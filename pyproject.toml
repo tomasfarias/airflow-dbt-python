@@ -1,0 +1,51 @@
+[tool.poetry]
+name = "airflow-dbt-python"
+version = "0.1.0"
+description = "A dbt operator for Airflow that uses the dbt Python package"
+authors = ["Tomás Farías Santana <tomas@tomasfarias.dev>"]
+
+[tool.poetry.dependencies]
+python = "^3.8"
+apache-airflow = ">=1.10.12"
+dbt-core = "^0.19"
+
+dbt-postgres = { version = "^0.19", optional = true }
+dbt-redshift = { version = "^0.19", optional = true }
+dbt-snowflake = { version = "^0.19", optional = true }
+dbt-bigquery = { version = "^0.19", optional = true }
+
+[tool.poetry.dev-dependencies]
+black = "^21.5b1"
+mypy = "^0.812"
+flake8 = "^3.9.2"
+pytest = "^6.2.4"
+pre-commit = "^2.12.1"
+
+[tool.poetry.extras]
+redshift = ["dbt-redshift"]
+postgres = ["dbt-postgres"]
+snowflake = ["dbt-snowflake"]
+bigquery = ["dbt-bigquery"]
+all = ["dbt-bigquery", "dbt-redshift", "dbt-postgres", "dbt-snowflake"]
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.black]
+line-length = 88
+include = '\.pyi?$'
+exclude = '''
+/(
+    \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | _build
+  | buck-out
+  | build
+  | dist
+)/
+'''
