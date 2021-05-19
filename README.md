@@ -1,16 +1,18 @@
 # airflow-dbt-python
 
-An Airflow operator to call the `main` function from the [`dbt-core`](https://pypi.org/project/dbt-core/) Python package
+An [Airflow](https://airflow.apache.org/) operator to call the `main` function from the [`dbt-core`](https://pypi.org/project/dbt-core/) Python package
 
 # Motivation
 
-Although `dbt` is meant to be installed and used as a CLI, we may not have control of the environment where Airflow is running, disallowing us the option of using `dbt` as a CLI.
+Although [`dbt`](https://docs.getdbt.com/) is meant to be installed and used as a CLI, we may not have control of the environment where Airflow is running, disallowing us the option of using `dbt` as a CLI.
 
 This is exactly what happens when using [Amazon's Managed Workflows for Apache Airflow](https://aws.amazon.com/managed-workflows-for-apache-airflow/) or MWAA: although a list of Python requirements can be passed, the CLI cannot be found in the worker's PATH.
 
 There is a workaround which involves using Airflow's `BashOperator` and running Python from the command line:
 
 ```py
+from airflow.operators.bash import BashOperator
+
 BASH_COMMAND = "python -c 'from dbt.main import main; main()' run"
 operator = BashOperator(
     task_id="dbt_run",
@@ -20,9 +22,9 @@ operator = BashOperator(
 
 But it can get sloppy when appending all potential arguments a `dbt run` command (or other subcommand) can take.
 
-`airflow-dbt-python` abstracts the complexity of handling CLI arguments by defining a `DbtRunOperator` which has an attribute for each possible CLI argument.
+`airflow-dbt-python` abstracts the complexity of handling CLI arguments by defining an operator for each `dbt` subcommand, and having each operator be defined with attribute for each possible CLI argument.
 
-The existing `airflow-dbt` package, by default, would not work if `dbt` is not in the PATH, which means it would not be usable in MWAA. There is a workaround via the `dbt_bin` argument, which can be set to `"python -c 'from dbt.main import main; main()' run"`, in similar fashion as the `BashOperator` example. Yet this approach is not without its limitations:
+The existing [`airflow-dbt`](https://pypi.org/project/airflow-dbt/) package, by default, would not work if `dbt` is not in the PATH, which means it would not be usable in MWAA. There is a workaround via the `dbt_bin` argument, which can be set to `"python -c 'from dbt.main import main; main()' run"`, in similar fashion as the `BashOperator` example. Yet this approach is not without its limitations:
 * `airflow-dbt` works by wrapping the `dbt` CLI, which makes our code dependent on the environment in which it runs.
 * `airflow-dbt` does not support the full range of arguments a command can take. For example, `DbtRunOperator` does not have an attribute for `fail_fast`.
 
@@ -67,12 +69,17 @@ with DAG(
 
 With poetry:
 ```sh
-poetry install .
+poetry install
+```
+
+Install any extras you need, and only those you need:
+```sh
+poetry install -E postgres -E redshift
 ```
 
 # Testing
 
-Tests are written using `pytest`, they can be locally run with `poetry`:
+Tests are written using `pytest`, can be located in `test/`, and they can be run locally with `poetry`:
 ```sh
 poetry run pytest -vv
 ```
