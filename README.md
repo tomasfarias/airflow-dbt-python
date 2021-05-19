@@ -10,7 +10,7 @@ This is exactly what happens when using [Amazon's Managed Workflows for Apache A
 
 There is a workaround which involves using Airflow's `BashOperator` and running Python from the command line:
 
-```
+```py
 BASH_COMMAND = "python -c 'from dbt.main import main; main()' run"
 operator = BashOperator(
     task_id="dbt_run",
@@ -36,7 +36,7 @@ Currently, the following `dbt` commands are supported:
 
 ## Examples
 
-```
+```py
 from datetime import timedelta
 
 from airflow import DAG
@@ -66,14 +66,14 @@ with DAG(
 # Installing
 
 With poetry:
-```
+```sh
 poetry install .
 ```
 
 # Testing
 
 Tests are written using `pytest`, they can be locally run with `poetry`:
-```
+```sh
 poetry run pytest -vv
 ```
 
