@@ -34,7 +34,15 @@ Finally, `airflow-dbt-python` does not depend on `dbt` but on `dbt-core`. The co
 
 Currently, the following `dbt` commands are supported:
 
-* `dbt run`
+* `clean`
+* `compile`
+* `debug`
+* `deps`
+* `ls`
+* `run`
+* `seed`
+* `snapshot`
+* `test`
 
 ## Examples
 
@@ -43,26 +51,43 @@ from datetime import timedelta
 
 from airflow import DAG
 from airflow.utils.dates import days_ago
-from airflow_dbt_python.operators.dbt import DbtRunOperator
+from airflow_dbt_python.operators.dbt import (
+    DbtRunOperator,
+    DbtSeedOperator,
+    DbtTestoperator,
+)
 
 args = {
     'owner': 'airflow',
 }
 
 with DAG(
-    dag_id='example_dbt_run_operator',
+    dag_id='example_dbt_operator',
     default_args=args,
     schedule_interval='0 0 * * *',
     start_date=days_ago(2),
     dagrun_timeout=timedelta(minutes=60),
     tags=['example', 'example2'],
 ) as dag:
+    dbt_test = DbtTestOperator(
+        task_id="dbt_test",
+        selector="pre-run-tests",
+    )
+
+    dbt_seed = DbtSeedOperator(
+        task_id="dbt_seed",
+        select=["/path/to/first.csv", "/path/to/second.csv"],
+        full_refresh=True,
+    )
+
     dbt_run = DbtRunOperator(
         task_id="dbt_run",
-        models=["/path/to/models"]
+        models=["/path/to/models"],
         full_refresh=True,
         fail_fast=True,
     )
+
+    dbt_test >> dbt_seed >> dbt_run
 ```
 
 # Installing
