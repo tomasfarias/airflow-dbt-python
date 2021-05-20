@@ -5,7 +5,7 @@ description = "A dbt operator for Airflow that uses the dbt Python package"
 authors = ["Tomás Farías Santana <tomas@tomasfarias.dev>"]
 
 [tool.poetry.dependencies]
-python = "^3.8"
+python = "^3.9"
 apache-airflow = ">=1.10.12"
 dbt-core = "^0.19"
 
