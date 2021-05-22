@@ -92,6 +92,20 @@ with DAG(
 
 # Installing
 
+## From PyPI:
+
+```sh
+pip install airflow-dbt-python
+```
+
+## From this repo:
+
+Clone the repo:
+```sh
+git clone https://github.com/tomasfarias/airflow-dbt-python.git
+cd airflow-dbt-python
+```
+
 With poetry:
 ```sh
 poetry install
@@ -105,6 +119,7 @@ poetry install -E postgres -E redshift
 # Testing
 
 Tests are written using `pytest`, can be located in `test/`, and they can be run locally with `poetry`:
+
 ```sh
 poetry run pytest -vv
 ```
