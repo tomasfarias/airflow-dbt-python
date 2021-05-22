@@ -1,11 +1,13 @@
 [tool.poetry]
 name = "airflow-dbt-python"
-version = "0.2.0"
+version = "0.2.1"
 description = "A dbt operator for Airflow that uses the dbt Python package"
 authors = ["Tomás Farías Santana <tomas@tomasfarias.dev>"]
+license = "MIT"
+readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "^3.9"
+python = "^3.7"
 apache-airflow = ">=1.10.12"
 dbt-core = "^0.19"
 
