@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "airflow-dbt-python"
-version = "0.2.1"
+version = "0.3.0"
 description = "A dbt operator for Airflow that uses the dbt Python package"
 authors = ["Tomás Farías Santana <tomas@tomasfarias.dev>"]
 license = "MIT"
@@ -22,6 +22,9 @@ mypy = "^0.812"
 flake8 = "^3.9.2"
 pytest = "^6.2.4"
 pre-commit = "^2.12.1"
+pytest-postgresql = "^3.1.1"
+psycopg2-binary = "^2.8.6"
+dbt-postgres = "^0.19.1"
 
 [tool.poetry.extras]
 redshift = ["dbt-redshift"]
@@ -51,3 +54,8 @@ exclude = '''
   | dist
 )/
 '''
+
+[tool.pytest.ini_options]
+postgresql_user = "test"
+postgresql_password = "test"
+postgresql_dbname = "test"

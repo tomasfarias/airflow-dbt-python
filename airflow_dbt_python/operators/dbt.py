@@ -6,14 +6,19 @@ from pathlib import Path
 from airflow import AirflowException
 from airflow.models.baseoperator import BaseOperator
 from airflow.utils.decorators import apply_defaults
+from dbt.contracts.results import RunResult
+from dbt.main import adapter_management
+from dbt.main import initialize_config_values
+from dbt.main import parse_args
+from dbt.logger import log_manager
 
 
 class DbtBaseOperator(BaseOperator):
     """The basic Airflow dbt operator. Defines how to build an argument list and execute
-        a dbt command. Does not set a command itself, subclasses should set it.
+        a dbt task. Does not set a task itself, subclasses should set it.
 
         Attributes:
-        command: The dbt command to execute.
+        task: The dbt task to execute.
         project_dir: Directory for dbt to look for dbt_profile.yml. Defaults to current
     directory.
         profiles_dir: Directory for dbt to look for profiles.yml. Defaults to ~/.dbt.
@@ -25,11 +30,11 @@ class DbtBaseOperator(BaseOperator):
         bypass_cache: Flag to bypass the adapter-level cache of database state.
 
         Methods:
-        execute: Executes a set dbt command by calling dbt.main.handle_and_check.
+        execute: Executes a set dbt task by calling dbt.main.handle_and_check.
         args_list: Produce a list of arguments for dbt.main.handle_and_check to consume.
     """
 
-    command = ""
+    task: Optional[str] = None
     __slots__ = (
         "project_dir",
         "profiles_dir",
@@ -62,18 +67,20 @@ class DbtBaseOperator(BaseOperator):
         self.bypass_cache = bypass_cache
 
     def execute(self, context: dict):
-        from dbt.main import handle_and_check
-
-        args = [self.command]
+        """Execute dbt task with prepared arguments"""
+        args = [self.task]
         args.extend(self.args_list())
-        res, success = handle_and_check(args)
+
+        with log_manager.applicationbound():
+            res, success = self.run_dbt_task(args)
 
         if success is not True:
-            raise AirflowException(f"dbt {self.command} {args} failed")
+            raise AirflowException(f"dbt {self.task} {args} failed")
 
         return res
 
     def args_list(self) -> list[str]:
+        """Build a list of arguments to pass to dbt"""
         args = []
         for arg in self.__slots__:
             value = getattr(self, arg)
@@ -103,9 +110,30 @@ class DbtBaseOperator(BaseOperator):
 
         return args
 
+    def run_dbt_task(self, args: list[Optional[str]]) -> tuple[RunResult, bool]:
+        """Run a dbt task as implemented by a subclass"""
+        try:
+            parsed = parse_args(args)
+        except Exception as exc:
+            raise AirflowException("Failed to parse dbt arguments: {args}") from exc
+
+        initialize_config_values(parsed)
+
+        results = None
+        with adapter_management():
+            parsed.cls.pre_init_hook(parsed)
+            task = parsed.cls.from_args(args=parsed)
+            results = task.run()
+
+        success = task.interpret_results(results)
+
+        return results, success
+
 
 class DbtRunOperator(DbtBaseOperator):
-    command = "run"
+    """Executes dbt run"""
+
+    task = "run"
 
     __slots__ = DbtBaseOperator.__slots__ + (
         "full_refresh",
@@ -145,7 +173,9 @@ class DbtRunOperator(DbtBaseOperator):
 
 
 class DbtSeedOperator(DbtBaseOperator):
-    command = "seed"
+    """Executes dbt seed"""
+
+    task = "seed"
 
     __slots__ = DbtBaseOperator.__slots__ + (
         "full_refresh",
@@ -179,7 +209,9 @@ class DbtSeedOperator(DbtBaseOperator):
 
 
 class DbtTestOperator(DbtBaseOperator):
-    command = "test"
+    """Executes dbt test"""
+
+    task = "test"
 
     __slots__ = DbtBaseOperator.__slots__ + (
         "data",
@@ -222,7 +254,9 @@ class DbtTestOperator(DbtBaseOperator):
 
 
 class DbtCompileOperator(DbtBaseOperator):
-    command = "compile"
+    """Executes dbt compile"""
+
+    task = "compile"
 
     __slots__ = DbtBaseOperator.__slots__ + (
         "parse_only",
@@ -259,21 +293,27 @@ class DbtCompileOperator(DbtBaseOperator):
 
 
 class DbtDepsOperator(DbtBaseOperator):
-    command = "deps"
+    """Executes dbt deps"""
+
+    task = "deps"
 
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
 
 
 class DbtCleanOperator(DbtBaseOperator):
-    command = "clean"
+    """Executes dbt clean"""
+
+    task = "clean"
 
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
 
 
 class DbtDebugOperator(DbtBaseOperator):
-    command = "debug"
+    """Execute dbt debug"""
+
+    task = "debug"
 
     __slots__ = DbtBaseOperator.__slots__ + ("config_dir", "no_version_check")
 
@@ -289,7 +329,9 @@ class DbtDebugOperator(DbtBaseOperator):
 
 
 class DbtSnapshotOperator(DbtBaseOperator):
-    command = "snapshot"
+    """Execute dbt snapshot"""
+
+    task = "snapshot"
 
     __slots__ = DbtBaseOperator.__slots__ + (
         "select",
@@ -317,7 +359,9 @@ class DbtSnapshotOperator(DbtBaseOperator):
 
 
 class DbtLsOperator(DbtBaseOperator):
-    command = "ls"
+    """Execute dbt list (or ls)"""
+
+    task = "ls"
 
     __slots__ = DbtBaseOperator.__slots__ + (
         "resource_type",

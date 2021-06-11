@@ -10,7 +10,6 @@ from airflow_dbt_python.operators.dbt import (
     DbtDebugOperator,
     DbtDepsOperator,
     DbtLsOperator,
-    DbtRunOperator,
     DbtSeedOperator,
     DbtSnapshotOperator,
     DbtTestOperator,
@@ -52,124 +51,6 @@ def test_args_list_all_base_args():
     ]
 
     assert args == expected
-
-
-def test_args_list_all_run_args():
-    op = DbtRunOperator(
-        task_id="dbt_task",
-        project_dir="/path/to/project/",
-        profiles_dir="/path/to/profiles/",
-        profile="dbt-profile",
-        target="dbt-target",
-        vars={"target": "override"},
-        log_cache_events=True,
-        bypass_cache=True,
-        full_refresh=True,
-        models=["/path/to/model.sql", "+/another/model.sql+2"],
-        fail_fast=True,
-        threads=3,
-        exclude=["/path/to/model/to/exclude.sql"],
-        selector="a-selector",
-        state="/path/to/state/",
-    )
-    args = op.args_list()
-    expected = [
-        "--project-dir",
-        "/path/to/project/",
-        "--profiles-dir",
-        "/path/to/profiles/",
-        "--profile",
-        "dbt-profile",
-        "--target",
-        "dbt-target",
-        "--vars",
-        "{target: override}",
-        "--log-cache-events",
-        "--bypass-cache",
-        "--full-refresh",
-        "--models",
-        "/path/to/model.sql",
-        "+/another/model.sql+2",
-        "--fail-fast",
-        "--threads",
-        "3",
-        "--exclude",
-        "/path/to/model/to/exclude.sql",
-        "--selector",
-        "a-selector",
-        "--state",
-        "/path/to/state/",
-    ]
-
-    assert args == expected
-
-
-def test_dbt_run_mocked_all_args():
-    op = DbtRunOperator(
-        task_id="dbt_task",
-        project_dir="/path/to/project/",
-        profiles_dir="/path/to/profiles/",
-        profile="dbt-profile",
-        target="dbt-target",
-        vars={"target": "override"},
-        log_cache_events=True,
-        bypass_cache=True,
-        full_refresh=True,
-        models=["/path/to/model.sql", "+/another/model.sql+2"],
-        fail_fast=True,
-        threads=3,
-        exclude=["/path/to/model/to/exclude.sql"],
-        selector="a-selector",
-        state="/path/to/state/",
-    )
-    args = [
-        "run",
-        "--project-dir",
-        "/path/to/project/",
-        "--profiles-dir",
-        "/path/to/profiles/",
-        "--profile",
-        "dbt-profile",
-        "--target",
-        "dbt-target",
-        "--vars",
-        "{target: override}",
-        "--log-cache-events",
-        "--bypass-cache",
-        "--full-refresh",
-        "--models",
-        "/path/to/model.sql",
-        "+/another/model.sql+2",
-        "--fail-fast",
-        "--threads",
-        "3",
-        "--exclude",
-        "/path/to/model/to/exclude.sql",
-        "--selector",
-        "a-selector",
-        "--state",
-        "/path/to/state/",
-    ]
-
-    with patch("dbt.main.handle_and_check") as mock:
-        mock.return_value = ([], True)
-        op.execute({})
-        mock.assert_called_once_with(args)
-
-
-def test_dbt_run_mocked_default():
-    op = DbtRunOperator(
-        task_id="dbt_task",
-    )
-
-    assert op.command == "run"
-
-    args = ["run"]
-
-    with patch("dbt.main.handle_and_check") as mock:
-        mock.return_value = ([], True)
-        op.execute({})
-        mock.assert_called_once_with(args)
 
 
 def test_dbt_seed_mocked_all_args():
@@ -218,7 +99,7 @@ def test_dbt_seed_mocked_all_args():
         "/path/to/state/",
     ]
 
-    with patch("dbt.main.handle_and_check") as mock:
+    with patch.object(DbtSeedOperator, "run_dbt_task") as mock:
         mock.return_value = ([], True)
         op.execute({})
         mock.assert_called_once_with(args)
@@ -229,11 +110,11 @@ def test_dbt_seed_mocked_default():
         task_id="dbt_task",
     )
 
-    assert op.command == "seed"
+    assert op.task == "seed"
 
     args = ["seed"]
 
-    with patch("dbt.main.handle_and_check") as mock:
+    with patch.object(DbtSeedOperator, "run_dbt_task") as mock:
         mock.return_value = ([], True)
         op.execute({})
         mock.assert_called_once_with(args)
@@ -287,7 +168,7 @@ def test_dbt_test_mocked_all_args():
         "--no-defer",
     ]
 
-    with patch("dbt.main.handle_and_check") as mock:
+    with patch.object(DbtTestOperator, "run_dbt_task") as mock:
         mock.return_value = ([], True)
         op.execute({})
         mock.assert_called_once_with(args)
@@ -297,11 +178,11 @@ def test_dbt_test_mocked_default():
     op = DbtTestOperator(
         task_id="dbt_task",
     )
-    assert op.command == "test"
+    assert op.task == "test"
 
     args = ["test"]
 
-    with patch("dbt.main.handle_and_check") as mock:
+    with patch.object(DbtTestOperator, "run_dbt_task") as mock:
         mock.return_value = ([], True)
         op.execute({})
         mock.assert_called_once_with(args)
@@ -312,9 +193,9 @@ def test_dbt_base_mocked_raises_exception_on_dbt_failure():
         task_id="dbt_task",
     )
 
-    assert op.command == ""
+    assert op.task is None
 
-    with patch("dbt.main.handle_and_check") as mock:
+    with patch.object(DbtBaseOperator, "run_dbt_task") as mock:
         mock.return_value = ([], False)
 
         with pytest.raises(AirflowException):
@@ -370,7 +251,7 @@ def test_dbt_compile_mocked_all_args():
         "/path/to/state/",
     ]
 
-    with patch("dbt.main.handle_and_check") as mock:
+    with patch.object(DbtCompileOperator, "run_dbt_task") as mock:
         mock.return_value = ([], True)
         op.execute({})
         mock.assert_called_once_with(args)
@@ -380,11 +261,11 @@ def test_dbt_compile_mocked_default():
     op = DbtCompileOperator(
         task_id="dbt_task",
     )
-    assert op.command == "compile"
+    assert op.task == "compile"
 
     args = ["compile"]
 
-    with patch("dbt.main.handle_and_check") as mock:
+    with patch.object(DbtCompileOperator, "run_dbt_task") as mock:
         mock.return_value = ([], True)
         op.execute({})
         mock.assert_called_once_with(args)
@@ -417,7 +298,7 @@ def test_dbt_deps_mocked_all_args():
         "--bypass-cache",
     ]
 
-    with patch("dbt.main.handle_and_check") as mock:
+    with patch.object(DbtDepsOperator, "run_dbt_task") as mock:
         mock.return_value = ([], True)
         op.execute({})
         mock.assert_called_once_with(args)
@@ -427,11 +308,11 @@ def test_dbt_deps_mocked_default():
     op = DbtDepsOperator(
         task_id="dbt_task",
     )
-    assert op.command == "deps"
+    assert op.task == "deps"
 
     args = ["deps"]
 
-    with patch("dbt.main.handle_and_check") as mock:
+    with patch.object(DbtDepsOperator, "run_dbt_task") as mock:
         mock.return_value = ([], True)
         op.execute({})
         mock.assert_called_once_with(args)
@@ -464,7 +345,7 @@ def test_dbt_clean_mocked_all_args():
         "--bypass-cache",
     ]
 
-    with patch("dbt.main.handle_and_check") as mock:
+    with patch.object(DbtCleanOperator, "run_dbt_task") as mock:
         mock.return_value = ([], True)
         op.execute({})
         mock.assert_called_once_with(args)
@@ -474,11 +355,11 @@ def test_dbt_clean_mocked_default():
     op = DbtCleanOperator(
         task_id="dbt_task",
     )
-    assert op.command == "clean"
+    assert op.task == "clean"
 
     args = ["clean"]
 
-    with patch("dbt.main.handle_and_check") as mock:
+    with patch.object(DbtCleanOperator, "run_dbt_task") as mock:
         mock.return_value = ([], True)
         op.execute({})
         mock.assert_called_once_with(args)
@@ -515,7 +396,7 @@ def test_dbt_debug_mocked_all_args():
         "--no-version-check",
     ]
 
-    with patch("dbt.main.handle_and_check") as mock:
+    with patch.object(DbtDebugOperator, "run_dbt_task") as mock:
         mock.return_value = ([], True)
         op.execute({})
         mock.assert_called_once_with(args)
@@ -525,11 +406,11 @@ def test_dbt_debug_mocked_default():
     op = DbtDebugOperator(
         task_id="dbt_task",
     )
-    assert op.command == "debug"
+    assert op.task == "debug"
 
     args = ["debug"]
 
-    with patch("dbt.main.handle_and_check") as mock:
+    with patch.object(DbtDebugOperator, "run_dbt_task") as mock:
         mock.return_value = ([], True)
         op.execute({})
         mock.assert_called_once_with(args)
@@ -577,7 +458,7 @@ def test_dbt_snapshot_mocked_all_args():
         "/path/to/state/",
     ]
 
-    with patch("dbt.main.handle_and_check") as mock:
+    with patch.object(DbtSnapshotOperator, "run_dbt_task") as mock:
         mock.return_value = ([], True)
         op.execute({})
         mock.assert_called_once_with(args)
@@ -587,11 +468,11 @@ def test_dbt_snapshot_mocked_default():
     op = DbtSnapshotOperator(
         task_id="dbt_task",
     )
-    assert op.command == "snapshot"
+    assert op.task == "snapshot"
 
     args = ["snapshot"]
 
-    with patch("dbt.main.handle_and_check") as mock:
+    with patch.object(DbtSnapshotOperator, "run_dbt_task") as mock:
         mock.return_value = ([], True)
         op.execute({})
         mock.assert_called_once_with(args)
@@ -640,7 +521,7 @@ def test_dbt_ls_mocked_all_args():
         "json",
     ]
 
-    with patch("dbt.main.handle_and_check") as mock:
+    with patch.object(DbtLsOperator, "run_dbt_task") as mock:
         mock.return_value = ([], True)
         op.execute({})
         mock.assert_called_once_with(args)
@@ -650,11 +531,11 @@ def test_dbt_ls_mocked_default():
     op = DbtLsOperator(
         task_id="dbt_task",
     )
-    assert op.command == "ls"
+    assert op.task == "ls"
 
     args = ["ls"]
 
-    with patch("dbt.main.handle_and_check") as mock:
+    with patch.object(DbtLsOperator, "run_dbt_task") as mock:
         mock.return_value = ([], True)
         op.execute({})
         mock.assert_called_once_with(args)
