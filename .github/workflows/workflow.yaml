@@ -24,9 +24,9 @@ jobs:
       - name: mypy
         run: poetry run mypy .
       - name: black
-        run: poetry run black --check
+        run: poetry run black --check .
       - name: test
-        run: poetry run pytest -v
+        run: poetry run pytest -v tests/
 
   deploy:
     needs: test
