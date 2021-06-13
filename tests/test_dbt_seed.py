@@ -4,11 +4,11 @@ from airflow import AirflowException
 from dbt.contracts.results import RunStatus
 import pytest
 
-from airflow_dbt_python.operators.dbt import DbtRunOperator
+from airflow_dbt_python.operators.dbt import DbtSeedOperator
 
 
-def test_dbt_run_mocked_all_args():
-    op = DbtRunOperator(
+def test_dbt_seed_mocked_all_args():
+    op = DbtSeedOperator(
         task_id="dbt_task",
         project_dir="/path/to/project/",
         profiles_dir="/path/to/profiles/",
@@ -18,15 +18,15 @@ def test_dbt_run_mocked_all_args():
         log_cache_events=True,
         bypass_cache=True,
         full_refresh=True,
-        models=["/path/to/model.sql", "+/another/model.sql+2"],
-        fail_fast=True,
-        threads=3,
-        exclude=["/path/to/model/to/exclude.sql"],
+        select=["/path/to/data.csv"],
+        show=True,
+        threads=2,
+        exclude=["/path/to/data/to/exclude.csv"],
         selector="a-selector",
         state="/path/to/state/",
     )
     args = [
-        "run",
+        "seed",
         "--project-dir",
         "/path/to/project/",
         "--profiles-dir",
@@ -40,60 +40,58 @@ def test_dbt_run_mocked_all_args():
         "--log-cache-events",
         "--bypass-cache",
         "--full-refresh",
-        "--models",
-        "/path/to/model.sql",
-        "+/another/model.sql+2",
-        "--fail-fast",
+        "--select",
+        "/path/to/data.csv",
+        "--show",
         "--threads",
-        "3",
+        "2",
         "--exclude",
-        "/path/to/model/to/exclude.sql",
+        "/path/to/data/to/exclude.csv",
         "--selector",
         "a-selector",
         "--state",
         "/path/to/state/",
     ]
 
-    with patch.object(DbtRunOperator, "run_dbt_task") as mock:
+    with patch.object(DbtSeedOperator, "run_dbt_task") as mock:
         mock.return_value = ([], True)
         op.execute({})
         mock.assert_called_once_with(args)
 
 
-def test_dbt_run_mocked_default():
-    op = DbtRunOperator(
+def test_dbt_seed_mocked_default():
+    op = DbtSeedOperator(
         task_id="dbt_task",
     )
 
-    assert op.task == "run"
+    assert op.task == "seed"
 
-    args = ["run"]
+    args = ["seed"]
 
-    with patch.object(DbtRunOperator, "run_dbt_task") as mock:
+    with patch.object(DbtSeedOperator, "run_dbt_task") as mock:
         mock.return_value = ([], True)
         op.execute({})
         mock.assert_called_once_with(args)
 
 
-def test_dbt_run_non_existent_model(profiles_file, dbt_project_file, model_files):
-    op = DbtRunOperator(
+def test_dbt_seed_non_existent_file(profiles_file, dbt_project_file, seed_files):
+    op = DbtSeedOperator(
         task_id="dbt_task",
         project_dir=dbt_project_file.parent,
         profiles_dir=profiles_file.parent,
-        models=["fake"],
-        full_refresh=True,
+        select=["fake"],
     )
 
     execution_results = op.execute({})
     assert len(execution_results.results) == 0
 
 
-def test_dbt_run_models(profiles_file, dbt_project_file, model_files):
-    op = DbtRunOperator(
+def test_dbt_seed_models(profiles_file, dbt_project_file, seed_files):
+    op = DbtSeedOperator(
         task_id="dbt_task",
         project_dir=dbt_project_file.parent,
         profiles_dir=profiles_file.parent,
-        models=[str(m.stem) for m in model_files],
+        select=[str(s.stem) for s in seed_files],
     )
     execution_results = op.execute({})
     run_result = execution_results.results[0]
@@ -101,12 +99,12 @@ def test_dbt_run_models(profiles_file, dbt_project_file, model_files):
     assert run_result.status == RunStatus.Success
 
 
-def test_dbt_run_models_full_refresh(profiles_file, dbt_project_file, model_files):
-    op = DbtRunOperator(
+def test_dbt_seed_models_full_refresh(profiles_file, dbt_project_file, seed_files):
+    op = DbtSeedOperator(
         task_id="dbt_task",
         project_dir=dbt_project_file.parent,
         profiles_dir=profiles_file.parent,
-        models=[str(m.stem) for m in model_files],
+        select=[str(s.stem) for s in seed_files],
         full_refresh=True,
     )
     execution_results = op.execute({})
@@ -115,30 +113,29 @@ def test_dbt_run_models_full_refresh(profiles_file, dbt_project_file, model_file
     assert run_result.status == RunStatus.Success
 
 
-BROKEN_SQL = """
-SELECT
-  field1 AS field1
-FROM
-  non_existent_table
-WHERE
-  field1 > 1
+BROKEN_CSV = """\
+id,name
+1,A name,
+2
 """
 
 
 @pytest.fixture
 def broken_file(dbt_project_dir):
-    d = dbt_project_dir / "models"
-    m = d / "broken.sql"
-    m.write_text(BROKEN_SQL)
-    return m
+    d = dbt_project_dir / "data"
+    s = d / "broken_seed.csv"
+    s.write_text(BROKEN_CSV)
+    return s
 
 
-def test_dbt_run_fails_with_malformed_sql(profiles_file, dbt_project_file, broken_file):
-    op = DbtRunOperator(
+def test_dbt_seed_fails_with_malformed_csv(
+    profiles_file, dbt_project_file, broken_file
+):
+    op = DbtSeedOperator(
         task_id="dbt_task",
         project_dir=dbt_project_file.parent,
         profiles_dir=profiles_file.parent,
-        models=[str(broken_file.stem)],
+        select=[str(broken_file.stem)],
         full_refresh=True,
     )
 

@@ -22,16 +22,83 @@ config-version: 2
 version: 1.0.0
 """
 
-MODEL1 = """
+MODEL_1 = """
+{{ config(
+    materialized="ephemeral",
+) }}
+
 SELECT
   123 AS field1,
   'abc' AS field2
 """
 
-MODEL2 = """
+MODEL_2 = """
+{{ config(
+    materialized="table",
+    schema="another"
+) }}
+
 SELECT
   123 AS field1,
-  'abc' AS field2
+  '{{ 'a' * 3  }}' AS field2
+"""
+
+MODEL_3 = """
+{{ config(
+    materialized="incremental",
+    schema="a_schema"
+) }}
+
+SELECT
+  123 AS field1,
+  NOW() AS field2
+
+{% if is_incremental() %}
+
+  WHERE NOW() > (SELECT MAX(field2) FROM {{ this }})
+
+{% endif %}
+"""
+
+
+MODEL_4 = """
+{{ config(
+    materialized="view",
+) }}
+{% set l = ("a", "b", "c") %}
+
+SELECT
+  field1 AS field1,
+  field2 AS field2,
+  SUM(CASE WHEN 'd' IN {{ l }} THEN 1 ELSE 0 END) AS field3
+FROM
+  {{ ref('model_1') }}
+GROUP BY
+  field1, field2
+"""
+
+MODELS = [MODEL_1, MODEL_2, MODEL_3, MODEL_4]
+
+
+SEED_1 = """\
+country_code,country_name
+US,United States
+CA,Canada
+GB,United Kingdom
+"""
+
+SEED_2 = """\
+id,name
+1,Harmony Jeans
+2,Lelah Small
+3,Bok Hogsett
+4,Micaela Talton
+5,Roxy Hellyer
+6,Wilfredo Carwell
+7,Zola Blocker
+8,Junita Do
+9,Tarra Delsignore
+10,Ward Fugitt
 """
 
 
@@ -81,8 +148,27 @@ def dbt_project_file(dbt_project_dir):
 def model_files(dbt_project_dir):
     d = dbt_project_dir / "models"
     d.mkdir(exist_ok=True)
-    m1 = d / "model1.sql"
-    m1.write_text(MODEL1)
-    m2 = d / "model2.sql"
-    m2.write_text(MODEL2)
-    return [m1, m2]
+
+    paths = []
+    for n, model in enumerate(MODELS):
+        m = d / "model_{0}.sql".format(n + 1)
+        m.write_text(model)
+        paths.append(m)
+    return paths
+
+
+@pytest.fixture(scope="session")
+def seed_files(dbt_project_dir):
+    d = dbt_project_dir / "data"
+    d.mkdir(exist_ok=True)
+    s1 = d / "seed_1.csv"
+    s1.write_text(SEED_1)
+    s2 = d / "seed_2.csv"
+    s2.write_text(SEED_2)
+    return [s1, s2]
+
+
+@pytest.fixture(scope="session")
+def compile_dir(dbt_project_file):
+    d = dbt_project_file.parent
+    return d / "target" / "compiled" / "test" / "models"
