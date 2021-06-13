@@ -18,7 +18,7 @@ dbt-bigquery = { version = "^0.19", optional = true }
 
 [tool.poetry.dev-dependencies]
 black = "^21.5b1"
-mypy = "^0.812"
+mypy = "^0.902"
 flake8 = "^3.9.2"
 pytest = "^6.2.4"
 pre-commit = "^2.12.1"
@@ -59,3 +59,10 @@ exclude = '''
 postgresql_user = "test"
 postgresql_password = "test"
 postgresql_dbname = "test"
+
+[tool.mypy]
+ignore_missing_imports = true
+strict_optional = true
+warn_unused_ignores = true
+warn_redundant_casts = true
+warn_unused_configs = true
