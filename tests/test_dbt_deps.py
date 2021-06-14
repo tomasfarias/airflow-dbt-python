@@ -1,5 +1,7 @@
 from unittest.mock import patch
 
+import pytest
+
 from airflow_dbt_python.operators.dbt import DbtDepsOperator
 
 
@@ -48,3 +50,41 @@ def test_dbt_deps_mocked_default():
         mock.return_value = ([], True)
         op.execute({})
         mock.assert_called_once_with(args)
+
+
+@pytest.fixture(scope="session")
+def dbt_modules_dir(dbt_project_file):
+    d = dbt_project_file.parent
+    return d / "dbt_modules"
+
+
+PACKAGES = """
+packages:
+  - package: fishtown-analytics/dbt_utils
+    version: 0.6.6
+"""
+
+
+@pytest.fixture(scope="session")
+def packages_file(dbt_project_file):
+    d = dbt_project_file.parent
+    packages = d / "packages.yml"
+    packages.write_text(PACKAGES)
+    return packages
+
+
+def test_dbt_deps_downloads_dbt_utils(
+    profiles_file, dbt_project_file, dbt_modules_dir, packages_file
+):
+    op = DbtDepsOperator(
+        task_id="dbt_task",
+        project_dir=dbt_project_file.parent,
+        profiles_dir=profiles_file.parent,
+    )
+    modules = dbt_modules_dir.glob("dbt_utils")
+    assert len([m for m in modules]) == 0
+
+    op.execute({})
+
+    modules = dbt_modules_dir.glob("dbt_utils")
+    assert len([m for m in modules]) == 1
