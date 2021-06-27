@@ -83,7 +83,7 @@ class DbtBaseOperator(BaseOperator):
         """Build a list of arguments to pass to dbt"""
         args = []
         for arg in self.__slots__:
-            value = getattr(self, arg)
+            value = getattr(self, arg, None)
             if value is None:
                 continue
 
