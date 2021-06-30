@@ -7,9 +7,11 @@ from airflow import AirflowException
 from airflow.models.baseoperator import BaseOperator
 from airflow.utils.decorators import apply_defaults
 from dbt.contracts.results import RunResult
+import dbt.flags as flags
 from dbt.main import adapter_management
 from dbt.main import initialize_config_values
 from dbt.main import parse_args
+from dbt.main import track_run
 from dbt.logger import log_manager
 
 
@@ -112,22 +114,33 @@ class DbtBaseOperator(BaseOperator):
 
     def run_dbt_task(self, args: list[Optional[str]]) -> tuple[RunResult, bool]:
         """Run a dbt task as implemented by a subclass"""
-        try:
-            parsed = parse_args(args)
-        except Exception as exc:
-            raise AirflowException("Failed to parse dbt arguments: {args}") from exc
+        with log_manager.applicationbound():
+            try:
+                parsed = parse_args(args)
+            except Exception as exc:
+                raise AirflowException("Failed to parse dbt arguments: {args}") from exc
 
-        initialize_config_values(parsed)
+            initialize_config_values(parsed)
+            results = None
+            with adapter_management():
+                flags.set_from_args(parsed)
 
-        results = None
-        with adapter_management():
-            parsed.cls.pre_init_hook(parsed)
-            task = parsed.cls.from_args(args=parsed)
-            results = task.run()
+                parsed.cls.pre_init_hook(parsed)
+                task = parsed.cls.from_args(args=parsed)
 
-        success = task.interpret_results(results)
+                log_manager.reset_handlers()
+                log_path = None
+                if task.config is not None:
+                    log_path = getattr(task.config, "log_path", None)
 
-        return results, success
+                log_manager.set_path(log_path)
+
+                with track_run(task):
+                    results = task.run()
+
+                success = task.interpret_results(results)
+
+                return results, success
 
 
 class DbtRunOperator(DbtBaseOperator):

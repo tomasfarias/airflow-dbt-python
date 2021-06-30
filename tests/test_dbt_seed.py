@@ -109,7 +109,6 @@ def test_dbt_seed_models_full_refresh(profiles_file, dbt_project_file, seed_file
     )
     execution_results = op.execute({})
     run_result = execution_results.results[0]
-
     assert run_result.status == RunStatus.Success
 
 
