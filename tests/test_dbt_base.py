@@ -43,6 +43,20 @@ def test_args_list_all_base_args():
     assert args == expected
 
 
+def test_args_list_project_dir():
+    op = DbtBaseOperator(
+        task_id="dbt_task",
+        project_dir="/home/airflow/project",
+    )
+    args = op.args_list()
+    expected = [
+        "--project-dir",
+        "/home/airflow/project",
+    ]
+
+    assert args == expected
+
+
 def test_dbt_base_mocked_raises_exception_on_dbt_failure():
     op = DbtBaseOperator(
         task_id="dbt_task",

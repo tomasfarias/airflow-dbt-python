@@ -2,6 +2,7 @@ from unittest.mock import patch
 
 from airflow import AirflowException
 from dbt.contracts.results import RunStatus
+from dbt.exceptions import RuntimeException
 import pytest
 
 from airflow_dbt_python.operators.dbt import DbtRunOperator
@@ -143,4 +144,16 @@ def test_dbt_run_fails_with_malformed_sql(profiles_file, dbt_project_file, broke
     )
 
     with pytest.raises(AirflowException):
+        op.execute({})
+
+
+def test_dbt_run_fails_with_non_existent_project(profiles_file, dbt_project_file):
+    op = DbtRunOperator(
+        task_id="dbt_task",
+        project_dir="/home/fake/project",
+        profiles_dir="/home/fake/profiles/",
+        full_refresh=True,
+    )
+
+    with pytest.raises(RuntimeException):
         op.execute({})

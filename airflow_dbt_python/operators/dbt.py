@@ -35,7 +35,7 @@ class DbtBaseOperator(BaseOperator):
     """
 
     task: Optional[str] = None
-    __slots__ = (
+    __dbt_args__ = [
         "project_dir",
         "profiles_dir",
         "profile",
@@ -43,7 +43,7 @@ class DbtBaseOperator(BaseOperator):
         "vars",
         "log_cache_events",
         "bypass_cache",
-    )
+    ]
 
     @apply_defaults
     def __init__(
@@ -82,7 +82,7 @@ class DbtBaseOperator(BaseOperator):
     def args_list(self) -> list[str]:
         """Build a list of arguments to pass to dbt"""
         args = []
-        for arg in self.__slots__:
+        for arg in self.__dbt_args__:
             value = getattr(self, arg, None)
             if value is None:
                 continue
@@ -135,7 +135,7 @@ class DbtRunOperator(DbtBaseOperator):
 
     task = "run"
 
-    __slots__ = DbtBaseOperator.__slots__ + (
+    __dbt_args__ = DbtBaseOperator.__dbt_args__ + [
         "full_refresh",
         "models",
         "fail_fast",
@@ -145,7 +145,7 @@ class DbtRunOperator(DbtBaseOperator):
         "state",
         "defer",
         "no_defer",
-    )
+    ]
 
     def __init__(
         self,
@@ -177,7 +177,7 @@ class DbtSeedOperator(DbtBaseOperator):
 
     task = "seed"
 
-    __slots__ = DbtBaseOperator.__slots__ + (
+    __dbt_args__ = DbtBaseOperator.__dbt_args__ + [
         "full_refresh",
         "select",
         "show",
@@ -185,7 +185,7 @@ class DbtSeedOperator(DbtBaseOperator):
         "exclude",
         "selector",
         "state",
-    )
+    ]
 
     def __init__(
         self,
@@ -213,7 +213,7 @@ class DbtTestOperator(DbtBaseOperator):
 
     task = "test"
 
-    __slots__ = DbtBaseOperator.__slots__ + (
+    __dbt_args__ = DbtBaseOperator.__dbt_args__ + [
         "data",
         "schema",
         "fail_fast",
@@ -224,7 +224,7 @@ class DbtTestOperator(DbtBaseOperator):
         "state",
         "defer",
         "no_defer",
-    )
+    ]
 
     def __init__(
         self,
@@ -258,7 +258,7 @@ class DbtCompileOperator(DbtBaseOperator):
 
     task = "compile"
 
-    __slots__ = DbtBaseOperator.__slots__ + (
+    __dbt_args__ = DbtBaseOperator.__dbt_args__ + [
         "parse_only",
         "full_refresh",
         "fail_fast",
@@ -267,7 +267,7 @@ class DbtCompileOperator(DbtBaseOperator):
         "exclude",
         "selector",
         "state",
-    )
+    ]
 
     def __init__(
         self,
@@ -315,7 +315,7 @@ class DbtDebugOperator(DbtBaseOperator):
 
     task = "debug"
 
-    __slots__ = DbtBaseOperator.__slots__ + ("config_dir", "no_version_check")
+    __dbt_args__ = DbtBaseOperator.__dbt_args__ + ["config_dir", "no_version_check"]
 
     def __init__(
         self,
@@ -333,13 +333,13 @@ class DbtSnapshotOperator(DbtBaseOperator):
 
     task = "snapshot"
 
-    __slots__ = DbtBaseOperator.__slots__ + (
+    __dbt_args__ = DbtBaseOperator.__dbt_args__ + [
         "select",
         "threads",
         "exclude",
         "selector",
         "state",
-    )
+    ]
 
     def __init__(
         self,
@@ -363,14 +363,14 @@ class DbtLsOperator(DbtBaseOperator):
 
     task = "ls"
 
-    __slots__ = DbtBaseOperator.__slots__ + (
+    __dbt_args__ = DbtBaseOperator.__dbt_args__ + [
         "resource_type",
         "select",
         "models",
         "exclude",
         "selector",
         "dbt_output",
-    )
+    ]
 
     def __init__(
         self,
