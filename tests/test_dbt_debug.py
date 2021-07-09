@@ -60,7 +60,7 @@ def test_dbt_debug_config_dir(profiles_file, dbt_project_file):
         project_dir=dbt_project_file.parent,
         profiles_dir=profiles_file.parent,
         config_dir=True,
-        xcom_push=True,
+        do_xcom_push=True,
     )
     output = op.execute({})
     assert output is None
@@ -71,7 +71,7 @@ def test_dbt_debug(profiles_file, dbt_project_file):
         task_id="dbt_task",
         project_dir=dbt_project_file.parent,
         profiles_dir=profiles_file.parent,
-        xcom_push=True,
+        do_xcom_push=True,
     )
     output = op.execute({})
     assert output is None

@@ -64,6 +64,7 @@ def test_dbt_run_mocked_all_args():
 def test_dbt_run_mocked_default():
     op = DbtRunOperator(
         task_id="dbt_task",
+        do_xcom_push=False,
     )
 
     assert op.task == "run"
@@ -78,10 +79,10 @@ def test_dbt_run_mocked_default():
     assert res is None
 
 
-def test_dbt_run_mocked_with_xcom_push():
+def test_dbt_run_mocked_with_do_xcom_push():
     op = DbtRunOperator(
         task_id="dbt_task",
-        xcom_push=True,
+        do_xcom_push=True,
     )
 
     assert op.task == "run"
@@ -103,7 +104,7 @@ def test_dbt_run_non_existent_model(profiles_file, dbt_project_file, model_files
         profiles_dir=profiles_file.parent,
         models=["fake"],
         full_refresh=True,
-        xcom_push=True,
+        do_xcom_push=True,
     )
 
     execution_results = op.execute({})
@@ -116,7 +117,7 @@ def test_dbt_run_models(profiles_file, dbt_project_file, model_files):
         project_dir=dbt_project_file.parent,
         profiles_dir=profiles_file.parent,
         models=[str(m.stem) for m in model_files],
-        xcom_push=True,
+        do_xcom_push=True,
     )
     execution_results = op.execute({})
     run_result = execution_results["results"][0]
@@ -131,7 +132,7 @@ def test_dbt_run_models_full_refresh(profiles_file, dbt_project_file, model_file
         profiles_dir=profiles_file.parent,
         models=[str(m.stem) for m in model_files],
         full_refresh=True,
-        xcom_push=True,
+        do_xcom_push=True,
     )
     execution_results = op.execute({})
     run_result = execution_results["results"][0]

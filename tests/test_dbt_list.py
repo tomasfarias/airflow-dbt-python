@@ -73,7 +73,7 @@ def test_dbt_ls_models(profiles_file, dbt_project_file, model_files):
         project_dir=dbt_project_file.parent,
         profiles_dir=profiles_file.parent,
         resource_type=["model"],
-        xcom_push=True,
+        do_xcom_push=True,
     )
     models = op.execute({})
 
@@ -86,7 +86,7 @@ def test_dbt_ls_seeds(profiles_file, dbt_project_file, seed_files):
         project_dir=dbt_project_file.parent,
         profiles_dir=profiles_file.parent,
         resource_type=["seed"],
-        xcom_push=True,
+        do_xcom_push=True,
     )
     seeds = op.execute({})
 
@@ -99,7 +99,7 @@ def test_dbt_ls_all(profiles_file, dbt_project_file, seed_files, model_files):
         project_dir=dbt_project_file.parent,
         profiles_dir=profiles_file.parent,
         resource_type=["all"],
-        xcom_push=True,
+        do_xcom_push=True,
     )
     all_files = op.execute({})
 

@@ -80,7 +80,7 @@ def test_dbt_seed_non_existent_file(profiles_file, dbt_project_file, seed_files)
         project_dir=dbt_project_file.parent,
         profiles_dir=profiles_file.parent,
         select=["fake"],
-        xcom_push=True,
+        do_xcom_push=True,
     )
 
     execution_results = op.execute({})
@@ -93,7 +93,7 @@ def test_dbt_seed_models(profiles_file, dbt_project_file, seed_files):
         project_dir=dbt_project_file.parent,
         profiles_dir=profiles_file.parent,
         select=[str(s.stem) for s in seed_files],
-        xcom_push=True,
+        do_xcom_push=True,
     )
     execution_results = op.execute({})
     run_result = execution_results["results"][0]
@@ -108,7 +108,7 @@ def test_dbt_seed_models_full_refresh(profiles_file, dbt_project_file, seed_file
         profiles_dir=profiles_file.parent,
         select=[str(s.stem) for s in seed_files],
         full_refresh=True,
-        xcom_push=True,
+        do_xcom_push=True,
     )
     execution_results = op.execute({})
     run_result = execution_results["results"][0]

@@ -1,16 +1,15 @@
 from __future__ import annotations
 
 from dataclasses import asdict, is_dataclass
-from typing import Optional, Union
 from pathlib import Path
-import logging
+from tempfile import NamedTemporaryFile, TemporaryDirectory
+from typing import Optional, Union
 
 from airflow import AirflowException
 from airflow.models.baseoperator import BaseOperator
 from airflow.utils.decorators import apply_defaults
 from dbt.contracts.results import RunResult
 import dbt.flags as flags
-from dbt.main import adapter_management
 from dbt.main import initialize_config_values
 from dbt.main import parse_args
 from dbt.main import track_run
@@ -34,8 +33,9 @@ class DbtBaseOperator(BaseOperator):
         bypass_cache: Flag to bypass the adapter-level cache of database state.
 
         Methods:
-        execute: Executes a set dbt task by calling dbt.main.handle_and_check.
-        args_list: Produce a list of arguments for dbt.main.handle_and_check to consume.
+        execute: Executes a given dbt task.
+        args_list: Produce a list of arguments for a dbt task.
+        run_dbt_task: Runs the actual dbt task as defined by self.task.
     """
 
     task: Optional[str] = None
@@ -59,7 +59,6 @@ class DbtBaseOperator(BaseOperator):
         vars: Optional[dict[str, str]] = None,
         log_cache_events: Optional[bool] = False,
         bypass_cache: Optional[bool] = False,
-        xcom_push: Optional[bool] = False,
         **kwargs,
     ) -> None:
         super().__init__(**kwargs)
@@ -70,28 +69,37 @@ class DbtBaseOperator(BaseOperator):
         self.vars = vars
         self.log_cache_events = log_cache_events
         self.bypass_cache = bypass_cache
-        self.xcom_push_flag = xcom_push
-
-        self.copy_logger_handlers("dbt")
-
-    def copy_logger_handlers(self, logger_name: str):
-        """Copy the instance's log handlers to another logger"""
-        logger = logging.getLogger(logger_name)
-        for handler in self.log.handlers:
-            logger.addHandler(handler)
 
     def execute(self, context: dict):
         """Execute dbt task with prepared arguments"""
-        args = [self.task]
+        if self.task is None:
+            raise AirflowException("dbt task is not defined")
+
+        args: list[Optional[str]] = [self.task]
         args.extend(self.args_list())
 
-        with log_manager.applicationbound():
-            res, success = self.run_dbt_task(args)
+        self.log.info("Running dbt %s with args %s", args[0], args[1:])
+
+        with TemporaryDirectory(prefix="airflowtmp") as tmp_dir:
+            with NamedTemporaryFile(dir=tmp_dir, mode="w+") as f:
+                with log_manager.applicationbound():
+                    log_manager.reset_handlers()
+                    log_manager.set_path(tmp_dir)
+                    # dbt logger writes to STDOUT and I haven't found a way
+                    # to bubble up to the Airflow task logger. As a workaround,
+                    # I set the output stream to a temporary file that is later
+                    # read and logged using the task's logger.
+                    log_manager.set_output_stream(f)
+                    res, success = self.run_dbt_task(args)
+
+                with open(f.name) as read_file:
+                    for line in read_file:
+                        self.log.info(line.rstrip())
 
         if success is not True:
-            raise AirflowException(f"dbt {self.task} {args} failed")
+            raise AirflowException(f"dbt {args[0]} {args[1:]} failed")
 
-        if self.xcom_push_flag is True:
+        if self.do_xcom_push is True:
             # Some dbt operations use dataclasses for its results,
             # found in dbt.contracts.results. We use dataclasses.asdict
             # to obtain a serializable dict for XCOM.
@@ -132,33 +140,22 @@ class DbtBaseOperator(BaseOperator):
 
     def run_dbt_task(self, args: list[Optional[str]]) -> tuple[RunResult, bool]:
         """Run a dbt task as implemented by a subclass"""
-        with log_manager.applicationbound():
-            try:
-                parsed = parse_args(args)
-            except Exception as exc:
-                raise AirflowException("Failed to parse dbt arguments: {args}") from exc
+        try:
+            parsed = parse_args(args)
+        except Exception as exc:
+            raise AirflowException("Failed to parse dbt arguments: {args}") from exc
 
-            initialize_config_values(parsed)
-            results = None
-            with adapter_management():
-                flags.set_from_args(parsed)
+        initialize_config_values(parsed)
+        flags.set_from_args(parsed)
+        parsed.cls.pre_init_hook(parsed)
 
-                parsed.cls.pre_init_hook(parsed)
-                task = parsed.cls.from_args(args=parsed)
+        task = parsed.cls.from_args(args=parsed)
+        results = None
+        with track_run(task):
+            results = task.run()
 
-                log_manager.reset_handlers()
-                log_path = None
-                if task.config is not None:
-                    log_path = getattr(task.config, "log_path", None)
-
-                log_manager.set_path(log_path)
-
-                with track_run(task):
-                    results = task.run()
-
-                success = task.interpret_results(results)
-
-                return results, success
+        success = task.interpret_results(results)
+        return results, success
 
 
 class DbtRunOperator(DbtBaseOperator):

@@ -110,7 +110,7 @@ def test_dbt_test_schema_tests(profiles_file, dbt_project_file, schema_tests_fil
         project_dir=dbt_project_file.parent,
         profiles_dir=profiles_file.parent,
         schema=True,
-        xcom_push=True,
+        do_xcom_push=True,
     )
     results = op.execute({})
 
@@ -154,7 +154,7 @@ def test_dbt_test_data_tests(profiles_file, dbt_project_file, data_tests_files):
         project_dir=dbt_project_file.parent,
         profiles_dir=profiles_file.parent,
         data=True,
-        xcom_push=True,
+        do_xcom_push=True,
     )
     results = op.execute({})
 
@@ -172,7 +172,7 @@ def test_dbt_test_data_and_schema_tests(
         task_id="dbt_task",
         project_dir=dbt_project_file.parent,
         profiles_dir=profiles_file.parent,
-        xcom_push=True,
+        do_xcom_push=True,
     )
     results = op.execute({})
 
