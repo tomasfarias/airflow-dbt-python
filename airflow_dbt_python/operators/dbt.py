@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import asdict, is_dataclass
 from typing import Optional, Union
 from pathlib import Path
+import logging
 
 from airflow import AirflowException
 from airflow.models.baseoperator import BaseOperator
@@ -70,6 +71,14 @@ class DbtBaseOperator(BaseOperator):
         self.log_cache_events = log_cache_events
         self.bypass_cache = bypass_cache
         self.xcom_push_flag = xcom_push
+
+        self.copy_logger_handlers("dbt")
+
+    def copy_logger_handlers(self, logger_name: str):
+        """Copy the instance's log handlers to another logger"""
+        logger = logging.getLogger(logger_name)
+        for handler in self.log.handlers:
+            logger.addHandler(handler)
 
     def execute(self, context: dict):
         """Execute dbt task with prepared arguments"""
