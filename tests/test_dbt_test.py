@@ -110,14 +110,15 @@ def test_dbt_test_schema_tests(profiles_file, dbt_project_file, schema_tests_fil
         project_dir=dbt_project_file.parent,
         profiles_dir=profiles_file.parent,
         schema=True,
+        xcom_push=True,
     )
     results = op.execute({})
 
-    assert results.args["data"] is False
-    assert results.args["schema"] is True
-    assert len(results.results) == 5
-    for test_result in results.results:
-        assert test_result.status == TestStatus.Pass
+    assert results["args"]["data"] is False
+    assert results["args"]["schema"] is True
+    assert len(results["results"]) == 5
+    for test_result in results["results"]:
+        assert test_result["status"] == TestStatus.Pass
 
 
 DATA_TEST_1 = """
@@ -153,14 +154,15 @@ def test_dbt_test_data_tests(profiles_file, dbt_project_file, data_tests_files):
         project_dir=dbt_project_file.parent,
         profiles_dir=profiles_file.parent,
         data=True,
+        xcom_push=True,
     )
     results = op.execute({})
 
-    assert results.args["schema"] is False
-    assert results.args["data"] is True
-    assert len(results.results) == 2
-    for test_result in results.results:
-        assert test_result.status == TestStatus.Pass
+    assert results["args"]["schema"] is False
+    assert results["args"]["data"] is True
+    assert len(results["results"]) == 2
+    for test_result in results["results"]:
+        assert test_result["status"] == TestStatus.Pass
 
 
 def test_dbt_test_data_and_schema_tests(
@@ -170,11 +172,12 @@ def test_dbt_test_data_and_schema_tests(
         task_id="dbt_task",
         project_dir=dbt_project_file.parent,
         profiles_dir=profiles_file.parent,
+        xcom_push=True,
     )
     results = op.execute({})
 
-    assert results.args["data"] is False
-    assert results.args["schema"] is False
-    assert len(results.results) == 7
-    for test_result in results.results:
-        assert test_result.status == TestStatus.Pass
+    assert results["args"]["data"] is False
+    assert results["args"]["schema"] is False
+    assert len(results["results"]) == 7
+    for test_result in results["results"]:
+        assert test_result["status"] == TestStatus.Pass

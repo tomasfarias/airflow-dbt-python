@@ -109,11 +109,12 @@ def test_dbt_snapshot(profiles_file, dbt_project_file, snapshot_files):
         project_dir=dbt_project_file.parent,
         profiles_dir=profiles_file.parent,
         select=[str(s.stem) for s in snapshot_files],
+        xcom_push=True,
     )
     execution_results = op.execute({})
-    run_result = execution_results.results[0]
+    run_result = execution_results["results"][0]
 
-    assert run_result.status == RunStatus.Success
+    assert run_result["status"] == RunStatus.Success
 
 
 BROKEN_SNAPSHOT_SQL = """

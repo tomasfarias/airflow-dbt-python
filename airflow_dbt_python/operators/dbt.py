@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from dataclasses import asdict, is_dataclass
 from typing import Optional, Union
 from pathlib import Path
 
@@ -57,6 +58,7 @@ class DbtBaseOperator(BaseOperator):
         vars: Optional[dict[str, str]] = None,
         log_cache_events: Optional[bool] = False,
         bypass_cache: Optional[bool] = False,
+        xcom_push: Optional[bool] = False,
         **kwargs,
     ) -> None:
         super().__init__(**kwargs)
@@ -67,6 +69,7 @@ class DbtBaseOperator(BaseOperator):
         self.vars = vars
         self.log_cache_events = log_cache_events
         self.bypass_cache = bypass_cache
+        self.xcom_push_flag = xcom_push
 
     def execute(self, context: dict):
         """Execute dbt task with prepared arguments"""
@@ -79,7 +82,13 @@ class DbtBaseOperator(BaseOperator):
         if success is not True:
             raise AirflowException(f"dbt {self.task} {args} failed")
 
-        return res
+        if self.xcom_push_flag is True:
+            # Some dbt operations use dataclasses for its results,
+            # found in dbt.contracts.results. We use dataclasses.asdict
+            # to obtain a serializable dict for XCOM.
+            if is_dataclass(res):
+                return asdict(res)
+            return res
 
     def args_list(self) -> list[str]:
         """Build a list of arguments to pass to dbt"""

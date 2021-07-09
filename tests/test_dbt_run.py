@@ -72,8 +72,28 @@ def test_dbt_run_mocked_default():
 
     with patch.object(DbtRunOperator, "run_dbt_task") as mock:
         mock.return_value = ([], True)
-        op.execute({})
+        res = op.execute({})
         mock.assert_called_once_with(args)
+
+    assert res is None
+
+
+def test_dbt_run_mocked_with_xcom_push():
+    op = DbtRunOperator(
+        task_id="dbt_task",
+        xcom_push=True,
+    )
+
+    assert op.task == "run"
+
+    args = ["run"]
+
+    with patch.object(DbtRunOperator, "run_dbt_task") as mock:
+        mock.return_value = ([], True)
+        res = op.execute({})
+        mock.assert_called_once_with(args)
+
+    assert res == []
 
 
 def test_dbt_run_non_existent_model(profiles_file, dbt_project_file, model_files):
@@ -83,10 +103,11 @@ def test_dbt_run_non_existent_model(profiles_file, dbt_project_file, model_files
         profiles_dir=profiles_file.parent,
         models=["fake"],
         full_refresh=True,
+        xcom_push=True,
     )
 
     execution_results = op.execute({})
-    assert len(execution_results.results) == 0
+    assert len(execution_results["results"]) == 0
 
 
 def test_dbt_run_models(profiles_file, dbt_project_file, model_files):
@@ -95,11 +116,12 @@ def test_dbt_run_models(profiles_file, dbt_project_file, model_files):
         project_dir=dbt_project_file.parent,
         profiles_dir=profiles_file.parent,
         models=[str(m.stem) for m in model_files],
+        xcom_push=True,
     )
     execution_results = op.execute({})
-    run_result = execution_results.results[0]
+    run_result = execution_results["results"][0]
 
-    assert run_result.status == RunStatus.Success
+    assert run_result["status"] == RunStatus.Success
 
 
 def test_dbt_run_models_full_refresh(profiles_file, dbt_project_file, model_files):
@@ -109,11 +131,12 @@ def test_dbt_run_models_full_refresh(profiles_file, dbt_project_file, model_file
         profiles_dir=profiles_file.parent,
         models=[str(m.stem) for m in model_files],
         full_refresh=True,
+        xcom_push=True,
     )
     execution_results = op.execute({})
-    run_result = execution_results.results[0]
+    run_result = execution_results["results"][0]
 
-    assert run_result.status == RunStatus.Success
+    assert run_result["status"] == RunStatus.Success
 
 
 BROKEN_SQL = """
