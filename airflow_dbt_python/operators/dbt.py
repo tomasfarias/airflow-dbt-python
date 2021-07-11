@@ -1,9 +1,10 @@
 from __future__ import annotations
 
 from dataclasses import asdict, is_dataclass
+import datetime as dt
 from pathlib import Path
 from tempfile import NamedTemporaryFile, TemporaryDirectory
-from typing import Optional, Union
+from typing import Optional, Union, Any
 
 from airflow import AirflowException
 from airflow.models.baseoperator import BaseOperator
@@ -14,6 +15,7 @@ from dbt.main import initialize_config_values
 from dbt.main import parse_args
 from dbt.main import track_run
 from dbt.logger import log_manager
+from dbt.contracts.results import RunExecutionResult
 
 
 class DbtBaseOperator(BaseOperator):
@@ -36,6 +38,7 @@ class DbtBaseOperator(BaseOperator):
         execute: Executes a given dbt task.
         args_list: Produce a list of arguments for a dbt task.
         run_dbt_task: Runs the actual dbt task as defined by self.task.
+        serializable_result: Turns a dbt result into a serializable object.
     """
 
     task: Optional[str] = None
@@ -101,11 +104,10 @@ class DbtBaseOperator(BaseOperator):
 
         if self.do_xcom_push is True:
             # Some dbt operations use dataclasses for its results,
-            # found in dbt.contracts.results. We use dataclasses.asdict
-            # to obtain a serializable dict for XCOM.
-            if is_dataclass(res):
-                return asdict(res)
-            return res
+            # found in dbt.contracts.results. Each DbtBaseOperator
+            # subclass should implement prepare_results to return a
+            # serializable object
+            return self.serializable_result(res)
 
     def args_list(self) -> list[str]:
         """Build a list of arguments to pass to dbt"""
@@ -156,6 +158,20 @@ class DbtBaseOperator(BaseOperator):
 
         success = task.interpret_results(results)
         return results, success
+
+    def serializable_result(
+        self, result: Optional[RunExecutionResult]
+    ) -> Optional[dict[Any, Any]]:
+        """
+        Turn dbt's RunExecutionResult into a dict of only JSON-serializable types
+        Each subclas may implement this method to return a dictionary of
+        JSON-serializable types, the default XCom backend. If implementing
+        custom XCom backends, this method may be overriden.
+        """
+
+        if result is None or is_dataclass(result) is False:
+            return result
+        return asdict(result, dict_factory=run_result_factory)
 
 
 class DbtRunOperator(DbtBaseOperator):
@@ -421,3 +437,17 @@ class DbtLsOperator(DbtBaseOperator):
 
 # Convinience alias
 DbtListOperator = DbtLsOperator
+
+
+def run_result_factory(data: list[tuple[Any, Any]]):
+    """
+    We only need to handle dt.datetime as the rest of the types should already be
+    JSON-serializable.
+    """
+    d = {}
+    print(data)
+    for key, val in data:
+        if isinstance(val, dt.datetime):
+            val = val.isoformat()
+        d[key] = val
+    return d
