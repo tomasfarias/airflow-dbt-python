@@ -20,7 +20,7 @@ jobs:
       - name: install
         run: poetry install
       - name: flake8
-        run: poetry run flake8
+        run: poetry run flake8 .
       - name: mypy
         run: poetry run mypy .
       - name: black
