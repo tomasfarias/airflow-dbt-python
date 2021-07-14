@@ -1,7 +1,7 @@
 from unittest.mock import patch
 
-from dbt.contracts.results import TestStatus
 import pytest
+from dbt.contracts.results import TestStatus
 
 from airflow_dbt_python.operators.dbt import DbtTestOperator
 

@@ -1,7 +1,7 @@
 from unittest.mock import patch
 
-from airflow import AirflowException
 import pytest
+from airflow import AirflowException
 
 from airflow_dbt_python.operators.dbt import DbtBaseOperator
 

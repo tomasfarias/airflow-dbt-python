@@ -1,5 +1,5 @@
-from unittest.mock import patch
 from itertools import chain
+from unittest.mock import patch
 
 from airflow_dbt_python.operators.dbt import DbtLsOperator
 

@@ -1,9 +1,9 @@
-from unittest.mock import patch
 import json
+from unittest.mock import patch
 
+import pytest
 from airflow import AirflowException
 from dbt.contracts.results import RunStatus
-import pytest
 
 from airflow_dbt_python.operators.dbt import DbtSeedOperator
 

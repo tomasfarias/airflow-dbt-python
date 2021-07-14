@@ -1,22 +1,18 @@
 from __future__ import annotations
 
-from dataclasses import asdict, is_dataclass
 import datetime as dt
+from dataclasses import asdict, is_dataclass
 from pathlib import Path
 from tempfile import NamedTemporaryFile, TemporaryDirectory
-from typing import Optional, Union, Any
+from typing import Any, Optional, Union
 
+import dbt.flags as flags
 from airflow import AirflowException
 from airflow.models.baseoperator import BaseOperator
 from airflow.utils.decorators import apply_defaults
-from dbt.contracts.results import agate
-from dbt.contracts.results import RunExecutionResult
-from dbt.contracts.results import RunResult
-import dbt.flags as flags
-from dbt.main import initialize_config_values
-from dbt.main import parse_args
-from dbt.main import track_run
+from dbt.contracts.results import RunExecutionResult, RunResult, agate
 from dbt.logger import log_manager
+from dbt.main import initialize_config_values, parse_args, track_run
 
 
 class DbtBaseOperator(BaseOperator):
