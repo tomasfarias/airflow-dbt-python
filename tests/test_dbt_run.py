@@ -1,3 +1,4 @@
+import json
 from unittest.mock import patch
 
 from airflow import AirflowException
@@ -94,6 +95,7 @@ def test_dbt_run_mocked_with_do_xcom_push():
         res = op.execute({})
         mock.assert_called_once_with(args)
 
+    assert isinstance(json.dumps(res), str)
     assert res == []
 
 
@@ -109,6 +111,7 @@ def test_dbt_run_non_existent_model(profiles_file, dbt_project_file, model_files
 
     execution_results = op.execute({})
     assert len(execution_results["results"]) == 0
+    assert isinstance(json.dumps(execution_results), str)
 
 
 def test_dbt_run_models(profiles_file, dbt_project_file, model_files):
@@ -138,6 +141,7 @@ def test_dbt_run_models_full_refresh(profiles_file, dbt_project_file, model_file
     run_result = execution_results["results"][0]
 
     assert run_result["status"] == RunStatus.Success
+    assert isinstance(json.dumps(execution_results), str)
 
 
 BROKEN_SQL = """

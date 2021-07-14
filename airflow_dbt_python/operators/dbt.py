@@ -9,13 +9,14 @@ from typing import Optional, Union, Any
 from airflow import AirflowException
 from airflow.models.baseoperator import BaseOperator
 from airflow.utils.decorators import apply_defaults
+from dbt.contracts.results import agate
+from dbt.contracts.results import RunExecutionResult
 from dbt.contracts.results import RunResult
 import dbt.flags as flags
 from dbt.main import initialize_config_values
 from dbt.main import parse_args
 from dbt.main import track_run
 from dbt.logger import log_manager
-from dbt.contracts.results import RunExecutionResult
 
 
 class DbtBaseOperator(BaseOperator):
@@ -441,13 +442,22 @@ DbtListOperator = DbtLsOperator
 
 def run_result_factory(data: list[tuple[Any, Any]]):
     """
-    We only need to handle dt.datetime as the rest of the types should already be
-    JSON-serializable.
+    We need to handle dt.datetime and agate.table.Table.
+    The rest of the types should already be JSON-serializable.
     """
     d = {}
     print(data)
     for key, val in data:
         if isinstance(val, dt.datetime):
             val = val.isoformat()
+        elif isinstance(val, agate.table.Table):
+            # agate Tables have a few print methods but they offer plain
+            # text representations of the table which are not very JSON
+            # friendly. There is a to_json method, but I don't think
+            # sending the whole table in an XCOM is a good idea either.
+            val = {
+                k: v.__class__.__name__
+                for k, v in zip(val._column_names, val._column_types)
+            }
         d[key] = val
     return d

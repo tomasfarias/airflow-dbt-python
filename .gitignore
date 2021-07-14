@@ -6,3 +6,8 @@ build/
 dist/
 .eggs/
 .tox/
+airflow.cfg
+airflow.db
+airflow/
+logs/
+test.log

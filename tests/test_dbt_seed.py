@@ -1,4 +1,5 @@
 from unittest.mock import patch
+import json
 
 from airflow import AirflowException
 from dbt.contracts.results import RunStatus
@@ -85,6 +86,7 @@ def test_dbt_seed_non_existent_file(profiles_file, dbt_project_file, seed_files)
 
     execution_results = op.execute({})
     assert len(execution_results["results"]) == 0
+    assert isinstance(json.dumps(execution_results), str)
 
 
 def test_dbt_seed_models(profiles_file, dbt_project_file, seed_files):
@@ -99,6 +101,8 @@ def test_dbt_seed_models(profiles_file, dbt_project_file, seed_files):
     run_result = execution_results["results"][0]
 
     assert run_result["status"] == RunStatus.Success
+    assert run_result["agate_table"] == {"country_code": "Text", "country_name": "Text"}
+    assert isinstance(json.dumps(execution_results), str)
 
 
 def test_dbt_seed_models_full_refresh(profiles_file, dbt_project_file, seed_files):
@@ -113,6 +117,7 @@ def test_dbt_seed_models_full_refresh(profiles_file, dbt_project_file, seed_file
     execution_results = op.execute({})
     run_result = execution_results["results"][0]
     assert run_result["status"] == RunStatus.Success
+    assert isinstance(json.dumps(execution_results), str)
 
 
 BROKEN_CSV = """\
