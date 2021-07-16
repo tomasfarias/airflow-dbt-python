@@ -107,9 +107,9 @@ with DAG(
 
 `airflow-dbt-python` is tested in Python 3.7, 3.8, and 3.9, although it could also support older versions.
 
-On the Airflow side, we test with version 1.10.12. More testing is planned to ensure compatibility with 2.x version of Airflow. 
+On the Airflow side, we unit test with versions 1.10.12 and upwards, including the latest version 2 release. Regardless, more testing is planned to ensure compatibility with version 2 of Airflow.
 
-Finally, `airflow-dbt-python` requires the latest `dbt` version as of the time of writing: 0.19. Version 0.20 should not introduce any changes that break `airflow-dbt-python` but further testing is required.
+Finally, `airflow-dbt-python` requires at least `dbt` version 0.19. Unit tests have verified to pass with version 0.20 after minor changes that should not have major effects anywhere else. Regardless, support for version 0.20 of dbt should be considered experimental.
 
 # Installing
 
