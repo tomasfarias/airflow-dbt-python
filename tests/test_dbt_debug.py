@@ -1,6 +1,12 @@
 from unittest.mock import patch
 
+from dbt.version import __version__ as DBT_VERSION
+from packaging.version import parse
+
 from airflow_dbt_python.operators.dbt import DbtDebugOperator
+
+DBT_VERSION = parse(DBT_VERSION)
+IS_DBT_VERSION_0_20 = DBT_VERSION.minor == 20 and DBT_VERSION.major == 0
 
 
 def test_dbt_debug_mocked_all_args():
@@ -63,7 +69,11 @@ def test_dbt_debug_config_dir(profiles_file, dbt_project_file):
         do_xcom_push=True,
     )
     output = op.execute({})
-    assert output is None
+
+    if IS_DBT_VERSION_0_20:
+        assert output is True
+    else:
+        assert output is None
 
 
 def test_dbt_debug(profiles_file, dbt_project_file):
@@ -74,4 +84,8 @@ def test_dbt_debug(profiles_file, dbt_project_file):
         do_xcom_push=True,
     )
     output = op.execute({})
-    assert output is None
+
+    if IS_DBT_VERSION_0_20:
+        assert output is True
+    else:
+        assert output is None

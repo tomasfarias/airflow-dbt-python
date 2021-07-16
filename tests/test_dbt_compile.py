@@ -1,8 +1,13 @@
 from unittest.mock import patch
 
 from dbt.contracts.results import RunStatus
+from dbt.version import __version__ as DBT_VERSION
+from packaging.version import parse
 
 from airflow_dbt_python.operators.dbt import DbtCompileOperator
+
+DBT_VERSION = parse(DBT_VERSION)
+IS_DBT_VERSION_0_20 = DBT_VERSION.minor == 20 and DBT_VERSION.major == 0
 
 
 def test_dbt_compile_mocked_all_args():
@@ -106,8 +111,13 @@ SELECT
   NOW() AS field2
 """
 
-COMPILED_MODEL_4 = """
-with __dbt__CTE__model_1 as (
+if IS_DBT_VERSION_0_20:
+    cte = "cte"
+else:
+    cte = "CTE"
+
+COMPILED_MODEL_4 = f"""
+with __dbt__{cte}__model_1 as (
 SELECT
   123 AS field1,
   'abc' AS field2
@@ -116,7 +126,7 @@ SELECT
   field2 AS field2,
   SUM(CASE WHEN 'd' IN ('a', 'b', 'c') THEN 1 ELSE 0 END) AS field3
 FROM
-  __dbt__CTE__model_1
+  __dbt__{cte}__model_1
 GROUP BY
   field1, field2
 """
