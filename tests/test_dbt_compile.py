@@ -54,7 +54,7 @@ def test_dbt_compile_mocked_all_args():
         "/path/to/state/",
     ]
 
-    with patch.object(DbtCompileOperator, "run_dbt_task") as mock:
+    with patch.object(DbtCompileOperator, "run_dbt_command") as mock:
         mock.return_value = ([], True)
         op.execute({})
         mock.assert_called_once_with(args)
@@ -64,11 +64,11 @@ def test_dbt_compile_mocked_default():
     op = DbtCompileOperator(
         task_id="dbt_task",
     )
-    assert op.task == "compile"
+    assert op.command == "compile"
 
     args = ["compile"]
 
-    with patch.object(DbtCompileOperator, "run_dbt_task") as mock:
+    with patch.object(DbtCompileOperator, "run_dbt_command") as mock:
         mock.return_value = ([], True)
         op.execute({})
         mock.assert_called_once_with(args)

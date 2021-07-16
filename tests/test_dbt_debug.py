@@ -34,7 +34,7 @@ def test_dbt_debug_mocked_all_args():
         "--no-version-check",
     ]
 
-    with patch.object(DbtDebugOperator, "run_dbt_task") as mock:
+    with patch.object(DbtDebugOperator, "run_dbt_command") as mock:
         mock.return_value = ([], True)
         op.execute({})
         mock.assert_called_once_with(args)
@@ -44,11 +44,11 @@ def test_dbt_debug_mocked_default():
     op = DbtDebugOperator(
         task_id="dbt_task",
     )
-    assert op.task == "debug"
+    assert op.command == "debug"
 
     args = ["debug"]
 
-    with patch.object(DbtDebugOperator, "run_dbt_task") as mock:
+    with patch.object(DbtDebugOperator, "run_dbt_command") as mock:
         mock.return_value = ([], True)
         op.execute({})
         mock.assert_called_once_with(args)

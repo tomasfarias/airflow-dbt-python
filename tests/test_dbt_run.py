@@ -56,7 +56,7 @@ def test_dbt_run_mocked_all_args():
         "/path/to/state/",
     ]
 
-    with patch.object(DbtRunOperator, "run_dbt_task") as mock:
+    with patch.object(DbtRunOperator, "run_dbt_command") as mock:
         mock.return_value = ([], True)
         op.execute({})
         mock.assert_called_once_with(args)
@@ -68,16 +68,16 @@ def test_dbt_run_mocked_default():
         do_xcom_push=False,
     )
 
-    assert op.task == "run"
+    assert op.command == "run"
 
     args = ["run"]
 
-    with patch.object(DbtRunOperator, "run_dbt_task") as mock:
+    with patch.object(DbtRunOperator, "run_dbt_command") as mock:
         mock.return_value = ([], True)
         res = op.execute({})
         mock.assert_called_once_with(args)
 
-    assert res is None
+    assert res == []
 
 
 def test_dbt_run_mocked_with_do_xcom_push():
@@ -86,11 +86,11 @@ def test_dbt_run_mocked_with_do_xcom_push():
         do_xcom_push=True,
     )
 
-    assert op.task == "run"
+    assert op.command == "run"
 
     args = ["run"]
 
-    with patch.object(DbtRunOperator, "run_dbt_task") as mock:
+    with patch.object(DbtRunOperator, "run_dbt_command") as mock:
         mock.return_value = ([], True)
         res = op.execute({})
         mock.assert_called_once_with(args)

@@ -62,9 +62,9 @@ def test_dbt_base_mocked_raises_exception_on_dbt_failure():
         task_id="dbt_task",
     )
 
-    assert op.task is None
+    assert op.command is None
 
-    with patch.object(DbtBaseOperator, "run_dbt_task") as mock:
+    with patch.object(DbtBaseOperator, "run_dbt_command") as mock:
         mock.return_value = ([], False)
 
         with pytest.raises(AirflowException):

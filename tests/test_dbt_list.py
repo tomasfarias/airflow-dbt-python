@@ -47,7 +47,7 @@ def test_dbt_ls_mocked_all_args():
         "json",
     ]
 
-    with patch.object(DbtLsOperator, "run_dbt_task") as mock:
+    with patch.object(DbtLsOperator, "run_dbt_command") as mock:
         mock.return_value = ([], True)
         op.execute({})
         mock.assert_called_once_with(args)
@@ -57,11 +57,11 @@ def test_dbt_ls_mocked_default():
     op = DbtLsOperator(
         task_id="dbt_task",
     )
-    assert op.task == "ls"
+    assert op.command == "ls"
 
     args = ["ls"]
 
-    with patch.object(DbtLsOperator, "run_dbt_task") as mock:
+    with patch.object(DbtLsOperator, "run_dbt_command") as mock:
         mock.return_value = ([], True)
         op.execute({})
         mock.assert_called_once_with(args)

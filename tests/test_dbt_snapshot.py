@@ -49,7 +49,7 @@ def test_dbt_snapshot_mocked_all_args():
         "/path/to/state/",
     ]
 
-    with patch.object(DbtSnapshotOperator, "run_dbt_task") as mock:
+    with patch.object(DbtSnapshotOperator, "run_dbt_command") as mock:
         mock.return_value = ([], True)
         op.execute({})
         mock.assert_called_once_with(args)
@@ -59,11 +59,11 @@ def test_dbt_snapshot_mocked_default():
     op = DbtSnapshotOperator(
         task_id="dbt_task",
     )
-    assert op.task == "snapshot"
+    assert op.command == "snapshot"
 
     args = ["snapshot"]
 
-    with patch.object(DbtSnapshotOperator, "run_dbt_task") as mock:
+    with patch.object(DbtSnapshotOperator, "run_dbt_command") as mock:
         mock.return_value = ([], True)
         op.execute({})
         mock.assert_called_once_with(args)

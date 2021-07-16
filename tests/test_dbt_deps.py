@@ -32,7 +32,7 @@ def test_dbt_deps_mocked_all_args():
         "--bypass-cache",
     ]
 
-    with patch.object(DbtDepsOperator, "run_dbt_task") as mock:
+    with patch.object(DbtDepsOperator, "run_dbt_command") as mock:
         mock.return_value = ([], True)
         op.execute({})
         mock.assert_called_once_with(args)
@@ -42,11 +42,11 @@ def test_dbt_deps_mocked_default():
     op = DbtDepsOperator(
         task_id="dbt_task",
     )
-    assert op.task == "deps"
+    assert op.command == "deps"
 
     args = ["deps"]
 
-    with patch.object(DbtDepsOperator, "run_dbt_task") as mock:
+    with patch.object(DbtDepsOperator, "run_dbt_command") as mock:
         mock.return_value = ([], True)
         op.execute({})
         mock.assert_called_once_with(args)

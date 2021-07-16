@@ -54,7 +54,7 @@ def test_dbt_test_mocked_all_args():
         "--no-defer",
     ]
 
-    with patch.object(DbtTestOperator, "run_dbt_task") as mock:
+    with patch.object(DbtTestOperator, "run_dbt_command") as mock:
         mock.return_value = ([], True)
         op.execute({})
         mock.assert_called_once_with(args)
@@ -64,11 +64,11 @@ def test_dbt_test_mocked_default():
     op = DbtTestOperator(
         task_id="dbt_task",
     )
-    assert op.task == "test"
+    assert op.command == "test"
 
     args = ["test"]
 
-    with patch.object(DbtTestOperator, "run_dbt_task") as mock:
+    with patch.object(DbtTestOperator, "run_dbt_command") as mock:
         mock.return_value = ([], True)
         op.execute({})
         mock.assert_called_once_with(args)
