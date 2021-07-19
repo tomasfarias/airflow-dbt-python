@@ -446,7 +446,6 @@ def run_result_factory(data: list[tuple[Any, Any]]):
     The rest of the types should already be JSON-serializable.
     """
     d = {}
-    print(data)
     for key, val in data:
         if isinstance(val, dt.datetime):
             val = val.isoformat()
