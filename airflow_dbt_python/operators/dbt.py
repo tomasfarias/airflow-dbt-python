@@ -53,6 +53,7 @@ class DbtBaseOperator(BaseOperator):
     @apply_defaults
     def __init__(
         self,
+        positional_args: Optional[list[str]] = None,
         project_dir: Optional[Union[str, Path]] = None,
         profiles_dir: Optional[Union[str, Path]] = None,
         profile: Optional[str] = None,
@@ -63,6 +64,7 @@ class DbtBaseOperator(BaseOperator):
         **kwargs,
     ) -> None:
         super().__init__(**kwargs)
+        self.positional_args = positional_args
         self.project_dir = project_dir
         self.profiles_dir = profiles_dir
         self.profile = profile
@@ -77,6 +79,9 @@ class DbtBaseOperator(BaseOperator):
             raise AirflowException("dbt command is not defined")
 
         args: list[Optional[str]] = [self.command]
+
+        if self.positional_args is not None:
+            args.extend(self.positional_args)
         args.extend(self.args_list())
 
         self.log.info("Running dbt %s with args %s", args[0], args[1:])
@@ -134,7 +139,7 @@ class DbtBaseOperator(BaseOperator):
             elif isinstance(value, dict):
                 yaml_str = (
                     "{"
-                    + ",".join("{}: {}".format(k, v) for k, v in value.items())
+                    + ", ".join("{}: {}".format(k, v) for k, v in value.items())
                     + "}"
                 )
                 args.append(yaml_str)
@@ -438,6 +443,25 @@ class DbtLsOperator(DbtBaseOperator):
 
 # Convinience alias
 DbtListOperator = DbtLsOperator
+
+
+class DbtRunOperationOperator(DbtBaseOperator):
+    """Execute dbt run-operation"""
+
+    command = "run-operation"
+
+    __dbt_args__ = DbtBaseOperator.__dbt_args__ + [
+        "args",
+    ]
+
+    def __init__(
+        self,
+        macro: str,
+        args: Optional[dict[str, str]] = None,
+        **kwargs,
+    ) -> None:
+        super().__init__(positional_args=[macro], **kwargs)
+        self.args = args
 
 
 def run_result_factory(data: list[tuple[Any, Any]]):
