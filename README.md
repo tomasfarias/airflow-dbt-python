@@ -53,6 +53,7 @@ Currently, the following `dbt` commands are supported:
 * `deps`
 * `ls`
 * `run`
+* `run-operation`
 * `seed`
 * `snapshot`
 * `test`
