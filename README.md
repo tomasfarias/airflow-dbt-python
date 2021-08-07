@@ -52,10 +52,12 @@ Currently, the following `dbt` commands are supported:
 * `debug`
 * `deps`
 * `ls`
+* `parse`
 * `run`
 * `run-operation`
 * `seed`
 * `snapshot`
+* `source` (Not well tested)
 * `test`
 
 ## Examples

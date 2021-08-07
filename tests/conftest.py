@@ -72,7 +72,6 @@ SELECT
 {% endif %}
 """
 
-
 MODEL_4 = """
 {{ config(
     materialized="view",
@@ -91,6 +90,20 @@ GROUP BY
 
 MODELS = [MODEL_1, MODEL_2, MODEL_3, MODEL_4]
 
+SOURCES = """\
+version: 2
+
+sources:
+  - name: a_source
+    schema: public
+    tables:
+      - name: my_source_1
+
+  - name: another_source
+    schema: public
+    tables:
+      - name: my_source_2
+"""
 
 SEED_1 = """\
 country_code,country_name
@@ -125,6 +138,15 @@ def database(postgresql_proc):
         postgresql_proc.password,
     )
     janitor.init()
+
+    with janitor.cursor() as cur:
+        cur.execute(
+            """\
+        CREATE TABLE my_source_1 (id serial PRIMARY KEY, num integer);
+        CREATE TABLE my_source_2 (id serial PRIMARY KEY, num integer);
+        """
+        )
+
     yield postgresql_proc
     janitor.drop()
 
@@ -167,6 +189,13 @@ def model_files(dbt_project_dir):
         m.write_text(model)
         paths.append(m)
     return paths
+
+
+@pytest.fixture(scope="session")
+def sources_file(model_files, database):
+    m = model_files[0].parent / "my_sources.yml"
+    m.write_text(SOURCES)
+    return m
 
 
 @pytest.fixture(scope="session")

@@ -464,6 +464,52 @@ class DbtRunOperationOperator(DbtBaseOperator):
         self.args = args
 
 
+class DbtParseOperator(DbtBaseOperator):
+    """Execute dbt parse"""
+
+    command = "parse"
+
+    def __init__(
+        self,
+        **kwargs,
+    ) -> None:
+        super().__init__(**kwargs)
+
+
+class DbtSourceOperator(DbtBaseOperator):
+    """Execute dbt source"""
+
+    command = "source"
+
+    __dbt_args__ = DbtBaseOperator.__dbt_args__ + [
+        "select",
+        "models",
+        "exclude",
+        "selector",
+        "dbt_output",
+    ]
+
+    def __init__(
+        self,
+        # Only one subcommand is currently provided
+        subcommand: str = "snapshot-freshness",
+        select: Optional[list[str]] = None,
+        dbt_output: Optional[Union[str, Path]] = None,
+        threads: Optional[int] = None,
+        exclude: Optional[list[str]] = None,
+        selector: Optional[str] = None,
+        state: Optional[Union[str, Path]] = None,
+        **kwargs,
+    ) -> None:
+        super().__init__(positional_args=[subcommand], **kwargs)
+        self.select = select
+        self.dbt_output = dbt_output
+        self.threads = threads
+        self.exclude = exclude
+        self.selector = selector
+        self.state = state
+
+
 def run_result_factory(data: list[tuple[Any, Any]]):
     """
     We need to handle dt.datetime and agate.table.Table.
