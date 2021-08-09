@@ -69,3 +69,44 @@ def test_dbt_base_mocked_raises_exception_on_dbt_failure():
 
         with pytest.raises(AirflowException):
             op.execute({})
+
+
+def test_prepare_args_raises_exception():
+    op = DbtBaseOperator(
+        task_id="dbt_task",
+        project_dir="/home/airflow/project",
+    )
+    with pytest.raises(AirflowException):
+        op.prepare_args()
+
+
+def test_prepare_args():
+    op = DbtBaseOperator(
+        task_id="dbt_task",
+        project_dir="/home/airflow/project",
+    )
+    op.command = "run"
+    args = op.prepare_args()
+    expected = [
+        "run",
+        "--project-dir",
+        "/home/airflow/project",
+    ]
+    assert args == expected
+
+
+def test_prepare_args_with_positional():
+    op = DbtBaseOperator(
+        task_id="dbt_task",
+        project_dir="/home/airflow/project",
+        positional_args=["my_macro"],
+    )
+    op.command = "run-operation"
+    args = op.prepare_args()
+    expected = [
+        "run-operation",
+        "my_macro",
+        "--project-dir",
+        "/home/airflow/project",
+    ]
+    assert args == expected

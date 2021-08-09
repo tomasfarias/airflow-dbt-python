@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import datetime as dt
+from contextlib import contextmanager
 from dataclasses import asdict, is_dataclass
 from pathlib import Path
 from tempfile import NamedTemporaryFile, TemporaryDirectory
@@ -75,32 +76,11 @@ class DbtBaseOperator(BaseOperator):
 
     def execute(self, context: dict):
         """Execute dbt command with prepared arguments"""
-        if self.command is None:
-            raise AirflowException("dbt command is not defined")
-
-        args: list[Optional[str]] = [self.command]
-
-        if self.positional_args is not None:
-            args.extend(self.positional_args)
-        args.extend(self.args_list())
-
+        args = self.prepare_args()
         self.log.info("Running dbt %s with args %s", args[0], args[1:])
 
-        with TemporaryDirectory(prefix="airflowtmp") as tmp_dir:
-            with NamedTemporaryFile(dir=tmp_dir, mode="w+") as f:
-                with log_manager.applicationbound():
-                    log_manager.reset_handlers()
-                    log_manager.set_path(tmp_dir)
-                    # dbt logger writes to STDOUT and I haven't found a way
-                    # to bubble up to the Airflow command logger. As a workaround,
-                    # I set the output stream to a temporary file that is later
-                    # read and logged using the command's logger.
-                    log_manager.set_output_stream(f)
-                    res, success = self.run_dbt_command(args)
-
-                with open(f.name) as read_file:
-                    for line in read_file:
-                        self.log.info(line.rstrip())
+        with self.override_dbt_logging():
+            res, success = self.run_dbt_command(args)
 
         if self.do_xcom_push is True:
             # Some dbt operations use dataclasses for its results,
@@ -114,6 +94,40 @@ class DbtBaseOperator(BaseOperator):
                 self.xcom_push(context, key=XCOM_RETURN_KEY, value=res)
             raise AirflowException(f"dbt {args[0]} {args[1:]} failed")
         return res
+
+    @contextmanager
+    def override_dbt_logging(self):
+        with TemporaryDirectory(prefix="airflowtmp") as tmp_dir:
+            with NamedTemporaryFile(dir=tmp_dir, mode="w+") as f:
+                with log_manager.applicationbound():
+                    log_manager.reset_handlers()
+                    log_manager.set_path(tmp_dir)
+                    # dbt logger writes to STDOUT and I haven't found a way
+                    # to bubble up to the Airflow command logger. As a workaround,
+                    # I set the output stream to a temporary file that is later
+                    # read and logged using the command's logger.
+                    log_manager.set_output_stream(f)
+                    yield
+
+                with open(f.name) as read_file:
+                    for line in read_file:
+                        self.log.info(line.rstrip())
+
+    def prepare_args(self) -> list[Optional[str]]:
+        """Prepare the arguments needed to call dbt"""
+        if self.command is None:
+            raise AirflowException(
+                "dbt command is not defined; each subclass of DbtBaseOperator"
+                "should set a command attribute"
+            )
+
+        args: list[Optional[str]] = [self.command]
+
+        if self.positional_args is not None:
+            args.extend(self.positional_args)
+        args.extend(self.args_list())
+
+        return args
 
     def args_list(self) -> list[str]:
         """Build a list of arguments to pass to dbt"""
