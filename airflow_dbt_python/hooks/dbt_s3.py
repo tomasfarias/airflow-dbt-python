@@ -66,8 +66,7 @@ class DbtS3Hook(S3Hook):
             path_file = Path(s3_object_key).relative_to(f"{key_prefix}")
             local_project_file = local_project_dir / path_file
 
-            if not local_project_file.parent.exists():
-                local_project_file.parent.mkdir()
+            local_project_file.parent.mkdir(parents=True, exist_ok=True)
 
             with open(local_project_file, "wb+") as f:
                 s3_object.download_fileobj(f)
