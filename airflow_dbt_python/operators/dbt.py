@@ -43,6 +43,12 @@ class DbtBaseOperator(BaseOperator):
         serializable_result: Turns a dbt result into a serializable object.
     """
 
+    template_fields = [
+        "project_dir",
+        "profiles_dir",
+        "profile",
+        "target",
+    ]
     command: Optional[str] = None
     __dbt_args__ = [
         "project_dir",
