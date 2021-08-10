@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import datetime as dt
+import json
 from contextlib import contextmanager
 from dataclasses import asdict, is_dataclass
 from pathlib import Path
@@ -65,6 +66,7 @@ class DbtBaseOperator(BaseOperator):
         log_cache_events: Optional[bool] = False,
         bypass_cache: Optional[bool] = False,
         s3_conn_id: str = "aws_default",
+        do_xcom_push_artifacts: Optional[list[str]] = None,
         **kwargs,
     ) -> None:
         super().__init__(**kwargs)
@@ -77,6 +79,7 @@ class DbtBaseOperator(BaseOperator):
         self.log_cache_events = log_cache_events
         self.bypass_cache = bypass_cache
         self.s3_conn_id = s3_conn_id
+        self.do_xcom_push_artifacts = do_xcom_push_artifacts
         self._dbt_s3_hook = None
 
     def execute(self, context: dict):
@@ -88,18 +91,34 @@ class DbtBaseOperator(BaseOperator):
 
                 res, success = self.run_dbt_command(args)
 
-        if self.do_xcom_push is True:
-            # Some dbt operations use dataclasses for its results,
-            # found in dbt.contracts.results. Each DbtBaseOperator
-            # subclass should implement prepare_results to return a
-            # serializable object
-            res = self.serializable_result(res)
+                if self.do_xcom_push is True:
+                    # Some dbt operations use dataclasses for its results,
+                    # found in dbt.contracts.results. Each DbtBaseOperator
+                    # subclass should implement prepare_results to return a
+                    # serializable object
+                    res = self.serializable_result(res)
+                    if context.get("ti", None) is not None:
+                        self.xcom_push_artifacts(context, dbt_dir)
 
         if success is not True:
             if self.do_xcom_push is True and context.get("ti", None) is not None:
                 self.xcom_push(context, key=XCOM_RETURN_KEY, value=res)
             raise AirflowException(f"dbt {args[0]} {args[1:]} failed")
         return res
+
+    def xcom_push_artifacts(self, context: dict, dbt_directory: str):
+        if self.do_xcom_push_artifacts is None:
+            # Nothing to xcom_push. Need this for mypy.
+            return
+
+        target_dir = Path(dbt_directory) / "target"
+
+        for artifact in self.do_xcom_push_artifacts:
+            artifact_path = target_dir / artifact
+
+            with open(artifact_path) as f:
+                json_dict = json.load(f)
+            self.xcom_push(context, key=artifact, value=json_dict)
 
     def prepare_args(self) -> list[Optional[str]]:
         """Prepare the arguments needed to call dbt"""
