@@ -181,7 +181,7 @@ class DbtBaseOperator(BaseOperator):
 
         with TemporaryDirectory(prefix="airflowtmp") as tmp_dir:
             if urlparse(str(self.profiles_dir)).scheme == "s3":
-                self.log.info("Fetching profiles.yml from S3")
+                self.log.info("Fetching profiles.yml from S3: %s", self.profiles_dir)
                 profiles_file_path = self.dbt_s3_hook.get_dbt_profiles(
                     self.profiles_dir,
                     tmp_dir,
@@ -189,7 +189,7 @@ class DbtBaseOperator(BaseOperator):
                 self.profiles_dir = str(profiles_file_path.parent) + "/"
 
             if urlparse(str(self.project_dir)).scheme == "s3":
-                self.log.info("Fetching dbt project from S3")
+                self.log.info("Fetching dbt project from S3: %s", self.project_dir)
                 project_dir_path = self.dbt_s3_hook.get_dbt_project(
                     self.project_dir,
                     tmp_dir,
