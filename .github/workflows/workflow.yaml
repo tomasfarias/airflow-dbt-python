@@ -18,13 +18,15 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - uses: abatilo/actions-poetry@v2.1.0
       - name: install
-        run: poetry install
+        run: poetry install -E amazon
       - name: flake8
         run: poetry run flake8 .
       - name: mypy
         run: poetry run mypy .
       - name: black
         run: poetry run black --check .
+      - name: init airflow db
+        run: poetry run airflow db init
       - name: test
         run: poetry run pytest -v tests/
 

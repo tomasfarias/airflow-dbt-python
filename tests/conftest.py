@@ -1,5 +1,7 @@
+import boto3
 import pytest
 from dbt.version import __version__ as DBT_VERSION
+from moto import mock_s3
 from packaging.version import parse
 from pytest_postgresql.janitor import DatabaseJanitor
 
@@ -213,3 +215,16 @@ def seed_files(dbt_project_dir):
 def compile_dir(dbt_project_file):
     d = dbt_project_file.parent
     return d / "target" / "compiled" / "test" / "models"
+
+
+@pytest.fixture
+def mocked_s3_res():
+    with mock_s3():
+        yield boto3.resource("s3")
+
+
+@pytest.fixture
+def s3_bucket(mocked_s3_res):
+    bucket = "airflow-dbt-test-s3-bucket"
+    mocked_s3_res.create_bucket(Bucket=bucket)
+    return bucket

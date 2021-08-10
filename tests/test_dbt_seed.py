@@ -2,10 +2,19 @@ import json
 from unittest.mock import patch
 
 import pytest
-from airflow import AirflowException
 from dbt.contracts.results import RunStatus
 
+from airflow import AirflowException
 from airflow_dbt_python.operators.dbt import DbtSeedOperator
+
+condition = False
+try:
+    from airflow_dbt_python.hooks.dbt_s3 import DbtS3Hook
+except ImportError:
+    condition = True
+no_s3_hook = pytest.mark.skipif(
+    condition, reason="S3Hook not available, consider installing amazon extras"
+)
 
 
 def test_dbt_seed_mocked_all_args():
@@ -148,3 +157,91 @@ def test_dbt_seed_fails_with_malformed_csv(
 
     with pytest.raises(AirflowException):
         op.execute({})
+
+
+@no_s3_hook
+def test_dbt_seed_from_s3(s3_bucket, profiles_file, dbt_project_file, seed_files):
+    hook = DbtS3Hook()
+    bucket = hook.get_bucket(s3_bucket)
+
+    with open(dbt_project_file) as pf:
+        project_content = pf.read()
+    bucket.put_object(Key="project/dbt_project.yml", Body=project_content.encode())
+
+    with open(profiles_file) as pf:
+        profiles_content = pf.read()
+    bucket.put_object(Key="project/profiles.yml", Body=profiles_content.encode())
+
+    for seed_file in seed_files:
+        with open(seed_file) as sf:
+            seed_content = sf.read()
+            bucket.put_object(
+                Key=f"project/data/{seed_file.name}", Body=seed_content.encode()
+            )
+
+    op = DbtSeedOperator(
+        task_id="dbt_task",
+        project_dir=f"s3://{s3_bucket}/project/",
+        profiles_dir=f"s3://{s3_bucket}/project/",
+        select=[str(m.stem) for m in seed_files],
+        do_xcom_push=True,
+    )
+    execution_results = op.execute({})
+    run_result = execution_results["results"][0]
+
+    assert run_result["status"] == RunStatus.Success
+
+
+@no_s3_hook
+def test_dbt_seed_with_profile_from_s3(
+    s3_bucket, profiles_file, dbt_project_file, seed_files
+):
+    hook = DbtS3Hook()
+    bucket = hook.get_bucket(s3_bucket)
+
+    with open(profiles_file) as pf:
+        profiles_content = pf.read()
+    bucket.put_object(Key="project/profiles.yml", Body=profiles_content.encode())
+
+    op = DbtSeedOperator(
+        task_id="dbt_task",
+        project_dir=dbt_project_file.parent,
+        profiles_dir=f"s3://{s3_bucket}/project/",
+        select=[str(m.stem) for m in seed_files],
+        do_xcom_push=True,
+    )
+    execution_results = op.execute({})
+    run_result = execution_results["results"][0]
+
+    assert run_result["status"] == RunStatus.Success
+
+
+@no_s3_hook
+def test_dbt_seed_with_project_from_s3(
+    s3_bucket, profiles_file, dbt_project_file, seed_files
+):
+    hook = DbtS3Hook()
+    bucket = hook.get_bucket(s3_bucket)
+
+    with open(dbt_project_file) as pf:
+        project_content = pf.read()
+    bucket.put_object(Key="project/dbt_project.yml", Body=project_content.encode())
+
+    for seed_file in seed_files:
+        with open(seed_file) as sf:
+            seed_content = sf.read()
+            bucket.put_object(
+                Key=f"project/data/{seed_file.name}", Body=seed_content.encode()
+            )
+
+    op = DbtSeedOperator(
+        task_id="dbt_task",
+        project_dir=f"s3://{s3_bucket}/project/",
+        profiles_dir=profiles_file.parent,
+        select=[str(m.stem) for m in seed_files],
+        do_xcom_push=True,
+    )
+    execution_results = op.execute({})
+    run_result = execution_results["results"][0]
+
+    assert run_result["status"] == RunStatus.Success

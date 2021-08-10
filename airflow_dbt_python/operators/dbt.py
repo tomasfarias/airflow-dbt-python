@@ -5,16 +5,18 @@ from contextlib import contextmanager
 from dataclasses import asdict, is_dataclass
 from pathlib import Path
 from tempfile import NamedTemporaryFile, TemporaryDirectory
-from typing import Any, Optional, Union
+from typing import Any, Iterator, Optional, Union
+from urllib.parse import urlparse
 
 import dbt.flags as flags
+from dbt.contracts.results import RunExecutionResult, RunResult, agate
+from dbt.logger import log_manager
+from dbt.main import initialize_config_values, parse_args, track_run
+
 from airflow import AirflowException
 from airflow.models.baseoperator import BaseOperator
 from airflow.models.xcom import XCOM_RETURN_KEY
 from airflow.utils.decorators import apply_defaults
-from dbt.contracts.results import RunExecutionResult, RunResult, agate
-from dbt.logger import log_manager
-from dbt.main import initialize_config_values, parse_args, track_run
 
 
 class DbtBaseOperator(BaseOperator):
@@ -62,6 +64,7 @@ class DbtBaseOperator(BaseOperator):
         vars: Optional[dict[str, str]] = None,
         log_cache_events: Optional[bool] = False,
         bypass_cache: Optional[bool] = False,
+        s3_conn_id: str = "aws_default",
         **kwargs,
     ) -> None:
         super().__init__(**kwargs)
@@ -73,14 +76,17 @@ class DbtBaseOperator(BaseOperator):
         self.vars = vars
         self.log_cache_events = log_cache_events
         self.bypass_cache = bypass_cache
+        self.s3_conn_id = s3_conn_id
+        self._dbt_s3_hook = None
 
     def execute(self, context: dict):
         """Execute dbt command with prepared arguments"""
-        args = self.prepare_args()
-        self.log.info("Running dbt %s with args %s", args[0], args[1:])
+        with self.dbt_directory() as dbt_dir:  # type: str
+            with self.override_dbt_logging(dbt_dir):
+                args = self.prepare_args()
+                self.log.info("Running dbt %s with args %s", args[0], args[1:])
 
-        with self.override_dbt_logging():
-            res, success = self.run_dbt_command(args)
+                res, success = self.run_dbt_command(args)
 
         if self.do_xcom_push is True:
             # Some dbt operations use dataclasses for its results,
@@ -94,24 +100,6 @@ class DbtBaseOperator(BaseOperator):
                 self.xcom_push(context, key=XCOM_RETURN_KEY, value=res)
             raise AirflowException(f"dbt {args[0]} {args[1:]} failed")
         return res
-
-    @contextmanager
-    def override_dbt_logging(self):
-        with TemporaryDirectory(prefix="airflowtmp") as tmp_dir:
-            with NamedTemporaryFile(dir=tmp_dir, mode="w+") as f:
-                with log_manager.applicationbound():
-                    log_manager.reset_handlers()
-                    log_manager.set_path(tmp_dir)
-                    # dbt logger writes to STDOUT and I haven't found a way
-                    # to bubble up to the Airflow command logger. As a workaround,
-                    # I set the output stream to a temporary file that is later
-                    # read and logged using the command's logger.
-                    log_manager.set_output_stream(f)
-                    yield
-
-                with open(f.name) as read_file:
-                    for line in read_file:
-                        self.log.info(line.rstrip())
 
     def prepare_args(self) -> list[Optional[str]]:
         """Prepare the arguments needed to call dbt"""
@@ -159,6 +147,70 @@ class DbtBaseOperator(BaseOperator):
                 args.append(yaml_str)
 
         return args
+
+    @contextmanager
+    def dbt_directory(self) -> Iterator[str]:
+        """
+        Creates a temporary directory for dbt to run in and prepares the dbt files
+        if they need to be pulled from S3.
+
+        Yields:
+        The temporary directory's name.
+        """
+        store_profiles_dir = self.profiles_dir
+        store_project_dir = self.project_dir
+
+        with TemporaryDirectory(prefix="airflowtmp") as tmp_dir:
+            if urlparse(str(self.profiles_dir)).scheme == "s3":
+                self.log.info("Fetching profiles.yml from S3")
+                profiles_file_path = self.dbt_s3_hook.get_dbt_profiles(
+                    self.profiles_dir,
+                    tmp_dir,
+                )
+                self.profiles_dir = str(profiles_file_path.parent) + "/"
+
+            if urlparse(str(self.project_dir)).scheme == "s3":
+                self.log.info("Fetching dbt project from S3")
+                project_dir_path = self.dbt_s3_hook.get_dbt_project(
+                    self.project_dir,
+                    tmp_dir,
+                )
+                self.project_dir = str(project_dir_path) + "/"
+
+            yield tmp_dir
+
+        self.profiles_dir = store_profiles_dir
+        self.project_dir = store_project_dir
+
+    @property
+    def dbt_s3_hook(self):
+        """Provides an existing DbtS3Hook or creates one"""
+        if self._dbt_s3_hook is None:
+            from airflow_dbt_python.hooks.dbt_s3 import DbtS3Hook
+
+            self._dbt_s3_hook = DbtS3Hook(self.s3_conn_id)
+        return self._dbt_s3_hook
+
+    @contextmanager
+    def override_dbt_logging(self, dbt_directory: str = None):
+        """
+        dbt logger writes to STDOUT and I haven't found a way
+        to bubble up to the Airflow command logger. As a workaround,
+        I set the output stream to a temporary file that is later
+        read and logged using the command's logger.
+        """
+        with NamedTemporaryFile(dir=dbt_directory, mode="w+") as f:
+            with log_manager.applicationbound():
+
+                log_manager.reset_handlers()
+                log_manager.set_path(dbt_directory)
+                log_manager.set_output_stream(f)
+
+                yield
+
+            with open(f.name) as read_file:
+                for line in read_file:
+                    self.log.info(line.rstrip())
 
     def run_dbt_command(self, args: list[Optional[str]]) -> tuple[RunResult, bool]:
         """Run a dbt command as implemented by a subclass"""
