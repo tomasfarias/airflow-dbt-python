@@ -1,6 +1,5 @@
 from pathlib import Path
 from typing import Optional
-from urllib.parse import urljoin
 
 from airflow.hooks.S3_hook import S3Hook
 
@@ -22,8 +21,10 @@ class DbtS3Hook(S3Hook):
         A Path to the local directory containing the dbt project files
         """
         bucket_name, key_prefix = self.parse_s3_url(s3_profiles_url)
+        # Airflow 1.X does .strip("/") on key_prefix, whereas Airflow 2.X
+        # does only .lstrip("/"). Path accounts for both.
         s3_object = self.get_key(
-            key=urljoin(key_prefix, "profiles.yml"), bucket_name=bucket_name
+            key=str(Path(key_prefix) / "profiles.yml"), bucket_name=bucket_name
         )
 
         if profiles_dir is None:
@@ -51,6 +52,8 @@ class DbtS3Hook(S3Hook):
         A Path to the local directory containing the dbt project files
         """
         bucket_name, key_prefix = self.parse_s3_url(s3_project_url)
+        if not key_prefix.endswith("/"):
+            key_prefix += "/"
         s3_object_keys = self.list_keys(bucket_name=bucket_name, prefix=f"{key_prefix}")
 
         if project_dir is None:
