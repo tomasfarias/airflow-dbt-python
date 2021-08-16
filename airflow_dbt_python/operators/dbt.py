@@ -113,6 +113,14 @@ class DbtBaseOperator(BaseOperator):
         return res
 
     def xcom_push_artifacts(self, context: dict, dbt_directory: str):
+        """
+        Read dbt artifacts from dbt_directory/target/ and push them to XCom
+
+        Arguments:
+        context: The Airflow task's context.
+        dbt_directory: A directory containing a dbt project. Artifacts will be
+            assumed to be in dbt_directory/target/.
+        """
         if self.do_xcom_push_artifacts is None:
             # Nothing to xcom_push. Need this for mypy.
             return

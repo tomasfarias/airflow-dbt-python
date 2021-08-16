@@ -5,6 +5,15 @@ from dbt.contracts.results import TestStatus
 
 from airflow_dbt_python.operators.dbt import DbtTestOperator
 
+condition = False
+try:
+    from airflow_dbt_python.hooks.dbt_s3 import DbtS3Hook
+except ImportError:
+    condition = True
+no_s3_hook = pytest.mark.skipif(
+    condition, reason="S3Hook not available, consider installing amazon extras"
+)
+
 
 def test_dbt_test_mocked_all_args():
     op = DbtTestOperator(
@@ -179,5 +188,87 @@ def test_dbt_test_data_and_schema_tests(
     assert results["args"]["data"] is False
     assert results["args"]["schema"] is False
     assert len(results["results"]) == 7
+    for test_result in results["results"]:
+        assert test_result["status"] == TestStatus.Pass
+
+
+@no_s3_hook
+def test_dbt_test_from_s3(s3_bucket, profiles_file, dbt_project_file, data_tests_files):
+    hook = DbtS3Hook()
+    bucket = hook.get_bucket(s3_bucket)
+
+    with open(dbt_project_file) as pf:
+        project_content = pf.read()
+    bucket.put_object(Key="project/dbt_project.yml", Body=project_content.encode())
+
+    with open(profiles_file) as pf:
+        profiles_content = pf.read()
+    bucket.put_object(Key="project/profiles.yml", Body=profiles_content.encode())
+
+    for test_file in data_tests_files:
+        with open(test_file) as tf:
+            test_content = tf.read()
+            bucket.put_object(
+                Key=f"project/tests/{test_file.name}", Body=test_content.encode()
+            )
+
+    op = DbtTestOperator(
+        task_id="dbt_task",
+        project_dir=f"s3://{s3_bucket}/project/",
+        profiles_dir=f"s3://{s3_bucket}/project/",
+        do_xcom_push=True,
+    )
+    results = op.execute({})
+    for test_result in results["results"]:
+        assert test_result["status"] == TestStatus.Pass
+
+
+@no_s3_hook
+def test_dbt_tests_with_profile_from_s3(
+    s3_bucket, profiles_file, dbt_project_file, data_tests_files
+):
+    hook = DbtS3Hook()
+    bucket = hook.get_bucket(s3_bucket)
+
+    with open(profiles_file) as pf:
+        profiles_content = pf.read()
+    bucket.put_object(Key="project/profiles.yml", Body=profiles_content.encode())
+
+    op = DbtTestOperator(
+        task_id="dbt_task",
+        project_dir=dbt_project_file.parent,
+        profiles_dir=f"s3://{s3_bucket}/project/",
+        do_xcom_push=True,
+    )
+    results = op.execute({})
+    for test_result in results["results"]:
+        assert test_result["status"] == TestStatus.Pass
+
+
+@no_s3_hook
+def test_dbt_test_with_project_from_s3(
+    s3_bucket, profiles_file, dbt_project_file, data_tests_files
+):
+    hook = DbtS3Hook()
+    bucket = hook.get_bucket(s3_bucket)
+
+    with open(dbt_project_file) as pf:
+        project_content = pf.read()
+    bucket.put_object(Key="project/dbt_project.yml", Body=project_content.encode())
+
+    for test_file in data_tests_files:
+        with open(test_file) as tf:
+            test_content = tf.read()
+            bucket.put_object(
+                Key=f"project/tests/{test_file.name}", Body=test_content.encode()
+            )
+
+    op = DbtTestOperator(
+        task_id="dbt_task",
+        project_dir=f"s3://{s3_bucket}/project/",
+        profiles_dir=profiles_file.parent,
+        do_xcom_push=True,
+    )
+    results = op.execute({})
     for test_result in results["results"]:
         assert test_result["status"] == TestStatus.Pass

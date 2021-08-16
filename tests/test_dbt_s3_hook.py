@@ -10,6 +10,7 @@ except ImportError:
 
 
 def test_get_dbt_profiles(s3_bucket, tmpdir, profiles_file):
+    """Test pulling dbt profile from S3 path"""
     hook = DbtS3Hook()
     bucket = hook.get_bucket(s3_bucket)
 
@@ -52,6 +53,9 @@ def test_get_dbt_profiles_sub_dir(s3_bucket, tmpdir, profiles_file):
 
 
 def test_get_dbt_profiles_sub_dir_trailing_slash(s3_bucket, tmpdir, profiles_file):
+    """
+    Test whether an S3 path without a trailing slash successfully pulls a dbt project
+    """
     hook = DbtS3Hook()
     bucket = hook.get_bucket(s3_bucket)
 
@@ -74,6 +78,7 @@ def test_get_dbt_profiles_sub_dir_trailing_slash(s3_bucket, tmpdir, profiles_fil
 
 
 def test_get_dbt_project(s3_bucket, tmpdir, dbt_project_file):
+    """Test pulling dbt project from S3 path"""
     hook = DbtS3Hook()
     bucket = hook.get_bucket(s3_bucket)
 
@@ -116,6 +121,9 @@ def test_get_dbt_project(s3_bucket, tmpdir, dbt_project_file):
 
 
 def test_get_dbt_project_no_trailing_slash(s3_bucket, tmpdir, dbt_project_file):
+    """
+    Test whether an S3 path without a trailing slash successfully pulls a dbt project
+    """
     hook = DbtS3Hook()
     bucket = hook.get_bucket(s3_bucket)
 
