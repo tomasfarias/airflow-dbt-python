@@ -35,6 +35,8 @@ class DbtBaseOperator(BaseOperator):
     variables defined in dbt_profile.yml.
         log_cache_events: Flag to enable logging of cache events.
         bypass_cache: Flag to bypass the adapter-level cache of database state.
+        s3_conn_id: An s3 Airflow connection ID to use when pulling dbt files from s3.
+        do_xcom_push_artifacts: A list of dbt artifacts to XCom push.
 
         Methods:
         execute: Executes a given dbt command.
