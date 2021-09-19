@@ -20,6 +20,7 @@ class DbtS3Hook(S3Hook):
         Returns:
         A Path to the local directory containing the dbt project files
         """
+        self.log.info("Downloading dbt profiles file from: %s", s3_profiles_url)
         bucket_name, key_prefix = self.parse_s3_url(s3_profiles_url)
         # Airflow 1.X does .strip("/") on key_prefix, whereas Airflow 2.X
         # does only .lstrip("/"). Path accounts for both.
@@ -32,6 +33,7 @@ class DbtS3Hook(S3Hook):
         else:
             local_profiles_file = Path(profiles_dir) / "profiles.yml"
 
+        self.log.info("Saving profiles file to: %s", local_profiles_file)
         with open(local_profiles_file, "wb+") as f:
             s3_object.download_fileobj(f)
         return local_profiles_file
@@ -51,6 +53,7 @@ class DbtS3Hook(S3Hook):
         Returns:
         A Path to the local directory containing the dbt project files
         """
+        self.log.info("Downloading dbt project file from: %s", s3_project_url)
         bucket_name, key_prefix = self.parse_s3_url(s3_project_url)
         if not key_prefix.endswith("/"):
             key_prefix += "/"
@@ -66,6 +69,8 @@ class DbtS3Hook(S3Hook):
             path_file = Path(s3_object_key).relative_to(f"{key_prefix}")
             local_project_file = local_project_dir / path_file
             local_project_file.parent.mkdir(parents=True, exist_ok=True)
+
+            self.log.info("Saving %s to: %s", s3_object_key, local_project_file)
 
             with open(local_project_file, "wb+") as f:
                 s3_object.download_fileobj(f)
