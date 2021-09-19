@@ -1,9 +1,8 @@
 from unittest.mock import patch
 
 import pytest
-from airflow import AirflowException
-from dbt.exceptions import CompilationException
 
+from airflow import AirflowException
 from airflow_dbt_python.operators.dbt import DbtRunOperationOperator
 
 
@@ -153,7 +152,7 @@ def test_dbt_run_operation_fails_with_malformed_macro(
         macro=str(broken_macro.stem),
     )
 
-    with pytest.raises(CompilationException):
+    with pytest.raises(AirflowException):
         op.execute({})
 
 

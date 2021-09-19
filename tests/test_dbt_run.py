@@ -3,7 +3,6 @@ from unittest.mock import patch
 
 import pytest
 from dbt.contracts.results import RunStatus
-from dbt.exceptions import RuntimeException
 
 from airflow import AirflowException
 from airflow_dbt_python.operators.dbt import DbtRunOperator
@@ -192,7 +191,7 @@ def test_dbt_run_fails_with_non_existent_project(profiles_file, dbt_project_file
         full_refresh=True,
     )
 
-    with pytest.raises(RuntimeException):
+    with pytest.raises(AirflowException):
         op.execute({})
 
 

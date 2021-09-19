@@ -97,7 +97,11 @@ class DbtBaseOperator(BaseOperator):
                 args = self.prepare_args()
                 self.log.info("Running dbt %s with args %s", args[0], args[1:])
 
-                res, success = self.run_dbt_command(args)
+                try:
+                    res, success = self.run_dbt_command(args)
+                except Exception as e:
+                    self.log.exception("There was an error executing dbt", exc_info=e)
+                    res, success = {}, False
 
                 if self.do_xcom_push is True:
                     # Some dbt operations use dataclasses for its results,
@@ -196,26 +200,28 @@ class DbtBaseOperator(BaseOperator):
         store_project_dir = self.project_dir
 
         with TemporaryDirectory(prefix="airflowtmp") as tmp_dir:
-            if urlparse(str(self.profiles_dir)).scheme == "s3":
-                self.log.info("Fetching profiles.yml from S3: %s", self.profiles_dir)
-                profiles_file_path = self.dbt_s3_hook.get_dbt_profiles(
-                    self.profiles_dir,
-                    tmp_dir,
-                )
-                self.profiles_dir = str(profiles_file_path.parent) + "/"
-
-            if urlparse(str(self.project_dir)).scheme == "s3":
-                self.log.info("Fetching dbt project from S3: %s", self.project_dir)
-                project_dir_path = self.dbt_s3_hook.get_dbt_project(
-                    self.project_dir,
-                    tmp_dir,
-                )
-                self.project_dir = str(project_dir_path) + "/"
-
+            self.prepare_directory(tmp_dir)
             yield tmp_dir
 
         self.profiles_dir = store_profiles_dir
         self.project_dir = store_project_dir
+
+    def prepare_directory(self, tmp_dir: str):
+        if urlparse(str(self.profiles_dir)).scheme == "s3":
+            self.log.info("Fetching profiles.yml from S3: %s", self.profiles_dir)
+            profiles_file_path = self.dbt_s3_hook.get_dbt_profiles(
+                self.profiles_dir,
+                tmp_dir,
+            )
+            self.profiles_dir = str(profiles_file_path.parent) + "/"
+
+        if urlparse(str(self.project_dir)).scheme == "s3":
+            self.log.info("Fetching dbt project from S3: %s", self.project_dir)
+            project_dir_path = self.dbt_s3_hook.get_dbt_project(
+                self.project_dir,
+                tmp_dir,
+            )
+            self.project_dir = str(project_dir_path) + "/"
 
     @property
     def dbt_s3_hook(self):
