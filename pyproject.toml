@@ -5,6 +5,11 @@ description = "A dbt operator for Airflow that uses the dbt Python package"
 authors = ["Tomás Farías Santana <tomas@tomasfarias.dev>"]
 license = "MIT"
 readme = "README.md"
+repository = "https://github.com/tomasfarias/airflow-dbt-python"
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+]
 
 [tool.poetry.dependencies]
 python = "^3.7"
