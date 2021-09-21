@@ -1,3 +1,5 @@
+"""Provides an S3 hook exclusively for fetching dbt files."""
+
 from pathlib import Path
 from typing import Optional
 
@@ -8,17 +10,19 @@ class DbtS3Hook(S3Hook):
     def get_dbt_profiles(
         self, s3_profiles_url: str, profiles_dir: Optional[str] = None
     ) -> Path:
-        """
+        """Fetch a dbt profiles file from S3.
+
         Fetches dbt profiles.yml file from the directory given by s3_profiles_url
         and pulls it to profiles_dir/profiles.yml.
 
-        Arguments:
-        s3_profiles_url: An S3 URL to a directory containing the dbt profiles file.
-        profiles_dir: An optional directory to download the S3 profiles file into.
-            If not provided, the profiles file will be downloaded to ~/.dbt/profiles.yml
+        Args:
+            s3_profiles_url: An S3 URL to a directory containing the dbt profiles file.
+            profiles_dir: An optional directory to download the S3 profiles file into.
+                If not provided, the profiles file will be downloaded to
+                ~/.dbt/profiles.yml
 
         Returns:
-        A Path to the local directory containing the dbt project files
+            A Path to the local directory containing the dbt project files
         """
         self.log.info("Downloading dbt profiles file from: %s", s3_profiles_url)
         bucket_name, key_prefix = self.parse_s3_url(s3_profiles_url)
@@ -41,17 +45,18 @@ class DbtS3Hook(S3Hook):
     def get_dbt_project(
         self, s3_project_url: str, project_dir: Optional[str] = None
     ) -> Path:
-        """
+        """Fetch all dbt project files from S3.
+
         Fetches the dbt project files from the directory given by s3_project_url
         and pulls them to project_dir.
 
         Arguments:
-        s3_project_url: An S3 URL to a directory containing the dbt project files.
-        project_dir: An optional directory to download the S3 project files into.
-            If not provided, one will be created using the S3 URL.
+            s3_project_url: An S3 URL to a directory containing the dbt project files.
+            project_dir: An optional directory to download the S3 project files into.
+                If not provided, one will be created using the S3 URL.
 
         Returns:
-        A Path to the local directory containing the dbt project files
+            A Path to the local directory containing the dbt project files.
         """
         self.log.info("Downloading dbt project file from: %s", s3_project_url)
         bucket_name, key_prefix = self.parse_s3_url(s3_project_url)

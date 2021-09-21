@@ -1,3 +1,4 @@
+"""Airflow operators for all dbt commands."""
 from __future__ import annotations
 
 import datetime as dt
@@ -21,28 +22,25 @@ from airflow.utils.decorators import apply_defaults
 
 
 class DbtBaseOperator(BaseOperator):
-    """The basic Airflow dbt operator. Defines how to build an argument list and execute
-        a dbt command. Does not set a command itself, subclasses should set it.
+    """The basic Airflow dbt operator.
 
-        Attributes:
+    Defines how to build an argument list and execute a dbt command. Does not set a
+    command itself, subclasses should set it.
+
+    Attributes:
         command: The dbt command to execute.
-        project_dir: Directory for dbt to look for dbt_profile.yml. Defaults to current
-    directory.
-        profiles_dir: Directory for dbt to look for profiles.yml. Defaults to ~/.dbt.
+        project_dir: Directory for dbt to look for dbt_profile.yml. Defaults to
+            current directory.
+        profiles_dir: Directory for dbt to look for profiles.yml. Defaults to
+            ~/.dbt.
         profile: Which profile to load. Overrides dbt_profile.yml.
         target: Which target to load for the given profile.
         vars: Supply variables to the project. Should be a YAML string. Overrides
-    variables defined in dbt_profile.yml.
+            variables defined in dbt_profile.yml.
         log_cache_events: Flag to enable logging of cache events.
         bypass_cache: Flag to bypass the adapter-level cache of database state.
         s3_conn_id: An s3 Airflow connection ID to use when pulling dbt files from s3.
         do_xcom_push_artifacts: A list of dbt artifacts to XCom push.
-
-        Methods:
-        execute: Executes a given dbt command.
-        args_list: Produce a list of arguments for a dbt command.
-        run_dbt_command: Runs the actual dbt command as defined by self.command.
-        serializable_result: Turns a dbt result into a serializable object.
     """
 
     template_fields = [
@@ -91,7 +89,7 @@ class DbtBaseOperator(BaseOperator):
         self._dbt_s3_hook = None
 
     def execute(self, context: dict):
-        """Execute dbt command with prepared arguments"""
+        """Execute dbt command with prepared arguments."""
         with self.dbt_directory() as dbt_dir:  # type: str
             with self.override_dbt_logging(dbt_dir):
                 args = self.prepare_args()
@@ -119,13 +117,12 @@ class DbtBaseOperator(BaseOperator):
         return res
 
     def xcom_push_artifacts(self, context: dict, dbt_directory: str):
-        """
-        Read dbt artifacts from dbt_directory/target/ and push them to XCom
+        """Read dbt artifacts and push them to XCom.
 
-        Arguments:
-        context: The Airflow task's context.
-        dbt_directory: A directory containing a dbt project. Artifacts will be
-            assumed to be in dbt_directory/target/.
+        Args:
+            context: The Airflow task's context.
+            dbt_directory: A directory containing a dbt project. Artifacts will be
+                assumed to be in dbt_directory/target/.
         """
         if self.do_xcom_push_artifacts is None:
             # Nothing to xcom_push. Need this for mypy.
@@ -141,7 +138,7 @@ class DbtBaseOperator(BaseOperator):
             self.xcom_push(context, key=artifact, value=json_dict)
 
     def prepare_args(self) -> list[Optional[str]]:
-        """Prepare the arguments needed to call dbt"""
+        """Prepare the arguments needed to call dbt."""
         if self.command is None:
             raise AirflowException(
                 "dbt command is not defined; each subclass of DbtBaseOperator"
@@ -157,7 +154,7 @@ class DbtBaseOperator(BaseOperator):
         return args
 
     def args_list(self) -> list[str]:
-        """Build a list of arguments to pass to dbt"""
+        """Build a list of arguments to pass to dbt."""
         args = []
         for arg in self.__dbt_args__:
             value = getattr(self, arg, None)
@@ -189,12 +186,13 @@ class DbtBaseOperator(BaseOperator):
 
     @contextmanager
     def dbt_directory(self) -> Iterator[str]:
-        """
+        """Provides a temporary directory to execute dbt.
+
         Creates a temporary directory for dbt to run in and prepares the dbt files
         if they need to be pulled from S3.
 
         Yields:
-        The temporary directory's name.
+            The temporary directory's name.
         """
         store_profiles_dir = self.profiles_dir
         store_project_dir = self.project_dir
@@ -207,6 +205,7 @@ class DbtBaseOperator(BaseOperator):
         self.project_dir = store_project_dir
 
     def prepare_directory(self, tmp_dir: str):
+        """Prepares a dbt directory by pulling files from S3."""
         if urlparse(str(self.profiles_dir)).scheme == "s3":
             self.log.info("Fetching profiles.yml from S3: %s", self.profiles_dir)
             profiles_file_path = self.dbt_s3_hook.get_dbt_profiles(
@@ -225,7 +224,7 @@ class DbtBaseOperator(BaseOperator):
 
     @property
     def dbt_s3_hook(self):
-        """Provides an existing DbtS3Hook or creates one"""
+        """Provides an existing DbtS3Hook or creates one."""
         if self._dbt_s3_hook is None:
             from airflow_dbt_python.hooks.dbt_s3 import DbtS3Hook
 
@@ -234,7 +233,8 @@ class DbtBaseOperator(BaseOperator):
 
     @contextmanager
     def override_dbt_logging(self, dbt_directory: str = None):
-        """
+        """Override dbt's logger.
+
         dbt logger writes to STDOUT and I haven't found a way
         to bubble up to the Airflow command logger. As a workaround,
         I set the output stream to a temporary file that is later
@@ -254,7 +254,7 @@ class DbtBaseOperator(BaseOperator):
                     self.log.info(line.rstrip())
 
     def run_dbt_command(self, args: list[Optional[str]]) -> tuple[RunResult, bool]:
-        """Run a dbt command as implemented by a subclass"""
+        """Run a dbt command as implemented by a subclass."""
         try:
             parsed = parse_args(args)
         except Exception as exc:
@@ -275,20 +275,20 @@ class DbtBaseOperator(BaseOperator):
     def serializable_result(
         self, result: Optional[RunExecutionResult]
     ) -> Optional[dict[Any, Any]]:
-        """
+        """Makes dbt's run result JSON-serializable.
+
         Turn dbt's RunExecutionResult into a dict of only JSON-serializable types
         Each subclas may implement this method to return a dictionary of
         JSON-serializable types, the default XCom backend. If implementing
         custom XCom backends, this method may be overriden.
         """
-
         if result is None or is_dataclass(result) is False:
             return result
         return asdict(result, dict_factory=run_result_factory)
 
 
 class DbtRunOperator(DbtBaseOperator):
-    """Executes dbt run"""
+    """Executes dbt run."""
 
     command = "run"
 
@@ -330,7 +330,7 @@ class DbtRunOperator(DbtBaseOperator):
 
 
 class DbtSeedOperator(DbtBaseOperator):
-    """Executes dbt seed"""
+    """Executes dbt seed."""
 
     command = "seed"
 
@@ -366,7 +366,7 @@ class DbtSeedOperator(DbtBaseOperator):
 
 
 class DbtTestOperator(DbtBaseOperator):
-    """Executes dbt test"""
+    """Executes dbt test."""
 
     command = "test"
 
@@ -411,7 +411,7 @@ class DbtTestOperator(DbtBaseOperator):
 
 
 class DbtCompileOperator(DbtBaseOperator):
-    """Executes dbt compile"""
+    """Executes dbt compile."""
 
     command = "compile"
 
@@ -450,7 +450,7 @@ class DbtCompileOperator(DbtBaseOperator):
 
 
 class DbtDepsOperator(DbtBaseOperator):
-    """Executes dbt deps"""
+    """Executes dbt deps."""
 
     command = "deps"
 
@@ -459,7 +459,7 @@ class DbtDepsOperator(DbtBaseOperator):
 
 
 class DbtCleanOperator(DbtBaseOperator):
-    """Executes dbt clean"""
+    """Executes dbt clean."""
 
     command = "clean"
 
@@ -468,7 +468,7 @@ class DbtCleanOperator(DbtBaseOperator):
 
 
 class DbtDebugOperator(DbtBaseOperator):
-    """Execute dbt debug"""
+    """Execute dbt debug."""
 
     command = "debug"
 
@@ -486,7 +486,7 @@ class DbtDebugOperator(DbtBaseOperator):
 
 
 class DbtSnapshotOperator(DbtBaseOperator):
-    """Execute dbt snapshot"""
+    """Execute dbt snapshot."""
 
     command = "snapshot"
 
@@ -516,7 +516,7 @@ class DbtSnapshotOperator(DbtBaseOperator):
 
 
 class DbtLsOperator(DbtBaseOperator):
-    """Execute dbt list (or ls)"""
+    """Execute dbt list (or ls)."""
 
     command = "ls"
 
@@ -553,7 +553,7 @@ DbtListOperator = DbtLsOperator
 
 
 class DbtRunOperationOperator(DbtBaseOperator):
-    """Execute dbt run-operation"""
+    """Execute dbt run-operation."""
 
     command = "run-operation"
 
@@ -572,7 +572,7 @@ class DbtRunOperationOperator(DbtBaseOperator):
 
 
 class DbtParseOperator(DbtBaseOperator):
-    """Execute dbt parse"""
+    """Execute dbt parse."""
 
     command = "parse"
 
@@ -584,7 +584,7 @@ class DbtParseOperator(DbtBaseOperator):
 
 
 class DbtSourceOperator(DbtBaseOperator):
-    """Execute dbt source"""
+    """Execute dbt source."""
 
     command = "source"
 
@@ -618,7 +618,8 @@ class DbtSourceOperator(DbtBaseOperator):
 
 
 def run_result_factory(data: list[tuple[Any, Any]]):
-    """
+    """Dictionary factory for dbt's run_result.
+
     We need to handle dt.datetime and agate.table.Table.
     The rest of the types should already be JSON-serializable.
     """

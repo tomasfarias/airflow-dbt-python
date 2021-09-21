@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "airflow-dbt-python"
-version = "0.7.1"
+version = "0.7.2"
 description = "A dbt operator for Airflow that uses the dbt Python package"
 authors = ["Tomás Farías Santana <tomas@tomasfarias.dev>"]
 license = "MIT"
@@ -30,6 +30,7 @@ dbt-bigquery = { version = ">=0.19, < 0.21", optional = true }
 black = "^21.5b1"
 mypy = "^0.902"
 flake8 = "^3.9.2"
+flake8-docstrings = "^1.6.0"
 pytest = "^6.2.4"
 pre-commit = "^2.12.1"
 pytest-postgresql = "^3.1.1"
