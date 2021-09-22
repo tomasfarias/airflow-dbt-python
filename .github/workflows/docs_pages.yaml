@@ -16,6 +16,7 @@ jobs:
       uses: sphinx-notes/pages@master
       with:
         documentation_path: docs
+        extra_files: docs/.nojekyll
     - name: Push changes
       uses: ad-m/github-push-action@master
       with:

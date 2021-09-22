@@ -1,0 +1,20 @@
+name: PyPI deploy
+on:
+  push:
+    tags: '*'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: 3.9
+      - uses: abatilo/actions-poetry@v2.1.0
+      - name: install
+        run: poetry install
+      - name: build
+        run: poetry build
+      - name: publish
+        run: poetry publish --username __token__ --password ${{ secrets.PYPI_API_TOKEN }}

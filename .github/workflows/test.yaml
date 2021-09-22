@@ -1,8 +1,10 @@
-name: CI/CD
+name: test
 on:
   push:
     branches: [ master ]
-    tags: '*'
+  pull_request:
+    branches:
+    - master
 
 jobs:
   test:
@@ -29,20 +31,3 @@ jobs:
         run: poetry run airflow db init
       - name: test
         run: poetry run pytest -v tests/
-
-  deploy:
-    needs: test
-    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags')
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
-        with:
-          python-version: 3.9
-      - uses: abatilo/actions-poetry@v2.1.0
-      - name: install
-        run: poetry install
-      - name: build
-        run: poetry build
-      - name: publish
-        run: poetry publish --username __token__ --password ${{ secrets.PYPI_API_TOKEN }}
