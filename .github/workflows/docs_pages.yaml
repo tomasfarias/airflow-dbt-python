@@ -12,13 +12,19 @@ jobs:
       uses: actions/checkout@master
       with:
         fetch-depth: 0
+    - uses: actions/setup-python@v2
+      with:
+        python-version: 3.9
+    - uses: abatilo/actions-poetry@v2.1.3
+    - name: install
+      run: poetry install -E amazon
     - name: Sphinx build
       uses: ammaraskar/sphinx-action@master
       with:
         docs-folder: docs/
     - name: Commit documentation changes
       run: |
-        git clone https://github.com/ammaraskar/sphinx-action-test.git --branch gh-pages --single-branch gh-pages
+        git clone git@github.com:tomasfarias/airflow_dbt_python.git --branch gh-pages --single-branch gh-pages
         cp -r docs/_build/html/* gh-pages/
         cd gh-pages
         git config --local user.email "action@github.com"
