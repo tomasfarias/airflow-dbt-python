@@ -1,7 +1,8 @@
 # airflow-dbt-python
 
-[![](https://img.shields.io/pypi/v/airflow-dbt-python?style=plastic)](https://pypi.org/project/airflow-dbt-python/)
-[![](https://github.com/tomasfarias/airflow-dbt-python/actions/workflows/workflow.yaml/badge.svg)](https://github.com/tomasfarias/airflow-dbt-python/actions)
+[![PyPI version](https://img.shields.io/pypi/v/airflow-dbt-python?style=plastic)](https://pypi.org/project/airflow-dbt-python/)
+[![GitHub build status](https://github.com/tomasfarias/airflow-dbt-python/actions/workflows/workflow.yaml/badge.svg)](https://github.com/tomasfarias/airflow-dbt-python/actions)
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
 An [Airflow](https://airflow.apache.org/) operator to call the `main` function from the [`dbt-core`](https://pypi.org/project/dbt-core/) Python package
 
