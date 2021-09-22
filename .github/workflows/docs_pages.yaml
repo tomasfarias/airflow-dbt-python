@@ -12,13 +12,22 @@ jobs:
       uses: actions/checkout@master
       with:
         fetch-depth: 0
-    - name: Build and Commit
-      uses: sphinx-notes/pages@master
+    - name: Sphinx build
+      uses: ammaraskar/sphinx-action@master
       with:
-        documentation_path: docs
-        extra_files: .nojekyll
+        docs-folder: docs/
+    - name: Commit documentation changes
+      run: |
+        git clone https://github.com/ammaraskar/sphinx-action-test.git --branch gh-pages --single-branch gh-pages
+        cp -r docs/_build/html/* gh-pages/
+        cd gh-pages
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git add .
+        git commit -m "Update documentation" -a || true
     - name: Push changes
       uses: ad-m/github-push-action@master
       with:
-        github_token: ${{ secrets.GITHUB_TOKEN }}
         branch: gh-pages
+        directory: gh-pages
+        github_token: ${{ secrets.GITHUB_TOKEN }}
