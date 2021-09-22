@@ -7,6 +7,7 @@ per-file-ignores =
     tests/*.py: D1,D2,D4
     examples/*.py: D1,D2,D4
     __version__.py: D100
+    __init__.py: F401
 exclude =
     airflow
     docs/conf.py

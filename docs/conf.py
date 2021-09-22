@@ -13,17 +13,17 @@
 import os
 import sys
 
-sys.path.insert(0, os.path.abspath("../airflow_dbt_python"))
-
+sys.path.insert(0, os.path.abspath(".."))
+import airflow_dbt_python
 
 # -- Project information -----------------------------------------------------
 
-project = "airflow-dbt-python"
-copyright = "2021, Tomás Farías Santana"
-author = "Tomás Farías Santana"
+project = airflow_dbt_python.__title__
+copyright = airflow_dbt_python.__copyright__
+author = airflow_dbt_python.__author__
 
 # The full version, including alpha/beta/rc tags
-release = "0.7.2"
+release = version = airflow_dbt_python.__version__
 
 
 # -- General configuration ---------------------------------------------------
