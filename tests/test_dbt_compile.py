@@ -7,10 +7,11 @@ from packaging.version import parse
 from airflow_dbt_python.operators.dbt import DbtCompileOperator
 
 DBT_VERSION = parse(DBT_VERSION)
-IS_DBT_VERSION_0_20 = DBT_VERSION.minor == 20 and DBT_VERSION.major == 0
+IS_DBT_VERSION_LESS_THAN_0_20 = DBT_VERSION.minor < 20 and DBT_VERSION.major == 0
 
 
 def test_dbt_compile_mocked_all_args():
+    """Test mocked dbt compile call with all arguments."""
     op = DbtCompileOperator(
         task_id="dbt_task",
         project_dir="/path/to/project/",
@@ -111,7 +112,7 @@ SELECT
   NOW() AS field2
 """
 
-if IS_DBT_VERSION_0_20:
+if not IS_DBT_VERSION_LESS_THAN_0_20:
     cte = "cte"
 else:
     cte = "CTE"

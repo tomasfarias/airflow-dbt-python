@@ -18,6 +18,7 @@ no_s3_hook = pytest.mark.skipif(
 
 
 def test_dbt_run_mocked_all_args():
+    """Test mocked dbt run call with all arguments."""
     op = DbtRunOperator(
         task_id="dbt_task",
         project_dir="/path/to/project/",

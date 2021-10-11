@@ -6,7 +6,7 @@ from packaging.version import parse
 from pytest_postgresql.janitor import DatabaseJanitor
 
 DBT_VERSION = parse(DBT_VERSION)
-IS_DBT_VERSION_0_20 = DBT_VERSION.minor == 20 and DBT_VERSION.major == 0
+IS_DBT_VERSION_LESS_THAN_0_20 = DBT_VERSION.minor < 20 and DBT_VERSION.major == 0
 
 PROFILES = """
 default:
@@ -29,7 +29,7 @@ config-version: 2
 version: 1.0.0
 """
 
-if IS_DBT_VERSION_0_20:
+if not IS_DBT_VERSION_LESS_THAN_0_20:
     PROJECT += """
 dispatch:
   - macro_namespace: dbt_utils
