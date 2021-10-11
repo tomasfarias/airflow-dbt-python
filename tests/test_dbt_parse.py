@@ -5,6 +5,7 @@ from airflow_dbt_python.operators.dbt import DbtParseOperator
 
 
 def test_dbt_parse_mocked_all_args():
+    """Test mocked dbt parse call with all arguments."""
     op = DbtParseOperator(
         task_id="dbt_task",
         project_dir="/path/to/project/",

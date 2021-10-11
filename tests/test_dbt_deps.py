@@ -60,8 +60,8 @@ def dbt_modules_dir(dbt_project_file):
 
 PACKAGES = """
 packages:
-  - package: fishtown-analytics/dbt_utils
-    version: 0.7.0
+  - package: dbt-labs/dbt_utils
+    version: 0.7.3
 """
 
 
