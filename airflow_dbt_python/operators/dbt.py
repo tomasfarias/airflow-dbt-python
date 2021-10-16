@@ -14,6 +14,8 @@ import dbt.flags as flags
 from dbt.contracts.results import RunExecutionResult, RunResult, agate
 from dbt.logger import log_manager
 from dbt.main import initialize_config_values, parse_args, track_run
+from dbt.semver import VersionSpecifier
+from dbt.version import installed as installed_version
 
 from airflow import AirflowException
 from airflow.models.baseoperator import BaseOperator
@@ -308,6 +310,7 @@ class DbtRunOperator(DbtBaseOperator):
         self,
         full_refresh: Optional[bool] = None,
         models: Optional[list[str]] = None,
+        select: Optional[list[str]] = None,
         fail_fast: Optional[bool] = None,
         threads: Optional[int] = None,
         exclude: Optional[list[str]] = None,
@@ -527,6 +530,7 @@ class DbtLsOperator(DbtBaseOperator):
         "exclude",
         "selector",
         "dbt_output",
+        "output_keys",
     ]
 
     def __init__(
@@ -537,6 +541,7 @@ class DbtLsOperator(DbtBaseOperator):
         exclude: Optional[list[str]] = None,
         selector: Optional[str] = None,
         dbt_output: Optional[str] = None,
+        output_keys: Optional[list[str]] = None,
         **kwargs,
     ) -> None:
         super().__init__(**kwargs)
@@ -546,6 +551,7 @@ class DbtLsOperator(DbtBaseOperator):
         self.exclude = exclude
         self.selector = selector
         self.dbt_output = dbt_output
+        self.output_keys = output_keys
 
 
 # Convinience alias
@@ -599,7 +605,9 @@ class DbtSourceOperator(DbtBaseOperator):
     def __init__(
         self,
         # Only one subcommand is currently provided
-        subcommand: str = "snapshot-freshness",
+        subcommand: str = "freshness"
+        if not installed_version < VersionSpecifier.from_version_string("0.21.0")
+        else "snapshot-freshness",
         select: Optional[list[str]] = None,
         dbt_output: Optional[Union[str, Path]] = None,
         threads: Optional[int] = None,
@@ -615,6 +623,62 @@ class DbtSourceOperator(DbtBaseOperator):
         self.exclude = exclude
         self.selector = selector
         self.state = state
+
+
+class DbtBuildOperator(DbtBaseOperator):
+    """Execute dbt build.
+
+    The build command combines the run, test, seed, and snapshot commands into one. The
+    full Documentation for the dbt build command can be found here:
+    https://docs.getdbt.com/reference/commands/build.
+    """
+
+    command = "build"
+
+    __dbt_args__ = DbtBaseOperator.__dbt_args__ + [
+        "full_refresh",
+        "select",
+        "fail_fast",
+        "threads",
+        "exclude",
+        "selector",
+        "state",
+        "defer",
+        "no_defer",
+        "data",
+        "schema",
+        "show",
+    ]
+
+    def __init__(
+        self,
+        full_refresh: Optional[bool] = None,
+        select: Optional[list[str]] = None,
+        fail_fast: Optional[bool] = None,
+        threads: Optional[int] = None,
+        exclude: Optional[list[str]] = None,
+        selector: Optional[str] = None,
+        state: Optional[Union[str, Path]] = None,
+        defer: Optional[bool] = None,
+        no_defer: Optional[bool] = None,
+        data: Optional[bool] = None,
+        schema: Optional[bool] = None,
+        show: Optional[bool] = None,
+        **kwargs,
+    ) -> None:
+        super().__init__(**kwargs)
+        self.full_refresh = full_refresh
+        self.select = select
+        self.fail_fast = fail_fast
+        self.threads = threads
+        self.exclude = exclude
+        self.selector = selector
+        self.state = state
+        self.defer = defer
+        self.no_defer = no_defer
+        self.data = data
+        self.schema = schema
+        self.show = show
 
 
 def run_result_factory(data: list[tuple[Any, Any]]):

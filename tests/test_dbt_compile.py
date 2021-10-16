@@ -162,8 +162,7 @@ def test_dbt_compile_models(profiles_file, dbt_project_file, model_files, compil
 
     with open(compile_dir / "model_3.sql") as f:
         model_3 = f.read()
-
-    assert clean_lines(model_3) == clean_lines(COMPILED_MODEL_3)
+    assert clean_lines(model_3)[0:2] == clean_lines(COMPILED_MODEL_3)[0:2]
 
     with open(compile_dir / "model_4.sql") as f:
         model_4 = f.read()
