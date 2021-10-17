@@ -228,3 +228,22 @@ def s3_bucket(mocked_s3_res):
     bucket = "airflow-dbt-test-s3-bucket"
     mocked_s3_res.create_bucket(Bucket=bucket)
     return bucket
+
+
+BROKEN_SQL = """
+SELECT
+  field1 AS field1
+FROM
+  non_existent_table
+WHERE
+  field1 > 1
+"""
+
+
+@pytest.fixture
+def broken_file(dbt_project_dir):
+    d = dbt_project_dir / "models"
+    m = d / "broken.sql"
+    m.write_text(BROKEN_SQL)
+    yield m
+    m.unlink()

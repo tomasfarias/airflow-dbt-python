@@ -48,6 +48,7 @@ def test_dbt_debug_mocked_all_args():
 
 
 def test_dbt_debug_mocked_default():
+    """Test mocked dbt debug call with default arguments."""
     op = DbtDebugOperator(
         task_id="dbt_task",
     )

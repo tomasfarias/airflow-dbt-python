@@ -8,6 +8,7 @@ from airflow_dbt_python.operators.dbt import DbtCompileOperator
 
 DBT_VERSION = parse(DBT_VERSION)
 IS_DBT_VERSION_LESS_THAN_0_20 = DBT_VERSION.minor < 20 and DBT_VERSION.major == 0
+IS_DBT_VERSION_LESS_THAN_0_21 = DBT_VERSION.minor < 21 and DBT_VERSION.major == 0
 
 
 def test_dbt_compile_mocked_all_args():
@@ -30,6 +31,12 @@ def test_dbt_compile_mocked_all_args():
         selector="a-selector",
         state="/path/to/state/",
     )
+
+    if IS_DBT_VERSION_LESS_THAN_0_21:
+        SELECTION_KEY = "models"
+    else:
+        SELECTION_KEY = "select"
+
     args = [
         "compile",
         "--project-dir",
@@ -49,7 +56,7 @@ def test_dbt_compile_mocked_all_args():
         "--fail-fast",
         "--threads",
         "2",
-        "--models",
+        f"--{SELECTION_KEY}",
         "/path/to/model1.sql",
         "/path/to/model2.sql",
         "--exclude",
@@ -162,8 +169,7 @@ def test_dbt_compile_models(profiles_file, dbt_project_file, model_files, compil
 
     with open(compile_dir / "model_3.sql") as f:
         model_3 = f.read()
-
-    assert clean_lines(model_3) == clean_lines(COMPILED_MODEL_3)
+    assert clean_lines(model_3)[0:2] == clean_lines(COMPILED_MODEL_3)[0:2]
 
     with open(compile_dir / "model_4.sql") as f:
         model_4 = f.read()
@@ -206,3 +212,32 @@ def test_dbt_compile_models_full_refresh(
         model_4 = f.read()
 
     assert clean_lines(model_4) == clean_lines(COMPILED_MODEL_4)
+
+
+def test_dbt_compile_uses_correct_argument_according_to_version():
+    """Test if dbt run operator sets the proper attribute based on dbt version."""
+    op = DbtCompileOperator(
+        task_id="dbt_task",
+        project_dir="/path/to/project/",
+        profiles_dir="/path/to/profiles/",
+        profile="dbt-profile",
+        target="dbt-target",
+        vars={"target": "override"},
+        log_cache_events=True,
+        bypass_cache=True,
+        parse_only=True,
+        full_refresh=True,
+        fail_fast=True,
+        models=["/path/to/model1.sql", "/path/to/model2.sql"],
+        threads=2,
+        exclude=["/path/to/data/to/exclude.sql"],
+        selector="a-selector",
+        state="/path/to/state/",
+    )
+
+    if IS_DBT_VERSION_LESS_THAN_0_21:
+        assert op.models == ["/path/to/model1.sql", "/path/to/model2.sql"]
+        assert getattr(op, "select", None) is None
+    else:
+        assert op.select == ["/path/to/model1.sql", "/path/to/model2.sql"]
+        assert getattr(op, "models", None) is None

@@ -7,7 +7,7 @@ from dbt.version import __version__ as DBT_VERSION
 from packaging.version import parse
 
 from airflow import AirflowException
-from airflow_dbt_python.operators.dbt import DbtRunOperator
+from airflow_dbt_python.operators.dbt import DbtBuildOperator
 
 condition = False
 try:
@@ -21,10 +21,17 @@ no_s3_hook = pytest.mark.skipif(
 DBT_VERSION = parse(DBT_VERSION)
 IS_DBT_VERSION_LESS_THAN_0_21 = DBT_VERSION.minor < 21 and DBT_VERSION.major == 0
 
+if IS_DBT_VERSION_LESS_THAN_0_21:
+    pytest.skip(
+        "skipping DbtBuildOperator tests as dbt build command is available "
+        f"in dbt version 0.21 or later, and found version {DBT_VERSION}  installed",
+        allow_module_level=True,
+    )
 
-def test_dbt_run_mocked_all_args():
-    """Test mocked dbt run call with all arguments."""
-    op = DbtRunOperator(
+
+def test_dbt_build_mocked_all_args():
+    """Test mocked dbt build call with all arguments."""
+    op = DbtBuildOperator(
         task_id="dbt_task",
         project_dir="/path/to/project/",
         profiles_dir="/path/to/profiles/",
@@ -34,21 +41,18 @@ def test_dbt_run_mocked_all_args():
         log_cache_events=True,
         bypass_cache=True,
         full_refresh=True,
-        models=["/path/to/model.sql", "+/another/model.sql+2"],
+        select=["/path/to/model.sql", "+/another/model.sql+2"],
         fail_fast=True,
         threads=3,
         exclude=["/path/to/model/to/exclude.sql"],
         selector="a-selector",
         state="/path/to/state/",
+        data=True,
+        schema=True,
+        show=True,
     )
-
-    if IS_DBT_VERSION_LESS_THAN_0_21:
-        SELECTION_KEY = "models"
-    else:
-        SELECTION_KEY = "select"
-
     args = [
-        "run",
+        "build",
         "--project-dir",
         "/path/to/project/",
         "--profiles-dir",
@@ -62,7 +66,7 @@ def test_dbt_run_mocked_all_args():
         "--log-cache-events",
         "--bypass-cache",
         "--full-refresh",
-        f"--{SELECTION_KEY}",
+        "--select",
         "/path/to/model.sql",
         "+/another/model.sql+2",
         "--fail-fast",
@@ -74,26 +78,29 @@ def test_dbt_run_mocked_all_args():
         "a-selector",
         "--state",
         "/path/to/state/",
+        "--data",
+        "--schema",
+        "--show",
     ]
 
-    with patch.object(DbtRunOperator, "run_dbt_command") as mock:
+    with patch.object(DbtBuildOperator, "run_dbt_command") as mock:
         mock.return_value = ([], True)
         op.execute({})
         mock.assert_called_once_with(args)
 
 
-def test_dbt_run_mocked_default():
-    """Test mocked dbt run call with default arguments."""
-    op = DbtRunOperator(
+def test_dbt_build_mocked_default():
+    """Test mocked dbt build call with default arguments."""
+    op = DbtBuildOperator(
         task_id="dbt_task",
         do_xcom_push=False,
     )
 
-    assert op.command == "run"
+    assert op.command == "build"
 
-    args = ["run"]
+    args = ["build"]
 
-    with patch.object(DbtRunOperator, "run_dbt_command") as mock:
+    with patch.object(DbtBuildOperator, "run_dbt_command") as mock:
         mock.return_value = ([], True)
         res = op.execute({})
         mock.assert_called_once_with(args)
@@ -101,17 +108,17 @@ def test_dbt_run_mocked_default():
     assert res == []
 
 
-def test_dbt_run_mocked_with_do_xcom_push():
-    op = DbtRunOperator(
+def test_dbt_build_mocked_with_do_xcom_push():
+    op = DbtBuildOperator(
         task_id="dbt_task",
         do_xcom_push=True,
     )
 
-    assert op.command == "run"
+    assert op.command == "build"
 
-    args = ["run"]
+    args = ["build"]
 
-    with patch.object(DbtRunOperator, "run_dbt_command") as mock:
+    with patch.object(DbtBuildOperator, "run_dbt_command") as mock:
         mock.return_value = ([], True)
         res = op.execute({})
         mock.assert_called_once_with(args)
@@ -120,12 +127,12 @@ def test_dbt_run_mocked_with_do_xcom_push():
     assert res == []
 
 
-def test_dbt_run_non_existent_model(profiles_file, dbt_project_file, model_files):
-    op = DbtRunOperator(
+def test_dbt_build_non_existent_model(profiles_file, dbt_project_file, model_files):
+    op = DbtBuildOperator(
         task_id="dbt_task",
         project_dir=dbt_project_file.parent,
         profiles_dir=profiles_file.parent,
-        models=["fake"],
+        select=["fake"],
         full_refresh=True,
         do_xcom_push=True,
     )
@@ -135,42 +142,44 @@ def test_dbt_run_non_existent_model(profiles_file, dbt_project_file, model_files
     assert isinstance(json.dumps(execution_results), str)
 
 
-def test_dbt_run_models(profiles_file, dbt_project_file, model_files):
-    op = DbtRunOperator(
+def test_dbt_build_select(profiles_file, dbt_project_file, model_files):
+    op = DbtBuildOperator(
         task_id="dbt_task",
         project_dir=dbt_project_file.parent,
         profiles_dir=profiles_file.parent,
-        models=[str(m.stem) for m in model_files],
+        select=[str(m.stem) for m in model_files],
         do_xcom_push=True,
     )
     execution_results = op.execute({})
-    run_result = execution_results["results"][0]
+    build_result = execution_results["results"][0]
 
-    assert run_result["status"] == RunStatus.Success
+    assert build_result["status"] == RunStatus.Success
 
 
-def test_dbt_run_models_full_refresh(profiles_file, dbt_project_file, model_files):
-    op = DbtRunOperator(
+def test_dbt_build_models_full_refresh(profiles_file, dbt_project_file, model_files):
+    op = DbtBuildOperator(
         task_id="dbt_task",
         project_dir=dbt_project_file.parent,
         profiles_dir=profiles_file.parent,
-        models=[str(m.stem) for m in model_files],
+        select=[str(m.stem) for m in model_files],
         full_refresh=True,
         do_xcom_push=True,
     )
     execution_results = op.execute({})
-    run_result = execution_results["results"][0]
+    build_result = execution_results["results"][0]
 
-    assert run_result["status"] == RunStatus.Success
+    assert build_result["status"] == RunStatus.Success
     assert isinstance(json.dumps(execution_results), str)
 
 
-def test_dbt_run_fails_with_malformed_sql(profiles_file, dbt_project_file, broken_file):
-    op = DbtRunOperator(
+def test_dbt_build_fails_with_malformed_sql(
+    profiles_file, dbt_project_file, broken_file
+):
+    op = DbtBuildOperator(
         task_id="dbt_task",
         project_dir=dbt_project_file.parent,
         profiles_dir=profiles_file.parent,
-        models=[str(broken_file.stem)],
+        select=[str(broken_file.stem)],
         full_refresh=True,
     )
 
@@ -178,8 +187,8 @@ def test_dbt_run_fails_with_malformed_sql(profiles_file, dbt_project_file, broke
         op.execute({})
 
 
-def test_dbt_run_fails_with_non_existent_project(profiles_file, dbt_project_file):
-    op = DbtRunOperator(
+def test_dbt_build_fails_with_non_existent_project(profiles_file, dbt_project_file):
+    op = DbtBuildOperator(
         task_id="dbt_task",
         project_dir="/home/fake/project",
         profiles_dir="/home/fake/profiles/",
@@ -191,7 +200,7 @@ def test_dbt_run_fails_with_non_existent_project(profiles_file, dbt_project_file
 
 
 @no_s3_hook
-def test_dbt_run_models_from_s3(
+def test_dbt_build_models_from_s3(
     s3_bucket, profiles_file, dbt_project_file, model_files
 ):
     hook = DbtS3Hook()
@@ -212,21 +221,22 @@ def test_dbt_run_models_from_s3(
                 Key=f"project/models/{model_file.name}", Body=model_content.encode()
             )
 
-    op = DbtRunOperator(
+    op = DbtBuildOperator(
         task_id="dbt_task",
         project_dir=f"s3://{s3_bucket}/project/",
         profiles_dir=f"s3://{s3_bucket}/project/",
-        models=[str(m.stem) for m in model_files],
+        select=[str(m.stem) for m in model_files],
         do_xcom_push=True,
     )
     execution_results = op.execute({})
-    run_result = execution_results["results"][0]
+    print(execution_results)
+    build_result = execution_results["results"][0]
 
-    assert run_result["status"] == RunStatus.Success
+    assert build_result["status"] == RunStatus.Success
 
 
 @no_s3_hook
-def test_dbt_run_models_with_profile_from_s3(
+def test_dbt_build_models_with_profile_from_s3(
     s3_bucket, profiles_file, dbt_project_file, model_files
 ):
     hook = DbtS3Hook()
@@ -236,21 +246,21 @@ def test_dbt_run_models_with_profile_from_s3(
         profiles_content = pf.read()
     bucket.put_object(Key="project/profiles.yml", Body=profiles_content.encode())
 
-    op = DbtRunOperator(
+    op = DbtBuildOperator(
         task_id="dbt_task",
         project_dir=dbt_project_file.parent,
         profiles_dir=f"s3://{s3_bucket}/project/",
-        models=[str(m.stem) for m in model_files],
+        select=[str(m.stem) for m in model_files],
         do_xcom_push=True,
     )
     execution_results = op.execute({})
-    run_result = execution_results["results"][0]
+    build_result = execution_results["results"][0]
 
-    assert run_result["status"] == RunStatus.Success
+    assert build_result["status"] == RunStatus.Success
 
 
 @no_s3_hook
-def test_dbt_run_models_with_project_from_s3(
+def test_dbt_build_models_with_project_from_s3(
     s3_bucket, profiles_file, dbt_project_file, model_files
 ):
     hook = DbtS3Hook()
@@ -267,42 +277,14 @@ def test_dbt_run_models_with_project_from_s3(
                 Key=f"project/models/{model_file.name}", Body=model_content.encode()
             )
 
-    op = DbtRunOperator(
+    op = DbtBuildOperator(
         task_id="dbt_task",
         project_dir=f"s3://{s3_bucket}/project/",
         profiles_dir=profiles_file.parent,
-        models=[str(m.stem) for m in model_files],
+        select=[str(m.stem) for m in model_files],
         do_xcom_push=True,
     )
     execution_results = op.execute({})
-    run_result = execution_results["results"][0]
+    build_result = execution_results["results"][0]
 
-    assert run_result["status"] == RunStatus.Success
-
-
-def test_dbt_run_uses_correct_argument_according_to_version():
-    """Test if dbt run operator sets the proper attribute based on dbt version."""
-    op = DbtRunOperator(
-        task_id="dbt_task",
-        project_dir="/path/to/project/",
-        profiles_dir="/path/to/profiles/",
-        profile="dbt-profile",
-        target="dbt-target",
-        vars={"target": "override"},
-        log_cache_events=True,
-        bypass_cache=True,
-        full_refresh=True,
-        models=["/path/to/model.sql", "+/another/model.sql+2"],
-        fail_fast=True,
-        threads=3,
-        exclude=["/path/to/model/to/exclude.sql"],
-        selector="a-selector",
-        state="/path/to/state/",
-    )
-
-    if IS_DBT_VERSION_LESS_THAN_0_21:
-        assert op.models == ["/path/to/model.sql", "+/another/model.sql+2"]
-        assert getattr(op, "select", None) is None
-    else:
-        assert op.select == ["/path/to/model.sql", "+/another/model.sql+2"]
-        assert getattr(op, "models", None) is None
+    assert build_result["status"] == RunStatus.Success

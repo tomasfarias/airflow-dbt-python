@@ -5,6 +5,7 @@ from airflow_dbt_python.operators.dbt import DbtLsOperator
 
 
 def test_dbt_ls_mocked_all_args():
+    """Test mocked dbt ls call with all arguments."""
     op = DbtLsOperator(
         task_id="dbt_task",
         project_dir="/path/to/project/",
@@ -19,7 +20,9 @@ def test_dbt_ls_mocked_all_args():
         exclude=["/path/to/data/to/exclude.sql"],
         selector="a-selector",
         dbt_output="json",
+        output_keys=["a-key", "another-key"],
     )
+
     args = [
         "ls",
         "--project-dir",
@@ -45,6 +48,9 @@ def test_dbt_ls_mocked_all_args():
         "a-selector",
         "--output",
         "json",
+        "--output-keys",
+        "a-key",
+        "another-key",
     ]
 
     with patch.object(DbtLsOperator, "run_dbt_command") as mock:
