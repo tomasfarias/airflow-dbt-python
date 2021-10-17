@@ -3,6 +3,8 @@ from unittest.mock import patch
 
 import pytest
 from dbt.contracts.results import RunStatus
+from dbt.version import __version__ as DBT_VERSION
+from packaging.version import parse
 
 from airflow import AirflowException
 from airflow_dbt_python.operators.dbt import DbtRunOperator
@@ -15,6 +17,9 @@ except ImportError:
 no_s3_hook = pytest.mark.skipif(
     condition, reason="S3Hook not available, consider installing amazon extras"
 )
+
+DBT_VERSION = parse(DBT_VERSION)
+IS_DBT_VERSION_LESS_THAN_0_21 = DBT_VERSION.minor < 21 and DBT_VERSION.major == 0
 
 
 def test_dbt_run_mocked_all_args():
@@ -36,6 +41,12 @@ def test_dbt_run_mocked_all_args():
         selector="a-selector",
         state="/path/to/state/",
     )
+
+    if IS_DBT_VERSION_LESS_THAN_0_21:
+        SELECTION_KEY = "models"
+    else:
+        SELECTION_KEY = "select"
+
     args = [
         "run",
         "--project-dir",
@@ -51,7 +62,7 @@ def test_dbt_run_mocked_all_args():
         "--log-cache-events",
         "--bypass-cache",
         "--full-refresh",
-        "--models",
+        f"--{SELECTION_KEY}",
         "/path/to/model.sql",
         "+/another/model.sql+2",
         "--fail-fast",
@@ -72,6 +83,7 @@ def test_dbt_run_mocked_all_args():
 
 
 def test_dbt_run_mocked_default():
+    """Test mocked dbt run call with default arguments."""
     op = DbtRunOperator(
         task_id="dbt_task",
         do_xcom_push=False,
@@ -266,3 +278,31 @@ def test_dbt_run_models_with_project_from_s3(
     run_result = execution_results["results"][0]
 
     assert run_result["status"] == RunStatus.Success
+
+
+def test_dbt_run_uses_correct_argument_according_to_version():
+    """Test if dbt run operator sets the proper attribute based on dbt version."""
+    op = DbtRunOperator(
+        task_id="dbt_task",
+        project_dir="/path/to/project/",
+        profiles_dir="/path/to/profiles/",
+        profile="dbt-profile",
+        target="dbt-target",
+        vars={"target": "override"},
+        log_cache_events=True,
+        bypass_cache=True,
+        full_refresh=True,
+        models=["/path/to/model.sql", "+/another/model.sql+2"],
+        fail_fast=True,
+        threads=3,
+        exclude=["/path/to/model/to/exclude.sql"],
+        selector="a-selector",
+        state="/path/to/state/",
+    )
+
+    if IS_DBT_VERSION_LESS_THAN_0_21:
+        assert op.models == ["/path/to/model.sql", "+/another/model.sql+2"]
+        assert getattr(op, "select", None) is None
+    else:
+        assert op.select == ["/path/to/model.sql", "+/another/model.sql+2"]
+        assert getattr(op, "models", None) is None

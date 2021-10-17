@@ -2,6 +2,8 @@ from unittest.mock import patch
 
 import pytest
 from dbt.contracts.results import TestStatus
+from dbt.version import __version__ as DBT_VERSION
+from packaging.version import parse
 
 from airflow_dbt_python.operators.dbt import DbtTestOperator
 
@@ -14,8 +16,12 @@ no_s3_hook = pytest.mark.skipif(
     condition, reason="S3Hook not available, consider installing amazon extras"
 )
 
+DBT_VERSION = parse(DBT_VERSION)
+IS_DBT_VERSION_LESS_THAN_0_21 = DBT_VERSION.minor < 21 and DBT_VERSION.major == 0
+
 
 def test_dbt_test_mocked_all_args():
+    """Test mocked dbt test call with all arguments.n"""
     op = DbtTestOperator(
         task_id="dbt_task",
         project_dir="/path/to/project/",
@@ -34,6 +40,12 @@ def test_dbt_test_mocked_all_args():
         state="/path/to/state/",
         no_defer=True,
     )
+
+    if IS_DBT_VERSION_LESS_THAN_0_21:
+        SELECTION_KEY = "models"
+    else:
+        SELECTION_KEY = "select"
+
     args = [
         "test",
         "--project-dir",
@@ -50,7 +62,7 @@ def test_dbt_test_mocked_all_args():
         "--bypass-cache",
         "--data",
         "--schema",
-        "--models",
+        f"--{SELECTION_KEY}",
         "/path/to/models",
         "--threads",
         "2",
@@ -272,3 +284,32 @@ def test_dbt_test_with_project_from_s3(
     results = op.execute({})
     for test_result in results["results"]:
         assert test_result["status"] == TestStatus.Pass
+
+
+def test_dbt_compile_uses_correct_argument_according_to_version():
+    """Test if dbt run operator sets the proper attribute based on dbt version."""
+    op = DbtTestOperator(
+        task_id="dbt_task",
+        project_dir="/path/to/project/",
+        profiles_dir="/path/to/profiles/",
+        profile="dbt-profile",
+        target="dbt-target",
+        vars={"target": "override"},
+        log_cache_events=True,
+        bypass_cache=True,
+        data=True,
+        schema=True,
+        models=["/path/to/models"],
+        threads=2,
+        exclude=["/path/to/data/to/exclude.sql"],
+        selector="a-selector",
+        state="/path/to/state/",
+        no_defer=True,
+    )
+
+    if IS_DBT_VERSION_LESS_THAN_0_21:
+        assert op.models == ["/path/to/models"]
+        assert getattr(op, "select", None) is None
+    else:
+        assert op.select == ["/path/to/models"]
+        assert getattr(op, "models", None) is None

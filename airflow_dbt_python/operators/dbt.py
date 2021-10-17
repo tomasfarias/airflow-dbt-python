@@ -22,6 +22,10 @@ from airflow.models.baseoperator import BaseOperator
 from airflow.models.xcom import XCOM_RETURN_KEY
 from airflow.utils.decorators import apply_defaults
 
+IS_DBT_VERSION_LESS_THAN_0_21 = (
+    int(installed_version.minor) < 21 and int(installed_version.major) == 0
+)
+
 
 class DbtBaseOperator(BaseOperator):
     """The basic Airflow dbt operator.
@@ -297,6 +301,7 @@ class DbtRunOperator(DbtBaseOperator):
     __dbt_args__ = DbtBaseOperator.__dbt_args__ + [
         "full_refresh",
         "models",
+        "select",
         "fail_fast",
         "threads",
         "exclude",
@@ -322,7 +327,6 @@ class DbtRunOperator(DbtBaseOperator):
     ) -> None:
         super().__init__(**kwargs)
         self.full_refresh = full_refresh
-        self.models = models
         self.fail_fast = fail_fast
         self.threads = threads
         self.exclude = exclude
@@ -330,6 +334,11 @@ class DbtRunOperator(DbtBaseOperator):
         self.state = state
         self.defer = defer
         self.no_defer = no_defer
+
+        if IS_DBT_VERSION_LESS_THAN_0_21:
+            self.models = models or select
+        else:
+            self.select = select or models
 
 
 class DbtSeedOperator(DbtBaseOperator):
@@ -378,6 +387,7 @@ class DbtTestOperator(DbtBaseOperator):
         "schema",
         "fail_fast",
         "models",
+        "select",
         "threads",
         "exclude",
         "selector",
@@ -391,6 +401,7 @@ class DbtTestOperator(DbtBaseOperator):
         data: Optional[bool] = None,
         schema: Optional[bool] = None,
         models: Optional[list[str]] = None,
+        select: Optional[list[str]] = None,
         fail_fast: Optional[bool] = None,
         threads: Optional[int] = None,
         exclude: Optional[list[str]] = None,
@@ -403,7 +414,6 @@ class DbtTestOperator(DbtBaseOperator):
         super().__init__(**kwargs)
         self.data = data
         self.schema = schema
-        self.models = models
         self.fail_fast = fail_fast
         self.threads = threads
         self.exclude = exclude
@@ -411,6 +421,11 @@ class DbtTestOperator(DbtBaseOperator):
         self.state = state
         self.defer = defer
         self.no_defer = no_defer
+
+        if IS_DBT_VERSION_LESS_THAN_0_21:
+            self.models = models or select
+        else:
+            self.select = select or models
 
 
 class DbtCompileOperator(DbtBaseOperator):
@@ -424,6 +439,7 @@ class DbtCompileOperator(DbtBaseOperator):
         "fail_fast",
         "threads",
         "models",
+        "select",
         "exclude",
         "selector",
         "state",
@@ -434,6 +450,7 @@ class DbtCompileOperator(DbtBaseOperator):
         parse_only: Optional[bool] = None,
         full_refresh: Optional[bool] = None,
         models: Optional[list[str]] = None,
+        select: Optional[list[str]] = None,
         fail_fast: Optional[bool] = None,
         threads: Optional[int] = None,
         exclude: Optional[list[str]] = None,
@@ -444,12 +461,16 @@ class DbtCompileOperator(DbtBaseOperator):
         super().__init__(**kwargs)
         self.parse_only = parse_only
         self.full_refresh = full_refresh
-        self.models = models
         self.fail_fast = fail_fast
         self.threads = threads
         self.exclude = exclude
         self.selector = selector
         self.state = state
+
+        if IS_DBT_VERSION_LESS_THAN_0_21:
+            self.models = models or select
+        else:
+            self.select = select or models
 
 
 class DbtDepsOperator(DbtBaseOperator):
@@ -526,7 +547,6 @@ class DbtLsOperator(DbtBaseOperator):
     __dbt_args__ = DbtBaseOperator.__dbt_args__ + [
         "resource_type",
         "select",
-        "models",
         "exclude",
         "selector",
         "dbt_output",
@@ -537,7 +557,6 @@ class DbtLsOperator(DbtBaseOperator):
         self,
         resource_type: Optional[list[str]] = None,
         select: Optional[list[str]] = None,
-        models: Optional[list[str]] = None,
         exclude: Optional[list[str]] = None,
         selector: Optional[str] = None,
         dbt_output: Optional[str] = None,
@@ -547,7 +566,6 @@ class DbtLsOperator(DbtBaseOperator):
         super().__init__(**kwargs)
         self.resource_type = resource_type
         self.select = select
-        self.models = models
         self.exclude = exclude
         self.selector = selector
         self.dbt_output = dbt_output
@@ -596,9 +614,10 @@ class DbtSourceOperator(DbtBaseOperator):
 
     __dbt_args__ = DbtBaseOperator.__dbt_args__ + [
         "select",
-        "models",
+        "threads",
         "exclude",
         "selector",
+        "state",
         "dbt_output",
     ]
 
@@ -618,11 +637,11 @@ class DbtSourceOperator(DbtBaseOperator):
     ) -> None:
         super().__init__(positional_args=[subcommand], **kwargs)
         self.select = select
-        self.dbt_output = dbt_output
         self.threads = threads
         self.exclude = exclude
         self.selector = selector
         self.state = state
+        self.dbt_output = dbt_output
 
 
 class DbtBuildOperator(DbtBaseOperator):

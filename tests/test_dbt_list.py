@@ -22,6 +22,7 @@ def test_dbt_ls_mocked_all_args():
         dbt_output="json",
         output_keys=["a-key", "another-key"],
     )
+
     args = [
         "ls",
         "--project-dir",
