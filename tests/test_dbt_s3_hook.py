@@ -1,3 +1,4 @@
+"""Unit test module for DbtS3Hook."""
 import pytest
 
 try:

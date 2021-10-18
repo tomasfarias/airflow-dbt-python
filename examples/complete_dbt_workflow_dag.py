@@ -1,5 +1,6 @@
-"""
-Sample DAG showcasing a complete dbt workflow
+"""Sample DAG showcasing a complete dbt workflow.
+
+The complete workflow includes a sequence of source, seed, and several run commands.
 """
 import datetime as dt
 

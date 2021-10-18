@@ -1,3 +1,4 @@
+"""Unit test module for DbtCompileOperator."""
 from unittest.mock import patch
 
 from dbt.contracts.results import RunStatus

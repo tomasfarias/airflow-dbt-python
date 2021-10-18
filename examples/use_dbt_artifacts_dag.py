@@ -1,6 +1,4 @@
-"""
-Sample DAG to showcase pulling dbt artifacts from XCOM
-"""
+"""Sample DAG to showcase pulling dbt artifacts from XCOM."""
 import datetime as dt
 
 from airflow import DAG
@@ -10,9 +8,7 @@ from airflow_dbt_python.dbt.operators import DbtRunOperator
 
 
 def process_dbt_artifacts(**context):
-    """
-    Report which model or models took the longest to compile and execute
-    """
+    """Report which model or models took the longest to compile and execute."""
     run_results = context["ti"].xcom_pull(
         key="run_results.json", task_ids="dbt_run_daily"
     )

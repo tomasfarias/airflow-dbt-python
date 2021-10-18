@@ -1,3 +1,8 @@
+"""Conftest file including setting common fixtures.
+
+Common fixtures include a connection to a postgres database, a set of sample model and
+ seed files, dbt configuration files, and temporary directories for everything.
+"""
 import boto3
 import pytest
 from dbt.version import __version__ as DBT_VERSION

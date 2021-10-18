@@ -1,3 +1,4 @@
+"""Unit test module for DbtListOperator."""
 from itertools import chain
 from unittest.mock import patch
 

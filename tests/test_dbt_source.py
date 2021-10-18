@@ -1,3 +1,4 @@
+"""Unit test module for DbtSourceOperator."""
 from pathlib import Path
 from unittest.mock import patch
 

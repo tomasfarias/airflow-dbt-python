@@ -1,3 +1,4 @@
+"""Unit test module for DbtDepsOperator."""
 from unittest.mock import patch
 
 import pytest

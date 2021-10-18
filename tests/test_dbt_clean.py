@@ -1,3 +1,4 @@
+"""Unit test module for DbtCleanOperator."""
 from unittest.mock import patch
 
 from airflow_dbt_python.operators.dbt import DbtCleanOperator, DbtCompileOperator

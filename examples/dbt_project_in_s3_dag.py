@@ -1,6 +1,4 @@
-"""
-Sample basic DAG which showcases a dbt project being pulled from S3
-"""
+"""Sample basic DAG which showcases a dbt project being pulled from S3."""
 import datetime as dt
 
 from airflow import DAG
