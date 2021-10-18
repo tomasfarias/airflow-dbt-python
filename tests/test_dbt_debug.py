@@ -1,3 +1,4 @@
+"""Unit test module for DbtDebugOperator."""
 from unittest.mock import patch
 
 from dbt.version import __version__ as DBT_VERSION

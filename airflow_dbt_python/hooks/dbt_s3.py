@@ -7,6 +7,12 @@ from airflow.hooks.S3_hook import S3Hook
 
 
 class DbtS3Hook(S3Hook):
+    """Subclass of S3Hook with methods to pull dbt-related files.
+
+    A dbt hook should provide a method to pull a dbt profiles file (profiles.yml) and
+    all the files corresponding to a project.
+    """
+
     def get_dbt_profiles(
         self, s3_profiles_url: str, profiles_dir: Optional[str] = None
     ) -> Path:

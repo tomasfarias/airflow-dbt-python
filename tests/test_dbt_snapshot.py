@@ -1,9 +1,10 @@
+"""Unit test module for DbtSnapshotOperator."""
 from unittest.mock import patch
 
 import pytest
-from airflow import AirflowException
 from dbt.contracts.results import RunStatus
 
+from airflow import AirflowException
 from airflow_dbt_python.operators.dbt import DbtSnapshotOperator
 
 

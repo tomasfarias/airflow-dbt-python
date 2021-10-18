@@ -1,3 +1,4 @@
+"""Unit test module for DbtBuildOperator."""
 import json
 from unittest.mock import patch
 
