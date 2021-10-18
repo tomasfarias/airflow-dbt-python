@@ -95,7 +95,14 @@ class DbtBaseOperator(BaseOperator):
         self._dbt_s3_hook = None
 
     def execute(self, context: dict):
-        """Execute dbt command with prepared arguments."""
+        """Execute dbt command with prepared arguments.
+
+        Execution requires setting up a directory with the dbt project files and
+        overriding the logging.
+
+        Args:
+            context: The Airflow's task context
+        """
         with self.dbt_directory() as dbt_dir:  # type: str
             with self.override_dbt_logging(dbt_dir):
                 args = self.prepare_args()
@@ -124,6 +131,9 @@ class DbtBaseOperator(BaseOperator):
 
     def xcom_push_artifacts(self, context: dict, dbt_directory: str):
         """Read dbt artifacts and push them to XCom.
+
+        Artifacts are read from the target/ directory in dbt_directory. This method will
+        fail if the required artifact is not found.
 
         Args:
             context: The Airflow task's context.
@@ -160,7 +170,11 @@ class DbtBaseOperator(BaseOperator):
         return args
 
     def args_list(self) -> list[str]:
-        """Build a list of arguments to pass to dbt."""
+        """Build a list of arguments to pass to dbt.
+
+        Building involves creating a list of flags for dbt to parse given the operators
+        attributes and the values specified by __dbt_args__.
+        """
         args = []
         for arg in self.__dbt_args__:
             value = getattr(self, arg, None)
@@ -289,7 +303,12 @@ class DbtBaseOperator(BaseOperator):
 
 
 class DbtRunOperator(DbtBaseOperator):
-    """Executes dbt run."""
+    """Executes a dbt run command.
+
+    The run command executes SQL model files against the given target. The
+    documentation for the dbt command can be found here:
+    https://docs.getdbt.com/reference/commands/run.
+    """
 
     command = "run"
 
@@ -337,7 +356,12 @@ class DbtRunOperator(DbtBaseOperator):
 
 
 class DbtSeedOperator(DbtBaseOperator):
-    """Executes dbt seed."""
+    """Executes a dbt seed command.
+
+    The seed command loads csv files into the  the given target. The
+    documentation for the dbt command can be found here:
+    https://docs.getdbt.com/reference/commands/seed.
+    """
 
     command = "seed"
 
@@ -373,7 +397,12 @@ class DbtSeedOperator(DbtBaseOperator):
 
 
 class DbtTestOperator(DbtBaseOperator):
-    """Executes dbt test."""
+    """Executes a dbt test command.
+
+    The test command runs data and/or schema tests. The
+    documentation for the dbt command can be found here:
+    https://docs.getdbt.com/reference/commands/test.
+    """
 
     command = "test"
 
@@ -424,7 +453,12 @@ class DbtTestOperator(DbtBaseOperator):
 
 
 class DbtCompileOperator(DbtBaseOperator):
-    """Executes dbt compile."""
+    """Executes a dbt compile command.
+
+    The compile command generates SQL files. The
+    documentation for the dbt command can be found here:
+    https://docs.getdbt.com/reference/commands/compile.
+    """
 
     command = "compile"
 
@@ -469,7 +503,11 @@ class DbtCompileOperator(DbtBaseOperator):
 
 
 class DbtDepsOperator(DbtBaseOperator):
-    """Executes dbt deps."""
+    """Executes a dbt deps command.
+
+    The documentation for the dbt command can be found here:
+    https://docs.getdbt.com/reference/commands/deps.
+    """
 
     command = "deps"
 
@@ -478,7 +516,11 @@ class DbtDepsOperator(DbtBaseOperator):
 
 
 class DbtCleanOperator(DbtBaseOperator):
-    """Executes dbt clean."""
+    """Executes a dbt clean command.
+
+    The documentation for the dbt command can be found here:
+    https://docs.getdbt.com/reference/commands/debug.
+    """
 
     command = "clean"
 
@@ -487,7 +529,11 @@ class DbtCleanOperator(DbtBaseOperator):
 
 
 class DbtDebugOperator(DbtBaseOperator):
-    """Execute dbt debug."""
+    """Executes a dbt debug command.
+
+    The documentation for the dbt command can be found here:
+    https://docs.getdbt.com/reference/commands/debug.
+    """
 
     command = "debug"
 
@@ -505,7 +551,11 @@ class DbtDebugOperator(DbtBaseOperator):
 
 
 class DbtSnapshotOperator(DbtBaseOperator):
-    """Execute dbt snapshot."""
+    """Executes a dbt snapshot command.
+
+    The documentation for the dbt command can be found here:
+    https://docs.getdbt.com/reference/commands/snapshot.
+    """
 
     command = "snapshot"
 
@@ -535,7 +585,11 @@ class DbtSnapshotOperator(DbtBaseOperator):
 
 
 class DbtLsOperator(DbtBaseOperator):
-    """Execute dbt list (or ls)."""
+    """Executes a dbt list (or ls) command.
+
+    The documentation for the dbt command can be found here:
+    https://docs.getdbt.com/reference/commands/list.
+    """
 
     command = "ls"
 
@@ -572,7 +626,11 @@ DbtListOperator = DbtLsOperator
 
 
 class DbtRunOperationOperator(DbtBaseOperator):
-    """Execute dbt run-operation."""
+    """Executes a dbt run-operation command.
+
+    The documentation for the dbt command can be found here:
+    https://docs.getdbt.com/reference/commands/run-operation.
+    """
 
     command = "run-operation"
 
@@ -591,7 +649,11 @@ class DbtRunOperationOperator(DbtBaseOperator):
 
 
 class DbtParseOperator(DbtBaseOperator):
-    """Execute dbt parse."""
+    """Executes a dbt parse command.
+
+    The documentation for the dbt command can be found here:
+    https://docs.getdbt.com/reference/commands/parse.
+    """
 
     command = "parse"
 
@@ -603,7 +665,11 @@ class DbtParseOperator(DbtBaseOperator):
 
 
 class DbtSourceOperator(DbtBaseOperator):
-    """Execute dbt source."""
+    """Executes a dbt source command.
+
+    The documentation for the dbt command can be found here:
+    https://docs.getdbt.com/reference/commands/source.
+    """
 
     command = "source"
 
@@ -640,7 +706,7 @@ class DbtSourceOperator(DbtBaseOperator):
 
 
 class DbtBuildOperator(DbtBaseOperator):
-    """Execute dbt build.
+    """Executes a dbt build command.
 
     The build command combines the run, test, seed, and snapshot commands into one. The
     full Documentation for the dbt build command can be found here:
