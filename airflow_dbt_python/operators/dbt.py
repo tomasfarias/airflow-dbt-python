@@ -219,6 +219,14 @@ class DbtBaseOperator(BaseOperator):
 
         with TemporaryDirectory(prefix="airflowtmp") as tmp_dir:
             self.prepare_directory(tmp_dir)
+
+            if getattr(self, "state", None) is not None:
+                state = Path(getattr(self, "state", ""))
+                # Since we are running in a temporary directory, we need to make
+                # state paths relative to this temporary directory.
+                if not state.is_absolute():
+                    setattr(self, "state", str(Path(tmp_dir) / state))
+
             yield tmp_dir
 
         self.profiles_dir = store_profiles_dir
