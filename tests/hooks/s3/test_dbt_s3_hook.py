@@ -2,7 +2,7 @@
 import pytest
 
 try:
-    from airflow_dbt_python.hooks.dbt_s3 import DbtS3Hook
+    from airflow_dbt_python.hooks.s3 import DbtS3Hook
 except ImportError:
     pytest.skip(
         "S3Hook not available, consider installing amazon extras",

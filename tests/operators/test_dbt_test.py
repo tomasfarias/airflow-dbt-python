@@ -1,28 +1,22 @@
 """Unit test module for DbtTestOperator."""
-from unittest.mock import patch
-
 import pytest
 from dbt.contracts.results import TestStatus
-from dbt.version import __version__ as DBT_VERSION
-from packaging.version import parse
 
+from airflow_dbt_python.hooks.dbt import TestTaskConfig
 from airflow_dbt_python.operators.dbt import DbtTestOperator
 
 condition = False
 try:
-    from airflow_dbt_python.hooks.dbt_s3 import DbtS3Hook
+    from airflow_dbt_python.hooks.s3 import DbtS3Hook
 except ImportError:
     condition = True
 no_s3_hook = pytest.mark.skipif(
     condition, reason="S3Hook not available, consider installing amazon extras"
 )
 
-DBT_VERSION = parse(DBT_VERSION)
-IS_DBT_VERSION_LESS_THAN_0_21 = DBT_VERSION.minor < 21 and DBT_VERSION.major == 0
 
-
-def test_dbt_test_mocked_all_args():
-    """Test mocked dbt test call with all arguments.n"""
+def test_dbt_test_configuration_all_args():
+    """Test DbtTestOperator configuration with all arguments."""
     op = DbtTestOperator(
         task_id="dbt_task",
         project_dir="/path/to/project/",
@@ -37,96 +31,50 @@ def test_dbt_test_mocked_all_args():
         models=["/path/to/models"],
         threads=2,
         exclude=["/path/to/data/to/exclude.sql"],
-        selector="a-selector",
+        selector_name=["a-selector"],
         state="/path/to/state/",
         no_defer=True,
+        fail_fast=True,
     )
 
-    if IS_DBT_VERSION_LESS_THAN_0_21:
-        SELECTION_KEY = "models"
-    else:
-        SELECTION_KEY = "select"
-
-    args = [
-        "test",
-        "--project-dir",
-        "/path/to/project/",
-        "--profiles-dir",
-        "/path/to/profiles/",
-        "--profile",
-        "dbt-profile",
-        "--target",
-        "dbt-target",
-        "--vars",
-        "{target: override}",
-        "--log-cache-events",
-        "--bypass-cache",
-        "--data",
-        "--schema",
-        f"--{SELECTION_KEY}",
-        "/path/to/models",
-        "--threads",
-        "2",
-        "--exclude",
-        "/path/to/data/to/exclude.sql",
-        "--selector",
-        "a-selector",
-        "--state",
-        "/path/to/state/",
-        "--no-defer",
-    ]
-
-    with patch.object(DbtTestOperator, "run_dbt_command") as mock:
-        mock.return_value = ([], True)
-        op.execute({})
-        mock.assert_called_once_with(args)
-
-
-def test_dbt_test_mocked_default():
-    op = DbtTestOperator(
-        task_id="dbt_task",
-    )
     assert op.command == "test"
 
-    args = ["test"]
-
-    with patch.object(DbtTestOperator, "run_dbt_command") as mock:
-        mock.return_value = ([], True)
-        op.execute({})
-        mock.assert_called_once_with(args)
-
-
-SCHEMA_TESTS = """
-version: 2
-
-models:
-  - name: model_2
-    columns:
-      - name: field1
-        tests:
-          - unique
-          - not_null
-          - accepted_values:
-              values: ['123', '456']
-      - name: field2
-        tests:
-          - unique
-          - not_null
-"""
+    config = op.get_dbt_config()
+    assert isinstance(config, TestTaskConfig) is True
+    assert config.project_dir == "/path/to/project/"
+    assert config.profiles_dir == "/path/to/profiles/"
+    assert config.profile == "dbt-profile"
+    assert config.target == "dbt-target"
+    assert config.vars == '{"target": "override"}'
+    assert config.log_cache_events is True
+    assert config.bypass_cache is True
+    assert config.data is True
+    assert config.schema is True
+    assert config.fail_fast is True
+    assert config.threads == 2
+    assert config.select == ["/path/to/models"]
+    assert config.exclude == ["/path/to/data/to/exclude.sql"]
+    assert config.selector_name == ["a-selector"]
+    assert config.state == "/path/to/state/"
+    assert config.no_defer is True
 
 
-@pytest.fixture(scope="session")
-def schema_tests_files(dbt_project_dir):
-    d = dbt_project_dir / "models"
-    d.mkdir(exist_ok=True)
+@pytest.fixture
+def run_models(hook, dbt_project_file, profiles_file, model_files):
+    """We need to run some models before we can test."""
+    factory = hook.get_config_factory("run")
+    config = factory.create_config(
+        project_dir=dbt_project_file.parent,
+        profiles_dir=profiles_file.parent,
+    )
+    hook.run_dbt_task(config)
+    yield
 
-    schema = d / "schema.yml"
-    schema.write_text(SCHEMA_TESTS)
 
-    return [schema]
-
-
-def test_dbt_test_schema_tests(profiles_file, dbt_project_file, schema_tests_files):
+def test_dbt_test_schema_tests(
+    profiles_file, dbt_project_file, schema_tests_files, run_models
+):
+    """Test a dbt test operator for schema tests only."""
     op = DbtTestOperator(
         task_id="dbt_task",
         project_dir=dbt_project_file.parent,
@@ -136,41 +84,16 @@ def test_dbt_test_schema_tests(profiles_file, dbt_project_file, schema_tests_fil
     )
     results = op.execute({})
 
-    assert results["args"]["data"] is False
     assert results["args"]["schema"] is True
     assert len(results["results"]) == 5
     for test_result in results["results"]:
         assert test_result["status"] == TestStatus.Pass
 
 
-DATA_TEST_1 = """
-SELECT *
-FROM {{ ref('model_2' )}}
-WHERE field1 != 123
-"""
-
-DATA_TEST_2 = """
-SELECT *
-FROM {{ ref('model_4' )}}
-WHERE field1 != 123
-"""
-
-
-@pytest.fixture(scope="session")
-def data_tests_files(dbt_project_dir):
-    d = dbt_project_dir / "test"
-    d.mkdir(exist_ok=True)
-
-    test1 = d / "data_test_1.sql"
-    test1.write_text(DATA_TEST_1)
-
-    test2 = d / "data_test_2.sql"
-    test2.write_text(DATA_TEST_2)
-
-    return [test1, test2]
-
-
-def test_dbt_test_data_tests(profiles_file, dbt_project_file, data_tests_files):
+def test_dbt_test_data_tests(
+    profiles_file, dbt_project_file, data_tests_files, run_models
+):
+    """Test a dbt test operator for data tests only."""
     op = DbtTestOperator(
         task_id="dbt_task",
         project_dir=dbt_project_file.parent,
@@ -180,7 +103,6 @@ def test_dbt_test_data_tests(profiles_file, dbt_project_file, data_tests_files):
     )
     results = op.execute({})
 
-    assert results["args"]["schema"] is False
     assert results["args"]["data"] is True
     assert len(results["results"]) == 2
     for test_result in results["results"]:
@@ -188,8 +110,9 @@ def test_dbt_test_data_tests(profiles_file, dbt_project_file, data_tests_files):
 
 
 def test_dbt_test_data_and_schema_tests(
-    profiles_file, dbt_project_file, schema_tests_files, data_tests_files
+    profiles_file, dbt_project_file, schema_tests_files, data_tests_files, run_models
 ):
+    """Test a dbt test operator for data and schema tests."""
     op = DbtTestOperator(
         task_id="dbt_task",
         project_dir=dbt_project_file.parent,
@@ -198,15 +121,16 @@ def test_dbt_test_data_and_schema_tests(
     )
     results = op.execute({})
 
-    assert results["args"]["data"] is False
-    assert results["args"]["schema"] is False
     assert len(results["results"]) == 7
     for test_result in results["results"]:
         assert test_result["status"] == TestStatus.Pass
 
 
 @no_s3_hook
-def test_dbt_test_from_s3(s3_bucket, profiles_file, dbt_project_file, data_tests_files):
+def test_dbt_test_from_s3(
+    s3_bucket, profiles_file, dbt_project_file, data_tests_files, run_models
+):
+    """Test a dbt test operator for data and schema tests from s3."""
     hook = DbtS3Hook()
     bucket = hook.get_bucket(s3_bucket)
 
@@ -303,14 +227,10 @@ def test_dbt_compile_uses_correct_argument_according_to_version():
         models=["/path/to/models"],
         threads=2,
         exclude=["/path/to/data/to/exclude.sql"],
-        selector="a-selector",
+        selector_name=["a-selector"],
         state="/path/to/state/",
         no_defer=True,
     )
 
-    if IS_DBT_VERSION_LESS_THAN_0_21:
-        assert op.models == ["/path/to/models"]
-        assert getattr(op, "select", None) is None
-    else:
-        assert op.select == ["/path/to/models"]
-        assert getattr(op, "models", None) is None
+    assert op.select == ["/path/to/models"]
+    assert getattr(op, "models", None) is None

@@ -4,10 +4,12 @@ from unittest.mock import patch
 import pytest
 
 from airflow import AirflowException
+from airflow_dbt_python.hooks.dbt import RunOperationTaskConfig
 from airflow_dbt_python.operators.dbt import DbtRunOperationOperator
 
 
 def test_dbt_run_operation_mocked_all_args():
+    """Test a dbt run-operation operator execution with all mocked arguments."""
     op = DbtRunOperationOperator(
         task_id="dbt_task",
         project_dir="/path/to/project/",
@@ -20,72 +22,27 @@ def test_dbt_run_operation_mocked_all_args():
         macro="my_macro",
         args={"a_var": "a_value", "another_var": 2},
     )
-    args = [
-        "run-operation",
-        "my_macro",
-        "--project-dir",
-        "/path/to/project/",
-        "--profiles-dir",
-        "/path/to/profiles/",
-        "--profile",
-        "dbt-profile",
-        "--target",
-        "dbt-target",
-        "--vars",
-        "{target: override}",
-        "--log-cache-events",
-        "--bypass-cache",
-        "--args",
-        "{a_var: a_value, another_var: 2}",
-    ]
-
-    with patch.object(DbtRunOperationOperator, "run_dbt_command") as mock:
-        mock.return_value = ([], True)
-        op.execute({})
-        mock.assert_called_once_with(args)
-
-
-def test_dbt_run_operation_mocked_default():
-    op = DbtRunOperationOperator(
-        task_id="dbt_task",
-        macro="my_macro",
-    )
 
     assert op.command == "run-operation"
 
-    args = ["run-operation", "my_macro"]
+    config = op.get_dbt_config()
 
-    with patch.object(DbtRunOperationOperator, "run_dbt_command") as mock:
-        mock.return_value = ([], True)
-        res = op.execute({})
-        mock.assert_called_once_with(args)
-
-    assert res == []
-
-
-MACRO = """
-{% macro my_macro(an_arg) %}
-{% set sql %}
-  SELECT {{ an_arg }} as the_arg;
-{% endset %}
-
-{% do run_query(sql) %}
-{% endmacro %}
-"""
-
-
-@pytest.fixture
-def macro_file(dbt_project_dir):
-    d = dbt_project_dir / "macros"
-    d.mkdir(exist_ok=True)
-    m = d / "my_macro.sql"
-    m.write_text(MACRO)
-    return m
+    assert isinstance(config, RunOperationTaskConfig) is True
+    assert config.project_dir == "/path/to/project/"
+    assert config.profiles_dir == "/path/to/profiles/"
+    assert config.profile == "dbt-profile"
+    assert config.target == "dbt-target"
+    assert config.vars == '{"target": "override"}'
+    assert config.log_cache_events is True
+    assert config.bypass_cache is True
+    assert config.macro == "my_macro"
+    assert config.args == "{'a_var': 'a_value', 'another_var': 2}"
 
 
 def test_dbt_run_operation_non_existent_macro(
     profiles_file, dbt_project_file, macro_file
 ):
+    """Test exectuion of DbtRunOperationOperator with a non-existent macro."""
     op = DbtRunOperationOperator(
         task_id="dbt_task",
         project_dir=dbt_project_file.parent,
@@ -100,6 +57,7 @@ def test_dbt_run_operation_non_existent_macro(
 def test_dbt_run_operation_missing_arguments(
     profiles_file, dbt_project_file, macro_file
 ):
+    """Test exectuion of DbtRunOperationOperator with missing arguments."""
     op = DbtRunOperationOperator(
         task_id="dbt_task",
         project_dir=dbt_project_file.parent,
@@ -112,6 +70,7 @@ def test_dbt_run_operation_missing_arguments(
 
 
 def test_dbt_run_operation_run_macro(profiles_file, dbt_project_file, macro_file):
+    """Test a dbt run-operation operator basic execution."""
     op = DbtRunOperationOperator(
         task_id="dbt_task",
         project_dir=dbt_project_file.parent,
@@ -135,6 +94,7 @@ BROKEN_MACRO1 = """
 
 @pytest.fixture
 def broken_macro(dbt_project_dir):
+    """Create a broken macro file."""
     d = dbt_project_dir / "macros"
     d.mkdir(exist_ok=True)
     m = d / "my_broken_macro.sql"
@@ -146,6 +106,7 @@ def broken_macro(dbt_project_dir):
 def test_dbt_run_operation_fails_with_malformed_macro(
     profiles_file, dbt_project_file, broken_macro
 ):
+    """Test DbtRunOperationOperator with a macro with syntax errors."""
     op = DbtRunOperationOperator(
         task_id="dbt_task",
         project_dir=dbt_project_file.parent,
@@ -170,6 +131,7 @@ BROKEN_MACRO2 = """
 
 @pytest.fixture
 def another_broken_macro(dbt_project_dir):
+    """Create another broken macro file for testing."""
     d = dbt_project_dir / "macros"
     d.mkdir(exist_ok=True)
     m = d / "another_broken_macro.sql"
@@ -180,6 +142,7 @@ def another_broken_macro(dbt_project_dir):
 def test_dbt_run_operation_fails_with_malformed_sql(
     profiles_file, dbt_project_file, another_broken_macro
 ):
+    """Test DbtRunOperationOperator with a malformed SQL in macro."""
     op = DbtRunOperationOperator(
         task_id="dbt_task",
         project_dir=dbt_project_file.parent,

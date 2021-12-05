@@ -1,15 +1,8 @@
 """Unit test module for DbtCompileOperator."""
-from unittest.mock import patch
-
 from dbt.contracts.results import RunStatus
-from dbt.version import __version__ as DBT_VERSION
-from packaging.version import parse
 
+from airflow_dbt_python.hooks.dbt import CompileTaskConfig
 from airflow_dbt_python.operators.dbt import DbtCompileOperator
-
-DBT_VERSION = parse(DBT_VERSION)
-IS_DBT_VERSION_LESS_THAN_0_20 = DBT_VERSION.minor < 20 and DBT_VERSION.major == 0
-IS_DBT_VERSION_LESS_THAN_0_21 = DBT_VERSION.minor < 21 and DBT_VERSION.major == 0
 
 
 def test_dbt_compile_mocked_all_args():
@@ -29,66 +22,37 @@ def test_dbt_compile_mocked_all_args():
         models=["/path/to/model1.sql", "/path/to/model2.sql"],
         threads=2,
         exclude=["/path/to/data/to/exclude.sql"],
-        selector="a-selector",
+        selector_name=["a-selector"],
         state="/path/to/state/",
     )
 
-    if IS_DBT_VERSION_LESS_THAN_0_21:
-        SELECTION_KEY = "models"
-    else:
-        SELECTION_KEY = "select"
-
-    args = [
-        "compile",
-        "--project-dir",
-        "/path/to/project/",
-        "--profiles-dir",
-        "/path/to/profiles/",
-        "--profile",
-        "dbt-profile",
-        "--target",
-        "dbt-target",
-        "--vars",
-        "{target: override}",
-        "--log-cache-events",
-        "--bypass-cache",
-        "--parse-only",
-        "--full-refresh",
-        "--fail-fast",
-        "--threads",
-        "2",
-        f"--{SELECTION_KEY}",
-        "/path/to/model1.sql",
-        "/path/to/model2.sql",
-        "--exclude",
-        "/path/to/data/to/exclude.sql",
-        "--selector",
-        "a-selector",
-        "--state",
-        "/path/to/state/",
-    ]
-
-    with patch.object(DbtCompileOperator, "run_dbt_command") as mock:
-        mock.return_value = ([], True)
-        op.execute({})
-        mock.assert_called_once_with(args)
-
-
-def test_dbt_compile_mocked_default():
-    op = DbtCompileOperator(
-        task_id="dbt_task",
-    )
     assert op.command == "compile"
 
-    args = ["compile"]
+    config = op.get_dbt_config()
 
-    with patch.object(DbtCompileOperator, "run_dbt_command") as mock:
-        mock.return_value = ([], True)
-        op.execute({})
-        mock.assert_called_once_with(args)
+    assert isinstance(config, CompileTaskConfig) is True
+    assert config.project_dir == "/path/to/project/"
+    assert config.profiles_dir == "/path/to/profiles/"
+    assert config.profile == "dbt-profile"
+    assert config.target == "dbt-target"
+    assert config.vars == '{"target": "override"}'
+    assert config.log_cache_events is True
+    assert config.bypass_cache is True
+    assert config.parse_only is True
+    assert config.full_refresh is True
+    assert config.fail_fast is True
+    assert config.threads == 2
+    assert config.select == [
+        "/path/to/model1.sql",
+        "/path/to/model2.sql",
+    ]
+    assert config.exclude == ["/path/to/data/to/exclude.sql"]
+    assert config.selector_name == ["a-selector"]
+    assert config.state == "/path/to/state/"
 
 
 def test_dbt_compile_non_existent_model(profiles_file, dbt_project_file, model_files):
+    """Test execution of DbtCompileOperator with a non-existent file."""
     op = DbtCompileOperator(
         task_id="dbt_task",
         project_dir=dbt_project_file.parent,
@@ -120,13 +84,8 @@ SELECT
   NOW() AS field2
 """
 
-if not IS_DBT_VERSION_LESS_THAN_0_20:
-    cte = "cte"
-else:
-    cte = "CTE"
-
-COMPILED_MODEL_4 = f"""
-with __dbt__{cte}__model_1 as (
+COMPILED_MODEL_4 = """
+with __dbt__cte__model_1 as (
 SELECT
   123 AS field1,
   'abc' AS field2
@@ -135,7 +94,7 @@ SELECT
   field2 AS field2,
   SUM(CASE WHEN 'd' IN ('a', 'b', 'c') THEN 1 ELSE 0 END) AS field3
 FROM
-  __dbt__{cte}__model_1
+  __dbt__cte__model_1
 GROUP BY
   field1, field2
 """
@@ -232,13 +191,9 @@ def test_dbt_compile_uses_correct_argument_according_to_version():
         models=["/path/to/model1.sql", "/path/to/model2.sql"],
         threads=2,
         exclude=["/path/to/data/to/exclude.sql"],
-        selector="a-selector",
+        selector_name=["a-selector"],
         state="/path/to/state/",
     )
 
-    if IS_DBT_VERSION_LESS_THAN_0_21:
-        assert op.models == ["/path/to/model1.sql", "/path/to/model2.sql"]
-        assert getattr(op, "select", None) is None
-    else:
-        assert op.select == ["/path/to/model1.sql", "/path/to/model2.sql"]
-        assert getattr(op, "models", None) is None
+    assert op.select == ["/path/to/model1.sql", "/path/to/model2.sql"]
+    assert getattr(op, "models", None) is None

@@ -5,10 +5,12 @@ import pytest
 from dbt.contracts.results import RunStatus
 
 from airflow import AirflowException
+from airflow_dbt_python.hooks.dbt import SnapshotTaskConfig
 from airflow_dbt_python.operators.dbt import DbtSnapshotOperator
 
 
 def test_dbt_snapshot_mocked_all_args():
+    """Test mocked dbt snapshot call with all arguments."""
     op = DbtSnapshotOperator(
         task_id="dbt_task",
         project_dir="/path/to/project/",
@@ -21,90 +23,29 @@ def test_dbt_snapshot_mocked_all_args():
         select=["/path/to/models"],
         threads=2,
         exclude=["/path/to/data/to/exclude.sql"],
-        selector="a-selector",
+        selector_name=["a-selector"],
         state="/path/to/state/",
-    )
-    args = [
-        "snapshot",
-        "--project-dir",
-        "/path/to/project/",
-        "--profiles-dir",
-        "/path/to/profiles/",
-        "--profile",
-        "dbt-profile",
-        "--target",
-        "dbt-target",
-        "--vars",
-        "{target: override}",
-        "--log-cache-events",
-        "--bypass-cache",
-        "--select",
-        "/path/to/models",
-        "--threads",
-        "2",
-        "--exclude",
-        "/path/to/data/to/exclude.sql",
-        "--selector",
-        "a-selector",
-        "--state",
-        "/path/to/state/",
-    ]
-
-    with patch.object(DbtSnapshotOperator, "run_dbt_command") as mock:
-        mock.return_value = ([], True)
-        op.execute({})
-        mock.assert_called_once_with(args)
-
-
-def test_dbt_snapshot_mocked_default():
-    op = DbtSnapshotOperator(
-        task_id="dbt_task",
     )
     assert op.command == "snapshot"
 
-    args = ["snapshot"]
-
-    with patch.object(DbtSnapshotOperator, "run_dbt_command") as mock:
-        mock.return_value = ([], True)
-        op.execute({})
-        mock.assert_called_once_with(args)
-
-
-SNAPSHOT_1 = """
-{% snapshot test_snapshot %}
-
-{{
-    config(
-      target_database='test',
-      target_schema='test',
-      unique_key='id_field',
-
-      strategy='timestamp',
-      updated_at='time_field',
-    )
-}}
-
-SELECT
-  1 AS id_field,
-  'abc' AS value_field,
-  NOW() AS time_field
-
-{% endsnapshot %}
-"""
-
-
-@pytest.fixture(scope="session")
-def snapshot_files(dbt_project_dir):
-    d = dbt_project_dir / "snapshots"
-    d.mkdir(exist_ok=True)
-
-    snap = d / "snapshot_1.sql"
-    snap.write_text(SNAPSHOT_1)
-
-    return [snap]
+    config = op.get_dbt_config()
+    assert isinstance(config, SnapshotTaskConfig) is True
+    assert config.project_dir == "/path/to/project/"
+    assert config.profiles_dir == "/path/to/profiles/"
+    assert config.profile == "dbt-profile"
+    assert config.target == "dbt-target"
+    assert config.vars == '{"target": "override"}'
+    assert config.log_cache_events is True
+    assert config.bypass_cache is True
+    assert config.threads == 2
+    assert config.select == ["/path/to/models"]
+    assert config.exclude == ["/path/to/data/to/exclude.sql"]
+    assert config.selector_name == ["a-selector"]
+    assert config.state == "/path/to/state/"
 
 
 def test_dbt_snapshot(profiles_file, dbt_project_file, snapshot_files):
+    """Test a basic dbt snapshot operator execution."""
     op = DbtSnapshotOperator(
         task_id="dbt_task",
         project_dir=dbt_project_file.parent,
@@ -142,6 +83,7 @@ SELECT -- id_field doesn't exist
 
 @pytest.fixture
 def broken_snapshot_file(dbt_project_dir):
+    """Create an invalid snapshot file."""
     d = dbt_project_dir / "snapshots"
     snap = d / "broken_snapshot.sql"
     snap.write_text(BROKEN_SNAPSHOT_SQL)
@@ -151,6 +93,7 @@ def broken_snapshot_file(dbt_project_dir):
 def test_dbt_run_fails_with_malformed_sql(
     profiles_file, dbt_project_file, broken_snapshot_file
 ):
+    """Test DbtSnapshotOperator when using a brokene SQL file."""
     op = DbtSnapshotOperator(
         task_id="dbt_task",
         project_dir=dbt_project_file.parent,

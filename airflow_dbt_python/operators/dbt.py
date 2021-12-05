@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import datetime as dt
 import json
+import os
 from contextlib import contextmanager
 from dataclasses import asdict, is_dataclass
 from pathlib import Path
@@ -10,20 +11,18 @@ from tempfile import TemporaryDirectory
 from typing import Any, Iterator, Optional, Union
 from urllib.parse import urlparse
 
-import dbt.flags as flags
-from dbt.contracts.results import RunExecutionResult, RunResult, agate
+from dbt.contracts.results import RunExecutionResult, agate
 from dbt.logger import log_manager
-from dbt.main import initialize_config_values, parse_args, track_run
-from dbt.semver import VersionSpecifier
-from dbt.version import installed as installed_version
 
 from airflow import AirflowException
 from airflow.models.baseoperator import BaseOperator
 from airflow.models.xcom import XCOM_RETURN_KEY
 from airflow.utils.decorators import apply_defaults
-
-IS_DBT_VERSION_LESS_THAN_0_21 = (
-    int(installed_version.minor) < 21 and int(installed_version.major) == 0
+from airflow_dbt_python.hooks.dbt import (
+    BaseConfig,
+    IndirectSelection,
+    LogFormat,
+    Output,
 )
 
 
@@ -54,45 +53,81 @@ class DbtBaseOperator(BaseOperator):
         "profiles_dir",
         "profile",
         "target",
-    ]
-    command: Optional[str] = None
-    __dbt_args__ = [
-        "project_dir",
-        "profiles_dir",
-        "profile",
-        "target",
-        "vars",
-        "log_cache_events",
-        "bypass_cache",
+        "select",
+        "models",
+        "exclude",
+        "state",
     ]
 
     @apply_defaults
     def __init__(
         self,
-        positional_args: Optional[list[str]] = None,
         project_dir: Optional[Union[str, Path]] = None,
         profiles_dir: Optional[Union[str, Path]] = None,
         profile: Optional[str] = None,
         target: Optional[str] = None,
+        compiled_target: Optional[Union[os.PathLike, str, bytes]] = None,
         vars: Optional[dict[str, str]] = None,
         log_cache_events: Optional[bool] = False,
         bypass_cache: Optional[bool] = False,
+        record_timing_info: Optional[str] = None,
+        log_format: Optional[str] = None,
+        warn_error: Optional[bool] = None,
+        use_experimental_parser: Optional[bool] = None,
+        no_static_parser: Optional[bool] = None,
+        no_anonymous_usage_stats: Optional[bool] = None,
+        partial_parse: Optional[bool] = None,
+        no_partial_parse: Optional[bool] = None,
+        use_colors: Optional[bool] = None,
+        no_use_colors: Optional[bool] = None,
+        no_version_check: Optional[bool] = None,
+        single_threaded: Optional[bool] = None,
+        debug: Optional[bool] = None,
+        fail_fast: Optional[bool] = None,
+        defer: Optional[bool] = None,
+        state: Optional[str] = None,
+        threads: Optional[int] = None,
+        no_defer: Optional[bool] = None,
         s3_conn_id: str = "aws_default",
         do_xcom_push_artifacts: Optional[list[str]] = None,
         **kwargs,
     ) -> None:
         super().__init__(**kwargs)
-        self.positional_args = positional_args
+        # All dbt configuration arguments.
         self.project_dir = project_dir
         self.profiles_dir = profiles_dir
         self.profile = profile
         self.target = target
-        self.vars = vars
+        self.vars = vars or {}
+        self.debug = debug
         self.log_cache_events = log_cache_events
+        self.log_format = (
+            LogFormat.from_str(log_format) if log_format is not None else None
+        )
         self.bypass_cache = bypass_cache
+        self.fail_fast = fail_fast
+        self.warn_error = warn_error
+        self.use_experimental_parser = use_experimental_parser
+        self.no_static_parser = no_static_parser
+        self.no_anonymous_usage_stats = no_anonymous_usage_stats
+        self.partial_parse = partial_parse
+        self.no_partial_parse = no_partial_parse
+        self.use_colors = use_colors
+        self.no_use_colors = no_use_colors
+        self.no_version_check = no_version_check
+        self.defer = defer
+        self.no_defer = no_defer
+        self.single_threaded = single_threaded
+        self.record_timing_info = record_timing_info
+        self.state = state
+        self.threads = threads
+        self.compiled_target = compiled_target
+
+        # Airflow operator configuration.
         self.s3_conn_id = s3_conn_id
         self.do_xcom_push_artifacts = do_xcom_push_artifacts
-        self._dbt_s3_hook = None
+        self._s3_hook = None
+        self._dbt_hook = None
 
     def execute(self, context: dict):
         """Execute dbt command with prepared arguments.
@@ -105,29 +140,52 @@ class DbtBaseOperator(BaseOperator):
         """
         with self.dbt_directory() as dbt_dir:  # type: str
             with self.override_dbt_logging(dbt_dir):
-                args = self.prepare_args()
-                self.log.info("Running dbt %s with args %s", args[0], args[1:])
+                config = self.get_dbt_config()
+                self.log.info("Running dbt configuration: %s", config)
 
                 try:
-                    res, success = self.run_dbt_command(args)
+                    success, results = self.dbt_hook.run_dbt_task(config)
                 except Exception as e:
                     self.log.exception("There was an error executing dbt", exc_info=e)
-                    res, success = {}, False
+                    success, results = False, {}
 
                 if self.do_xcom_push is True:
                     # Some dbt operations use dataclasses for its results,
                     # found in dbt.contracts.results. Each DbtBaseOperator
                     # subclass should implement prepare_results to return a
                     # serializable object
-                    res = self.serializable_result(res)
+                    res = self.serializable_result(results)
                     if context.get("ti", None) is not None:
                         self.xcom_push_artifacts(context, dbt_dir)
 
         if success is not True:
             if self.do_xcom_push is True and context.get("ti", None) is not None:
                 self.xcom_push(context, key=XCOM_RETURN_KEY, value=res)
-            raise AirflowException(f"dbt {args[0]} {args[1:]} failed")
+            raise AirflowException(
+                f"An error has occurred executing dbt {config.dbt_task}"
+            )
         return res
+
+    @property
+    def command(self) -> str:
+        """Return the current dbt command.
+
+        Each subclass of DbtBaseOperator should return its corresponding command.
+        """
+        raise NotImplementedError()
+
+    def get_dbt_config(self) -> BaseConfig:
+        """Return a dbt task configuration."""
+        factory = self.dbt_hook.get_config_factory(self.command)
+        config_kwargs = {}
+        for field in factory.fields:
+            # Some arguments conflict with Airflow's BaseOperator, so we append dbt_
+            # to them.
+            kwarg = getattr(self, f"dbt_{field.name}", getattr(self, field.name, None))
+            if kwarg is None:
+                continue
+            config_kwargs[field.name] = kwarg
+        return factory.create_config(**config_kwargs)
 
     def xcom_push_artifacts(self, context: dict, dbt_directory: str):
         """Read dbt artifacts and push them to XCom.
@@ -152,57 +210,6 @@ class DbtBaseOperator(BaseOperator):
             with open(artifact_path) as f:
                 json_dict = json.load(f)
             self.xcom_push(context, key=artifact, value=json_dict)
-
-    def prepare_args(self) -> list[Optional[str]]:
-        """Prepare the arguments needed to call dbt."""
-        if self.command is None:
-            raise AirflowException(
-                "dbt command is not defined; each subclass of DbtBaseOperator"
-                "should set a command attribute"
-            )
-
-        args: list[Optional[str]] = [self.command]
-
-        if self.positional_args is not None:
-            args.extend(self.positional_args)
-        args.extend(self.args_list())
-
-        return args
-
-    def args_list(self) -> list[str]:
-        """Build a list of arguments to pass to dbt.
-
-        Building involves creating a list of flags for dbt to parse given the operators
-        attributes and the values specified by __dbt_args__.
-        """
-        args = []
-        for arg in self.__dbt_args__:
-            value = getattr(self, arg, None)
-            if value is None:
-                continue
-
-            if arg.startswith("dbt_"):
-                arg = arg[4:]
-
-            if not isinstance(value, bool) or value is True:
-                flag = "--" + arg.replace("_", "-")
-                args.append(flag)
-
-            if isinstance(value, bool):
-                continue
-            elif any(isinstance(value, _type) for _type in (str, Path, int)):
-                args.append(str(value))
-            elif isinstance(value, list):
-                args.extend(value)
-            elif isinstance(value, dict):
-                yaml_str = (
-                    "{"
-                    + ", ".join("{}: {}".format(k, v) for k, v in value.items())
-                    + "}"
-                )
-                args.append(yaml_str)
-
-        return args
 
     @contextmanager
     def dbt_directory(self) -> Iterator[str]:
@@ -236,7 +243,7 @@ class DbtBaseOperator(BaseOperator):
         """Prepares a dbt directory by pulling files from S3."""
         if urlparse(str(self.profiles_dir)).scheme == "s3":
             self.log.info("Fetching profiles.yml from S3: %s", self.profiles_dir)
-            profiles_file_path = self.dbt_s3_hook.get_dbt_profiles(
+            profiles_file_path = self.s3_hook.get_dbt_profiles(
                 self.profiles_dir,
                 tmp_dir,
             )
@@ -244,20 +251,29 @@ class DbtBaseOperator(BaseOperator):
 
         if urlparse(str(self.project_dir)).scheme == "s3":
             self.log.info("Fetching dbt project from S3: %s", self.project_dir)
-            project_dir_path = self.dbt_s3_hook.get_dbt_project(
+            project_dir_path = self.s3_hook.get_dbt_project(
                 self.project_dir,
                 tmp_dir,
             )
             self.project_dir = str(project_dir_path) + "/"
 
     @property
-    def dbt_s3_hook(self):
+    def s3_hook(self):
         """Provides an existing DbtS3Hook or creates one."""
-        if self._dbt_s3_hook is None:
-            from airflow_dbt_python.hooks.dbt_s3 import DbtS3Hook
+        if self._s3_hook is None:
+            from airflow_dbt_python.hooks.s3 import DbtS3Hook
 
-            self._dbt_s3_hook = DbtS3Hook(self.s3_conn_id)
-        return self._dbt_s3_hook
+            self._s3_hook = DbtS3Hook(self.s3_conn_id)
+        return self._s3_hook
+
+    @property
+    def dbt_hook(self):
+        """Provides an existing DbtHook or creates one."""
+        if self._dbt_hook is None:
+            from airflow_dbt_python.hooks.dbt import DbtHook
+
+            self._dbt_hook = DbtHook()
+        return self._dbt_hook
 
     @contextmanager
     def override_dbt_logging(self, dbt_directory: str = None):
@@ -275,25 +291,6 @@ class DbtBaseOperator(BaseOperator):
                 StreamLogWriter(self.log, self.log.getEffectiveLevel())
             )
             yield
-
-    def run_dbt_command(self, args: list[Optional[str]]) -> tuple[RunResult, bool]:
-        """Run a dbt command as implemented by a subclass."""
-        try:
-            parsed = parse_args(args)
-        except Exception as exc:
-            raise AirflowException("Failed to parse dbt arguments: {args}") from exc
-
-        initialize_config_values(parsed)
-        flags.set_from_args(parsed)
-        parsed.cls.pre_init_hook(parsed)
-
-        command = parsed.cls.from_args(args=parsed)
-        results = None
-        with track_run(command):
-            results = command.run()
-
-        success = command.interpret_results(results)
-        return results, success
 
     def serializable_result(
         self, result: Optional[RunExecutionResult]
@@ -318,49 +315,25 @@ class DbtRunOperator(DbtBaseOperator):
     https://docs.getdbt.com/reference/commands/run.
     """
 
-    command = "run"
-
-    __dbt_args__ = DbtBaseOperator.__dbt_args__ + [
-        "full_refresh",
-        "models",
-        "select",
-        "fail_fast",
-        "threads",
-        "exclude",
-        "selector",
-        "state",
-        "defer",
-        "no_defer",
-    ]
-
     def __init__(
         self,
         full_refresh: Optional[bool] = None,
         models: Optional[list[str]] = None,
         select: Optional[list[str]] = None,
-        fail_fast: Optional[bool] = None,
-        threads: Optional[int] = None,
+        selector_name: Optional[list[str]] = None,
         exclude: Optional[list[str]] = None,
-        selector: Optional[str] = None,
-        state: Optional[Union[str, Path]] = None,
-        defer: Optional[bool] = None,
-        no_defer: Optional[bool] = None,
         **kwargs,
     ) -> None:
         super().__init__(**kwargs)
         self.full_refresh = full_refresh
-        self.fail_fast = fail_fast
-        self.threads = threads
         self.exclude = exclude
-        self.selector = selector
-        self.state = state
-        self.defer = defer
-        self.no_defer = no_defer
+        self.selector_name = selector_name
+        self.select = select or models
 
-        if IS_DBT_VERSION_LESS_THAN_0_21:
-            self.models = models or select
-        else:
-            self.select = select or models
+    @property
+    def command(self) -> str:
+        """Return the run command."""
+        return "run"
 
 
 class DbtSeedOperator(DbtBaseOperator):
@@ -371,37 +344,26 @@ class DbtSeedOperator(DbtBaseOperator):
     https://docs.getdbt.com/reference/commands/seed.
     """
 
-    command = "seed"
-
-    __dbt_args__ = DbtBaseOperator.__dbt_args__ + [
-        "full_refresh",
-        "select",
-        "show",
-        "threads",
-        "exclude",
-        "selector",
-        "state",
-    ]
-
     def __init__(
         self,
         full_refresh: Optional[bool] = None,
         select: Optional[list[str]] = None,
         show: Optional[bool] = None,
-        threads: Optional[int] = None,
         exclude: Optional[list[str]] = None,
-        selector: Optional[str] = None,
-        state: Optional[Union[str, Path]] = None,
+        selector_name: Optional[str] = None,
         **kwargs,
     ) -> None:
         super().__init__(**kwargs)
         self.full_refresh = full_refresh
         self.select = select
         self.show = show
-        self.threads = threads
         self.exclude = exclude
-        self.selector = selector
-        self.state = state
+        self.selector_name = selector_name
+
+    @property
+    def command(self) -> str:
+        """Return the seed command."""
+        return "seed"
 
 
 class DbtTestOperator(DbtBaseOperator):
@@ -412,52 +374,27 @@ class DbtTestOperator(DbtBaseOperator):
     https://docs.getdbt.com/reference/commands/test.
     """
 
-    command = "test"
-
-    __dbt_args__ = DbtBaseOperator.__dbt_args__ + [
-        "data",
-        "schema",
-        "fail_fast",
-        "models",
-        "select",
-        "threads",
-        "exclude",
-        "selector",
-        "state",
-        "defer",
-        "no_defer",
-    ]
-
     def __init__(
         self,
         data: Optional[bool] = None,
         schema: Optional[bool] = None,
         models: Optional[list[str]] = None,
         select: Optional[list[str]] = None,
-        fail_fast: Optional[bool] = None,
-        threads: Optional[int] = None,
         exclude: Optional[list[str]] = None,
-        selector: Optional[str] = None,
-        state: Optional[Union[str, Path]] = None,
-        defer: Optional[bool] = None,
-        no_defer: Optional[bool] = None,
+        selector_name: Optional[str] = None,
         **kwargs,
     ) -> None:
         super().__init__(**kwargs)
         self.data = data
         self.schema = schema
-        self.fail_fast = fail_fast
-        self.threads = threads
         self.exclude = exclude
-        self.selector = selector
-        self.state = state
-        self.defer = defer
-        self.no_defer = no_defer
+        self.selector_name = selector_name
+        self.select = select or models
 
-        if IS_DBT_VERSION_LESS_THAN_0_21:
-            self.models = models or select
-        else:
-            self.select = select or models
+    @property
+    def command(self) -> str:
+        """Return the test command."""
+        return "test"
 
 
 class DbtCompileOperator(DbtBaseOperator):
@@ -468,46 +405,27 @@ class DbtCompileOperator(DbtBaseOperator):
     https://docs.getdbt.com/reference/commands/compile.
     """
 
-    command = "compile"
-
-    __dbt_args__ = DbtBaseOperator.__dbt_args__ + [
-        "parse_only",
-        "full_refresh",
-        "fail_fast",
-        "threads",
-        "models",
-        "select",
-        "exclude",
-        "selector",
-        "state",
-    ]
-
     def __init__(
         self,
         parse_only: Optional[bool] = None,
         full_refresh: Optional[bool] = None,
         models: Optional[list[str]] = None,
         select: Optional[list[str]] = None,
-        fail_fast: Optional[bool] = None,
-        threads: Optional[int] = None,
         exclude: Optional[list[str]] = None,
-        selector: Optional[str] = None,
-        state: Optional[Union[str, Path]] = None,
+        selector_name: Optional[str] = None,
         **kwargs,
     ) -> None:
         super().__init__(**kwargs)
         self.parse_only = parse_only
         self.full_refresh = full_refresh
-        self.fail_fast = fail_fast
-        self.threads = threads
         self.exclude = exclude
-        self.selector = selector
-        self.state = state
+        self.selector_name = selector_name
+        self.select = select or models
 
-        if IS_DBT_VERSION_LESS_THAN_0_21:
-            self.models = models or select
-        else:
-            self.select = select or models
+    @property
+    def command(self) -> str:
+        """Return the compile command."""
+        return "compile"
 
 
 class DbtDepsOperator(DbtBaseOperator):
@@ -517,10 +435,13 @@ class DbtDepsOperator(DbtBaseOperator):
     https://docs.getdbt.com/reference/commands/deps.
     """
 
-    command = "deps"
-
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
+
+    @property
+    def command(self) -> str:
+        """Return the deps command."""
+        return "deps"
 
 
 class DbtCleanOperator(DbtBaseOperator):
@@ -530,10 +451,13 @@ class DbtCleanOperator(DbtBaseOperator):
     https://docs.getdbt.com/reference/commands/debug.
     """
 
-    command = "clean"
-
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
+
+    @property
+    def command(self) -> str:
+        """Return the clean command."""
+        return "clean"
 
 
 class DbtDebugOperator(DbtBaseOperator):
@@ -542,10 +466,6 @@ class DbtDebugOperator(DbtBaseOperator):
     The documentation for the dbt command can be found here:
     https://docs.getdbt.com/reference/commands/debug.
     """
-
-    command = "debug"
-
-    __dbt_args__ = DbtBaseOperator.__dbt_args__ + ["config_dir", "no_version_check"]
 
     def __init__(
         self,
@@ -557,6 +477,11 @@ class DbtDebugOperator(DbtBaseOperator):
         self.config_dir = config_dir
         self.no_version_check = no_version_check
 
+    @property
+    def command(self) -> str:
+        """Return the debug command."""
+        return "debug"
+
 
 class DbtSnapshotOperator(DbtBaseOperator):
     """Executes a dbt snapshot command.
@@ -565,31 +490,22 @@ class DbtSnapshotOperator(DbtBaseOperator):
     https://docs.getdbt.com/reference/commands/snapshot.
     """
 
-    command = "snapshot"
-
-    __dbt_args__ = DbtBaseOperator.__dbt_args__ + [
-        "select",
-        "threads",
-        "exclude",
-        "selector",
-        "state",
-    ]
-
     def __init__(
         self,
         select: Optional[list[str]] = None,
-        threads: Optional[int] = None,
         exclude: Optional[list[str]] = None,
-        selector: Optional[str] = None,
-        state: Optional[Union[str, Path]] = None,
+        selector_name: Optional[str] = None,
         **kwargs,
     ) -> None:
         super().__init__(**kwargs)
         self.select = select
-        self.threads = threads
         self.exclude = exclude
-        self.selector = selector
-        self.state = state
+        self.selector_name = selector_name
+
+    @property
+    def command(self) -> str:
+        """Return the snapshot command."""
+        return "snapshot"
 
 
 class DbtLsOperator(DbtBaseOperator):
@@ -599,34 +515,36 @@ class DbtLsOperator(DbtBaseOperator):
     https://docs.getdbt.com/reference/commands/list.
     """
 
-    command = "ls"
-
-    __dbt_args__ = DbtBaseOperator.__dbt_args__ + [
-        "resource_type",
-        "select",
-        "exclude",
-        "selector",
-        "dbt_output",
-        "output_keys",
-    ]
-
     def __init__(
         self,
-        resource_type: Optional[list[str]] = None,
+        resource_types: Optional[list[str]] = None,
         select: Optional[list[str]] = None,
         exclude: Optional[list[str]] = None,
-        selector: Optional[str] = None,
+        selector_name: Optional[str] = None,
         dbt_output: Optional[str] = None,
         output_keys: Optional[list[str]] = None,
+        indirect_selection: Optional[str] = None,
         **kwargs,
     ) -> None:
         super().__init__(**kwargs)
-        self.resource_type = resource_type
+        self.resource_types = resource_types
         self.select = select
         self.exclude = exclude
-        self.selector = selector
-        self.dbt_output = dbt_output
+        self.selector_name = selector_name
+        self.dbt_output = (
+            Output.from_str(dbt_output) if dbt_output is not None else None
+        )
         self.output_keys = output_keys
+        self.indirect_selection = (
+            IndirectSelection.from_str(indirect_selection)
+            if indirect_selection is not None
+            else None
+        )
+
+    @property
+    def command(self) -> str:
+        """Return the list command."""
+        return "list"
 
 
 # Convinience alias
@@ -640,20 +558,20 @@ class DbtRunOperationOperator(DbtBaseOperator):
     https://docs.getdbt.com/reference/commands/run-operation.
     """
 
-    command = "run-operation"
-
-    __dbt_args__ = DbtBaseOperator.__dbt_args__ + [
-        "args",
-    ]
-
     def __init__(
         self,
         macro: str,
         args: Optional[dict[str, str]] = None,
         **kwargs,
     ) -> None:
-        super().__init__(positional_args=[macro], **kwargs)
+        super().__init__(**kwargs)
+        self.macro = macro
         self.args = args
+
+    @property
+    def command(self) -> str:
+        """Return the run-operation command."""
+        return "run-operation"
 
 
 class DbtParseOperator(DbtBaseOperator):
@@ -663,54 +581,43 @@ class DbtParseOperator(DbtBaseOperator):
     https://docs.getdbt.com/reference/commands/parse.
     """
 
-    command = "parse"
-
     def __init__(
         self,
         **kwargs,
     ) -> None:
         super().__init__(**kwargs)
 
+    @property
+    def command(self) -> str:
+        """Return the parse command."""
+        return "parse"
 
-class DbtSourceOperator(DbtBaseOperator):
-    """Executes a dbt source command.
+
+class DbtSourceFreshnessOperator(DbtBaseOperator):
+    """Executes a dbt source-freshness command.
 
     The documentation for the dbt command can be found here:
     https://docs.getdbt.com/reference/commands/source.
     """
 
-    command = "source"
-
-    __dbt_args__ = DbtBaseOperator.__dbt_args__ + [
-        "select",
-        "threads",
-        "exclude",
-        "selector",
-        "state",
-        "dbt_output",
-    ]
-
     def __init__(
         self,
-        # Only one subcommand is currently provided
-        subcommand: str = "freshness"
-        if not installed_version < VersionSpecifier.from_version_string("0.21.0")
-        else "snapshot-freshness",
         select: Optional[list[str]] = None,
         dbt_output: Optional[Union[str, Path]] = None,
-        threads: Optional[int] = None,
         exclude: Optional[list[str]] = None,
-        selector: Optional[str] = None,
-        state: Optional[Union[str, Path]] = None,
+        selector_name: Optional[str] = None,
         **kwargs,
     ) -> None:
-        super().__init__(positional_args=[subcommand], **kwargs)
+        super().__init__(**kwargs)
         self.select = select
-        self.threads = threads
         self.exclude = exclude
-        self.selector = selector
-        self.state = state
+        self.selector_name = selector_name
         self.dbt_output = dbt_output
+
+    @property
+    def command(self) -> str:
+        """Return the source command."""
+        return "source"
 
 
 class DbtBuildOperator(DbtBaseOperator):
@@ -721,34 +628,12 @@ class DbtBuildOperator(DbtBaseOperator):
     https://docs.getdbt.com/reference/commands/build.
     """
 
-    command = "build"
-
-    __dbt_args__ = DbtBaseOperator.__dbt_args__ + [
-        "full_refresh",
-        "select",
-        "fail_fast",
-        "threads",
-        "exclude",
-        "selector",
-        "state",
-        "defer",
-        "no_defer",
-        "data",
-        "schema",
-        "show",
-    ]
-
     def __init__(
         self,
         full_refresh: Optional[bool] = None,
         select: Optional[list[str]] = None,
-        fail_fast: Optional[bool] = None,
-        threads: Optional[int] = None,
         exclude: Optional[list[str]] = None,
-        selector: Optional[str] = None,
-        state: Optional[Union[str, Path]] = None,
-        defer: Optional[bool] = None,
-        no_defer: Optional[bool] = None,
+        selector_name: Optional[str] = None,
         data: Optional[bool] = None,
         schema: Optional[bool] = None,
         show: Optional[bool] = None,
@@ -757,16 +642,16 @@ class DbtBuildOperator(DbtBaseOperator):
         super().__init__(**kwargs)
         self.full_refresh = full_refresh
         self.select = select
-        self.fail_fast = fail_fast
-        self.threads = threads
         self.exclude = exclude
-        self.selector = selector
-        self.state = state
-        self.defer = defer
-        self.no_defer = no_defer
+        self.selector_name = selector_name
         self.data = data
         self.schema = schema
         self.show = show
+
+    @property
+    def command(self) -> str:
+        """Return the parse command."""
+        return "build"
 
 
 def run_result_factory(data: list[tuple[Any, Any]]):
