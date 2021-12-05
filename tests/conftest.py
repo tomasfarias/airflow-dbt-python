@@ -5,13 +5,10 @@ Common fixtures include a connection to a postgres database, a set of sample mod
 """
 import boto3
 import pytest
-from dbt.version import __version__ as DBT_VERSION
 from moto import mock_s3
-from packaging.version import parse
 from pytest_postgresql.janitor import DatabaseJanitor
 
-DBT_VERSION = parse(DBT_VERSION)
-IS_DBT_VERSION_LESS_THAN_0_20 = DBT_VERSION.minor < 20 and DBT_VERSION.major == 0
+from airflow_dbt_python.hooks.dbt import DbtHook
 
 PROFILES = """
 default:
@@ -34,8 +31,7 @@ config-version: 2
 version: 1.0.0
 """
 
-if not IS_DBT_VERSION_LESS_THAN_0_20:
-    PROJECT += """
+PROJECT += """
 dispatch:
   - macro_namespace: dbt_utils
     search_order: [dbt_utils]
@@ -136,6 +132,7 @@ id,name
 
 @pytest.fixture(scope="session")
 def database(postgresql_proc):
+    """Initialize a test postgres database."""
     janitor = DatabaseJanitor(
         postgresql_proc.user,
         postgresql_proc.host,
@@ -160,6 +157,7 @@ def database(postgresql_proc):
 
 @pytest.fixture(scope="session")
 def profiles_file(tmp_path_factory, database):
+    """Create a profiles.yml file for testing."""
     p = tmp_path_factory.mktemp(".dbt") / "profiles.yml"
     profiles_content = PROFILES.format(
         host=database.host,
@@ -174,12 +172,14 @@ def profiles_file(tmp_path_factory, database):
 
 @pytest.fixture(scope="session")
 def dbt_project_dir(tmp_path_factory):
+    """A temporary directory to store dbt test files."""
     d = tmp_path_factory.mktemp("project")
     return d
 
 
 @pytest.fixture(scope="session")
 def dbt_project_file(dbt_project_dir):
+    """Create a test dbt_project.yml file."""
     p = dbt_project_dir / "dbt_project.yml"
     p.write_text(PROJECT)
     return p
@@ -187,6 +187,7 @@ def dbt_project_file(dbt_project_dir):
 
 @pytest.fixture(scope="session")
 def model_files(dbt_project_dir):
+    """Create test model files."""
     d = dbt_project_dir / "models"
     d.mkdir(exist_ok=True)
 
@@ -200,6 +201,7 @@ def model_files(dbt_project_dir):
 
 @pytest.fixture(scope="session")
 def sources_file(model_files, database):
+    """Create test source file."""
     m = model_files[0].parent / "my_sources.yml"
     m.write_text(SOURCES)
     return m
@@ -207,6 +209,7 @@ def sources_file(model_files, database):
 
 @pytest.fixture(scope="session")
 def seed_files(dbt_project_dir):
+    """Create test seed files."""
     d = dbt_project_dir / "data"
     d.mkdir(exist_ok=True)
     s1 = d / "seed_1.csv"
@@ -218,18 +221,21 @@ def seed_files(dbt_project_dir):
 
 @pytest.fixture(scope="session")
 def compile_dir(dbt_project_file):
+    """Return a path to the directory with compiled files."""
     d = dbt_project_file.parent
     return d / "target" / "compiled" / "test" / "models"
 
 
 @pytest.fixture
 def mocked_s3_res():
+    """Return a mocked s3 resource."""
     with mock_s3():
         yield boto3.resource("s3")
 
 
 @pytest.fixture
 def s3_bucket(mocked_s3_res):
+    """Return a mocked s3 bucket for testing."""
     bucket = "airflow-dbt-test-s3-bucket"
     mocked_s3_res.create_bucket(Bucket=bucket)
     return bucket
@@ -247,8 +253,169 @@ WHERE
 
 @pytest.fixture
 def broken_file(dbt_project_dir):
+    """Create a malformed SQL file for testing."""
     d = dbt_project_dir / "models"
     m = d / "broken.sql"
     m.write_text(BROKEN_SQL)
     yield m
     m.unlink()
+
+
+@pytest.fixture(scope="function")
+def dbt_modules_dir(dbt_project_file):
+    """Create a dbt_modules dir to install packages."""
+    d = dbt_project_file.parent
+    return d / "dbt_modules"
+
+
+PACKAGES = """
+packages:
+  - package: dbt-labs/dbt_utils
+    version: 0.7.3
+"""
+
+
+@pytest.fixture(scope="session")
+def packages_file(dbt_project_file):
+    """Create a test packages.yml file."""
+    d = dbt_project_file.parent
+    packages = d / "packages.yml"
+    packages.write_text(PACKAGES)
+    return packages
+
+
+@pytest.fixture
+def hook():
+    """Provide a DbtHook."""
+    return DbtHook()
+
+
+@pytest.fixture
+def pre_compile(hook, dbt_project_file, profiles_file):
+    """Fixture to run a dbt compile task."""
+    import shutil
+
+    factory = hook.get_config_factory("run")
+    config = factory.create_config(
+        project_dir=dbt_project_file.parent,
+        profiles_dir=profiles_file.parent,
+    )
+    hook.run_dbt_task(config)
+    yield
+    target_dir = dbt_project_file.parent / "target"
+    shutil.rmtree(target_dir, ignore_errors=True)
+
+
+SCHEMA_TESTS = """
+version: 2
+
+models:
+  - name: model_2
+    columns:
+      - name: field1
+        tests:
+          - unique
+          - not_null
+          - accepted_values:
+              values: ['123', '456']
+      - name: field2
+        tests:
+          - unique
+          - not_null
+"""
+
+
+@pytest.fixture(scope="session")
+def schema_tests_files(dbt_project_dir):
+    """Create a dbt schema test YAML file."""
+    d = dbt_project_dir / "models"
+    d.mkdir(exist_ok=True)
+
+    schema = d / "schema.yml"
+    schema.write_text(SCHEMA_TESTS)
+
+    return [schema]
+
+
+DATA_TEST_1 = """
+SELECT *
+FROM {{ ref('model_2' )}}
+WHERE field1 != 123
+"""
+
+DATA_TEST_2 = """
+SELECT *
+FROM {{ ref('model_4' )}}
+WHERE field1 != 123
+"""
+
+
+@pytest.fixture(scope="session")
+def data_tests_files(dbt_project_dir):
+    """Create data test files."""
+    d = dbt_project_dir / "test"
+    d.mkdir(exist_ok=True)
+
+    test1 = d / "data_test_1.sql"
+    test1.write_text(DATA_TEST_1)
+
+    test2 = d / "data_test_2.sql"
+    test2.write_text(DATA_TEST_2)
+
+    return [test1, test2]
+
+
+SNAPSHOT_1 = """
+{% snapshot test_snapshot %}
+
+{{
+    config(
+      target_database='test',
+      target_schema='test',
+      unique_key='id_field',
+
+      strategy='timestamp',
+      updated_at='time_field',
+    )
+}}
+
+SELECT
+  1 AS id_field,
+  'abc' AS value_field,
+  NOW() AS time_field
+
+{% endsnapshot %}
+"""
+
+
+@pytest.fixture(scope="session")
+def snapshot_files(dbt_project_dir):
+    """Create dbt snapshot files."""
+    d = dbt_project_dir / "snapshots"
+    d.mkdir(exist_ok=True)
+
+    snap = d / "snapshot_1.sql"
+    snap.write_text(SNAPSHOT_1)
+
+    return [snap]
+
+
+MACRO = """
+{% macro my_macro(an_arg) %}
+{% set sql %}
+  SELECT {{ an_arg }} as the_arg;
+{% endset %}
+
+{% do run_query(sql) %}
+{% endmacro %}
+"""
+
+
+@pytest.fixture
+def macro_file(dbt_project_dir):
+    """Create a dbt macro file."""
+    d = dbt_project_dir / "macros"
+    d.mkdir(exist_ok=True)
+    m = d / "my_macro.sql"
+    m.write_text(MACRO)
+    return m

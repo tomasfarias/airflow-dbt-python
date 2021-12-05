@@ -9,7 +9,7 @@ from airflow_dbt_python.operators.dbt import DbtBaseOperator
 
 condition = False
 try:
-    from airflow_dbt_python.hooks.dbt_s3 import DbtS3Hook
+    from airflow_dbt_python.hooks.s3 import DbtS3Hook
 except ImportError:
     condition = True
 no_s3_hook = pytest.mark.skipif(
@@ -17,110 +17,11 @@ no_s3_hook = pytest.mark.skipif(
 )
 
 
-def test_args_list_default():
+def test_dbt_base_does_not_implement_command():
+    """Test DbtBaseOperator doesn't implement a command."""
     op = DbtBaseOperator(task_id="dbt_task")
-    args = op.args_list()
-
-    assert args == []
-
-
-def test_args_list_all_base_args():
-    op = DbtBaseOperator(
-        task_id="dbt_task",
-        project_dir="/path/to/project/",
-        profiles_dir="/path/to/profiles/",
-        profile="dbt-profile",
-        target="dbt-target",
-        vars={"target": "override"},
-        log_cache_events=True,
-        bypass_cache=True,
-    )
-    args = op.args_list()
-    expected = [
-        "--project-dir",
-        "/path/to/project/",
-        "--profiles-dir",
-        "/path/to/profiles/",
-        "--profile",
-        "dbt-profile",
-        "--target",
-        "dbt-target",
-        "--vars",
-        "{target: override}",
-        "--log-cache-events",
-        "--bypass-cache",
-    ]
-
-    assert args == expected
-
-
-def test_args_list_project_dir():
-    op = DbtBaseOperator(
-        task_id="dbt_task",
-        project_dir="/home/airflow/project",
-    )
-    args = op.args_list()
-    expected = [
-        "--project-dir",
-        "/home/airflow/project",
-    ]
-
-    assert args == expected
-
-
-def test_dbt_base_mocked_raises_exception_on_dbt_failure():
-    op = DbtBaseOperator(
-        task_id="dbt_task",
-    )
-
-    assert op.command is None
-
-    with patch.object(DbtBaseOperator, "run_dbt_command") as mock:
-        mock.return_value = ([], False)
-
-        with pytest.raises(AirflowException):
-            op.execute({})
-
-
-def test_prepare_args_raises_exception():
-    op = DbtBaseOperator(
-        task_id="dbt_task",
-        project_dir="/home/airflow/project",
-    )
-    with pytest.raises(AirflowException):
-        op.prepare_args()
-
-
-def test_prepare_args():
-    op = DbtBaseOperator(
-        task_id="dbt_task",
-        project_dir="/home/airflow/project",
-    )
-    op.command = "run"
-    args = op.prepare_args()
-    expected = [
-        "run",
-        "--project-dir",
-        "/home/airflow/project",
-    ]
-    assert args == expected
-
-
-def test_prepare_args_with_positional():
-    op = DbtBaseOperator(
-        task_id="dbt_task",
-        project_dir="/home/airflow/project",
-        positional_args=["my_macro"],
-    )
-    op.command = "run-operation"
-    args = op.prepare_args()
-    expected = [
-        "run-operation",
-        "my_macro",
-        "--project-dir",
-        "/home/airflow/project",
-    ]
-    assert args == expected
+    with pytest.raises(NotImplementedError):
+        op.command
 
 
 @no_s3_hook

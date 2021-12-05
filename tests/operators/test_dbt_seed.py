@@ -6,11 +6,12 @@ import pytest
 from dbt.contracts.results import RunStatus
 
 from airflow import AirflowException
+from airflow_dbt_python.hooks.dbt import SeedTaskConfig
 from airflow_dbt_python.operators.dbt import DbtSeedOperator
 
 condition = False
 try:
-    from airflow_dbt_python.hooks.dbt_s3 import DbtS3Hook
+    from airflow_dbt_python.hooks.s3 import DbtS3Hook
 except ImportError:
     condition = True
 no_s3_hook = pytest.mark.skipif(
@@ -19,6 +20,7 @@ no_s3_hook = pytest.mark.skipif(
 
 
 def test_dbt_seed_mocked_all_args():
+    """Test mocked dbt seed call with all arguments."""
     op = DbtSeedOperator(
         task_id="dbt_task",
         project_dir="/path/to/project/",
@@ -33,59 +35,31 @@ def test_dbt_seed_mocked_all_args():
         show=True,
         threads=2,
         exclude=["/path/to/data/to/exclude.csv"],
-        selector="a-selector",
+        selector_name=["a-selector"],
         state="/path/to/state/",
     )
-    args = [
-        "seed",
-        "--project-dir",
-        "/path/to/project/",
-        "--profiles-dir",
-        "/path/to/profiles/",
-        "--profile",
-        "dbt-profile",
-        "--target",
-        "dbt-target",
-        "--vars",
-        "{target: override}",
-        "--log-cache-events",
-        "--bypass-cache",
-        "--full-refresh",
-        "--select",
-        "/path/to/data.csv",
-        "--show",
-        "--threads",
-        "2",
-        "--exclude",
-        "/path/to/data/to/exclude.csv",
-        "--selector",
-        "a-selector",
-        "--state",
-        "/path/to/state/",
-    ]
-
-    with patch.object(DbtSeedOperator, "run_dbt_command") as mock:
-        mock.return_value = ([], True)
-        op.execute({})
-        mock.assert_called_once_with(args)
-
-
-def test_dbt_seed_mocked_default():
-    op = DbtSeedOperator(
-        task_id="dbt_task",
-    )
-
     assert op.command == "seed"
 
-    args = ["seed"]
-
-    with patch.object(DbtSeedOperator, "run_dbt_command") as mock:
-        mock.return_value = ([], True)
-        op.execute({})
-        mock.assert_called_once_with(args)
+    config = op.get_dbt_config()
+    assert isinstance(config, SeedTaskConfig) is True
+    assert config.project_dir == "/path/to/project/"
+    assert config.profiles_dir == "/path/to/profiles/"
+    assert config.profile == "dbt-profile"
+    assert config.target == "dbt-target"
+    assert config.vars == '{"target": "override"}'
+    assert config.log_cache_events is True
+    assert config.bypass_cache is True
+    assert config.full_refresh is True
+    assert config.threads == 2
+    assert config.select == ["/path/to/data.csv"]
+    assert config.show is True
+    assert config.exclude == ["/path/to/data/to/exclude.csv"]
+    assert config.selector_name == ["a-selector"]
+    assert config.state == "/path/to/state/"
 
 
 def test_dbt_seed_non_existent_file(profiles_file, dbt_project_file, seed_files):
+    """Test dbt seed non existent seed file."""
     op = DbtSeedOperator(
         task_id="dbt_task",
         project_dir=dbt_project_file.parent,
@@ -100,6 +74,7 @@ def test_dbt_seed_non_existent_file(profiles_file, dbt_project_file, seed_files)
 
 
 def test_dbt_seed_models(profiles_file, dbt_project_file, seed_files):
+    """Test the dbt seed operator with all seed files."""
     op = DbtSeedOperator(
         task_id="dbt_task",
         project_dir=dbt_project_file.parent,

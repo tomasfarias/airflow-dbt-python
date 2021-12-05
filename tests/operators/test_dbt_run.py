@@ -1,26 +1,21 @@
 """Unit test module for DbtRunOperator."""
 import json
-from unittest.mock import patch
 
 import pytest
 from dbt.contracts.results import RunStatus
-from dbt.version import __version__ as DBT_VERSION
-from packaging.version import parse
 
 from airflow import AirflowException
+from airflow_dbt_python.hooks.dbt import RunTaskConfig
 from airflow_dbt_python.operators.dbt import DbtRunOperator
 
 condition = False
 try:
-    from airflow_dbt_python.hooks.dbt_s3 import DbtS3Hook
+    from airflow_dbt_python.hooks.s3 import DbtS3Hook
 except ImportError:
     condition = True
 no_s3_hook = pytest.mark.skipif(
     condition, reason="S3Hook not available, consider installing amazon extras"
 )
-
-DBT_VERSION = parse(DBT_VERSION)
-IS_DBT_VERSION_LESS_THAN_0_21 = DBT_VERSION.minor < 21 and DBT_VERSION.major == 0
 
 
 def test_dbt_run_mocked_all_args():
@@ -39,89 +34,31 @@ def test_dbt_run_mocked_all_args():
         fail_fast=True,
         threads=3,
         exclude=["/path/to/model/to/exclude.sql"],
-        selector="a-selector",
+        selector_name=["a-selector"],
         state="/path/to/state/",
     )
-
-    if IS_DBT_VERSION_LESS_THAN_0_21:
-        SELECTION_KEY = "models"
-    else:
-        SELECTION_KEY = "select"
-
-    args = [
-        "run",
-        "--project-dir",
-        "/path/to/project/",
-        "--profiles-dir",
-        "/path/to/profiles/",
-        "--profile",
-        "dbt-profile",
-        "--target",
-        "dbt-target",
-        "--vars",
-        "{target: override}",
-        "--log-cache-events",
-        "--bypass-cache",
-        "--full-refresh",
-        f"--{SELECTION_KEY}",
-        "/path/to/model.sql",
-        "+/another/model.sql+2",
-        "--fail-fast",
-        "--threads",
-        "3",
-        "--exclude",
-        "/path/to/model/to/exclude.sql",
-        "--selector",
-        "a-selector",
-        "--state",
-        "/path/to/state/",
-    ]
-
-    with patch.object(DbtRunOperator, "run_dbt_command") as mock:
-        mock.return_value = ([], True)
-        op.execute({})
-        mock.assert_called_once_with(args)
-
-
-def test_dbt_run_mocked_default():
-    """Test mocked dbt run call with default arguments."""
-    op = DbtRunOperator(
-        task_id="dbt_task",
-        do_xcom_push=False,
-    )
-
     assert op.command == "run"
 
-    args = ["run"]
-
-    with patch.object(DbtRunOperator, "run_dbt_command") as mock:
-        mock.return_value = ([], True)
-        res = op.execute({})
-        mock.assert_called_once_with(args)
-
-    assert res == []
-
-
-def test_dbt_run_mocked_with_do_xcom_push():
-    op = DbtRunOperator(
-        task_id="dbt_task",
-        do_xcom_push=True,
-    )
-
-    assert op.command == "run"
-
-    args = ["run"]
-
-    with patch.object(DbtRunOperator, "run_dbt_command") as mock:
-        mock.return_value = ([], True)
-        res = op.execute({})
-        mock.assert_called_once_with(args)
-
-    assert isinstance(json.dumps(res), str)
-    assert res == []
+    config = op.get_dbt_config()
+    assert isinstance(config, RunTaskConfig) is True
+    assert config.project_dir == "/path/to/project/"
+    assert config.profiles_dir == "/path/to/profiles/"
+    assert config.profile == "dbt-profile"
+    assert config.target == "dbt-target"
+    assert config.vars == '{"target": "override"}'
+    assert config.log_cache_events is True
+    assert config.bypass_cache is True
+    assert config.full_refresh is True
+    assert config.fail_fast is True
+    assert config.threads == 3
+    assert config.select == ["/path/to/model.sql", "+/another/model.sql+2"]
+    assert config.exclude == ["/path/to/model/to/exclude.sql"]
+    assert config.selector_name == ["a-selector"]
+    assert config.state == "/path/to/state/"
 
 
 def test_dbt_run_non_existent_model(profiles_file, dbt_project_file, model_files):
+    """Test execution of DbtRunOperator with a non-existent model."""
     op = DbtRunOperator(
         task_id="dbt_task",
         project_dir=dbt_project_file.parent,
@@ -137,6 +74,7 @@ def test_dbt_run_non_existent_model(profiles_file, dbt_project_file, model_files
 
 
 def test_dbt_run_models(profiles_file, dbt_project_file, model_files):
+    """Test execution of DbtRunOperator with all models."""
     op = DbtRunOperator(
         task_id="dbt_task",
         project_dir=dbt_project_file.parent,
@@ -151,6 +89,7 @@ def test_dbt_run_models(profiles_file, dbt_project_file, model_files):
 
 
 def test_dbt_run_models_full_refresh(profiles_file, dbt_project_file, model_files):
+    """Test dbt run operator with all model files and full-refresh."""
     op = DbtRunOperator(
         task_id="dbt_task",
         project_dir=dbt_project_file.parent,
@@ -167,6 +106,7 @@ def test_dbt_run_models_full_refresh(profiles_file, dbt_project_file, model_file
 
 
 def test_dbt_run_fails_with_malformed_sql(profiles_file, dbt_project_file, broken_file):
+    """Test dbt run operator raises an exception when failing due to a broken file."""
     op = DbtRunOperator(
         task_id="dbt_task",
         project_dir=dbt_project_file.parent,
@@ -180,6 +120,7 @@ def test_dbt_run_fails_with_malformed_sql(profiles_file, dbt_project_file, broke
 
 
 def test_dbt_run_fails_with_non_existent_project(profiles_file, dbt_project_file):
+    """Test dbt run operator raises an exception when failing due to missing project."""
     op = DbtRunOperator(
         task_id="dbt_task",
         project_dir="/home/fake/project",
@@ -195,6 +136,7 @@ def test_dbt_run_fails_with_non_existent_project(profiles_file, dbt_project_file
 def test_dbt_run_models_from_s3(
     s3_bucket, profiles_file, dbt_project_file, model_files
 ):
+    """Test execution of DbtRunOperator with all models from s3."""
     hook = DbtS3Hook()
     bucket = hook.get_bucket(s3_bucket)
 
@@ -230,6 +172,7 @@ def test_dbt_run_models_from_s3(
 def test_dbt_run_models_with_profile_from_s3(
     s3_bucket, profiles_file, dbt_project_file, model_files
 ):
+    """Test execution of DbtRunOperator with a profile file from s3."""
     hook = DbtS3Hook()
     bucket = hook.get_bucket(s3_bucket)
 
@@ -254,6 +197,7 @@ def test_dbt_run_models_with_profile_from_s3(
 def test_dbt_run_models_with_project_from_s3(
     s3_bucket, profiles_file, dbt_project_file, model_files
 ):
+    """Test execution of DbtRunOperator with a project from s3."""
     hook = DbtS3Hook()
     bucket = hook.get_bucket(s3_bucket)
 
@@ -297,13 +241,9 @@ def test_dbt_run_uses_correct_argument_according_to_version():
         fail_fast=True,
         threads=3,
         exclude=["/path/to/model/to/exclude.sql"],
-        selector="a-selector",
+        selector_name=["a-selector"],
         state="/path/to/state/",
     )
 
-    if IS_DBT_VERSION_LESS_THAN_0_21:
-        assert op.models == ["/path/to/model.sql", "+/another/model.sql+2"]
-        assert getattr(op, "select", None) is None
-    else:
-        assert op.select == ["/path/to/model.sql", "+/another/model.sql+2"]
-        assert getattr(op, "models", None) is None
+    assert op.select == ["/path/to/model.sql", "+/another/model.sql+2"]
+    assert getattr(op, "models", None) is None
