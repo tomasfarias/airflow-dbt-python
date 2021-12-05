@@ -16,7 +16,7 @@ with DAG(
         task_id="dbt_run_hourly",
         project_dir="s3://my-bucket/dbt/project/key/prefix/",
         profiles_dir="s3://my-bucket/dbt/profiles/key/prefix/",
-        models=["+tag:hourly"],
+        select=["+tag:hourly"],
         exclude=["tag:deprecated"],
         target="production",
         profile="my-project",
