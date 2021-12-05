@@ -2,6 +2,7 @@
 
 from pathlib import Path
 from typing import Optional
+from zipfile import ZipFile
 
 from airflow.hooks.S3_hook import S3Hook
 
@@ -43,10 +44,15 @@ class DbtS3Hook(S3Hook):
         else:
             local_profiles_file = Path(profiles_dir) / "profiles.yml"
 
-        self.log.info("Saving profiles file to: %s", local_profiles_file)
-        with open(local_profiles_file, "wb+") as f:
-            s3_object.download_fileobj(f)
+        self.download_one_s3_object(local_profiles_file, s3_object)
         return local_profiles_file
+
+    def download_one_s3_object(self, target: Path, s3_object):
+        """Download a single s3 object."""
+        self.log.info("Saving profiles file to: %s", target)
+
+        with open(target, "wb+") as f:
+            s3_object.download_fileobj(f)
 
     def get_dbt_project(
         self, s3_project_url: str, project_dir: Optional[str] = None
@@ -54,36 +60,61 @@ class DbtS3Hook(S3Hook):
         """Fetch all dbt project files from S3.
 
         Fetches the dbt project files from the directory given by s3_project_url
-        and pulls them to project_dir.
+        and pulls them to project_dir. However, if the URL points to a zip file,
+        we assume it contains all the project files, and only download and unzip that
+        instead.
 
         Arguments:
-            s3_project_url: An S3 URL to a directory containing the dbt project files.
-            project_dir: An optional directory to download the S3 project files into.
-                If not provided, one will be created using the S3 URL.
+            s3_project_url: An S3 URL to a directory containing the dbt project files
+                or a zip file containing all project files.
+            project_dir: An optional directory to download/unzip the S3 project files
+                into. If not provided, one will be created using the S3 URL.
 
         Returns:
             A Path to the local directory containing the dbt project files.
         """
-        self.log.info("Downloading dbt project file from: %s", s3_project_url)
+        self.log.info("Downloading dbt project files from: %s", s3_project_url)
         bucket_name, key_prefix = self.parse_s3_url(s3_project_url)
-        if not key_prefix.endswith("/"):
-            key_prefix += "/"
-        s3_object_keys = self.list_keys(bucket_name=bucket_name, prefix=f"{key_prefix}")
 
         if project_dir is None:
             local_project_dir = Path(bucket_name) / key_prefix
         else:
             local_project_dir = Path(project_dir)
 
-        for s3_object_key in s3_object_keys:
+        if key_prefix.endswith(".zip"):
+            s3_object = self.get_key(key=key_prefix, bucket_name=bucket_name)
+            target = local_project_dir / "dbt_project.zip"
+            self.download_one_s3_object(target, s3_object)
+
+            with ZipFile(target, "r") as zf:
+                zf.extractall(local_project_dir)
+
+            target.unlink()
+
+        else:
+            if not key_prefix.endswith("/"):
+                key_prefix += "/"
+            s3_object_keys = self.list_keys(
+                bucket_name=bucket_name, prefix=f"{key_prefix}"
+            )
+
+            self.download_many_s3_keys(
+                bucket_name, s3_object_keys, local_project_dir, key_prefix
+            )
+
+        return local_project_dir
+
+    def download_many_s3_keys(
+        self, bucket_name: str, s3_keys: list[str], target_dir: Path, prefix: str
+    ):
+        """Download multiple s3 keys."""
+        print(s3_keys)
+        for s3_object_key in s3_keys:
             s3_object = self.get_key(key=s3_object_key, bucket_name=bucket_name)
-            path_file = Path(s3_object_key).relative_to(f"{key_prefix}")
-            local_project_file = local_project_dir / path_file
+            path_file = Path(s3_object_key).relative_to(prefix)
+            local_project_file = target_dir / path_file
             local_project_file.parent.mkdir(parents=True, exist_ok=True)
 
             self.log.info("Saving %s to: %s", s3_object_key, local_project_file)
 
-            with open(local_project_file, "wb+") as f:
-                s3_object.download_fileobj(f)
-
-        return local_project_dir
+            self.download_one_s3_object(local_project_file, s3_object)
