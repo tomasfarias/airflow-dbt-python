@@ -59,7 +59,7 @@ with DAG(
         task_id="dbt_run_daily",
         project_dir="/path/to/my/dbt/project/",
         profiles_dir="~/.dbt/",
-        models=["+tag:daily"],
+        select=["+tag:daily"],
         exclude=["tag:deprecated"],
         target="production",
         profile="my-project",

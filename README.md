@@ -88,7 +88,7 @@ with DAG(
 ) as dag:
     dbt_test = DbtTestOperator(
         task_id="dbt_test",
-        selector="pre-run-tests",
+        selector_name=["pre-run-tests"],
     )
 
     dbt_seed = DbtSeedOperator(
@@ -99,7 +99,7 @@ with DAG(
 
     dbt_run = DbtRunOperator(
         task_id="dbt_run",
-        models=["/path/to/models"],
+        select=["/path/to/models"],
         full_refresh=True,
         fail_fast=True,
     )
