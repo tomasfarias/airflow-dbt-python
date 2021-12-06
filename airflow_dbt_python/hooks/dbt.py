@@ -1,4 +1,6 @@
 """Provides a hook to interact with a dbt project."""
+from __future__ import annotations
+
 import dataclasses
 import json
 import os
@@ -108,7 +110,7 @@ class BaseConfig:
     no_defer: Optional[bool] = None
     state: Optional[str] = None
     threads: Optional[int] = None
-    compiled_target: Optional[Union[os.PathLike[str], str]] = None
+    compiled_target: Optional[Union["os.PathLike[str]", str]] = None
 
     def __post_init__(self):
         """Support dictionary args by casting them to str after setting."""
