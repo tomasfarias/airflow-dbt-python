@@ -667,7 +667,6 @@ class DbtBuildOperator(DbtBaseOperator):
     template_fields = DbtBaseOperator.template_fields + [
         "select",
         "exclude",
-        "models",
     ]
 
     def __init__(
