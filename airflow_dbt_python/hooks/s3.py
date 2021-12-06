@@ -50,7 +50,7 @@ class DbtS3Hook(S3Hook):
 
     def download_one_s3_object(self, target: Path, s3_object):
         """Download a single s3 object."""
-        self.log.info("Saving profiles file to: %s", target)
+        self.log.info("Saving %s file to: %s", s3_object, target)
 
         with open(target, "wb+") as f:
             s3_object.download_fileobj(f)
@@ -109,13 +109,10 @@ class DbtS3Hook(S3Hook):
         self, bucket_name: str, s3_keys: list[str], target_dir: Path, prefix: str
     ):
         """Download multiple s3 keys."""
-        print(s3_keys)
         for s3_object_key in s3_keys:
             s3_object = self.get_key(key=s3_object_key, bucket_name=bucket_name)
             path_file = Path(s3_object_key).relative_to(prefix)
             local_project_file = target_dir / path_file
             local_project_file.parent.mkdir(parents=True, exist_ok=True)
-
-            self.log.info("Saving %s to: %s", s3_object_key, local_project_file)
 
             self.download_one_s3_object(local_project_file, s3_object)
