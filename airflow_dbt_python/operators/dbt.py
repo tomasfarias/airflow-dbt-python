@@ -53,9 +53,6 @@ class DbtBaseOperator(BaseOperator):
         "profiles_dir",
         "profile",
         "target",
-        "select",
-        "models",
-        "exclude",
         "state",
     ]
 
@@ -315,6 +312,12 @@ class DbtRunOperator(DbtBaseOperator):
     https://docs.getdbt.com/reference/commands/run.
     """
 
+    template_fields = DbtBaseOperator.template_fields + [
+        "select",
+        "models",
+        "exclude",
+    ]
+
     def __init__(
         self,
         full_refresh: Optional[bool] = None,
@@ -343,6 +346,11 @@ class DbtSeedOperator(DbtBaseOperator):
     documentation for the dbt command can be found here:
     https://docs.getdbt.com/reference/commands/seed.
     """
+
+    template_fields = DbtBaseOperator.template_fields + [
+        "select",
+        "exclude",
+    ]
 
     def __init__(
         self,
@@ -374,6 +382,12 @@ class DbtTestOperator(DbtBaseOperator):
     https://docs.getdbt.com/reference/commands/test.
     """
 
+    template_fields = DbtBaseOperator.template_fields + [
+        "select",
+        "models",
+        "exclude",
+    ]
+
     def __init__(
         self,
         data: Optional[bool] = None,
@@ -404,6 +418,12 @@ class DbtCompileOperator(DbtBaseOperator):
     documentation for the dbt command can be found here:
     https://docs.getdbt.com/reference/commands/compile.
     """
+
+    template_fields = DbtBaseOperator.template_fields + [
+        "select",
+        "models",
+        "exclude",
+    ]
 
     def __init__(
         self,
@@ -490,6 +510,11 @@ class DbtSnapshotOperator(DbtBaseOperator):
     https://docs.getdbt.com/reference/commands/snapshot.
     """
 
+    template_fields = DbtBaseOperator.template_fields + [
+        "select",
+        "exclude",
+    ]
+
     def __init__(
         self,
         select: Optional[list[str]] = None,
@@ -514,6 +539,12 @@ class DbtLsOperator(DbtBaseOperator):
     The documentation for the dbt command can be found here:
     https://docs.getdbt.com/reference/commands/list.
     """
+
+    template_fields = DbtBaseOperator.template_fields + [
+        "select",
+        "exclude",
+        "resource_types",
+    ]
 
     def __init__(
         self,
@@ -557,6 +588,11 @@ class DbtRunOperationOperator(DbtBaseOperator):
     The documentation for the dbt command can be found here:
     https://docs.getdbt.com/reference/commands/run-operation.
     """
+
+    template_fields = DbtBaseOperator.template_fields + [
+        "macro",
+        "args",
+    ]
 
     def __init__(
         self,
@@ -627,6 +663,11 @@ class DbtBuildOperator(DbtBaseOperator):
     full Documentation for the dbt build command can be found here:
     https://docs.getdbt.com/reference/commands/build.
     """
+
+    template_fields = DbtBaseOperator.template_fields + [
+        "select",
+        "exclude",
+    ]
 
     def __init__(
         self,
