@@ -115,7 +115,7 @@ class DbtBaseOperator(BaseOperator):
         self.use_colors = use_colors
         self.no_use_colors = no_use_colors
         self.no_version_check = no_version_check
-        self.defer = defer
+        self.dbt_defer = defer
         self.no_defer = no_defer
         self.single_threaded = single_threaded
         self.record_timing_info = record_timing_info
