@@ -53,6 +53,7 @@ class DbtBaseOperator(BaseOperator):
         "profiles_dir",
         "profile",
         "target",
+        "state",
     ]
 
     @apply_defaults
@@ -315,7 +316,6 @@ class DbtRunOperator(DbtBaseOperator):
         "select",
         "models",
         "exclude",
-        "state",
     ]
 
     def __init__(
@@ -350,7 +350,6 @@ class DbtSeedOperator(DbtBaseOperator):
     template_fields = DbtBaseOperator.template_fields + [
         "select",
         "exclude",
-        "state",
     ]
 
     def __init__(
@@ -387,7 +386,6 @@ class DbtTestOperator(DbtBaseOperator):
         "select",
         "models",
         "exclude",
-        "state",
     ]
 
     def __init__(
@@ -425,7 +423,6 @@ class DbtCompileOperator(DbtBaseOperator):
         "select",
         "models",
         "exclude",
-        "state",
     ]
 
     def __init__(
