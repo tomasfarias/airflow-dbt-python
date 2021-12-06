@@ -314,7 +314,6 @@ class DbtRunOperator(DbtBaseOperator):
 
     template_fields = DbtBaseOperator.template_fields + [
         "select",
-        "models",
         "exclude",
     ]
 
@@ -384,7 +383,6 @@ class DbtTestOperator(DbtBaseOperator):
 
     template_fields = DbtBaseOperator.template_fields + [
         "select",
-        "models",
         "exclude",
     ]
 
@@ -421,7 +419,6 @@ class DbtCompileOperator(DbtBaseOperator):
 
     template_fields = DbtBaseOperator.template_fields + [
         "select",
-        "models",
         "exclude",
     ]
 
