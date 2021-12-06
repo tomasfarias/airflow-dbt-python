@@ -108,7 +108,7 @@ class BaseConfig:
     log_cache_events: Optional[bool] = None
     defer: Optional[bool] = None
     no_defer: Optional[bool] = None
-    state: Optional[str] = None
+    state: Optional[Path] = None
     threads: Optional[int] = None
     compiled_target: Optional[Union["os.PathLike[str]", str]] = None
 
@@ -116,6 +116,8 @@ class BaseConfig:
         """Support dictionary args by casting them to str after setting."""
         if isinstance(self.vars, dict):
             self.vars = json.dumps(self.vars)
+        if isinstance(self.state, str):
+            self.state = Path(self.state)
 
     @property
     def dbt_task(self) -> BaseTask:

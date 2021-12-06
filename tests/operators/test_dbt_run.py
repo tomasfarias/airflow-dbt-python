@@ -1,5 +1,6 @@
 """Unit test module for DbtRunOperator."""
 import json
+from pathlib import Path
 
 import pytest
 from dbt.contracts.results import RunStatus
@@ -54,7 +55,7 @@ def test_dbt_run_mocked_all_args():
     assert config.select == ["/path/to/model.sql", "+/another/model.sql+2"]
     assert config.exclude == ["/path/to/model/to/exclude.sql"]
     assert config.selector_name == ["a-selector"]
-    assert config.state == "/path/to/state/"
+    assert config.state == Path("/path/to/state/")
 
 
 def test_dbt_run_non_existent_model(profiles_file, dbt_project_file, model_files):

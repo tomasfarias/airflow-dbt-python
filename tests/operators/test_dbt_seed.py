@@ -1,5 +1,6 @@
 """Unit test module for DbtSeedOperator."""
 import json
+from pathlib import Path
 from unittest.mock import patch
 
 import pytest
@@ -55,7 +56,7 @@ def test_dbt_seed_mocked_all_args():
     assert config.show is True
     assert config.exclude == ["/path/to/data/to/exclude.csv"]
     assert config.selector_name == ["a-selector"]
-    assert config.state == "/path/to/state/"
+    assert config.state == Path("/path/to/state/")
 
 
 def test_dbt_seed_non_existent_file(profiles_file, dbt_project_file, seed_files):

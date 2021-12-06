@@ -1,5 +1,6 @@
 """Unit test module for DbtBuildOperator."""
 import json
+from pathlib import Path
 from unittest.mock import patch
 
 import pytest
@@ -62,7 +63,7 @@ def test_dbt_build_mocked_all_args():
     ]
     assert config.exclude == ["/path/to/model/to/exclude.sql"]
     assert config.selector_name == ["a-selector"]
-    assert config.state == "/path/to/state/"
+    assert config.state == Path("/path/to/state/")
     assert config.data is True
     assert config.schema is True
     assert config.show is True

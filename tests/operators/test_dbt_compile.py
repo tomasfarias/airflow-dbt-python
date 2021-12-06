@@ -1,4 +1,6 @@
 """Unit test module for DbtCompileOperator."""
+from pathlib import Path
+
 from dbt.contracts.results import RunStatus
 
 from airflow_dbt_python.hooks.dbt import CompileTaskConfig
@@ -48,7 +50,7 @@ def test_dbt_compile_mocked_all_args():
     ]
     assert config.exclude == ["/path/to/data/to/exclude.sql"]
     assert config.selector_name == ["a-selector"]
-    assert config.state == "/path/to/state/"
+    assert config.state == Path("/path/to/state/")
 
 
 def test_dbt_compile_non_existent_model(profiles_file, dbt_project_file, model_files):

@@ -1,5 +1,5 @@
 """Unit test module for DbtSnapshotOperator."""
-from unittest.mock import patch
+from pathlib import Path
 
 import pytest
 from dbt.contracts.results import RunStatus
@@ -41,7 +41,7 @@ def test_dbt_snapshot_mocked_all_args():
     assert config.select == ["/path/to/models"]
     assert config.exclude == ["/path/to/data/to/exclude.sql"]
     assert config.selector_name == ["a-selector"]
-    assert config.state == "/path/to/state/"
+    assert config.state == Path("/path/to/state/")
 
 
 def test_dbt_snapshot(profiles_file, dbt_project_file, snapshot_files):

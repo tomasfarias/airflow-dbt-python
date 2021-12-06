@@ -1,4 +1,6 @@
 """Unit test module for DbtTestOperator."""
+from pathlib import Path
+
 import pytest
 from dbt.contracts.results import TestStatus
 
@@ -55,7 +57,7 @@ def test_dbt_test_configuration_all_args():
     assert config.select == ["/path/to/models"]
     assert config.exclude == ["/path/to/data/to/exclude.sql"]
     assert config.selector_name == ["a-selector"]
-    assert config.state == "/path/to/state/"
+    assert config.state == Path("/path/to/state/")
     assert config.no_defer is True
 
 
