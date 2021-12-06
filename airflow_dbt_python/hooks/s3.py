@@ -1,4 +1,5 @@
 """Provides an S3 hook exclusively for fetching dbt files."""
+from __future__ import annotations
 
 from pathlib import Path
 from typing import Optional

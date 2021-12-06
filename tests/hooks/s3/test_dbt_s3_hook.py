@@ -1,6 +1,6 @@
 """Unit test module for DbtS3Hook."""
 import io
-import os
+from pathlib import Path
 from zipfile import ZipFile
 
 import pytest
@@ -167,25 +167,34 @@ def test_get_dbt_project_no_trailing_slash(s3_bucket, tmpdir, dbt_project_file):
     assert result == "col1,col2\n1,2"
 
 
-def test_get_dbt_project_from_zip_file(s3_bucket, tmpdir, dbt_project_file):
+@pytest.fixture
+def test_files():
+    f1 = Path("data/a_seed.csv")
+    with open(f1, "w+") as f:
+        f.write("col1,col2\n1,2")
+
+    f2 = Path("models/a_model.sql")
+    with open(f2, "w+") as f:
+        f.write("SELECT 1")
+    f3 = Path("models/another_model.sql")
+    with open(f3, "w+") as f:
+        f.write("SELECT 2")
+    yield [f1, f2, f3]
+    f1.unlink()
+    f2.unlink()
+    f3.unlink()
+
+
+def test_get_dbt_project_from_zip_file(s3_bucket, tmpdir, dbt_project_file, test_files):
     """Test pulling dbt project from ZipFile in S3 path."""
     with open(dbt_project_file) as pf:
         project_content = pf.read()
 
-    with open("data/a_seed.csv", "w+") as f:
-        f.write("col1,col2\n1,2")
-
-    with open("models/a_model.sql", "w+") as f:
-        f.write("SELECT 1")
-    with open("models/another_model.sql", "w+") as f:
-        f.write("SELECT 2")
-
     zip_buffer = io.BytesIO()
     with ZipFile(zip_buffer, "a") as zf:
         zf.write(dbt_project_file, "dbt_project.yml")
-        zf.write("data/a_seed.csv")
-        zf.write("models/a_model.sql")
-        zf.write("models/another_model.sql")
+        for f in test_files:
+            zf.write(f)
 
     hook = DbtS3Hook()
     bucket = hook.get_bucket(s3_bucket)
