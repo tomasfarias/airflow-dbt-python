@@ -384,6 +384,9 @@ class DbtHook(BaseHook):
     Allows for running dbt tasks and provides required configurations for each task.
     """
 
+    def __init__(self):
+        pass
+
     def get_config_factory(self, command: str) -> ConfigFactory:
         """Get a ConfigFactory given a dbt command string."""
         return ConfigFactory.from_str(command)
