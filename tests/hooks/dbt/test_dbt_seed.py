@@ -54,7 +54,7 @@ GB,United Kingdom,3
 @pytest.fixture(scope="function")
 def new_seed_file(dbt_project_dir):
     """Create a new seed file to test full_refresh."""
-    d = dbt_project_dir / "data"
+    d = dbt_project_dir / "seeds"
     s1 = d / "seed_1.csv"
     target = Path("seed_temp.csv")
     s1.rename(target)

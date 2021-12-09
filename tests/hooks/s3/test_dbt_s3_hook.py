@@ -169,7 +169,7 @@ def test_get_dbt_project_no_trailing_slash(s3_bucket, tmpdir, dbt_project_file):
 
 @pytest.fixture
 def test_files():
-    f1 = Path("data/a_seed.csv")
+    f1 = Path("seeds/a_seed.csv")
     with open(f1, "w+") as f:
         f.write("col1,col2\n1,2")
 
@@ -210,9 +210,9 @@ def test_get_dbt_project_from_zip_file(s3_bucket, tmpdir, dbt_project_file, test
 
     dir_contents = [f for f in project_path.iterdir()]
     assert sorted(str(f.name) for f in dir_contents) == [
-        "data",
         "dbt_project.yml",
         "models",
+        "seeds",
     ]
 
     with open(project_path / "dbt_project.yml") as f:
@@ -227,6 +227,6 @@ def test_get_dbt_project_from_zip_file(s3_bucket, tmpdir, dbt_project_file, test
         result = f.read()
     assert result == "SELECT 2"
 
-    with open(project_path / "data" / "a_seed.csv") as f:
+    with open(project_path / "seeds" / "a_seed.csv") as f:
         result = f.read()
     assert result == "col1,col2\n1,2"

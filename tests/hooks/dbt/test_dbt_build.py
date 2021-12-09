@@ -8,8 +8,8 @@ def test_dbt_build_task(
     dbt_project_file,
     model_files,
     seed_files,
-    schema_tests_files,
-    data_tests_files,
+    singular_tests_files,
+    generic_tests_files,
 ):
     """Test a dbt build task."""
     factory = hook.get_config_factory("build")
@@ -32,8 +32,8 @@ def test_dbt_build_task_non_existent_model(
     dbt_project_file,
     model_files,
     seed_files,
-    schema_tests_files,
-    data_tests_files,
+    singular_tests_files,
+    generic_tests_files,
 ):
     """Test a dbt build task with non existent model."""
     factory = hook.get_config_factory("build")

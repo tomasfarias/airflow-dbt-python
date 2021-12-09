@@ -55,8 +55,8 @@ def test_dbt_ls_all(
     dbt_project_file,
     seed_files,
     model_files,
-    data_tests_files,
-    schema_tests_files,
+    singular_tests_files,
+    generic_tests_files,
     snapshot_files,
 ):
     """Test dbt list operator by listing all resources."""
@@ -77,13 +77,13 @@ def test_dbt_ls_all(
         "test.seed_1",
         "test.seed_2",
         "test.snapshot_1.test_snapshot",
-        "test.schema_test.accepted_values_model_2_field1__123__456",
-        "test.data_test.data_test_1",
-        "test.data_test.data_test_2",
-        "test.schema_test.not_null_model_2_field1",
-        "test.schema_test.not_null_model_2_field2",
-        "test.schema_test.unique_model_2_field1",
-        "test.schema_test.unique_model_2_field2",
+        "test.accepted_values_model_2_field1__123__456",
+        "test.not_null_model_2_field1",
+        "test.not_null_model_2_field2",
+        "test.singular_test_1",
+        "test.singular_test_2",
+        "test.unique_model_2_field1",
+        "test.unique_model_2_field2",
     ]
 
     assert all_files == expected

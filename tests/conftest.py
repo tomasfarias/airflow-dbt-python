@@ -210,7 +210,7 @@ def sources_file(model_files, database):
 @pytest.fixture(scope="session")
 def seed_files(dbt_project_dir):
     """Create test seed files."""
-    d = dbt_project_dir / "data"
+    d = dbt_project_dir / "seeds"
     d.mkdir(exist_ok=True)
     s1 = d / "seed_1.csv"
     s1.write_text(SEED_1)
@@ -262,16 +262,16 @@ def broken_file(dbt_project_dir):
 
 
 @pytest.fixture(scope="function")
-def dbt_modules_dir(dbt_project_file):
-    """Create a dbt_modules dir to install packages."""
+def dbt_packages_dir(dbt_project_file):
+    """Create a dbt_packages dir to install packages."""
     d = dbt_project_file.parent
-    return d / "dbt_modules"
+    return d / "dbt_packages"
 
 
 PACKAGES = """
 packages:
   - package: dbt-labs/dbt_utils
-    version: 0.7.3
+    version: 0.8.0
 """
 
 
@@ -306,7 +306,7 @@ def pre_compile(hook, dbt_project_file, profiles_file):
     shutil.rmtree(target_dir, ignore_errors=True)
 
 
-SCHEMA_TESTS = """
+GENERIC_TESTS = """
 version: 2
 
 models:
@@ -326,24 +326,24 @@ models:
 
 
 @pytest.fixture(scope="session")
-def schema_tests_files(dbt_project_dir):
-    """Create a dbt schema test YAML file."""
+def generic_tests_files(dbt_project_dir):
+    """Create a dbt generic test YAML file."""
     d = dbt_project_dir / "models"
     d.mkdir(exist_ok=True)
 
     schema = d / "schema.yml"
-    schema.write_text(SCHEMA_TESTS)
+    schema.write_text(GENERIC_TESTS)
 
     return [schema]
 
 
-DATA_TEST_1 = """
+SINGULAR_TEST_1 = """
 SELECT *
 FROM {{ ref('model_2' )}}
 WHERE field1 != 123
 """
 
-DATA_TEST_2 = """
+SINGULAR_TEST_2 = """
 SELECT *
 FROM {{ ref('model_4' )}}
 WHERE field1 != 123
@@ -351,16 +351,16 @@ WHERE field1 != 123
 
 
 @pytest.fixture(scope="session")
-def data_tests_files(dbt_project_dir):
-    """Create data test files."""
-    d = dbt_project_dir / "test"
+def singular_tests_files(dbt_project_dir):
+    """Create singular test files."""
+    d = dbt_project_dir / "tests"
     d.mkdir(exist_ok=True)
 
-    test1 = d / "data_test_1.sql"
-    test1.write_text(DATA_TEST_1)
+    test1 = d / "singular_test_1.sql"
+    test1.write_text(SINGULAR_TEST_1)
 
-    test2 = d / "data_test_2.sql"
-    test2.write_text(DATA_TEST_2)
+    test2 = d / "singular_test_2.sql"
+    test2.write_text(SINGULAR_TEST_2)
 
     return [test1, test2]
 
