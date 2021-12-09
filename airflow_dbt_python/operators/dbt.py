@@ -18,12 +18,7 @@ from airflow import AirflowException
 from airflow.models.baseoperator import BaseOperator
 from airflow.models.xcom import XCOM_RETURN_KEY
 from airflow.utils.decorators import apply_defaults
-from airflow_dbt_python.hooks.dbt import (
-    BaseConfig,
-    IndirectSelection,
-    LogFormat,
-    Output,
-)
+from airflow_dbt_python.hooks.dbt import BaseConfig, LogFormat, Output
 
 
 class DbtBaseOperator(BaseOperator):
@@ -394,6 +389,7 @@ class DbtTestOperator(DbtBaseOperator):
         select: Optional[list[str]] = None,
         exclude: Optional[list[str]] = None,
         selector_name: Optional[str] = None,
+        indirect_selection: Optional[str] = None,
         **kwargs,
     ) -> None:
         super().__init__(**kwargs)
@@ -402,6 +398,7 @@ class DbtTestOperator(DbtBaseOperator):
         self.exclude = exclude
         self.selector_name = selector_name
         self.select = select or models
+        self.indirect_selection = indirect_selection
 
     @property
     def command(self) -> str:
@@ -563,11 +560,7 @@ class DbtLsOperator(DbtBaseOperator):
             Output.from_str(dbt_output) if dbt_output is not None else None
         )
         self.output_keys = output_keys
-        self.indirect_selection = (
-            IndirectSelection.from_str(indirect_selection)
-            if indirect_selection is not None
-            else None
-        )
+        self.indirect_selection = indirect_selection
 
     @property
     def command(self) -> str:
@@ -675,6 +668,7 @@ class DbtBuildOperator(DbtBaseOperator):
         singular: Optional[bool] = None,
         generic: Optional[bool] = None,
         show: Optional[bool] = None,
+        indirect_selection: Optional[str] = None,
         **kwargs,
     ) -> None:
         super().__init__(**kwargs)
@@ -685,6 +679,7 @@ class DbtBuildOperator(DbtBaseOperator):
         self.singular = singular
         self.generic = generic
         self.show = show
+        self.indirect_selection = indirect_selection
 
     @property
     def command(self) -> str:
