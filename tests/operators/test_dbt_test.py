@@ -28,8 +28,8 @@ def test_dbt_test_configuration_all_args():
         vars={"target": "override"},
         log_cache_events=True,
         bypass_cache=True,
-        data=True,
-        schema=True,
+        singular=True,
+        generic=True,
         models=["/path/to/models"],
         threads=2,
         exclude=["/path/to/data/to/exclude.sql"],
@@ -50,11 +50,15 @@ def test_dbt_test_configuration_all_args():
     assert config.vars == '{"target": "override"}'
     assert config.log_cache_events is True
     assert config.bypass_cache is True
-    assert config.data is True
-    assert config.schema is True
+    assert config.singular is True
+    assert config.generic is True
     assert config.fail_fast is True
     assert config.threads == 2
-    assert config.select == ["/path/to/models"]
+    assert config.select == [
+        "/path/to/models",
+        "test_type:singular",
+        "test_type:generic",
+    ]
     assert config.exclude == ["/path/to/data/to/exclude.sql"]
     assert config.selector_name == ["a-selector"]
     assert config.state == Path("/path/to/state/")
@@ -73,48 +77,52 @@ def run_models(hook, dbt_project_file, profiles_file, model_files):
     yield
 
 
-def test_dbt_test_schema_tests(
-    profiles_file, dbt_project_file, schema_tests_files, run_models
+def test_dbt_test_generic_tests(
+    profiles_file, dbt_project_file, generic_tests_files, run_models
 ):
-    """Test a dbt test operator for schema tests only."""
+    """Test a dbt test operator for generic tests only."""
     op = DbtTestOperator(
         task_id="dbt_task",
         project_dir=dbt_project_file.parent,
         profiles_dir=profiles_file.parent,
-        schema=True,
+        generic=True,
         do_xcom_push=True,
     )
     results = op.execute({})
 
-    assert results["args"]["schema"] is True
+    assert results["args"]["generic"] is True
     assert len(results["results"]) == 5
     for test_result in results["results"]:
         assert test_result["status"] == TestStatus.Pass
 
 
-def test_dbt_test_data_tests(
-    profiles_file, dbt_project_file, data_tests_files, run_models
+def test_dbt_test_singular_tests(
+    profiles_file, dbt_project_file, singular_tests_files, run_models
 ):
-    """Test a dbt test operator for data tests only."""
+    """Test a dbt test operator for singular tests only."""
     op = DbtTestOperator(
         task_id="dbt_task",
         project_dir=dbt_project_file.parent,
         profiles_dir=profiles_file.parent,
-        data=True,
+        singular=True,
         do_xcom_push=True,
     )
     results = op.execute({})
 
-    assert results["args"]["data"] is True
+    assert results["args"]["singular"] is True
     assert len(results["results"]) == 2
     for test_result in results["results"]:
         assert test_result["status"] == TestStatus.Pass
 
 
-def test_dbt_test_data_and_schema_tests(
-    profiles_file, dbt_project_file, schema_tests_files, data_tests_files, run_models
+def test_dbt_test_singular_and_generic_tests(
+    profiles_file,
+    dbt_project_file,
+    generic_tests_files,
+    singular_tests_files,
+    run_models,
 ):
-    """Test a dbt test operator for data and schema tests."""
+    """Test a dbt test operator for singular and generic tests."""
     op = DbtTestOperator(
         task_id="dbt_task",
         project_dir=dbt_project_file.parent,
@@ -130,9 +138,9 @@ def test_dbt_test_data_and_schema_tests(
 
 @no_s3_hook
 def test_dbt_test_from_s3(
-    s3_bucket, profiles_file, dbt_project_file, data_tests_files, run_models
+    s3_bucket, profiles_file, dbt_project_file, singular_tests_files, run_models
 ):
-    """Test a dbt test operator for data and schema tests from s3."""
+    """Test a dbt test operator for singular and generic tests from s3."""
     hook = DbtS3Hook()
     bucket = hook.get_bucket(s3_bucket)
 
@@ -144,7 +152,7 @@ def test_dbt_test_from_s3(
         profiles_content = pf.read()
     bucket.put_object(Key="project/profiles.yml", Body=profiles_content.encode())
 
-    for test_file in data_tests_files:
+    for test_file in singular_tests_files:
         with open(test_file) as tf:
             test_content = tf.read()
             bucket.put_object(
@@ -164,7 +172,7 @@ def test_dbt_test_from_s3(
 
 @no_s3_hook
 def test_dbt_tests_with_profile_from_s3(
-    s3_bucket, profiles_file, dbt_project_file, data_tests_files
+    s3_bucket, profiles_file, dbt_project_file, singular_tests_files
 ):
     hook = DbtS3Hook()
     bucket = hook.get_bucket(s3_bucket)
@@ -186,7 +194,7 @@ def test_dbt_tests_with_profile_from_s3(
 
 @no_s3_hook
 def test_dbt_test_with_project_from_s3(
-    s3_bucket, profiles_file, dbt_project_file, data_tests_files
+    s3_bucket, profiles_file, dbt_project_file, singular_tests_files
 ):
     hook = DbtS3Hook()
     bucket = hook.get_bucket(s3_bucket)
@@ -195,7 +203,7 @@ def test_dbt_test_with_project_from_s3(
         project_content = pf.read()
     bucket.put_object(Key="project/dbt_project.yml", Body=project_content.encode())
 
-    for test_file in data_tests_files:
+    for test_file in singular_tests_files:
         with open(test_file) as tf:
             test_content = tf.read()
             bucket.put_object(
@@ -224,8 +232,8 @@ def test_dbt_compile_uses_correct_argument_according_to_version():
         vars={"target": "override"},
         log_cache_events=True,
         bypass_cache=True,
-        data=True,
-        schema=True,
+        singular=True,
+        generic=True,
         models=["/path/to/models"],
         threads=2,
         exclude=["/path/to/data/to/exclude.sql"],

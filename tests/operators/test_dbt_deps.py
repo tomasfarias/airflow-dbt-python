@@ -33,13 +33,13 @@ def test_dbt_deps_mocked_all_args():
 
 
 def test_dbt_deps_downloads_dbt_utils(
-    profiles_file, dbt_project_file, dbt_modules_dir, packages_file
+    profiles_file, dbt_project_file, dbt_packages_dir, packages_file
 ):
     """Test that a DbtDepsOperator downloads the dbt_utils module."""
     import shutil
 
     # Ensure modules directory is empty before starting
-    dbt_utils_dir = dbt_modules_dir / "dbt_utils"
+    dbt_utils_dir = dbt_packages_dir / "dbt_utils"
     shutil.rmtree(dbt_utils_dir, ignore_errors=True)
 
     assert dbt_utils_dir.exists() is False
@@ -49,10 +49,10 @@ def test_dbt_deps_downloads_dbt_utils(
         project_dir=dbt_project_file.parent,
         profiles_dir=profiles_file.parent,
     )
-    modules = dbt_modules_dir.glob("dbt_utils")
+    modules = dbt_packages_dir.glob("dbt_utils")
     assert len([m for m in modules]) == 0
 
     op.execute({})
 
-    modules = dbt_modules_dir.glob("dbt_utils")
+    modules = dbt_packages_dir.glob("dbt_utils")
     assert len([m for m in modules]) == 1

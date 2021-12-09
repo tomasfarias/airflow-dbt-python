@@ -22,37 +22,81 @@ def seed_and_run(hook, dbt_project_file, profiles_file, model_files, seed_files)
     return
 
 
-def test_dbt_test_schema_tests_task(
-    hook, profiles_file, dbt_project_file, schema_tests_files, seed_and_run
+def test_dbt_test_generic_tests_task(
+    hook,
+    profiles_file,
+    dbt_project_file,
+    singular_tests_files,
+    generic_tests_files,
+    seed_and_run,
 ):
-    """Test a dbt test task for schema tests only."""
+    """Test a dbt test task for generic tests only."""
     factory = hook.get_config_factory("test")
     config = factory.create_config(
         project_dir=dbt_project_file.parent,
         profiles_dir=profiles_file.parent,
-        schema=True,
+        generic=True,
     )
     success, results = hook.run_dbt_task(config)
     assert success is True
-    assert results.args["schema"] is True
+    assert results.args["generic"] is True
     assert len(results.results) == 5
     for test_result in results.results:
         assert test_result.status == TestStatus.Pass
 
 
-def test_dbt_test_data_tests_task(
-    hook, profiles_file, dbt_project_file, data_tests_files, seed_and_run
+def test_dbt_test_cautious_generic_tests_task(
+    hook,
+    profiles_file,
+    dbt_project_file,
+    singular_tests_files,
+    generic_tests_files,
+    seed_and_run,
 ):
-    """Test a dbt test task for only data tests."""
+    """Test a dbt test task for generic tests and cautious selection."""
     factory = hook.get_config_factory("test")
     config = factory.create_config(
         project_dir=dbt_project_file.parent,
         profiles_dir=profiles_file.parent,
-        data=True,
+        indirect_selection="cautious",
+        select=["model_1"],
     )
     success, results = hook.run_dbt_task(config)
     assert success is True
-    assert results.args["data"] is True
+    assert len(results.results) == 0
+
+    config = factory.create_config(
+        project_dir=dbt_project_file.parent,
+        profiles_dir=profiles_file.parent,
+        indirect_selection="cautious",
+        select=["model_2"],
+    )
+    success, results = hook.run_dbt_task(config)
+    assert success is True
+    assert len(results.results) == 6
+    for test_result in results.results:
+        assert test_result.status == TestStatus.Pass
+
+
+def test_dbt_test_singular_tests_task(
+    hook,
+    profiles_file,
+    dbt_project_file,
+    singular_tests_files,
+    generic_tests_files,
+    seed_and_run,
+):
+    """Test a dbt test task for only singular tests."""
+    factory = hook.get_config_factory("test")
+    config = factory.create_config(
+        project_dir=dbt_project_file.parent,
+        profiles_dir=profiles_file.parent,
+        singular=True,
+    )
+    success, results = hook.run_dbt_task(config)
+    assert success is True
+    assert results.args["singular"] is True
+    print(results)
     assert len(results.results) == 2
     for test_result in results.results:
         assert test_result.status == TestStatus.Pass
@@ -62,8 +106,8 @@ def test_dbt_test_all_tests_task(
     hook,
     profiles_file,
     dbt_project_file,
-    data_tests_files,
-    schema_tests_files,
+    singular_tests_files,
+    generic_tests_files,
     seed_and_run,
 ):
     """Test a dbt test task for all tests."""

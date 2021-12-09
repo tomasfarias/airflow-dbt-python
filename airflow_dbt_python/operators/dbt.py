@@ -388,8 +388,8 @@ class DbtTestOperator(DbtBaseOperator):
 
     def __init__(
         self,
-        data: Optional[bool] = None,
-        schema: Optional[bool] = None,
+        singular: Optional[bool] = None,
+        generic: Optional[bool] = None,
         models: Optional[list[str]] = None,
         select: Optional[list[str]] = None,
         exclude: Optional[list[str]] = None,
@@ -397,8 +397,8 @@ class DbtTestOperator(DbtBaseOperator):
         **kwargs,
     ) -> None:
         super().__init__(**kwargs)
-        self.data = data
-        self.schema = schema
+        self.singular = singular
+        self.generic = generic
         self.exclude = exclude
         self.selector_name = selector_name
         self.select = select or models
@@ -672,8 +672,8 @@ class DbtBuildOperator(DbtBaseOperator):
         select: Optional[list[str]] = None,
         exclude: Optional[list[str]] = None,
         selector_name: Optional[str] = None,
-        data: Optional[bool] = None,
-        schema: Optional[bool] = None,
+        singular: Optional[bool] = None,
+        generic: Optional[bool] = None,
         show: Optional[bool] = None,
         **kwargs,
     ) -> None:
@@ -682,8 +682,8 @@ class DbtBuildOperator(DbtBaseOperator):
         self.select = select
         self.exclude = exclude
         self.selector_name = selector_name
-        self.data = data
-        self.schema = schema
+        self.singular = singular
+        self.generic = generic
         self.show = show
 
     @property

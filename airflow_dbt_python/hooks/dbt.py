@@ -17,7 +17,7 @@ from dbt.contracts.graph.manifest import Manifest
 from dbt.contracts.results import RunResult
 from dbt.exceptions import InternalException
 from dbt.graph import Graph
-from dbt.main import adapter_management, initialize_config_values, track_run
+from dbt.main import adapter_management, read_user_config, track_run
 from dbt.task.base import BaseTask
 from dbt.task.build import BuildTask
 from dbt.task.clean import CleanTask
@@ -33,13 +33,9 @@ from dbt.task.runnable import ManifestTask
 from dbt.task.seed import SeedTask
 from dbt.task.snapshot import SnapshotTask
 from dbt.task.test import TestTask
-from dbt.version import get_installed_version
+from dbt.tracking import initialize_from_flags
 
 from airflow.hooks.base_hook import BaseHook
-
-DBT_VERSION = get_installed_version()
-DBT_VERSION_STRING = DBT_VERSION.to_version_string()
-DBT_VERSION_TUPLE = (int(DBT_VERSION.major), int(DBT_VERSION.minor))
 
 
 class FromStrMixin(Enum):
@@ -57,13 +53,6 @@ class LogFormat(FromStrMixin, Enum):
     DEFAULT = "default"
     JSON = "json"
     TEXT = "text"
-
-
-class IndirectSelection(FromStrMixin, Enum):
-    """Allowed indirect selection arguments."""
-
-    EAGER = "eager"
-    CAUTIOS = "cautios"
 
 
 class Output(FromStrMixin, Enum):
@@ -85,6 +74,7 @@ class Output(FromStrMixin, Enum):
 class BaseConfig:
     """BaseConfig dbt arguments for all tasks."""
 
+    cls: BaseTask = dataclasses.field(default=BaseTask, init=False)
     record_timing_info: Optional[str] = None
     debug: Optional[bool] = None
     bypass_cache: Optional[bool] = None
@@ -154,7 +144,7 @@ class BaseConfig:
 
             with open(manifest_path) as f:
                 loaded_manifest = json.load(f)
-                # If I'm taking something from this experience, it's this Mashumaru
+                # If I'm taking something from this experience, it's this Mashumaro
                 # package. I spent a long time trying to build a manifest, when I only
                 # had to call from_dict. Amazing stuff.
                 Manifest.from_dict(loaded_manifest)
@@ -219,13 +209,28 @@ class BuildTaskConfig(TableMutabilityConfig):
 
     cls: BaseTask = dataclasses.field(default=BuildTask, init=False)
     compiled_target: Optional[Union[os.PathLike[str], str]] = None
-    data: Optional[bool] = None
-    indirect_selection: Optional[IndirectSelection] = None
+    singular: Optional[bool] = None
+    indirect_selection: Optional[str] = None
     resource_types: Optional[list[str]] = None
-    schema: Optional[bool] = None
+    generic: Optional[bool] = None
     show: Optional[bool] = None
     store_failures: Optional[bool] = None
     which: str = dataclasses.field(default="build", init=False)
+
+    def __post_init__(self):
+        """Support for type casting arguments."""
+        super().__post_init__()
+        if self.singular is True:
+            try:
+                self.select.append("test_type:singular")
+            except AttributeError:
+                self.select = ["test_type:singular"]
+
+        if self.generic is True:
+            try:
+                self.select.append("test_type:generic")
+            except AttributeError:
+                self.select = ["test_type:generic"]
 
 
 @dataclass
@@ -269,7 +274,7 @@ class ListTaskConfig(SelectionConfig):
 
     cls: BaseTask = dataclasses.field(default=ListTask, init=False)
     compiled_target: Optional[Union[os.PathLike[str], str]] = None
-    indirect_selection: Optional[IndirectSelection] = None
+    indirect_selection: Optional[str] = None
     output: Output = Output.SELECTOR
     output_keys: Optional[list[str]] = None
     resource_types: Optional[list[str]] = None
@@ -344,11 +349,26 @@ class TestTaskConfig(SelectionConfig):
     """Dbt test task arguments."""
 
     cls: BaseTask = dataclasses.field(default=TestTask, init=False)
-    data: Optional[bool] = None
-    indirect_selection: Optional[IndirectSelection] = None
-    schema: Optional[bool] = None
+    generic: Optional[bool] = None
+    indirect_selection: Optional[str] = None
+    singular: Optional[bool] = None
     store_failures: Optional[bool] = None
     which: str = dataclasses.field(default="test", init=False)
+
+    def __post_init__(self):
+        """Support for type casting arguments."""
+        super().__post_init__()
+        if self.singular is True:
+            try:
+                self.select.append("test_type:singular")
+            except AttributeError:
+                self.select = ["test_type:singular"]
+
+        if self.generic is True:
+            try:
+                self.select.append("test_type:generic")
+            except AttributeError:
+                self.select = ["test_type:generic"]
 
 
 class ConfigFactory(FromStrMixin, Enum):
@@ -371,7 +391,6 @@ class ConfigFactory(FromStrMixin, Enum):
     def create_config(self, *args, **kwargs) -> BaseConfig:
         """Instantiate a dbt task config with the given args and kwargs."""
         config = self.value(**kwargs)
-        initialize_config_values(config)
         return config
 
     @property
@@ -395,8 +414,10 @@ class DbtHook(BaseHook):
 
     def initialize_runtime_config(self, config: BaseConfig) -> RuntimeConfig:
         """Set environment flags and return a RuntimeConfig."""
-        flags.reset()
-        flags.set_from_args(config)
+        user_config = read_user_config(flags.PROFILES_DIR)
+        initialize_from_flags()
+        config.cls.set_log_format()
+        flags.set_from_args(config, user_config)
         return RuntimeConfig.from_args(config)
 
     def run_dbt_task(self, config: BaseConfig) -> tuple[bool, Optional[RunResult]]:

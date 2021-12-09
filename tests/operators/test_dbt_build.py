@@ -38,8 +38,8 @@ def test_dbt_build_mocked_all_args():
         exclude=["/path/to/model/to/exclude.sql"],
         selector_name=["a-selector"],
         state="/path/to/state/",
-        data=True,
-        schema=True,
+        singular=True,
+        generic=True,
         show=True,
     )
 
@@ -60,12 +60,14 @@ def test_dbt_build_mocked_all_args():
     assert config.select == [
         "/path/to/model.sql",
         "+/another/model.sql+2",
+        "test_type:singular",
+        "test_type:generic",
     ]
     assert config.exclude == ["/path/to/model/to/exclude.sql"]
     assert config.selector_name == ["a-selector"]
     assert config.state == Path("/path/to/state/")
-    assert config.data is True
-    assert config.schema is True
+    assert config.singular is True
+    assert config.generic is True
     assert config.show is True
 
 

@@ -2,13 +2,13 @@
 
 
 def test_dbt_deps_task(
-    hook, profiles_file, dbt_project_file, model_files, dbt_modules_dir, packages_file
+    hook, profiles_file, dbt_project_file, model_files, dbt_packages_dir, packages_file
 ):
     """Test a dbt deps task."""
     import shutil
 
     # Ensure modules directory is empty before starting
-    dbt_utils_dir = dbt_modules_dir / "dbt_utils"
+    dbt_utils_dir = dbt_packages_dir / "dbt_utils"
     shutil.rmtree(dbt_utils_dir, ignore_errors=True)
 
     assert dbt_utils_dir.exists() is False

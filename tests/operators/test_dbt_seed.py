@@ -115,7 +115,8 @@ id,name
 
 @pytest.fixture
 def broken_file(dbt_project_dir):
-    d = dbt_project_dir / "data"
+    """A broken CSV file."""
+    d = dbt_project_dir / "seeds"
     s = d / "broken_seed.csv"
     s.write_text(BROKEN_CSV)
     return s
@@ -153,7 +154,7 @@ def test_dbt_seed_from_s3(s3_bucket, profiles_file, dbt_project_file, seed_files
         with open(seed_file) as sf:
             seed_content = sf.read()
             bucket.put_object(
-                Key=f"project/data/{seed_file.name}", Body=seed_content.encode()
+                Key=f"project/seeds/{seed_file.name}", Body=seed_content.encode()
             )
 
     op = DbtSeedOperator(
@@ -208,7 +209,7 @@ def test_dbt_seed_with_project_from_s3(
         with open(seed_file) as sf:
             seed_content = sf.read()
             bucket.put_object(
-                Key=f"project/data/{seed_file.name}", Body=seed_content.encode()
+                Key=f"project/seeds/{seed_file.name}", Body=seed_content.encode()
             )
 
     op = DbtSeedOperator(
