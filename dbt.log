@@ -1,0 +1,270 @@
+2021-10-10 23:13:57.834349 (MainThread): Sending event: {'category': 'dbt', 'action': 'invocation', 'label': 'start', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x7ff7861cd160>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x7ff7861cd6a0>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x7ff7861cd370>]}
+2021-10-10 23:13:57.843352 (MainThread): Partial parsing not enabled
+2021-10-10 23:13:57.848343 (MainThread): Parsing macros/adapters.sql
+2021-10-10 23:13:57.865392 (MainThread): Parsing macros/catalog.sql
+2021-10-10 23:13:57.867138 (MainThread): Parsing macros/relations.sql
+2021-10-10 23:13:57.868213 (MainThread): Parsing macros/materializations/snapshot_merge.sql
+2021-10-10 23:13:57.869594 (MainThread): Parsing macros/core.sql
+2021-10-10 23:13:57.872629 (MainThread): Parsing macros/adapters/common.sql
+2021-10-10 23:13:57.905554 (MainThread): Parsing macros/etc/datetime.sql
+2021-10-10 23:13:57.911844 (MainThread): Parsing macros/etc/get_custom_alias.sql
+2021-10-10 23:13:57.912733 (MainThread): Parsing macros/etc/get_custom_database.sql
+2021-10-10 23:13:57.914203 (MainThread): Parsing macros/etc/get_custom_schema.sql
+2021-10-10 23:13:57.915653 (MainThread): Parsing macros/etc/is_incremental.sql
+2021-10-10 23:13:57.916798 (MainThread): Parsing macros/etc/query.sql
+2021-10-10 23:13:57.917626 (MainThread): Parsing macros/materializations/helpers.sql
+2021-10-10 23:13:57.925667 (MainThread): Parsing macros/materializations/test.sql
+2021-10-10 23:13:57.930476 (MainThread): Parsing macros/materializations/common/merge.sql
+2021-10-10 23:13:57.940646 (MainThread): Parsing macros/materializations/incremental/helpers.sql
+2021-10-10 23:13:57.942047 (MainThread): Parsing macros/materializations/incremental/incremental.sql
+2021-10-10 23:13:57.947794 (MainThread): Parsing macros/materializations/seed/seed.sql
+2021-10-10 23:13:57.963536 (MainThread): Parsing macros/materializations/snapshot/snapshot.sql
+2021-10-10 23:13:57.985807 (MainThread): Parsing macros/materializations/snapshot/snapshot_merge.sql
+2021-10-10 23:13:57.987299 (MainThread): Parsing macros/materializations/snapshot/strategies.sql
+2021-10-10 23:13:58.000259 (MainThread): Parsing macros/materializations/table/table.sql
+2021-10-10 23:13:58.005252 (MainThread): Parsing macros/materializations/view/create_or_replace_view.sql
+2021-10-10 23:13:58.009197 (MainThread): Parsing macros/materializations/view/view.sql
+2021-10-10 23:13:58.013593 (MainThread): Parsing macros/schema_tests/accepted_values.sql
+2021-10-10 23:13:58.015405 (MainThread): Parsing macros/schema_tests/not_null.sql
+2021-10-10 23:13:58.016716 (MainThread): Parsing macros/schema_tests/relationships.sql
+2021-10-10 23:13:58.018026 (MainThread): Parsing macros/schema_tests/unique.sql
+2021-10-10 23:13:58.134733 (MainThread): Acquiring new postgres connection "model.test.model_4".
+2021-10-10 23:13:58.143863 (MainThread): Acquiring new postgres connection "model.test.model_3".
+2021-10-10 23:13:58.150469 (MainThread): Acquiring new postgres connection "model.test.model_2".
+2021-10-10 23:13:58.153585 (MainThread): Acquiring new postgres connection "model.test.model_1".
+2021-10-10 23:13:58.171447 (MainThread): Sending event: {'category': 'dbt', 'action': 'load_project', 'label': 'bc029f6b-9d2b-45ae-a106-72ddee31ce36', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x7ff78614f610>]}
+2021-10-10 23:13:58.174796 (MainThread): Sending event: {'category': 'dbt', 'action': 'resource_counts', 'label': 'bc029f6b-9d2b-45ae-a106-72ddee31ce36', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x7ff78614f0a0>]}
+2021-10-10 23:13:58.175009 (MainThread): Found 4 models, 0 tests, 0 snapshots, 0 analyses, 147 macros, 0 operations, 0 seed files, 0 sources, 0 exposures
+2021-10-10 23:13:58.175286 (MainThread): The selection criterion 'fake' does not match any nodes
+2021-10-10 23:13:58.175778 (MainThread): WARNING: Nothing to do. Try checking your model configs and model specification args
+2021-10-10 23:13:58.177919 (MainThread): 01:13:58 | Done.
+2021-10-10 23:13:58.178111 (MainThread): Sending event: {'category': 'dbt', 'action': 'invocation', 'label': 'end', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x7ff7861e1310>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x7ff7861e22e0>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x7ff7861ce130>]}
+2021-10-10 23:13:58.178224 (MainThread): Flushing usage events
+2021-10-10 23:28:18.760008 (MainThread): Sending event: {'category': 'dbt', 'action': 'invocation', 'label': 'start', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x7f9063faceb0>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x7f9063fb72e0>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x7f9063fb7250>]}
+2021-10-10 23:28:18.760455 (MainThread): Checking target/*
+2021-10-10 23:28:18.760773 (MainThread):  Cleaned target/*
+2021-10-10 23:28:18.760898 (MainThread): Finished cleaning all paths.
+2021-10-10 23:28:18.761044 (MainThread): Sending event: {'category': 'dbt', 'action': 'invocation', 'label': 'end', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x7f9063faceb0>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x7f9063fb71f0>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x7f9063fb7220>]}
+2021-10-10 23:28:18.761174 (MainThread): Flushing usage events
+2021-10-10 23:32:10.905189 (MainThread): Sending event: {'category': 'dbt', 'action': 'invocation', 'label': 'start', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x7fc6ba27a100>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x7fc6ba27a7f0>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x7fc6b9f0c8b0>]}
+2021-10-10 23:32:10.914431 (MainThread): Partial parsing not enabled
+2021-10-10 23:32:10.919473 (MainThread): Parsing macros/adapters.sql
+2021-10-10 23:32:10.937030 (MainThread): Parsing macros/catalog.sql
+2021-10-10 23:32:10.938834 (MainThread): Parsing macros/relations.sql
+2021-10-10 23:32:10.940109 (MainThread): Parsing macros/materializations/snapshot_merge.sql
+2021-10-10 23:32:10.941706 (MainThread): Parsing macros/core.sql
+2021-10-10 23:32:10.944624 (MainThread): Parsing macros/adapters/common.sql
+2021-10-10 23:32:10.978756 (MainThread): Parsing macros/etc/datetime.sql
+2021-10-10 23:32:10.985509 (MainThread): Parsing macros/etc/get_custom_alias.sql
+2021-10-10 23:32:10.986310 (MainThread): Parsing macros/etc/get_custom_database.sql
+2021-10-10 23:32:10.987792 (MainThread): Parsing macros/etc/get_custom_schema.sql
+2021-10-10 23:32:10.989796 (MainThread): Parsing macros/etc/is_incremental.sql
+2021-10-10 23:32:10.991204 (MainThread): Parsing macros/etc/query.sql
+2021-10-10 23:32:10.992174 (MainThread): Parsing macros/materializations/helpers.sql
+2021-10-10 23:32:10.999750 (MainThread): Parsing macros/materializations/test.sql
+2021-10-10 23:32:11.004858 (MainThread): Parsing macros/materializations/common/merge.sql
+2021-10-10 23:32:11.015413 (MainThread): Parsing macros/materializations/incremental/helpers.sql
+2021-10-10 23:32:11.016812 (MainThread): Parsing macros/materializations/incremental/incremental.sql
+2021-10-10 23:32:11.022802 (MainThread): Parsing macros/materializations/seed/seed.sql
+2021-10-10 23:32:11.038266 (MainThread): Parsing macros/materializations/snapshot/snapshot.sql
+2021-10-10 23:32:11.060765 (MainThread): Parsing macros/materializations/snapshot/snapshot_merge.sql
+2021-10-10 23:32:11.062523 (MainThread): Parsing macros/materializations/snapshot/strategies.sql
+2021-10-10 23:32:11.075469 (MainThread): Parsing macros/materializations/table/table.sql
+2021-10-10 23:32:11.080282 (MainThread): Parsing macros/materializations/view/create_or_replace_view.sql
+2021-10-10 23:32:11.084079 (MainThread): Parsing macros/materializations/view/view.sql
+2021-10-10 23:32:11.088798 (MainThread): Parsing macros/schema_tests/accepted_values.sql
+2021-10-10 23:32:11.090609 (MainThread): Parsing macros/schema_tests/not_null.sql
+2021-10-10 23:32:11.092000 (MainThread): Parsing macros/schema_tests/relationships.sql
+2021-10-10 23:32:11.093724 (MainThread): Parsing macros/schema_tests/unique.sql
+2021-10-10 23:32:11.272534 (MainThread): Acquiring new postgres connection "model.test.model_4".
+2021-10-10 23:32:11.281597 (MainThread): Acquiring new postgres connection "model.test.model_3".
+2021-10-10 23:32:11.288301 (MainThread): Acquiring new postgres connection "model.test.model_2".
+2021-10-10 23:32:11.291730 (MainThread): Acquiring new postgres connection "model.test.model_1".
+2021-10-10 23:32:11.309085 (MainThread): Sending event: {'category': 'dbt', 'action': 'load_project', 'label': 'e7d33965-2327-47c5-a27c-2a93308e70cb', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x7fc6b9f0eb80>]}
+2021-10-10 23:32:11.312384 (MainThread): Sending event: {'category': 'dbt', 'action': 'resource_counts', 'label': 'e7d33965-2327-47c5-a27c-2a93308e70cb', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x7fc6ba1a1e20>]}
+2021-10-10 23:32:11.312716 (MainThread): Found 4 models, 0 tests, 0 snapshots, 0 analyses, 147 macros, 0 operations, 0 seed files, 0 sources, 0 exposures
+2021-10-10 23:32:11.313810 (MainThread): 
+2021-10-10 23:32:11.314266 (MainThread): Acquiring new postgres connection "master".
+2021-10-10 23:32:11.315485 (ThreadPoolExecutor-0_0): Acquiring new postgres connection "list_test_public".
+2021-10-10 23:32:11.324116 (ThreadPoolExecutor-0_0): Using postgres connection "list_test_public".
+2021-10-10 23:32:11.324240 (ThreadPoolExecutor-0_0): On list_test_public: BEGIN
+2021-10-10 23:32:11.324300 (ThreadPoolExecutor-0_0): Opening a new connection, currently in state init
+2021-10-10 23:32:11.328284 (ThreadPoolExecutor-0_0): SQL status: BEGIN in 0.00 seconds
+2021-10-10 23:32:11.328449 (ThreadPoolExecutor-0_0): Using postgres connection "list_test_public".
+2021-10-10 23:32:11.328607 (ThreadPoolExecutor-0_0): On list_test_public: /* {"app": "dbt", "dbt_version": "0.20.2", "profile_name": "default", "target_name": "test", "connection_name": "list_test_public"} */
+select
+      'test' as database,
+      tablename as name,
+      schemaname as schema,
+      'table' as type
+    from pg_tables
+    where schemaname ilike 'public'
+    union all
+    select
+      'test' as database,
+      viewname as name,
+      schemaname as schema,
+      'view' as type
+    from pg_views
+    where schemaname ilike 'public'
+  
+2021-10-10 23:32:11.330840 (ThreadPoolExecutor-0_0): SQL status: SELECT 0 in 0.00 seconds
+2021-10-10 23:32:11.331166 (ThreadPoolExecutor-0_0): On list_test_public: ROLLBACK
+2021-10-10 23:32:11.331493 (ThreadPoolExecutor-0_0): On list_test_public: Close
+2021-10-10 23:32:11.332351 (ThreadPoolExecutor-0_0): Acquiring new postgres connection "list_test_public_a_schema".
+2021-10-10 23:32:11.334189 (ThreadPoolExecutor-0_0): Using postgres connection "list_test_public_a_schema".
+2021-10-10 23:32:11.334434 (ThreadPoolExecutor-0_0): On list_test_public_a_schema: BEGIN
+2021-10-10 23:32:11.334540 (ThreadPoolExecutor-0_0): Opening a new connection, currently in state closed
+2021-10-10 23:32:11.337255 (ThreadPoolExecutor-0_0): SQL status: BEGIN in 0.00 seconds
+2021-10-10 23:32:11.337399 (ThreadPoolExecutor-0_0): Using postgres connection "list_test_public_a_schema".
+2021-10-10 23:32:11.337449 (ThreadPoolExecutor-0_0): On list_test_public_a_schema: /* {"app": "dbt", "dbt_version": "0.20.2", "profile_name": "default", "target_name": "test", "connection_name": "list_test_public_a_schema"} */
+select
+      'test' as database,
+      tablename as name,
+      schemaname as schema,
+      'table' as type
+    from pg_tables
+    where schemaname ilike 'public_a_schema'
+    union all
+    select
+      'test' as database,
+      viewname as name,
+      schemaname as schema,
+      'view' as type
+    from pg_views
+    where schemaname ilike 'public_a_schema'
+  
+2021-10-10 23:32:11.339015 (ThreadPoolExecutor-0_0): SQL status: SELECT 0 in 0.00 seconds
+2021-10-10 23:32:11.339539 (ThreadPoolExecutor-0_0): On list_test_public_a_schema: ROLLBACK
+2021-10-10 23:32:11.339965 (ThreadPoolExecutor-0_0): On list_test_public_a_schema: Close
+2021-10-10 23:32:11.341084 (ThreadPoolExecutor-0_0): Acquiring new postgres connection "list_test_public_another".
+2021-10-10 23:32:11.342941 (ThreadPoolExecutor-0_0): Using postgres connection "list_test_public_another".
+2021-10-10 23:32:11.343069 (ThreadPoolExecutor-0_0): On list_test_public_another: BEGIN
+2021-10-10 23:32:11.343125 (ThreadPoolExecutor-0_0): Opening a new connection, currently in state closed
+2021-10-10 23:32:11.345629 (ThreadPoolExecutor-0_0): SQL status: BEGIN in 0.00 seconds
+2021-10-10 23:32:11.345802 (ThreadPoolExecutor-0_0): Using postgres connection "list_test_public_another".
+2021-10-10 23:32:11.345958 (ThreadPoolExecutor-0_0): On list_test_public_another: /* {"app": "dbt", "dbt_version": "0.20.2", "profile_name": "default", "target_name": "test", "connection_name": "list_test_public_another"} */
+select
+      'test' as database,
+      tablename as name,
+      schemaname as schema,
+      'table' as type
+    from pg_tables
+    where schemaname ilike 'public_another'
+    union all
+    select
+      'test' as database,
+      viewname as name,
+      schemaname as schema,
+      'view' as type
+    from pg_views
+    where schemaname ilike 'public_another'
+  
+2021-10-10 23:32:11.347927 (ThreadPoolExecutor-0_0): SQL status: SELECT 0 in 0.00 seconds
+2021-10-10 23:32:11.348224 (ThreadPoolExecutor-0_0): On list_test_public_another: ROLLBACK
+2021-10-10 23:32:11.348521 (ThreadPoolExecutor-0_0): On list_test_public_another: Close
+2021-10-10 23:32:11.352544 (MainThread): Using postgres connection "master".
+2021-10-10 23:32:11.352675 (MainThread): On master: BEGIN
+2021-10-10 23:32:11.352823 (MainThread): Opening a new connection, currently in state init
+2021-10-10 23:32:11.355692 (MainThread): SQL status: BEGIN in 0.00 seconds
+2021-10-10 23:32:11.355850 (MainThread): Using postgres connection "master".
+2021-10-10 23:32:11.355976 (MainThread): On master: /* {"app": "dbt", "dbt_version": "0.20.2", "profile_name": "default", "target_name": "test", "connection_name": "master"} */
+with relation as (
+        select
+            pg_rewrite.ev_class as class,
+            pg_rewrite.oid as id
+        from pg_rewrite
+    ),
+    class as (
+        select
+            oid as id,
+            relname as name,
+            relnamespace as schema,
+            relkind as kind
+        from pg_class
+    ),
+    dependency as (
+        select
+            pg_depend.objid as id,
+            pg_depend.refobjid as ref
+        from pg_depend
+    ),
+    schema as (
+        select
+            pg_namespace.oid as id,
+            pg_namespace.nspname as name
+        from pg_namespace
+        where nspname != 'information_schema' and nspname not like 'pg\_%'
+    ),
+    referenced as (
+        select
+            relation.id AS id,
+            referenced_class.name ,
+            referenced_class.schema ,
+            referenced_class.kind
+        from relation
+        join class as referenced_class on relation.class=referenced_class.id
+        where referenced_class.kind in ('r', 'v')
+    ),
+    relationships as (
+        select
+            referenced.name as referenced_name,
+            referenced.schema as referenced_schema_id,
+            dependent_class.name as dependent_name,
+            dependent_class.schema as dependent_schema_id,
+            referenced.kind as kind
+        from referenced
+        join dependency on referenced.id=dependency.id
+        join class as dependent_class on dependency.ref=dependent_class.id
+        where
+            (referenced.name != dependent_class.name or
+             referenced.schema != dependent_class.schema)
+    )
+
+    select
+        referenced_schema.name as referenced_schema,
+        relationships.referenced_name as referenced_name,
+        dependent_schema.name as dependent_schema,
+        relationships.dependent_name as dependent_name
+    from relationships
+    join schema as dependent_schema on relationships.dependent_schema_id=dependent_schema.id
+    join schema as referenced_schema on relationships.referenced_schema_id=referenced_schema.id
+    group by referenced_schema, referenced_name, dependent_schema, dependent_name
+    order by referenced_schema, referenced_name, dependent_schema, dependent_name;
+2021-10-10 23:32:11.358341 (MainThread): SQL status: SELECT 0 in 0.00 seconds
+2021-10-10 23:32:11.358755 (MainThread): On master: ROLLBACK
+2021-10-10 23:32:11.359153 (MainThread): On master: Close
+2021-10-10 23:32:11.360017 (MainThread): 01:32:11 | Concurrency: 1 threads (target='test')
+2021-10-10 23:32:11.360415 (MainThread): 01:32:11 | 
+2021-10-10 23:32:11.363008 (Thread-1): Began running node model.test.model_1
+2021-10-10 23:32:11.363362 (Thread-1): Acquiring new postgres connection "model.test.model_1".
+2021-10-10 23:32:11.363444 (Thread-1): Compiling model.test.model_1
+2021-10-10 23:32:11.366065 (Thread-1): Writing injected SQL for node "model.test.model_1"
+2021-10-10 23:32:11.366323 (Thread-1): finished collecting timing info
+2021-10-10 23:32:11.366564 (Thread-1): Finished running node model.test.model_1
+2021-10-10 23:32:11.366644 (Thread-1): Began running node model.test.model_2
+2021-10-10 23:32:11.367422 (Thread-1): Acquiring new postgres connection "model.test.model_2".
+2021-10-10 23:32:11.367951 (Thread-1): Compiling model.test.model_2
+2021-10-10 23:32:11.371073 (Thread-1): Writing injected SQL for node "model.test.model_2"
+2021-10-10 23:32:11.371431 (Thread-1): finished collecting timing info
+2021-10-10 23:32:11.371677 (Thread-1): finished collecting timing info
+2021-10-10 23:32:11.372013 (Thread-1): Finished running node model.test.model_2
+2021-10-10 23:32:11.372313 (Thread-1): Began running node model.test.model_3
+2021-10-10 23:32:11.373348 (Thread-1): Acquiring new postgres connection "model.test.model_3".
+2021-10-10 23:32:11.373732 (Thread-1): Compiling model.test.model_3
+2021-10-10 23:32:11.378066 (Thread-1): Writing injected SQL for node "model.test.model_3"
+2021-10-10 23:32:11.378284 (Thread-1): finished collecting timing info
+2021-10-10 23:32:11.378366 (Thread-1): finished collecting timing info
+2021-10-10 23:32:11.378551 (Thread-1): Finished running node model.test.model_3
+2021-10-10 23:32:11.378625 (Thread-1): Began running node model.test.model_4
+2021-10-10 23:32:11.379434 (Thread-1): Acquiring new postgres connection "model.test.model_4".
+2021-10-10 23:32:11.379704 (Thread-1): Compiling model.test.model_4
+2021-10-10 23:32:11.389441 (Thread-1): Writing injected SQL for node "model.test.model_4"
+2021-10-10 23:32:11.389846 (Thread-1): finished collecting timing info
+2021-10-10 23:32:11.390045 (Thread-1): finished collecting timing info
+2021-10-10 23:32:11.390403 (Thread-1): Finished running node model.test.model_4
+2021-10-10 23:32:11.392178 (MainThread): Connection 'master' was properly closed.
+2021-10-10 23:32:11.392326 (MainThread): Connection 'model.test.model_4' was properly closed.
+2021-10-10 23:32:11.395474 (MainThread): 01:32:11 | Done.
+2021-10-10 23:32:11.395776 (MainThread): Sending event: {'category': 'dbt', 'action': 'invocation', 'label': 'end', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x7fc6ba183ac0>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x7fc6b9f4c760>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x7fc6b9f4c640>]}
+2021-10-10 23:32:11.396031 (MainThread): Flushing usage events
