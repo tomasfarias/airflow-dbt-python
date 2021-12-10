@@ -17,7 +17,6 @@ def test_dbt_compile_mocked_all_args():
         target="dbt-target",
         vars={"target": "override"},
         log_cache_events=True,
-        bypass_cache=True,
         parse_only=True,
         full_refresh=True,
         fail_fast=True,
@@ -39,7 +38,6 @@ def test_dbt_compile_mocked_all_args():
     assert config.target == "dbt-target"
     assert config.vars == '{"target": "override"}'
     assert config.log_cache_events is True
-    assert config.bypass_cache is True
     assert config.parse_only is True
     assert config.full_refresh is True
     assert config.fail_fast is True
@@ -186,7 +184,6 @@ def test_dbt_compile_uses_correct_argument_according_to_version():
         target="dbt-target",
         vars={"target": "override"},
         log_cache_events=True,
-        bypass_cache=True,
         parse_only=True,
         full_refresh=True,
         fail_fast=True,

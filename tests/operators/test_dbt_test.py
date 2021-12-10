@@ -27,7 +27,6 @@ def test_dbt_test_configuration_all_args():
         target="dbt-target",
         vars={"target": "override"},
         log_cache_events=True,
-        bypass_cache=True,
         singular=True,
         generic=True,
         models=["/path/to/models"],
@@ -49,7 +48,6 @@ def test_dbt_test_configuration_all_args():
     assert config.target == "dbt-target"
     assert config.vars == '{"target": "override"}'
     assert config.log_cache_events is True
-    assert config.bypass_cache is True
     assert config.singular is True
     assert config.generic is True
     assert config.fail_fast is True
@@ -231,7 +229,6 @@ def test_dbt_compile_uses_correct_argument_according_to_version():
         target="dbt-target",
         vars={"target": "override"},
         log_cache_events=True,
-        bypass_cache=True,
         singular=True,
         generic=True,
         models=["/path/to/models"],

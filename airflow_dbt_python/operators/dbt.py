@@ -38,7 +38,6 @@ class DbtBaseOperator(BaseOperator):
         vars: Supply variables to the project. Should be a YAML string. Overrides
             variables defined in dbt_profile.yml.
         log_cache_events: Flag to enable logging of cache events.
-        bypass_cache: Flag to bypass the adapter-level cache of database state.
         s3_conn_id: An s3 Airflow connection ID to use when pulling dbt files from s3.
         do_xcom_push_artifacts: A list of dbt artifacts to XCom push.
     """
@@ -54,68 +53,83 @@ class DbtBaseOperator(BaseOperator):
     @apply_defaults
     def __init__(
         self,
+        # dbt project configuration
         project_dir: Optional[Union[str, Path]] = None,
         profiles_dir: Optional[Union[str, Path]] = None,
         profile: Optional[str] = None,
         target: Optional[str] = None,
+        state: Optional[str] = None,
+        # Execution configuration
         compiled_target: Optional[Union[os.PathLike, str, bytes]] = None,
-        vars: Optional[dict[str, str]] = None,
-        log_cache_events: Optional[bool] = False,
-        bypass_cache: Optional[bool] = False,
-        record_timing_info: Optional[str] = None,
-        log_format: Optional[str] = None,
-        warn_error: Optional[bool] = None,
+        fail_fast: Optional[bool] = None,
+        single_threaded: Optional[bool] = None,
+        threads: Optional[int] = None,
         use_experimental_parser: Optional[bool] = None,
-        no_static_parser: Optional[bool] = None,
-        no_anonymous_usage_stats: Optional[bool] = None,
+        vars: Optional[dict[str, str]] = None,
+        warn_error: Optional[bool] = None,
+        # Logging
+        debug: Optional[bool] = None,
+        log_format: Optional[str] = None,
+        log_cache_events: Optional[bool] = False,
+        record_timing_info: Optional[str] = None,
+        # Mutually exclusive
+        defer: Optional[bool] = None,
+        no_defer: Optional[bool] = None,
         partial_parse: Optional[bool] = None,
         no_partial_parse: Optional[bool] = None,
         use_colors: Optional[bool] = None,
         no_use_colors: Optional[bool] = None,
+        static_parser: Optional[bool] = None,
+        no_static_parser: Optional[bool] = None,
+        version_check: Optional[bool] = None,
         no_version_check: Optional[bool] = None,
-        single_threaded: Optional[bool] = None,
-        debug: Optional[bool] = None,
-        fail_fast: Optional[bool] = None,
-        defer: Optional[bool] = None,
-        state: Optional[str] = None,
-        threads: Optional[int] = None,
-        no_defer: Optional[bool] = None,
+        anonymous_usage_stats: Optional[bool] = None,
+        no_anonymous_usage_stats: Optional[bool] = None,
+        # Extra features configuration
         s3_conn_id: str = "aws_default",
         do_xcom_push_artifacts: Optional[list[str]] = None,
         **kwargs,
     ) -> None:
         super().__init__(**kwargs)
-        # All dbt configuration arguments.
         self.project_dir = project_dir
         self.profiles_dir = profiles_dir
         self.profile = profile
         self.target = target
+        self.state = state
+
+        self.compiled_target = compiled_target
+        self.fail_fast = fail_fast
+        self.single_threaded = single_threaded
+        self.threads = threads
+        self.use_experimental_parser = use_experimental_parser
         self.vars = vars or {}
+        self.warn_error = warn_error
+
         self.debug = debug
         self.log_cache_events = log_cache_events
         self.log_format = (
             LogFormat.from_str(log_format) if log_format is not None else None
         )
-        self.bypass_cache = bypass_cache
-        self.fail_fast = fail_fast
-        self.warn_error = warn_error
-        self.use_experimental_parser = use_experimental_parser
-        self.no_static_parser = no_static_parser
-        self.no_anonymous_usage_stats = no_anonymous_usage_stats
-        self.partial_parse = partial_parse
-        self.no_partial_parse = no_partial_parse
-        self.use_colors = use_colors
-        self.no_use_colors = no_use_colors
-        self.no_version_check = no_version_check
+        self.record_timing_info = record_timing_info
+
         self.dbt_defer = defer
         self.no_defer = no_defer
-        self.single_threaded = single_threaded
-        self.record_timing_info = record_timing_info
-        self.state = state
-        self.threads = threads
-        self.compiled_target = compiled_target
 
-        # Airflow operator configuration.
+        self.static_parser = static_parser
+        self.no_static_parser = no_static_parser
+
+        self.anonymous_usage_stats = anonymous_usage_stats
+        self.no_anonymous_usage_stats = no_anonymous_usage_stats
+
+        self.partial_parse = partial_parse
+        self.no_partial_parse = no_partial_parse
+
+        self.use_colors = use_colors
+        self.no_use_colors = no_use_colors
+
+        self.version_check = no_version_check
+        self.no_version_check = no_version_check
+
         self.s3_conn_id = s3_conn_id
         self.do_xcom_push_artifacts = do_xcom_push_artifacts
         self._s3_hook = None

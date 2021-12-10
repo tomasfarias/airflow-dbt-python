@@ -74,40 +74,82 @@ class Output(FromStrMixin, Enum):
 class BaseConfig:
     """BaseConfig dbt arguments for all tasks."""
 
-    cls: BaseTask = dataclasses.field(default=BaseTask, init=False)
-    record_timing_info: Optional[str] = None
-    debug: Optional[bool] = None
-    bypass_cache: Optional[bool] = None
-    log_format: Optional[LogFormat] = None
-    warn_error: Optional[bool] = None
-    use_experimental_parser: Optional[bool] = None
-    no_static_parser: Optional[bool] = None
-    no_anonymous_usage_stats: Optional[bool] = None
-    partial_parse: Optional[bool] = None
-    no_partial_parse: Optional[bool] = None
-    use_colors: Optional[bool] = None
-    no_use_colors: Optional[bool] = None
-    no_version_check: Optional[bool] = None
-    single_threaded: Optional[bool] = None
-    fail_fast: Optional[bool] = None
+    cls: BaseTask = dataclasses.field(default=BaseTask, init=False, repr=False)
+
+    # dbt project configuration
     project_dir: Optional[str] = None
     profiles_dir: Optional[str] = None
     profile: Optional[str] = None
     target: Optional[str] = None
-    vars: str = "{}"
-    log_cache_events: Optional[bool] = None
-    defer: Optional[bool] = None
-    no_defer: Optional[bool] = None
-    state: Optional[Path] = None
-    threads: Optional[int] = None
+
+    # Execution configuration
     compiled_target: Optional[Union["os.PathLike[str]", str]] = None
+    fail_fast: Optional[bool] = None
+    single_threaded: Optional[bool] = None
+    threads: Optional[int] = None
+    use_experimental_parser: Optional[bool] = None
+    vars: str = "{}"
+    warn_error: Optional[bool] = None
+
+    # Logging
+    log_format: Optional[LogFormat] = None
+    log_cache_events: Optional[bool] = None
+    record_timing_info: Optional[str] = None
+    debug: Optional[bool] = None
+
+    # Mutually exclusive attributes
+    defer: Optional[bool] = None
+    no_defer: Optional[bool] = dataclasses.field(default=None, repr=False)
+
+    partial_parse: Optional[bool] = None
+    no_partial_parse: Optional[bool] = dataclasses.field(default=None, repr=False)
+
+    use_colors: Optional[bool] = None
+    no_use_colors: Optional[bool] = dataclasses.field(default=None, repr=False)
+
+    static_parser: Optional[bool] = None
+    no_static_parser: Optional[bool] = dataclasses.field(default=None, repr=False)
+
+    version_check: Optional[bool] = None
+    no_version_check: Optional[bool] = dataclasses.field(default=None, repr=False)
+
+    send_anonymous_usage_stats: Optional[bool] = None
+    anonymous_usage_stats: Optional[bool] = dataclasses.field(default=None, repr=False)
+    no_anonymous_usage_stats: Optional[bool] = dataclasses.field(
+        default=None, repr=False
+    )
+
+    write_json: Optional[bool] = None
+    no_write_json: Optional[bool] = dataclasses.field(default=None, repr=False)
 
     def __post_init__(self):
         """Support dictionary args by casting them to str after setting."""
         if isinstance(self.vars, dict):
             self.vars = json.dumps(self.vars)
-        if isinstance(self.state, str):
-            self.state = Path(self.state)
+        mutually_exclusive_attrs = (
+            "defer",
+            "partial_parse",
+            "use_colors",
+            "static_parser",
+            "version_check",
+            "anonymous_usage_stats",
+            "write_json",
+        )
+
+        for attr in mutually_exclusive_attrs:
+            positive_value = getattr(self, attr, None)
+            negative_value = getattr(self, f"no_{attr}", None)
+
+            if positive_value is None and negative_value is None:
+                continue
+            elif positive_value is not None and negative_value is not None:
+                raise ValueError(f"{attr} and no_{attr} are mutually exclusive")
+            elif positive_value is not None:
+                setattr(self, attr, positive_value)
+            else:
+                setattr(self, attr, not negative_value)
+
+        self.send_anonymous_usage_stats = self.anonymous_usage_stats
 
     @property
     def dbt_task(self) -> BaseTask:
@@ -192,8 +234,16 @@ class SelectionConfig(BaseConfig):
     exclude: Optional[list[str]] = None
     select: Optional[list[str]] = None
     selector_name: Optional[list[str]] = None
+    state: Optional[Path] = None
+
     # Kept for compatibility with dbt versions < 0.21
     models: Optional[list[str]] = None
+
+    def __post_init__(self):
+        """Support casting state to Path."""
+        super().__post_init__()
+        if isinstance(self.state, str):
+            self.state = Path(self.state)
 
 
 @dataclass
@@ -202,13 +252,16 @@ class TableMutabilityConfig(SelectionConfig):
 
     full_refresh: Optional[bool] = None
 
+    def __post_init__(self):
+        """Call superclass __post_init__."""
+        super().__post_init__()
+
 
 @dataclass
 class BuildTaskConfig(TableMutabilityConfig):
     """Dbt build task arguments."""
 
     cls: BaseTask = dataclasses.field(default=BuildTask, init=False)
-    compiled_target: Optional[Union[os.PathLike[str], str]] = None
     singular: Optional[bool] = None
     indirect_selection: Optional[str] = None
     resource_types: Optional[list[str]] = None
@@ -273,7 +326,6 @@ class ListTaskConfig(SelectionConfig):
     """Dbt list task arguments."""
 
     cls: BaseTask = dataclasses.field(default=ListTask, init=False)
-    compiled_target: Optional[Union[os.PathLike[str], str]] = None
     indirect_selection: Optional[str] = None
     output: Output = Output.SELECTOR
     output_keys: Optional[list[str]] = None
@@ -296,7 +348,6 @@ class RunTaskConfig(TableMutabilityConfig):
     """Dbt run task arguments."""
 
     cls: BaseTask = dataclasses.field(default=RunTask, init=False)
-    compiled_target: Optional[Union[os.PathLike[str], str]] = None
     which: str = dataclasses.field(default="run", init=False)
 
 
@@ -322,7 +373,6 @@ class SeedTaskConfig(TableMutabilityConfig):
 
     cls: BaseTask = dataclasses.field(default=SeedTask, init=False)
     show: Optional[bool] = None
-    compiled_target: Optional[Union[os.PathLike[str], str]] = None
     which: str = dataclasses.field(default="seed", init=False)
 
 
@@ -331,7 +381,6 @@ class SnapshotTaskConfig(SelectionConfig):
     """Dbt snapshot task arguments."""
 
     cls: BaseTask = dataclasses.field(default=SnapshotTask, init=False)
-    compiled_target: Optional[Union[os.PathLike[str], str]] = None
     which: str = dataclasses.field(default="snapshot", init=False)
 
 
