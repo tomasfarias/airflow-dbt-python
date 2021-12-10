@@ -13,3 +13,6 @@ airflow/
 logs/
 test.log
 dbt.log
+models/
+data/
+dbt_packages/
