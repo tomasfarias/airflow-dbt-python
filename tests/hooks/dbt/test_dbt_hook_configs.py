@@ -1,5 +1,4 @@
 """Unit test module for dbt task configurations found as part of the DbtHook."""
-import pytest
 from dbt.task.base import BaseTask
 from dbt.task.build import BuildTask
 from dbt.task.compile import CompileTask
@@ -14,6 +13,7 @@ from dbt.task.snapshot import SnapshotTask
 from dbt.task.test import TestTask
 
 from airflow_dbt_python.hooks.dbt import (
+    BaseConfig,
     CompileTaskConfig,
     ConfigFactory,
     DbtHook,
@@ -37,11 +37,13 @@ def test_task_config_enum():
     assert ConfigFactory.from_str("seed").value == SeedTaskConfig
 
 
-def test_compile_task_minimal_config(profiles_file, dbt_project_file):
+def test_compile_task_minimal_config(hook, profiles_file, dbt_project_file):
     """Test the creation of a CompileTask from arguments."""
-    task = CompileTaskConfig(
+    cfg = CompileTaskConfig(
         profiles_dir=profiles_file.parent, project_dir=dbt_project_file.parent
-    ).create_dbt_task()
+    )
+    hook.initialize_runtime_config(cfg)
+    task = cfg.create_dbt_task()
 
     assert task.args.profiles_dir == profiles_file.parent
     assert task.args.project_dir == dbt_project_file.parent
@@ -49,7 +51,7 @@ def test_compile_task_minimal_config(profiles_file, dbt_project_file):
 
 
 def test_debug_task_minimal_config(profiles_file, dbt_project_file):
-    """Test the creation of a RunTask from arguments."""
+    """Test the creation of a DebugTask from arguments."""
     task = DebugTaskConfig(
         profiles_dir=profiles_file.parent, project_dir=dbt_project_file.parent
     ).create_dbt_task()
@@ -60,7 +62,7 @@ def test_debug_task_minimal_config(profiles_file, dbt_project_file):
 
 
 def test_deps_task_minimal_config(profiles_file, dbt_project_file):
-    """Test the creation of a RunTask from arguments."""
+    """Test the creation of a DepsTask from arguments."""
     task = DepsTaskConfig(
         profiles_dir=profiles_file.parent, project_dir=dbt_project_file.parent
     ).create_dbt_task()
@@ -70,12 +72,32 @@ def test_deps_task_minimal_config(profiles_file, dbt_project_file):
     assert isinstance(task, DepsTask)
 
 
-def test_run_task_minimal_config(profiles_file, dbt_project_file):
+def test_run_task_minimal_config(hook, profiles_file, dbt_project_file):
     """Test the creation of a RunTask from arguments."""
-    task = RunTaskConfig(
+    cfg = RunTaskConfig(
         profiles_dir=profiles_file.parent, project_dir=dbt_project_file.parent
-    ).create_dbt_task()
+    )
+    hook.initialize_runtime_config(cfg)
+    task = cfg.create_dbt_task()
 
     assert task.args.profiles_dir == profiles_file.parent
     assert task.args.project_dir == dbt_project_file.parent
     assert isinstance(task, RunTask)
+
+
+def test_base_config():
+    """Test a BaseConfig."""
+    config = BaseConfig(
+        defer=False,
+        no_version_check=True,
+        static_parser=False,
+        no_anonymous_usage_stats=False,
+        vars={"a_var": 2, "another_var": "abc"},
+    )
+
+    assert config.vars == '{"a_var": 2, "another_var": "abc"}'
+    assert config.dbt_task == BaseTask
+    assert config.defer is False
+    assert config.version_check is False
+    assert config.static_parser is False
+    assert config.send_anonymous_usage_stats is True

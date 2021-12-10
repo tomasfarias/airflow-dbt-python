@@ -15,7 +15,6 @@ def test_dbt_source_mocked_all_args():
         target="dbt-target",
         vars={"target": "override"},
         log_cache_events=True,
-        bypass_cache=True,
         select=["/path/to/models"],
         exclude=["/path/to/data/to/exclude.sql"],
         selector_name=["a-selector"],
@@ -31,7 +30,6 @@ def test_dbt_source_mocked_all_args():
     assert config.target == "dbt-target"
     assert config.vars == '{"target": "override"}'
     assert config.log_cache_events is True
-    assert config.bypass_cache is True
     assert config.select == ["/path/to/models"]
     assert config.exclude == ["/path/to/data/to/exclude.sql"]
     assert config.selector_name == ["a-selector"]

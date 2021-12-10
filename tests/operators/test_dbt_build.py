@@ -30,7 +30,6 @@ def test_dbt_build_mocked_all_args():
         target="dbt-target",
         vars={"target": "override"},
         log_cache_events=True,
-        bypass_cache=True,
         full_refresh=True,
         select=["/path/to/model.sql", "+/another/model.sql+2"],
         fail_fast=True,
@@ -54,7 +53,6 @@ def test_dbt_build_mocked_all_args():
     assert config.target == "dbt-target"
     assert config.vars == '{"target": "override"}'
     assert config.log_cache_events is True
-    assert config.bypass_cache is True
     assert config.full_refresh is True
     assert config.threads == 3
     assert config.select == [

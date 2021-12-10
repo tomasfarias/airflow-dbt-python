@@ -15,7 +15,6 @@ def test_dbt_debug_mocked_all_args():
         target="dbt-target",
         vars={"target": "override"},
         log_cache_events=True,
-        bypass_cache=True,
         config_dir=True,
         no_version_check=True,
     )
@@ -29,7 +28,6 @@ def test_dbt_debug_mocked_all_args():
     assert config.target == "dbt-target"
     assert config.vars == '{"target": "override"}'
     assert config.log_cache_events is True
-    assert config.bypass_cache is True
     assert config.config_dir is True
     assert config.no_version_check is True
 
