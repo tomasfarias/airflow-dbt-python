@@ -52,8 +52,16 @@ class DbtS3Hook(S3Hook):
         """Download a single s3 object."""
         self.log.info("Saving %s file to: %s", s3_object, target)
 
-        with open(target, "wb+") as f:
-            s3_object.download_fileobj(f)
+        try:
+            with open(target, "wb+") as f:
+                s3_object.download_fileobj(f)
+
+        except IsADirectoryError:
+            # Uploading files manually via the AWS UI to S3 can cause files
+            # with empty names to appear. When we attemp to download it, we build
+            # a relative path  that is equal to the parent directory that already
+            # exists.
+            self.log.warning("A file with no name was found in S3 at %s", s3_object)
 
     def get_dbt_project(
         self, s3_project_url: str, project_dir: Optional[str] = None
@@ -112,6 +120,13 @@ class DbtS3Hook(S3Hook):
         for s3_object_key in s3_keys:
             s3_object = self.get_key(key=s3_object_key, bucket_name=bucket_name)
             path_file = Path(s3_object_key).relative_to(prefix)
+
+            if path_file.suffix == "" and s3_object.key.endswith("/"):
+                # Empty S3 files may also be confused with unwanted directories.
+                # See comment in line 60.
+                self.log.warning("A file with no name was found in S3 at %s", s3_object)
+                continue
+
             local_project_file = target_dir / path_file
             local_project_file.parent.mkdir(parents=True, exist_ok=True)
 
