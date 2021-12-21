@@ -168,18 +168,27 @@ def test_get_dbt_project_no_trailing_slash(s3_bucket, tmpdir, dbt_project_file):
 
 
 @pytest.fixture
-def test_files():
-    f1 = Path("seeds/a_seed.csv")
+def test_files(tmp_path_factory):
+    """Create test files to upload to S3."""
+    d = tmp_path_factory.mktemp("test_s3")
+    seed_dir = d / "seeds"
+    seed_dir.mkdir(exist_ok=True)
+    f1 = seed_dir / "a_seed.csv"
+
     with open(f1, "w+") as f:
         f.write("col1,col2\n1,2")
 
-    f2 = Path("models/a_model.sql")
+    models_dir = d / "models"
+    models_dir.mkdir(exist_ok=True)
+    f2 = models_dir / "a_model.sql"
     with open(f2, "w+") as f:
         f.write("SELECT 1")
-    f3 = Path("models/another_model.sql")
+    f3 = models_dir / "another_model.sql"
     with open(f3, "w+") as f:
         f.write("SELECT 2")
+
     yield [f1, f2, f3]
+
     f1.unlink()
     f2.unlink()
     f3.unlink()
@@ -190,11 +199,14 @@ def test_get_dbt_project_from_zip_file(s3_bucket, tmpdir, dbt_project_file, test
     with open(dbt_project_file) as pf:
         project_content = pf.read()
 
+    # Prepare a zip file to upload to S3
     zip_buffer = io.BytesIO()
     with ZipFile(zip_buffer, "a") as zf:
         zf.write(dbt_project_file, "dbt_project.yml")
         for f in test_files:
-            zf.write(f)
+            # Since files  are in a different temporary directory, we need to zip them
+            # with their direct parent, e.g. models/a_model.sql
+            zf.write(f, arcname="/".join([f.parts[-2], f.parts[-1]]))
 
     hook = DbtS3Hook()
     bucket = hook.get_bucket(s3_bucket)
@@ -230,3 +242,38 @@ def test_get_dbt_project_from_zip_file(s3_bucket, tmpdir, dbt_project_file, test
     with open(project_path / "seeds" / "a_seed.csv") as f:
         result = f.read()
     assert result == "col1,col2\n1,2"
+
+
+def test_get_dbt_project_with_empty_file(s3_bucket, tmpdir, dbt_project_file):
+    """Test whether an S3 path without a trailing slash pulls a dbt project."""
+    hook = DbtS3Hook()
+    bucket = hook.get_bucket(s3_bucket)
+
+    with open(dbt_project_file) as pf:
+        project_content = pf.read()
+    bucket.put_object(Key="project/dbt_project.yml", Body=project_content.encode())
+    bucket.put_object(Key="project/models/a_model.sql", Body=b"SELECT 1")
+    bucket.put_object(Key="project/data/a_seed.csv", Body=b"col1,col2\n1,2")
+    bucket.put_object(Key="project/data//", Body=b"")
+
+    project_path = hook.get_dbt_project(
+        f"s3://{s3_bucket}/project",
+        project_dir=str(tmpdir),
+    )
+
+    assert project_path.exists()
+
+    dir_contents = [f for f in project_path.iterdir()]
+    assert sorted(str(f.name) for f in dir_contents) == [
+        "data",
+        "dbt_project.yml",
+        "models",
+    ]
+
+    with open(project_path / "dbt_project.yml") as f:
+        result = f.read()
+    assert result == project_content
+
+    with open(project_path / "models" / "a_model.sql") as f:
+        result = f.read()
+    assert result == "SELECT 1"
