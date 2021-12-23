@@ -96,6 +96,7 @@ Currently, the following `dbt` commands are supported:
 * `compile`
 * `debug`
 * `deps`
+* `docs generate`
 * `ls`
 * `parse`
 * `run`
