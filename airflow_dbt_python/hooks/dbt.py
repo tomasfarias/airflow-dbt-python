@@ -25,6 +25,7 @@ from dbt.task.compile import CompileTask
 from dbt.task.debug import DebugTask
 from dbt.task.deps import DepsTask
 from dbt.task.freshness import FreshnessTask
+from dbt.task.generate import GenerateTask
 from dbt.task.list import ListTask
 from dbt.task.parse import ParseTask
 from dbt.task.run import RunTask
@@ -322,6 +323,15 @@ class DepsTaskConfig(BaseConfig):
 
 
 @dataclass
+class GenerateTaskConfig(SelectionConfig):
+    """Generate task arguments."""
+
+    cls: BaseTask = dataclasses.field(default=GenerateTask, init=False)
+    compile: bool = True
+    which: str = dataclasses.field(default="generate", init=False)
+
+
+@dataclass
 class ListTaskConfig(SelectionConfig):
     """Dbt list task arguments."""
 
@@ -428,6 +438,7 @@ class ConfigFactory(FromStrMixin, Enum):
     CLEAN = CleanTaskConfig
     DEBUG = DebugTaskConfig
     DEPS = DepsTaskConfig
+    GENERATE = GenerateTaskConfig
     LIST = ListTaskConfig
     PARSE = ParseTaskConfig
     RUN = RunTaskConfig

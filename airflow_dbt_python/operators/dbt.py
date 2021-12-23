@@ -88,6 +88,7 @@ class DbtBaseOperator(BaseOperator):
         # Extra features configuration
         s3_conn_id: str = "aws_default",
         do_xcom_push_artifacts: Optional[list[str]] = None,
+        push_dbt_project: bool = False,
         **kwargs,
     ) -> None:
         super().__init__(**kwargs)
@@ -132,6 +133,7 @@ class DbtBaseOperator(BaseOperator):
 
         self.s3_conn_id = s3_conn_id
         self.do_xcom_push_artifacts = do_xcom_push_artifacts
+        self.push_dbt_project = push_dbt_project
         self._s3_hook = None
         self._dbt_hook = None
 
@@ -222,7 +224,10 @@ class DbtBaseOperator(BaseOperator):
         """Provides a temporary directory to execute dbt.
 
         Creates a temporary directory for dbt to run in and prepares the dbt files
-        if they need to be pulled from S3.
+        if they need to be pulled from S3. If a S3 backend is being used, and
+        self.push_dbt_project is True, before leaving the temporary directory, we push
+        back the project to S3. Pushing back a project enables commands like deps or
+        docs generate.
 
         Yields:
             The temporary directory's name.
@@ -242,6 +247,13 @@ class DbtBaseOperator(BaseOperator):
 
             yield tmp_dir
 
+            if (
+                self.push_dbt_project is True
+                and urlparse(str(store_project_dir)).scheme == "s3"
+            ):
+                self.log.info("Pushing dbt project back to S3: %s", store_project_dir)
+                self.s3_hook.push_dbt_project(store_project_dir, tmp_dir)
+
         self.profiles_dir = store_profiles_dir
         self.project_dir = store_project_dir
 
@@ -249,7 +261,7 @@ class DbtBaseOperator(BaseOperator):
         """Prepares a dbt directory by pulling files from S3."""
         if urlparse(str(self.profiles_dir)).scheme == "s3":
             self.log.info("Fetching profiles.yml from S3: %s", self.profiles_dir)
-            profiles_file_path = self.s3_hook.get_dbt_profiles(
+            profiles_file_path = self.s3_hook.pull_dbt_profiles(
                 self.profiles_dir,
                 tmp_dir,
             )
@@ -257,7 +269,7 @@ class DbtBaseOperator(BaseOperator):
 
         if urlparse(str(self.project_dir)).scheme == "s3":
             self.log.info("Fetching dbt project from S3: %s", self.project_dir)
-            project_dir_path = self.s3_hook.get_dbt_project(
+            project_dir_path = self.s3_hook.pull_dbt_project(
                 self.project_dir,
                 tmp_dir,
             )
@@ -463,13 +475,32 @@ class DbtDepsOperator(DbtBaseOperator):
     https://docs.getdbt.com/reference/commands/deps.
     """
 
-    def __init__(self, **kwargs) -> None:
+    def __init__(self, push_dbt_project=True, **kwargs) -> None:
         super().__init__(**kwargs)
+        self.push_dbt_project = push_dbt_project
 
     @property
     def command(self) -> str:
         """Return the deps command."""
         return "deps"
+
+
+class DbtDocsGenerateOperator(DbtBaseOperator):
+    """Executes a dbt docs generate command.
+
+    The documentation for the dbt command can be found here:
+    https://docs.getdbt.com/reference/commands/cmd-docs.
+    """
+
+    def __init__(self, compile=True, push_dbt_project=True, **kwargs) -> None:
+        super().__init__(**kwargs)
+        self.compile = compile
+        self.push_dbt_project = push_dbt_project
+
+    @property
+    def command(self) -> str:
+        """Return the generate command."""
+        return "generate"
 
 
 class DbtCleanOperator(DbtBaseOperator):

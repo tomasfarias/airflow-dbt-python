@@ -1,5 +1,6 @@
 """Unit test module for DbtS3Hook."""
 import io
+import shutil
 from pathlib import Path
 from zipfile import ZipFile
 
@@ -14,7 +15,7 @@ except ImportError:
     )
 
 
-def test_get_dbt_profiles(s3_bucket, tmpdir, profiles_file):
+def test_pull_dbt_profiles(s3_bucket, tmpdir, profiles_file):
     """Test pulling dbt profile from S3 path."""
     hook = DbtS3Hook()
     bucket = hook.get_bucket(s3_bucket)
@@ -23,7 +24,7 @@ def test_get_dbt_profiles(s3_bucket, tmpdir, profiles_file):
         profiles_content = pf.read()
     bucket.put_object(Key="profiles/profiles.yml", Body=profiles_content.encode())
 
-    profiles_path = hook.get_dbt_profiles(
+    profiles_path = hook.pull_dbt_profiles(
         f"s3://{s3_bucket}/profiles/",
         profiles_dir=str(tmpdir),
     )
@@ -35,7 +36,7 @@ def test_get_dbt_profiles(s3_bucket, tmpdir, profiles_file):
     assert result == profiles_content
 
 
-def test_get_dbt_profiles_sub_dir(s3_bucket, tmpdir, profiles_file):
+def test_pull_dbt_profiles_sub_dir(s3_bucket, tmpdir, profiles_file):
     """Test pulling dbt profile from S3 path sub-directory."""
     hook = DbtS3Hook()
     bucket = hook.get_bucket(s3_bucket)
@@ -46,7 +47,7 @@ def test_get_dbt_profiles_sub_dir(s3_bucket, tmpdir, profiles_file):
         Key="profiles/v0.0.1/profiles.yml", Body=profiles_content.encode()
     )
 
-    profiles_path = hook.get_dbt_profiles(
+    profiles_path = hook.pull_dbt_profiles(
         f"s3://{s3_bucket}/profiles/v0.0.1",
         profiles_dir=str(tmpdir),
     )
@@ -58,7 +59,7 @@ def test_get_dbt_profiles_sub_dir(s3_bucket, tmpdir, profiles_file):
     assert result == profiles_content
 
 
-def test_get_dbt_profiles_sub_dir_trailing_slash(s3_bucket, tmpdir, profiles_file):
+def test_pull_dbt_profiles_sub_dir_trailing_slash(s3_bucket, tmpdir, profiles_file):
     """Test whether an S3 path without a trailing slash pulls a dbt project."""
     hook = DbtS3Hook()
     bucket = hook.get_bucket(s3_bucket)
@@ -69,7 +70,7 @@ def test_get_dbt_profiles_sub_dir_trailing_slash(s3_bucket, tmpdir, profiles_fil
         Key="profiles/v0.0.1/profiles.yml", Body=profiles_content.encode()
     )
 
-    profiles_path = hook.get_dbt_profiles(
+    profiles_path = hook.pull_dbt_profiles(
         f"s3://{s3_bucket}/profiles/v0.0.1/",
         profiles_dir=str(tmpdir),
     )
@@ -81,7 +82,7 @@ def test_get_dbt_profiles_sub_dir_trailing_slash(s3_bucket, tmpdir, profiles_fil
     assert result == profiles_content
 
 
-def test_get_dbt_project(s3_bucket, tmpdir, dbt_project_file):
+def test_pull_dbt_project(s3_bucket, tmpdir, dbt_project_file):
     """Test pulling dbt project from S3 path."""
     hook = DbtS3Hook()
     bucket = hook.get_bucket(s3_bucket)
@@ -93,7 +94,7 @@ def test_get_dbt_project(s3_bucket, tmpdir, dbt_project_file):
     bucket.put_object(Key="project/models/another_model.sql", Body=b"SELECT 2")
     bucket.put_object(Key="project/data/a_seed.csv", Body=b"col1,col2\n1,2")
 
-    project_path = hook.get_dbt_project(
+    project_path = hook.pull_dbt_project(
         f"s3://{s3_bucket}/project/",
         project_dir=str(tmpdir),
     )
@@ -124,7 +125,7 @@ def test_get_dbt_project(s3_bucket, tmpdir, dbt_project_file):
     assert result == "col1,col2\n1,2"
 
 
-def test_get_dbt_project_no_trailing_slash(s3_bucket, tmpdir, dbt_project_file):
+def test_pull_dbt_project_no_trailing_slash(s3_bucket, tmpdir, dbt_project_file):
     """Test whether an S3 path without a trailing slash pulls a dbt project."""
     hook = DbtS3Hook()
     bucket = hook.get_bucket(s3_bucket)
@@ -136,7 +137,7 @@ def test_get_dbt_project_no_trailing_slash(s3_bucket, tmpdir, dbt_project_file):
     bucket.put_object(Key="project/models/another_model.sql", Body=b"SELECT 2")
     bucket.put_object(Key="project/data/a_seed.csv", Body=b"col1,col2\n1,2")
 
-    project_path = hook.get_dbt_project(
+    project_path = hook.pull_dbt_project(
         f"s3://{s3_bucket}/project",
         project_dir=str(tmpdir),
     )
@@ -168,7 +169,7 @@ def test_get_dbt_project_no_trailing_slash(s3_bucket, tmpdir, dbt_project_file):
 
 
 @pytest.fixture
-def test_files(tmp_path_factory):
+def test_files(tmp_path_factory, dbt_project_file):
     """Create test files to upload to S3."""
     d = tmp_path_factory.mktemp("test_s3")
     seed_dir = d / "seeds"
@@ -187,6 +188,8 @@ def test_files(tmp_path_factory):
     with open(f3, "w+") as f:
         f.write("SELECT 2")
 
+    shutil.copyfile(dbt_project_file, d / "dbt_project.yml")
+
     yield [f1, f2, f3]
 
     f1.unlink()
@@ -194,7 +197,9 @@ def test_files(tmp_path_factory):
     f3.unlink()
 
 
-def test_get_dbt_project_from_zip_file(s3_bucket, tmpdir, dbt_project_file, test_files):
+def test_pull_dbt_project_from_zip_file(
+    s3_bucket, tmpdir, dbt_project_file, test_files
+):
     """Test pulling dbt project from ZipFile in S3 path."""
     with open(dbt_project_file) as pf:
         project_content = pf.read()
@@ -213,7 +218,7 @@ def test_get_dbt_project_from_zip_file(s3_bucket, tmpdir, dbt_project_file, test
 
     bucket.put_object(Key="project/project.zip", Body=zip_buffer.getvalue())
 
-    project_path = hook.get_dbt_project(
+    project_path = hook.pull_dbt_project(
         f"s3://{s3_bucket}/project/project.zip",
         project_dir=str(tmpdir),
     )
@@ -244,7 +249,7 @@ def test_get_dbt_project_from_zip_file(s3_bucket, tmpdir, dbt_project_file, test
     assert result == "col1,col2\n1,2"
 
 
-def test_get_dbt_project_with_empty_file(s3_bucket, tmpdir, dbt_project_file):
+def test_pull_dbt_project_with_empty_file(s3_bucket, tmpdir, dbt_project_file):
     """Test whether an S3 path without a trailing slash pulls a dbt project."""
     hook = DbtS3Hook()
     bucket = hook.get_bucket(s3_bucket)
@@ -256,7 +261,7 @@ def test_get_dbt_project_with_empty_file(s3_bucket, tmpdir, dbt_project_file):
     bucket.put_object(Key="project/data/a_seed.csv", Body=b"col1,col2\n1,2")
     bucket.put_object(Key="project/data//", Body=b"")
 
-    project_path = hook.get_dbt_project(
+    project_path = hook.pull_dbt_project(
         f"s3://{s3_bucket}/project",
         project_dir=str(tmpdir),
     )
@@ -277,3 +282,57 @@ def test_get_dbt_project_with_empty_file(s3_bucket, tmpdir, dbt_project_file):
     with open(project_path / "models" / "a_model.sql") as f:
         result = f.read()
     assert result == "SELECT 1"
+
+
+def test_push_dbt_project_to_zip_file(s3_bucket, tmpdir, test_files):
+    """Test pushing a dbt project to a ZipFile in S3 path."""
+    hook = DbtS3Hook()
+
+    # Ensure zip file is not already present.
+    hook.delete_objects(
+        s3_bucket,
+        [f"s3://{s3_bucket}/project/project.zip"],
+    )
+    key = hook.check_for_key(
+        f"s3://{s3_bucket}/project/project.zip",
+        s3_bucket,
+    )
+    assert key is False
+
+    hook.push_dbt_project(
+        f"s3://{s3_bucket}/project/project.zip", test_files[0].parent.parent
+    )
+
+    key = hook.check_for_key(
+        f"s3://{s3_bucket}/project/project.zip",
+        s3_bucket,
+    )
+    assert key is True
+
+
+def test_push_dbt_project_to_files(s3_bucket, tmpdir, test_files):
+    """Test pushing a dbt project to a S3 path."""
+    hook = DbtS3Hook()
+
+    # Ensure we are working with an empty S3 prefix.
+    keys = hook.list_keys(
+        s3_bucket,
+        f"s3://{s3_bucket}/project/",
+    )
+    if keys is not None and len(keys) > 0:
+        hook.delete_objects(
+            s3_bucket,
+            keys,
+        )
+        keys = hook.list_keys(
+            s3_bucket,
+            f"s3://{s3_bucket}/project/",
+        )
+    assert keys is None or len(keys) == 0
+
+    hook.push_dbt_project(f"s3://{s3_bucket}/project/", test_files[0].parent.parent)
+    keys = hook.list_keys(
+        s3_bucket,
+        f"s3://{s3_bucket}/project/",
+    )
+    assert len(keys) == 4

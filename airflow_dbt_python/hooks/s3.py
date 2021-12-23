@@ -15,13 +15,13 @@ class DbtS3Hook(S3Hook):
     all the files corresponding to a project.
     """
 
-    def get_dbt_profiles(
+    def pull_dbt_profiles(
         self, s3_profiles_url: str, profiles_dir: Optional[str] = None
     ) -> Path:
-        """Fetch a dbt profiles file from S3.
+        """Pull a dbt profiles file from S3.
 
-        Fetches dbt profiles.yml file from the directory given by s3_profiles_url
-        and pulls it to profiles_dir/profiles.yml.
+        Pulls dbt profiles.yml file from the directory given by s3_profiles_url
+        and saves it to profiles_dir/profiles.yml.
 
         Args:
             s3_profiles_url: An S3 URL to a directory containing the dbt profiles file.
@@ -63,13 +63,13 @@ class DbtS3Hook(S3Hook):
             # exists.
             self.log.warning("A file with no name was found in S3 at %s", s3_object)
 
-    def get_dbt_project(
+    def pull_dbt_project(
         self, s3_project_url: str, project_dir: Optional[str] = None
     ) -> Path:
-        """Fetch all dbt project files from S3.
+        """Pull all dbt project files from S3.
 
-        Fetches the dbt project files from the directory given by s3_project_url
-        and pulls them to project_dir. However, if the URL points to a zip file,
+        Pulls the dbt project files from the directory given by s3_project_url
+        and saves them to project_dir. However, if the URL points to a zip file,
         we assume it contains all the project files, and only download and unzip that
         instead.
 
@@ -116,7 +116,7 @@ class DbtS3Hook(S3Hook):
     def download_many_s3_keys(
         self, bucket_name: str, s3_keys: list[str], target_dir: Path, prefix: str
     ):
-        """Download multiple s3 keys."""
+        """Download multiple S3 keys."""
         for s3_object_key in s3_keys:
             s3_object = self.get_key(key=s3_object_key, bucket_name=bucket_name)
             path_file = Path(s3_object_key).relative_to(prefix)
@@ -131,3 +131,35 @@ class DbtS3Hook(S3Hook):
             local_project_file.parent.mkdir(parents=True, exist_ok=True)
 
             self.download_one_s3_object(local_project_file, s3_object)
+
+    def push_dbt_project(self, s3_project_url: str, project_dir: str):
+        """Push a dbt project to S3."""
+        bucket_name, key = self.parse_s3_url(s3_project_url)
+        dbt_project_files = Path(project_dir).glob("**/*")
+
+        if key.endswith(".zip"):
+            zip_file_path = Path(project_dir) / "dbt_project.zip"
+            with ZipFile(zip_file_path, "w") as zf:
+                for _file in dbt_project_files:
+                    zf.write(_file, arcname=_file.relative_to(project_dir))
+
+            self.load_file(
+                zip_file_path, key=s3_project_url, bucket_name=bucket_name, replace=True
+            )
+            zip_file_path.unlink()
+
+        else:
+            for _file in dbt_project_files:
+                if _file.is_dir():
+                    continue
+
+                s3_key = f"s3://{bucket_name}/{key}{ _file.relative_to(project_dir)}"
+
+                self.load_file(
+                    filename=_file,
+                    key=s3_key,
+                    bucket_name=bucket_name,
+                    replace=True,
+                )
+
+        self.log.info("Pushed dbt project to: %s", s3_project_url)
