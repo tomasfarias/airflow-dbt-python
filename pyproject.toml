@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "airflow-dbt-python"
-version = "0.10.2"
+version = "0.11.0"
 description = "A dbt operator and hook for Airflow"
 authors = ["Tomás Farías Santana <tomas@tomasfarias.dev>"]
 license = "MIT"
