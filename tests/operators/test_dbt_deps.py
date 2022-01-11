@@ -1,4 +1,7 @@
 """Unit test module for DbtDepsOperator."""
+import glob
+import os
+from pathlib import Path
 from unittest.mock import patch
 
 import pytest
@@ -51,6 +54,13 @@ def test_dbt_deps_downloads_dbt_utils(
 
     assert dbt_utils_dir.exists() is False
 
+    # Record last modified times to ensure dbt deps only acts on
+    # dbt_packages_dir
+    files_and_times = [
+        (_file, os.stat(_file).st_mtime)
+        for _file in [dbt_project_file, profiles_file, packages_file]
+    ]
+
     op = DbtDepsOperator(
         task_id="dbt_task",
         project_dir=dbt_project_file.parent,
@@ -63,6 +73,11 @@ def test_dbt_deps_downloads_dbt_utils(
 
     modules = dbt_packages_dir.glob("dbt_utils")
     assert len([m for m in modules]) == 1
+
+    for _file, last_modified in files_and_times:
+        assert (
+            last_modified == os.stat(_file).st_mtime
+        ), f"DbtDepsOperator changed an unexpected file: {_file}"
 
 
 @no_s3_hook
@@ -104,6 +119,13 @@ def test_dbt_deps_push_to_s3(
         )
     assert keys is None or len(keys) == 0
 
+    # Record last modified times to ensure dbt deps only acts on
+    # dbt_packages_dir
+    files_and_times = [
+        (_file, os.stat(_file).st_mtime)
+        for _file in [dbt_project_file, profiles_file, packages_file]
+    ]
+
     op = DbtDepsOperator(
         task_id="dbt_task",
         project_dir=f"s3://{s3_bucket}/project/",
@@ -121,3 +143,59 @@ def test_dbt_deps_push_to_s3(
     # dbt_utils files may be anything, let's just check that at least
     # "dbt_utils" exists as part of the key.
     assert len([k for k in keys if "dbt_utils" in k]) >= 0
+
+    for _file, last_modified in files_and_times:
+        assert (
+            last_modified == os.stat(_file).st_mtime
+        ), f"DbtDepsOperator changed an unexpected file: {_file}"
+
+
+def test_dbt_deps_doesnt_affect_non_package_files(
+    profiles_file,
+    dbt_project_file,
+    dbt_packages_dir,
+    packages_file,
+    model_files,
+    seed_files,
+):
+    """Test that a DbtDepsOperator doesn't alter model, seed, or other project files."""
+    import shutil
+
+    # Ensure modules directory is empty before starting
+    dbt_utils_dir = dbt_packages_dir / "dbt_utils"
+    shutil.rmtree(dbt_utils_dir, ignore_errors=True)
+
+    assert dbt_utils_dir.exists() is False
+
+    # Record files to ensure dbt deps only acts on dbt_packages_dir
+    files_and_times = [
+        (_file, os.stat(_file).st_mtime)
+        for _file in dbt_project_file.parent.glob("**/*")
+        if not Path(_file).is_relative_to(dbt_packages_dir)
+    ]
+    dbt_packages_and_times = [
+        (_file, os.stat(_file).st_mtime) for _file in dbt_packages_dir.glob("**/*")
+    ]
+
+    op = DbtDepsOperator(
+        task_id="dbt_task",
+        project_dir=dbt_project_file.parent,
+        profiles_dir=profiles_file.parent,
+    )
+    modules = dbt_packages_dir.glob("dbt_utils")
+    assert len([m for m in modules]) == 0
+
+    op.execute({})
+
+    modules = dbt_packages_dir.glob("dbt_utils")
+    assert len([m for m in modules]) == 1
+
+    for _file, last_modified in files_and_times:
+        assert (
+            last_modified == os.stat(_file).st_mtime
+        ), f"DbtDepsOperator changed an unexpected file: {_file}"
+
+    for _file, last_modified in dbt_packages_and_times:
+        assert (
+            last_modified < os.stat(_file).st_mtime
+        ), f"DbtDepsOperator did not change a package file: {_file}"
