@@ -40,6 +40,8 @@ class DbtBaseOperator(BaseOperator):
         log_cache_events: Flag to enable logging of cache events.
         s3_conn_id: An s3 Airflow connection ID to use when pulling dbt files from s3.
         do_xcom_push_artifacts: A list of dbt artifacts to XCom push.
+        push_dbt_project: If True, before leaving the temporary directory, we push
+            back the project to S3. This enables operators like DbtDepsOperator.
     """
 
     template_fields = [
@@ -238,6 +240,8 @@ class DbtBaseOperator(BaseOperator):
         with TemporaryDirectory(prefix="airflowtmp") as tmp_dir:
             self.prepare_directory(tmp_dir)
 
+            self.pre_check_dbt_project(tmp_dir)
+
             if getattr(self, "state", None) is not None:
                 state = Path(getattr(self, "state", ""))
                 # Since we are running in a temporary directory, we need to make
@@ -246,6 +250,8 @@ class DbtBaseOperator(BaseOperator):
                     setattr(self, "state", str(Path(tmp_dir) / state))
 
             yield tmp_dir
+
+            self.post_check_dbt_project(tmp_dir)
 
             if (
                 self.push_dbt_project is True
@@ -274,6 +280,24 @@ class DbtBaseOperator(BaseOperator):
                 tmp_dir,
             )
             self.project_dir = str(project_dir_path) + "/"
+
+    def pre_check_dbt_project(self, tmp_dir: str):
+        """Perform checks on the dbt project before running an operator.
+
+        This basic implementation does nothing, subclasses should implement their
+        required pre-run checks as needed.
+        """
+        return True
+
+    def post_check_dbt_project(self, tmp_dir: str):
+        """Perform checks on the dbt project after running an operator.
+
+        This basic implementation does nothing, subclasses should implement their
+        required post-run checks as needed. These checks run before a project is
+        pushed back to S3, so they may stop execution before that happens by raising
+        an exception.
+        """
+        return True
 
     @property
     def s3_hook(self):
@@ -473,16 +497,59 @@ class DbtDepsOperator(DbtBaseOperator):
 
     The documentation for the dbt command can be found here:
     https://docs.getdbt.com/reference/commands/deps.
+
+    Attributes:
+        push_dbt_project: If True, before leaving the temporary directory, we push
+            back the project to S3. Defaults to True in DbtDepsOperator.
+        ensure_files_not_changed: Optional list of paths to check before uploading
+            the dbt project back to S3. We ensure the files have not been modified
+            by DbtDepsOperator, and raise an exception if they have.
     """
 
-    def __init__(self, push_dbt_project=True, **kwargs) -> None:
+    def __init__(
+        self,
+        push_dbt_project: bool = True,
+        ensure_files_not_changed: Optional[list[os.PathLike]] = None,
+        **kwargs,
+    ) -> None:
         super().__init__(**kwargs)
         self.push_dbt_project = push_dbt_project
+        self._files_not_changed = ensure_files_not_changed
+        self._tracked_files: Optional[list[tuple[Path, float]]] = None
 
     @property
     def command(self) -> str:
         """Return the deps command."""
         return "deps"
+
+    def pre_check_dbt_project(self, tmp_dir: str):
+        """Track files to ensure they have not changed."""
+        if self._files_not_changed is None or len(self._files_not_changed) == 0:
+            return True
+
+        self._tracked_files = []
+        for _file in self._files_not_changed:
+            path = Path(tmp_dir) / Path(_file)
+            self._tracked_files.append((path, path.stat().st_mtime))
+
+        return True
+
+    def post_check_dbt_project(self, tmp_dir: str):
+        """Ensure tracked files have not changed.
+
+        Raises:
+            AirflowException: If a tracked file has been modified.
+        """
+        if self._tracked_files is None or len(self._tracked_files) == 0:
+            return True
+
+        for path, last_modified in self._tracked_files:
+            if path.stat().st_mtime == last_modified:
+                continue
+            raise AirflowException(
+                "DbtDepsOperator cannot ensure file was not modified: "
+                f"{path.relative_to(tmp_dir)}"
+            )
 
 
 class DbtDocsGenerateOperator(DbtBaseOperator):
@@ -490,17 +557,61 @@ class DbtDocsGenerateOperator(DbtBaseOperator):
 
     The documentation for the dbt command can be found here:
     https://docs.getdbt.com/reference/commands/cmd-docs.
+
+    Attributes:
+        push_dbt_project: If True, before leaving the temporary directory, we push
+            back the project to S3. Defaults to True in DbtDocsGenerateOperator.
+        ensure_files_not_changed: Optional list of paths to check before uploading
+            the dbt project back to S3. We ensure the files have not been modified
+            by DbtDocsGenerateOperator, and raise an exception if they have.
     """
 
-    def __init__(self, compile=True, push_dbt_project=True, **kwargs) -> None:
+    def __init__(
+        self,
+        compile: bool = True,
+        push_dbt_project: bool = True,
+        ensure_files_not_changed: Optional[list[os.PathLike]] = None,
+        **kwargs,
+    ) -> None:
         super().__init__(**kwargs)
         self.compile = compile
         self.push_dbt_project = push_dbt_project
+        self._files_not_changed = ensure_files_not_changed
+        self._tracked_files: Optional[list[tuple[Path, float]]] = None
 
     @property
     def command(self) -> str:
         """Return the generate command."""
         return "generate"
+
+    def pre_check_dbt_project(self, tmp_dir: str):
+        """Track files to ensure they have not changed."""
+        if self._files_not_changed is None or len(self._files_not_changed) == 0:
+            return True
+
+        self._tracked_files = []
+        for _file in self._files_not_changed:
+            path = Path(tmp_dir) / Path(_file)
+            self._tracked_files.append((path, path.stat().st_mtime))
+
+        return True
+
+    def post_check_dbt_project(self, tmp_dir: str):
+        """Ensure tracked files have not changed.
+
+        Raises:
+            AirflowException: If a tracked file has been modified.
+        """
+        if self._tracked_files is None or len(self._tracked_files) == 0:
+            return True
+
+        for path, last_modified in self._tracked_files:
+            if path.stat().st_mtime == last_modified:
+                continue
+            raise AirflowException(
+                "DbtDepsOperator cannot ensure file was not modified: "
+                f"{path.relative_to(tmp_dir)}"
+            )
 
 
 class DbtCleanOperator(DbtBaseOperator):
