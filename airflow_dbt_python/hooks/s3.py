@@ -1,6 +1,7 @@
 """Provides an S3 hook exclusively for fetching dbt files."""
 from __future__ import annotations
 
+import os
 from pathlib import Path
 from typing import Optional
 from zipfile import ZipFile
@@ -132,8 +133,22 @@ class DbtS3Hook(S3Hook):
 
             self.download_one_s3_object(local_project_file, s3_object)
 
-    def push_dbt_project(self, s3_project_url: str, project_dir: str):
-        """Push a dbt project to S3."""
+    def push_dbt_project(
+        self, s3_project_url: str, project_dir: str, replace: bool = False
+    ):
+        """Push a dbt project to S3.
+
+        Pushing supports zipped projects: the s3_project_url will be used to determine
+        if we are working with a zip file by looking at the file extension.
+
+        Args:
+            s3_project_url (str): URL where the file/s should be uploaded. The bucket
+                name and key prefix will be extracted by calling S3Hook.parse_s3_url.
+            project_dir (str): A directory containing dbt project files. If
+                s3_project_url indicates a zip file, the contents of project_dir will be
+                zipped and uploaded, otherwise each file is individually uploaded.
+            replace (bool): Whether to replace existing files or not.
+        """
         bucket_name, key = self.parse_s3_url(s3_project_url)
         dbt_project_files = Path(project_dir).glob("**/*")
 
@@ -143,8 +158,11 @@ class DbtS3Hook(S3Hook):
                 for _file in dbt_project_files:
                     zf.write(_file, arcname=_file.relative_to(project_dir))
 
-            self.load_file(
-                zip_file_path, key=s3_project_url, bucket_name=bucket_name, replace=True
+            self.load_file_handle_replace_error(
+                zip_file_path,
+                key=s3_project_url,
+                bucket_name=bucket_name,
+                replace=replace,
             )
             zip_file_path.unlink()
 
@@ -155,11 +173,47 @@ class DbtS3Hook(S3Hook):
 
                 s3_key = f"s3://{bucket_name}/{key}{ _file.relative_to(project_dir)}"
 
-                self.load_file(
+                self.load_file_handle_replace_error(
                     filename=_file,
                     key=s3_key,
                     bucket_name=bucket_name,
-                    replace=True,
+                    replace=replace,
                 )
 
         self.log.info("Pushed dbt project to: %s", s3_project_url)
+
+    def load_file_handle_replace_error(
+        self,
+        filename: os.PathLike,
+        key: str,
+        bucket_name: Optional[str] = None,
+        replace: bool = False,
+        encrypt: bool = False,
+        gzip: bool = False,
+        acl_policy: Optional[bool] = None,
+    ) -> bool:
+        """Calls S3Hook.load_file but handle ValueError when replacing existing keys.
+
+        Will also log a warning whenever attempting to replace an existing key with
+        replace = False.
+
+        Returns:
+            True if no ValueError was raised, False otherwise.
+        """
+        success = True
+
+        try:
+            self.load_file(
+                filename,
+                key,
+                bucket_name=bucket_name,
+                replace=replace,
+                encrypt=encrypt,
+                gzip=gzip,
+                acl_policy=acl_policy,
+            )
+        except ValueError:
+            success = False
+            self.log.warning("Failed to load %s: key already exists in S3.", key)
+
+        return success

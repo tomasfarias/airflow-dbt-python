@@ -4,6 +4,7 @@ import shutil
 from pathlib import Path
 from zipfile import ZipFile
 
+import freezegun
 import pytest
 
 try:
@@ -310,14 +311,11 @@ def test_push_dbt_project_to_zip_file(s3_bucket, tmpdir, test_files):
     assert key is True
 
 
-def test_push_dbt_project_to_files(s3_bucket, tmpdir, test_files):
-    """Test pushing a dbt project to a S3 path."""
-    hook = DbtS3Hook()
-
-    # Ensure we are working with an empty S3 prefix.
+def clean_s3_prefix(hook: DbtS3Hook, prefix: str, s3_bucket: str):
+    """Ensure we are working with an empty S3 prefix."""
     keys = hook.list_keys(
         s3_bucket,
-        f"s3://{s3_bucket}/project/",
+        prefix,
     )
     if keys is not None and len(keys) > 0:
         hook.delete_objects(
@@ -326,9 +324,16 @@ def test_push_dbt_project_to_files(s3_bucket, tmpdir, test_files):
         )
         keys = hook.list_keys(
             s3_bucket,
-            f"s3://{s3_bucket}/project/",
+            prefix,
         )
     assert keys is None or len(keys) == 0
+
+
+def test_push_dbt_project_to_files(s3_bucket, tmpdir, test_files):
+    """Test pushing a dbt project to a S3 path."""
+    hook = DbtS3Hook()
+    prefix = f"s3://{s3_bucket}/project/"
+    clean_s3_prefix(hook, prefix, s3_bucket)
 
     hook.push_dbt_project(f"s3://{s3_bucket}/project/", test_files[0].parent.parent)
     keys = hook.list_keys(
@@ -336,3 +341,123 @@ def test_push_dbt_project_to_files(s3_bucket, tmpdir, test_files):
         f"s3://{s3_bucket}/project/",
     )
     assert len(keys) == 4
+
+
+def test_push_dbt_project_with_no_replace(s3_bucket, tmpdir, test_files):
+    """Test pushing a dbt project to a S3 path with replace = False.
+
+    We store the s3.Object last_modified attribute before pushing a project and compare it to the
+    new values after pushing (should be the same as we are not replacing).
+    """
+
+    hook = DbtS3Hook()
+    prefix = f"s3://{s3_bucket}/project/"
+    clean_s3_prefix(hook, prefix, s3_bucket)
+    bucket = hook.get_bucket(s3_bucket)
+
+    last_modified_expected = {}
+
+    project_dir = test_files[0].parent.parent
+
+    with freezegun.freeze_time("2022-01-01"):
+
+        for _file in project_dir.glob("**/*"):
+            if _file.is_dir():
+                continue
+
+            with open(_file) as f:
+                file_content = f.read()
+
+            key = f"s3://{s3_bucket}/project/{_file.relative_to(project_dir)}"
+            bucket.put_object(Key=key, Body=file_content.encode())
+            obj = hook.get_key(
+                key,
+                s3_bucket,
+            )
+            last_modified_expected[key] = obj.last_modified
+
+    with freezegun.freeze_time("2022-02-02"):
+        # Try to push the same files, a month after.
+        # Should not be replaced since replace = False.
+        hook.push_dbt_project(f"s3://{s3_bucket}/project/", project_dir, replace=False)
+
+        keys = hook.list_keys(
+            s3_bucket,
+            f"s3://{s3_bucket}/project/",
+        )
+        assert len(keys) == 4, keys
+
+        last_modified_result = {}
+
+        for key in keys:
+            obj = hook.get_key(
+                key,
+                s3_bucket,
+            )
+            last_modified_result[key] = obj.last_modified
+
+    assert last_modified_expected == last_modified_result
+
+
+def test_push_dbt_project_with_partial_replace(s3_bucket, tmpdir, test_files):
+    """Test pushing a dbt project to a S3 path with replace = False.
+
+    For this test we are looking for one file to be pushed while the rest are to be ignored
+    as they already exist and we are running with replace = False.
+    """
+
+    hook = DbtS3Hook()
+    prefix = f"s3://{s3_bucket}/project/"
+    clean_s3_prefix(hook, prefix, s3_bucket)
+    bucket = hook.get_bucket(s3_bucket)
+
+    last_modified_expected = {}
+
+    project_dir = test_files[0].parent.parent
+
+    with freezegun.freeze_time("2022-01-01"):
+        for _file in project_dir.glob("**/*"):
+            if _file.is_dir():
+                continue
+
+            with open(_file) as f:
+                file_content = f.read()
+
+            key = f"s3://{s3_bucket}/project/{_file.relative_to(project_dir)}"
+            bucket.put_object(Key=key, Body=file_content.encode())
+            obj = hook.get_key(
+                key,
+                s3_bucket,
+            )
+            last_modified_expected[key] = obj.last_modified
+
+    # Delete a single key
+    hook.delete_objects(
+        s3_bucket,
+        [f"s3://{s3_bucket}/project/seeds/a_seed.csv"],
+    )
+
+    with freezegun.freeze_time("2022-02-02"):
+        # Attempt to push project a month after.
+        # Only one file should be pushed as the rest exist and we are passing replace = False.
+        hook.push_dbt_project(f"s3://{s3_bucket}/project/", project_dir, replace=False)
+        keys = hook.list_keys(
+            s3_bucket,
+            f"s3://{s3_bucket}/project/",
+        )
+        assert len(keys) == 4
+
+        last_modified_result = {}
+
+        for key in keys:
+            obj = hook.get_key(
+                key,
+                s3_bucket,
+            )
+            last_modified_result[key] = obj.last_modified
+
+        for key, value in last_modified_result.items():
+            if key == f"s3://{s3_bucket}/project/seeds/a_seed.csv":
+                assert value > last_modified_expected[key]
+            else:
+                assert value == last_modified_expected[key]
