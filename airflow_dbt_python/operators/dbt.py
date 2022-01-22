@@ -89,6 +89,7 @@ class DbtBaseOperator(BaseOperator):
         s3_conn_id: str = "aws_default",
         do_xcom_push_artifacts: Optional[list[str]] = None,
         push_dbt_project: bool = False,
+        replace_on_push: bool = True,
         **kwargs,
     ) -> None:
         super().__init__(**kwargs)
@@ -134,6 +135,8 @@ class DbtBaseOperator(BaseOperator):
         self.s3_conn_id = s3_conn_id
         self.do_xcom_push_artifacts = do_xcom_push_artifacts
         self.push_dbt_project = push_dbt_project
+        self.replace_on_push = replace_on_push
+
         self._s3_hook = None
         self._dbt_hook = None
 
@@ -252,7 +255,9 @@ class DbtBaseOperator(BaseOperator):
                 and urlparse(str(store_project_dir)).scheme == "s3"
             ):
                 self.log.info("Pushing dbt project back to S3: %s", store_project_dir)
-                self.s3_hook.push_dbt_project(store_project_dir, tmp_dir)
+                self.s3_hook.push_dbt_project(
+                    store_project_dir, tmp_dir, self.replace_on_push
+                )
 
         self.profiles_dir = store_profiles_dir
         self.project_dir = store_project_dir

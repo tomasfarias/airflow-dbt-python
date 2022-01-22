@@ -1,9 +1,11 @@
 """Unit test module for DbtDepsOperator."""
+import datetime as dt
 import glob
 import os
 from pathlib import Path
 from unittest.mock import patch
 
+import freezegun
 import pytest
 
 from airflow_dbt_python.hooks.dbt import DepsTaskConfig
@@ -199,3 +201,75 @@ def test_dbt_deps_doesnt_affect_non_package_files(
         assert (
             last_modified < os.stat(_file).st_mtime
         ), f"DbtDepsOperator did not change a package file: {_file}"
+
+
+@no_s3_hook
+def test_dbt_deps_push_to_s3_with_no_replace(
+    s3_bucket,
+    profiles_file,
+    dbt_project_file,
+    packages_file,
+):
+    """Test execution of DbtDepsOperator with a push to S3 at the end but with replace = False.
+
+    We would expect dbt_packages to be pushed (since they don't exist) but the rest of the project
+    files should not be replaced.
+    """
+    hook = DbtS3Hook()
+    bucket = hook.get_bucket(s3_bucket)
+
+    project_files = (dbt_project_file, profiles_file, packages_file)
+    with freezegun.freeze_time("2022-01-01"):
+        for _file in project_files:
+            with open(_file) as pf:
+                content = pf.read()
+            bucket.put_object(Key=f"project/{_file.name}", Body=content.encode())
+
+    # Ensure we are working with an empty dbt_packages dir in S3.
+    keys = hook.list_keys(
+        s3_bucket,
+        f"s3://{s3_bucket}/project/dbt_packages/",
+    )
+    if keys is not None and len(keys) > 0:
+        hook.delete_objects(
+            s3_bucket,
+            keys,
+        )
+        keys = hook.list_keys(
+            s3_bucket,
+            f"s3://{s3_bucket}/project/dbt_packages/",
+        )
+    assert keys is None or len(keys) == 0
+
+    with freezegun.freeze_time("2022-02-02"):
+        op = DbtDepsOperator(
+            task_id="dbt_task",
+            project_dir=f"s3://{s3_bucket}/project/",
+            profiles_dir=f"s3://{s3_bucket}/project/",
+            push_dbt_project=True,
+            replace_on_push=False,
+        )
+
+        results = op.execute({})
+        assert results is None
+
+    keys = hook.list_keys(
+        s3_bucket,
+        f"s3://{s3_bucket}/project/dbt_packages/",
+    )
+    assert len(keys) >= 0
+    # dbt_utils files may be anything, let's just check that at least
+    # "dbt_utils" exists as part of the key.
+    assert len([k for k in keys if "dbt_utils" in k]) >= 0
+
+    file_names = {(f.name for f in project_files)}
+    for key in keys:
+        obj = hook.get_key(
+            key,
+            s3_bucket,
+        )
+
+        if Path(key).name in file_names:
+            assert obj.last_modified == dt.datetime(2022, 1, 1, tzinfo=dt.timezone.utc)
+        else:
+            assert obj.last_modified == dt.datetime(2022, 2, 2, tzinfo=dt.timezone.utc)
