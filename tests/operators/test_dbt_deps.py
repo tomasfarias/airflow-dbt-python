@@ -173,7 +173,8 @@ def test_dbt_deps_doesnt_affect_non_package_files(
     files_and_times = [
         (_file, os.stat(_file).st_mtime)
         for _file in dbt_project_file.parent.glob("**/*")
-        if not Path(_file).is_relative_to(dbt_packages_dir)
+        # is_relative_to was added in 3.9 and we support both 3.7 and 3.8
+        if dbt_packages_dir.name not in str(_file)
     ]
     dbt_packages_and_times = [
         (_file, os.stat(_file).st_mtime) for _file in dbt_packages_dir.glob("**/*")
