@@ -9,6 +9,7 @@ from moto import mock_s3
 from pytest_postgresql.janitor import DatabaseJanitor
 
 from airflow_dbt_python.hooks.dbt import DbtHook
+from airflow_dbt_python.hooks.s3 import DbtS3Hook
 
 PROFILES = """
 default:
@@ -234,11 +235,36 @@ def mocked_s3_res():
 
 
 @pytest.fixture
-def s3_bucket(mocked_s3_res):
-    """Return a mocked s3 bucket for testing."""
+def s3_hook():
+    """Provide a DbtHook."""
+    return DbtS3Hook()
+
+
+@pytest.fixture
+def s3_bucket(mocked_s3_res, s3_hook):
+    """Return a mocked s3 bucket for testing.
+
+    Bucket is cleaned after every use.
+    """
     bucket = "airflow-dbt-test-s3-bucket"
     mocked_s3_res.create_bucket(Bucket=bucket)
-    return bucket
+
+    yield bucket
+
+    keys = s3_hook.list_keys(
+        bucket,
+        "",
+    )
+    if keys is not None and len(keys) > 0:
+        s3_hook.delete_objects(
+            bucket,
+            keys,
+        )
+        keys = s3_hook.list_keys(
+            bucket,
+            "",
+        )
+    assert keys is None or len(keys) == 0
 
 
 BROKEN_SQL = """

@@ -311,29 +311,10 @@ def test_push_dbt_project_to_zip_file(s3_bucket, tmpdir, test_files):
     assert key is True
 
 
-def clean_s3_prefix(hook: DbtS3Hook, prefix: str, s3_bucket: str):
-    """Ensure we are working with an empty S3 prefix."""
-    keys = hook.list_keys(
-        s3_bucket,
-        prefix,
-    )
-    if keys is not None and len(keys) > 0:
-        hook.delete_objects(
-            s3_bucket,
-            keys,
-        )
-        keys = hook.list_keys(
-            s3_bucket,
-            prefix,
-        )
-    assert keys is None or len(keys) == 0
-
-
 def test_push_dbt_project_to_files(s3_bucket, tmpdir, test_files):
     """Test pushing a dbt project to a S3 path."""
     hook = DbtS3Hook()
     prefix = f"s3://{s3_bucket}/project/"
-    clean_s3_prefix(hook, prefix, s3_bucket)
 
     hook.push_dbt_project(f"s3://{s3_bucket}/project/", test_files[0].parent.parent)
     keys = hook.list_keys(
@@ -352,7 +333,6 @@ def test_push_dbt_project_with_no_replace(s3_bucket, tmpdir, test_files):
 
     hook = DbtS3Hook()
     prefix = f"s3://{s3_bucket}/project/"
-    clean_s3_prefix(hook, prefix, s3_bucket)
     bucket = hook.get_bucket(s3_bucket)
 
     last_modified_expected = {}
@@ -408,7 +388,6 @@ def test_push_dbt_project_with_partial_replace(s3_bucket, tmpdir, test_files):
 
     hook = DbtS3Hook()
     prefix = f"s3://{s3_bucket}/project/"
-    clean_s3_prefix(hook, prefix, s3_bucket)
     bucket = hook.get_bucket(s3_bucket)
 
     last_modified_expected = {}
