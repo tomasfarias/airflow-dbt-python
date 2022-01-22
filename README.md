@@ -3,6 +3,7 @@
 [![PyPI version](https://img.shields.io/pypi/v/airflow-dbt-python?style=plastic)](https://pypi.org/project/airflow-dbt-python/)
 [![GitHub build status](https://github.com/tomasfarias/airflow-dbt-python/actions/workflows/test.yaml/badge.svg)](https://github.com/tomasfarias/airflow-dbt-python/actions)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+[![Test coverage](https://codecov.io/gh/tomasfarias/airflow-dbt-python/branch/master/graph/badge.svg?token=HBKZ78F11F)](https://codecov.io/gh/tomasfarias/airflow-dbt-python)
 
 An [Airflow](https://airflow.apache.org/) operator and hook to interface with the [`dbt-core`](https://pypi.org/project/dbt-core/) Python package.
 

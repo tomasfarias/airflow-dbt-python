@@ -1,0 +1,38 @@
+name: Tagged release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  gh_tagged_release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Wait for Tests to succeed
+        uses: fountainhead/action-wait-for-check@v1.0.0
+        id: wait-for-test
+        with:
+          token: ${{ secrets.PA_TOKEN }}
+          checkName: test
+          ref: ${{ github.sha }}
+      - uses: actions/checkout@v2.3.4
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.9'
+      - name: Install Poetry
+        uses: abatilo/actions-poetry@v2.1.4
+        with:
+          poetry-version: 1.1.12
+      - name: Install redtape with Poetry
+        run: poetry install
+      - name: Build redtape with Poetry
+        run: poetry build
+      - name: Release new SemVer tag
+        uses: marvinpinto/action-automatic-releases@latest
+        with:
+          repo_token: "${{ secrets.PA_TOKEN }}"
+          prerelease: false
+          files: |
+            dist/*
