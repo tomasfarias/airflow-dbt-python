@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import datetime as dt
 import json
+import logging
 import os
 from contextlib import contextmanager
 from dataclasses import asdict, is_dataclass
@@ -12,7 +13,6 @@ from typing import Any, Iterator, Optional, Union
 from urllib.parse import urlparse
 
 from dbt.contracts.results import RunExecutionResult, agate
-from dbt.logger import log_manager
 
 from airflow import AirflowException
 from airflow.models.baseoperator import BaseOperator
@@ -302,18 +302,17 @@ class DbtBaseOperator(BaseOperator):
     def override_dbt_logging(self, dbt_directory: str = None):
         """Override dbt's logger.
 
-        We override the output stream of the dbt logger to use Airflow's StreamLogWriter
-        so that we can ensure dbt logs properly to the Airflow task's log output.
+        Starting with dbt v1, dbt initializes two loggers: default_file and
+        default_stdout. We override default_stdout's handlers with Airflow logger's
+        handlers.
         """
-        from airflow.utils.log.logging_mixin import StreamLogWriter
+        file_logger = logging.getLogger("default_file")
+        file_logger.handlers = []
 
-        with log_manager.applicationbound():
-            log_manager.reset_handlers()
-            log_manager.set_path(dbt_directory)
-            log_manager.set_output_stream(
-                StreamLogWriter(self.log, self.log.getEffectiveLevel())
-            )
-            yield
+        stdout_logger = logging.getLogger("default_stdout")
+        stdout_logger.handlers = self.log.handlers
+
+        yield
 
     def serializable_result(
         self, result: Optional[RunExecutionResult]

@@ -1,6 +1,8 @@
 """Unit test module for DbtSeedOperator."""
 import json
+import logging
 from pathlib import Path
+from typing import Iterator
 from unittest.mock import patch
 
 import pytest
@@ -87,6 +89,95 @@ def test_dbt_seed_models(profiles_file, dbt_project_file, seed_files):
     assert run_result["status"] == RunStatus.Success
     assert run_result["agate_table"] == {"country_code": "Text", "country_name": "Text"}
     assert isinstance(json.dumps(execution_results), str)
+
+
+@pytest.fixture
+def log_path() -> Iterator[Path]:
+    """Path to a test log file."""
+    p = Path.cwd() / "test.log"
+    yield p
+    p.unlink()
+
+
+def test_dbt_seed_models_logging(profiles_file, dbt_project_file, seed_files, log_path):
+    """Test the dbt seed operator logs to a test file without duplicates."""
+    op = DbtSeedOperator(
+        task_id="dbt_task",
+        project_dir=dbt_project_file.parent,
+        profiles_dir=profiles_file.parent,
+        select=[str(s.stem) for s in seed_files],
+        do_xcom_push=True,
+        debug=False,
+    )
+    op.log.addHandler(logging.FileHandler(log_path))
+
+    default_file_logger = logging.getLogger("default_file")
+    default_stdout_logger = logging.getLogger("default_stdout")
+
+    execution_results = op.execute({})
+
+    assert len(default_file_logger.handlers) == 0
+    assert len(default_stdout_logger.handlers) == 1
+    assert default_stdout_logger.handlers[0] == op.log.handlers[0]
+
+    with open(log_path) as log_file:
+        lines = log_file.readlines()
+    assert len(lines) >= 0
+
+    # Check for duplicate lines
+    line_1 = (
+        "1 of 2 START seed file public.seed_1.........................................."
+        ".. [RUN]"
+    )
+    assert sum((line_1 in line for line in lines)) == 1
+
+    line_2 = "Finished running 2 seeds"
+    assert sum((line_2 in line for line in lines)) == 1
+
+    # Check thread tags are not present (that would indicate we are running with debug flag)
+    thread_tag = "[info ] [Thread-1 ]"
+    assert any((thread_tag in line for line in lines)) is False
+
+    main_thread_tag = "[info ] [MainThread]"
+    assert any((main_thread_tag in line for line in lines)) is False
+
+
+def test_dbt_seed_models_debug_logging(
+    profiles_file, dbt_project_file, seed_files, log_path
+):
+    """Test the dbt seed operator debug logs to a test file without duplicates."""
+    op = DbtSeedOperator(
+        task_id="dbt_task",
+        project_dir=dbt_project_file.parent,
+        profiles_dir=profiles_file.parent,
+        select=[str(s.stem) for s in seed_files],
+        do_xcom_push=True,
+        debug=True,
+    )
+    op.log.addHandler(logging.FileHandler(log_path))
+
+    default_file_logger = logging.getLogger("default_file")
+    default_stdout_logger = logging.getLogger("default_stdout")
+
+    execution_results = op.execute({})
+
+    assert len(default_file_logger.handlers) == 0
+    assert len(default_stdout_logger.handlers) == 1
+    assert default_stdout_logger.handlers[0] == op.log.handlers[0]
+
+    with open(log_path) as log_file:
+        lines = log_file.readlines()
+    assert len(lines) >= 0
+
+    # Check for duplicate lines
+    line_1 = (
+        "[info ] [Thread-1  ]: 1 of 2 START seed file public.seed_1...................."
+        "........................ [RUN]"
+    )
+    assert sum((line_1 in line for line in lines)) == 1
+
+    line_2 = "[info ] [MainThread]: Finished running 2 seeds"
+    assert sum((line_2 in line for line in lines)) == 1
 
 
 def test_dbt_seed_models_full_refresh(profiles_file, dbt_project_file, seed_files):
