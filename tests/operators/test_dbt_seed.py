@@ -91,15 +91,7 @@ def test_dbt_seed_models(profiles_file, dbt_project_file, seed_files):
     assert isinstance(json.dumps(execution_results), str)
 
 
-@pytest.fixture
-def log_path() -> Iterator[Path]:
-    """Path to a test log file."""
-    p = Path.cwd() / "test.log"
-    yield p
-    p.unlink()
-
-
-def test_dbt_seed_models_logging(profiles_file, dbt_project_file, seed_files, log_path):
+def test_dbt_seed_models_logging(profiles_file, dbt_project_file, seed_files, tmp_path):
     """Test the dbt seed operator logs to a test file without duplicates."""
     op = DbtSeedOperator(
         task_id="dbt_task",
@@ -109,6 +101,7 @@ def test_dbt_seed_models_logging(profiles_file, dbt_project_file, seed_files, lo
         do_xcom_push=True,
         debug=False,
     )
+    log_path = tmp_path / "test.log"
     op.log.addHandler(logging.FileHandler(log_path))
 
     default_file_logger = logging.getLogger("default_file")
@@ -143,7 +136,7 @@ def test_dbt_seed_models_logging(profiles_file, dbt_project_file, seed_files, lo
 
 
 def test_dbt_seed_models_debug_logging(
-    profiles_file, dbt_project_file, seed_files, log_path
+    profiles_file, dbt_project_file, seed_files, tmp_path
 ):
     """Test the dbt seed operator debug logs to a test file without duplicates."""
     op = DbtSeedOperator(
@@ -154,6 +147,7 @@ def test_dbt_seed_models_debug_logging(
         do_xcom_push=True,
         debug=True,
     )
+    log_path = tmp_path / "test.log"
     op.log.addHandler(logging.FileHandler(log_path))
 
     default_file_logger = logging.getLogger("default_file")
