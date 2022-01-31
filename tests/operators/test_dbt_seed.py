@@ -110,8 +110,8 @@ def test_dbt_seed_models_logging(profiles_file, dbt_project_file, seed_files, tm
     execution_results = op.execute({})
 
     assert len(default_file_logger.handlers) == 0
-    assert len(default_stdout_logger.handlers) == 1
-    assert default_stdout_logger.handlers[0] == op.log.handlers[0]
+    assert len(default_stdout_logger.handlers) == len(op.log.handlers)
+    assert default_stdout_logger.handlers == op.log.handlers
 
     with open(log_path) as log_file:
         lines = log_file.readlines()
@@ -156,8 +156,8 @@ def test_dbt_seed_models_debug_logging(
     execution_results = op.execute({})
 
     assert len(default_file_logger.handlers) == 0
-    assert len(default_stdout_logger.handlers) == 1
-    assert default_stdout_logger.handlers[0] == op.log.handlers[0]
+    assert len(default_stdout_logger.handlers) == len(op.log.handlers)
+    assert default_stdout_logger.handlers == op.log.handlers
 
     with open(log_path) as log_file:
         lines = log_file.readlines()
