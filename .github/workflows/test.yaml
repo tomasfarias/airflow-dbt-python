@@ -26,7 +26,7 @@ jobs:
         with:
           poetry-version: 1.1.12
       - name: Install airflow-dbt-python with Poetry
-        run: poetry install -E amazon -E postgres
+        run: poetry install -E amazon -E postgres -E airflow
       - name: Style guide enforcement with flake8
         run: poetry run flake8 .
       - name: Static type checking with mypy
