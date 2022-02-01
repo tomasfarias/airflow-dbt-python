@@ -128,7 +128,7 @@ def test_dbt_seed_models_logging(profiles_file, dbt_project_file, seed_files, tm
     assert sum((line_2 in line for line in lines)) == 1
 
     # Check thread tags are not present (that would indicate we are running with debug flag)
-    thread_tag = "[info ] [Thread-1 ]"
+    thread_tag = "[info ] [Thread- ]"
     assert any((thread_tag in line for line in lines)) is False
 
     main_thread_tag = "[info ] [MainThread]"
@@ -165,7 +165,7 @@ def test_dbt_seed_models_debug_logging(
 
     # Check for duplicate lines
     line_1 = (
-        "[info ] [Thread-1  ]: 1 of 2 START seed file public.seed_1...................."
+        "]: 1 of 2 START seed file public.seed_1...................."
         "........................ [RUN]"
     )
     assert sum((line_1 in line for line in lines)) == 1
