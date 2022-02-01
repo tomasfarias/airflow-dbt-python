@@ -56,6 +56,16 @@ def test_dbt_run_mocked_all_args():
     assert config.state == Path("/path/to/state/")
 
 
+class FakeTaskInstance:
+    """Fake TaskInstance that stores result in XCom dict."""
+
+    def __init__(self):
+        self.xcom = {}
+
+    def xcom_push(self, key, value, execution_date):
+        self.xcom[key] = (value, execution_date)
+
+
 def test_dbt_run_non_existent_model(profiles_file, dbt_project_file, model_files):
     """Test execution of DbtRunOperator with a non-existent model."""
     op = DbtRunOperator(
@@ -68,6 +78,7 @@ def test_dbt_run_non_existent_model(profiles_file, dbt_project_file, model_files
     )
 
     execution_results = op.execute({})
+
     assert len(execution_results["results"]) == 0
     assert isinstance(json.dumps(execution_results), str)
 
@@ -81,6 +92,7 @@ def test_dbt_run_models(profiles_file, dbt_project_file, model_files):
         models=[str(m.stem) for m in model_files],
         do_xcom_push=True,
     )
+
     execution_results = op.execute({})
     run_result = execution_results["results"][0]
 
@@ -160,11 +172,17 @@ def test_dbt_run_models_from_s3(
         profiles_dir=f"s3://{s3_bucket}/project/",
         models=[str(m.stem) for m in model_files],
         do_xcom_push=True,
+        do_xcom_push_artifacts=["manifest.json", "run_results.json"],
     )
-    execution_results = op.execute({})
+    ti = FakeTaskInstance()
+
+    execution_results = op.execute({"ti": ti})
     run_result = execution_results["results"][0]
 
     assert run_result["status"] == RunStatus.Success
+    assert "manifest.json" in ti.xcom
+    assert "run_results.json" in ti.xcom
+    assert ti.xcom["run_results.json"][0]["results"][0]["status"] == "success"
 
 
 @no_s3_hook
