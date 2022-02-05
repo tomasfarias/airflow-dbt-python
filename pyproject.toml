@@ -90,6 +90,7 @@ exclude = '''
 postgresql_user = "test"
 postgresql_password = "test"
 postgresql_dbname = "test"
+python_classes = "!TestStatus !TestTaskConfig"
 filterwarnings = [
     # Warning raised by dbt dependency
     'ignore: write_gpickle is deprecated:DeprecationWarning',

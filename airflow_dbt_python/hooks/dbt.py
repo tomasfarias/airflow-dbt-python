@@ -7,8 +7,10 @@ import os
 import pickle
 from dataclasses import dataclass
 from enum import Enum
+from functools import wraps
 from pathlib import Path
 from typing import Any, Optional, Union
+from urllib.parse import urlparse
 
 import dbt.flags as flags
 from dbt.adapters.factory import register_adapter
@@ -36,7 +38,12 @@ from dbt.task.snapshot import SnapshotTask
 from dbt.task.test import TestTask
 from dbt.tracking import initialize_from_flags
 
-from airflow.hooks.base_hook import BaseHook
+try:
+    from airflow.hooks.base import BaseHook
+except ImportError:
+    from airflow.hooks.base_hook import BaseHook
+
+from .backends import DbtBackend, build_backend
 
 
 class FromStrMixin(Enum):
@@ -84,7 +91,7 @@ class BaseConfig:
     target: Optional[str] = None
 
     # Execution configuration
-    compiled_target: Optional[Union["os.PathLike[str]", str]] = None
+    compiled_target: Optional[Union["os.PathAble[str]", str]] = None
     fail_fast: Optional[bool] = None
     single_threaded: Optional[bool] = None
     threads: Optional[int] = None
@@ -399,7 +406,7 @@ class SourceFreshnessTaskConfig(SelectionConfig):
     """Dbt source freshness task arguments."""
 
     cls: BaseTask = dataclasses.field(default=FreshnessTask, init=False)
-    output: Optional[Union[os.PathLike, str, bytes]] = None
+    output: Optional[Union[os.PathAble, str, bytes]] = None
     which: str = dataclasses.field(default="source-freshness", init=False)
 
 
@@ -465,8 +472,58 @@ class DbtHook(BaseHook):
     Allows for running dbt tasks and provides required configurations for each task.
     """
 
-    def __init__(self):
-        pass
+    backends: dict[tuple[str, Optional[str]], DbtBackend] = {}
+
+    def get_backend(self, scheme: str, conn_id: Optional[str]) -> DbtBackend:
+        try:
+            return self.backends[(scheme, conn_id)]
+        except KeyError:
+            backend = build_backend(scheme, conn_id)
+        self.backends[(scheme, conn_id)] = backend
+        return backend
+
+    def pull_dbt_profiles(
+        self,
+        profiles_dir: PathAble,
+        destination: PathAble,
+        /,
+        *,
+        conn_id: Optional[str] = None,
+    ) -> Path:
+        scheme = urlparse(str(profiles_dir)).scheme
+        backend = self.get_backend(scheme, conn_id)
+
+        return backend.pull_dbt_profiles(profiles_dir, destination)
+
+    def pull_dbt_project(
+        self,
+        project_dir: PathAble,
+        destination: PathAble,
+        /,
+        *,
+        conn_id: Optional[str] = None,
+    ) -> Path:
+        scheme = urlparse(str(project_dir)).scheme
+        backend = self.get_backend(scheme, conn_id)
+
+        return backend.pull_dbt_project(project_dir, destination)
+
+    def push_dbt_project(
+        self,
+        project_dir: PathAble,
+        destination: PathAble,
+        /,
+        *,
+        conn_id: Optional[str] = None,
+        replace: bool = False,
+        delete_before: bool = False,
+    ) -> None:
+        scheme = urlparse(str(destination)).scheme
+        backend = self.get_backend(scheme, conn_id)
+
+        return backend.push_dbt_project(
+            project_dir, destination, replace=replace, delete_before=delete_before
+        )
 
     def get_config_factory(self, command: str) -> ConfigFactory:
         """Get a ConfigFactory given a dbt command string."""

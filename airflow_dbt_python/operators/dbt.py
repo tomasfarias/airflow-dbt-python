@@ -17,8 +17,17 @@ from dbt.contracts.results import RunExecutionResult, agate
 from airflow import AirflowException
 from airflow.models.baseoperator import BaseOperator
 from airflow.models.xcom import XCOM_RETURN_KEY
-from airflow.utils.decorators import apply_defaults
-from airflow_dbt_python.hooks.dbt import BaseConfig, LogFormat, Output
+from airflow.version import version
+from airflow_dbt_python.hooks.dbt import BaseConfig, DbtHook, LogFormat, Output
+
+# apply_defaults is deprecated in version 2 and beyond. This allows us to
+# support version 1 and deal with the deprecation warning.
+if int(version[0]) == 1:
+    from airflow.utils.decorators import apply_defaults
+else:
+
+    def apply_defaults(func):
+        return func
 
 
 class DbtBaseOperator(BaseOperator):
@@ -75,7 +84,7 @@ class DbtBaseOperator(BaseOperator):
         # Mutually exclusive
         defer: Optional[bool] = None,
         no_defer: Optional[bool] = None,
-        partial_parse: Optional[bool] = None,
+        partial_parse: Optional[bool] = False,
         no_partial_parse: Optional[bool] = None,
         use_colors: Optional[bool] = None,
         no_use_colors: Optional[bool] = None,
@@ -86,10 +95,12 @@ class DbtBaseOperator(BaseOperator):
         anonymous_usage_stats: Optional[bool] = None,
         no_anonymous_usage_stats: Optional[bool] = None,
         # Extra features configuration
-        s3_conn_id: str = "aws_default",
+        profiles_conn_id: Optional[str] = None,
+        project_conn_id: Optional[str] = None,
         do_xcom_push_artifacts: Optional[list[str]] = None,
         push_dbt_project: bool = False,
-        replace_on_push: bool = True,
+        delete_before_push: bool = False,
+        replace_on_push: bool = False,
         **kwargs,
     ) -> None:
         super().__init__(**kwargs)
@@ -132,12 +143,13 @@ class DbtBaseOperator(BaseOperator):
         self.version_check = no_version_check
         self.no_version_check = no_version_check
 
-        self.s3_conn_id = s3_conn_id
+        self.profiles_conn_id = profiles_conn_id
+        self.project_conn_id = project_conn_id
         self.do_xcom_push_artifacts = do_xcom_push_artifacts
         self.push_dbt_project = push_dbt_project
+        self.delete_before_push = delete_before_push
         self.replace_on_push = replace_on_push
 
-        self._s3_hook = None
         self._dbt_hook = None
 
     def execute(self, context: dict):
@@ -150,6 +162,8 @@ class DbtBaseOperator(BaseOperator):
             context: The Airflow's task context
         """
         with self.dbt_directory() as dbt_dir:  # type: str
+            os.chdir(dbt_dir)
+
             with self.override_dbt_logging(dbt_dir):
                 config = self.get_dbt_config()
                 self.log.info("Running dbt configuration: %s", config)
@@ -239,7 +253,13 @@ class DbtBaseOperator(BaseOperator):
         store_project_dir = self.project_dir
 
         with TemporaryDirectory(prefix="airflowtmp") as tmp_dir:
-            self.prepare_directory(tmp_dir)
+            self.log.info("Initializing temporary directory: %s", tmp_dir)
+            try:
+                self.prepare_directory(tmp_dir)
+            except Exception as e:
+                raise AirflowException(
+                    "Failed to prepare temporary directory for dbt execution"
+                ) from e
 
             if getattr(self, "state", None) is not None:
                 state = Path(getattr(self, "state", ""))
@@ -250,13 +270,14 @@ class DbtBaseOperator(BaseOperator):
 
             yield tmp_dir
 
-            if (
-                self.push_dbt_project is True
-                and urlparse(str(store_project_dir)).scheme == "s3"
-            ):
-                self.log.info("Pushing dbt project back to S3: %s", store_project_dir)
-                self.s3_hook.push_dbt_project(
-                    store_project_dir, tmp_dir, self.replace_on_push
+            if self.push_dbt_project is True:
+                self.log.info("Pushing dbt project to: %s", store_project_dir)
+                self.dbt_hook.push_dbt_project(
+                    tmp_dir,
+                    store_project_dir,
+                    conn_id=self.project_conn_id,
+                    replace=self.replace_on_push,
+                    delete_before=self.delete_before_push,
                 )
 
         self.profiles_dir = store_profiles_dir
@@ -264,37 +285,24 @@ class DbtBaseOperator(BaseOperator):
 
     def prepare_directory(self, tmp_dir: str):
         """Prepares a dbt directory by pulling files from S3."""
-        if urlparse(str(self.profiles_dir)).scheme == "s3":
-            self.log.info("Fetching profiles.yml from S3: %s", self.profiles_dir)
-            profiles_file_path = self.s3_hook.pull_dbt_profiles(
-                self.profiles_dir,
-                tmp_dir,
-            )
-            self.profiles_dir = str(profiles_file_path.parent) + "/"
+        profiles_file_path = self.dbt_hook.pull_dbt_profiles(
+            self.profiles_dir,
+            tmp_dir,
+            conn_id=self.profiles_conn_id,
+        )
+        self.profiles_dir = str(profiles_file_path.parent) + "/"
 
-        if urlparse(str(self.project_dir)).scheme == "s3":
-            self.log.info("Fetching dbt project from S3: %s", self.project_dir)
-            project_dir_path = self.s3_hook.pull_dbt_project(
-                self.project_dir,
-                tmp_dir,
-            )
-            self.project_dir = str(project_dir_path) + "/"
-
-    @property
-    def s3_hook(self):
-        """Provides an existing DbtS3Hook or creates one."""
-        if self._s3_hook is None:
-            from airflow_dbt_python.hooks.s3 import DbtS3Hook
-
-            self._s3_hook = DbtS3Hook(self.s3_conn_id)
-        return self._s3_hook
+        project_dir_path = self.dbt_hook.pull_dbt_project(
+            self.project_dir,
+            tmp_dir,
+            conn_id=self.project_conn_id,
+        )
+        self.project_dir = str(project_dir_path) + "/"
 
     @property
     def dbt_hook(self):
         """Provides an existing DbtHook or creates one."""
         if self._dbt_hook is None:
-            from airflow_dbt_python.hooks.dbt import DbtHook
-
             self._dbt_hook = DbtHook()
         return self._dbt_hook
 
@@ -457,6 +465,7 @@ class DbtCompileOperator(DbtBaseOperator):
         select: Optional[list[str]] = None,
         exclude: Optional[list[str]] = None,
         selector_name: Optional[str] = None,
+        push_dbt_project: bool = True,
         **kwargs,
     ) -> None:
         super().__init__(**kwargs)
@@ -465,6 +474,7 @@ class DbtCompileOperator(DbtBaseOperator):
         self.exclude = exclude
         self.selector_name = selector_name
         self.select = select or models
+        self.push_dbt_project = push_dbt_project
 
     @property
     def command(self) -> str:
@@ -479,7 +489,7 @@ class DbtDepsOperator(DbtBaseOperator):
     https://docs.getdbt.com/reference/commands/deps.
     """
 
-    def __init__(self, push_dbt_project=True, **kwargs) -> None:
+    def __init__(self, push_dbt_project: bool = True, **kwargs) -> None:
         super().__init__(**kwargs)
         self.push_dbt_project = push_dbt_project
 
@@ -496,7 +506,7 @@ class DbtDocsGenerateOperator(DbtBaseOperator):
     https://docs.getdbt.com/reference/commands/cmd-docs.
     """
 
-    def __init__(self, compile=True, push_dbt_project=True, **kwargs) -> None:
+    def __init__(self, compile=True, push_dbt_project: bool = True, **kwargs) -> None:
         super().__init__(**kwargs)
         self.compile = compile
         self.push_dbt_project = push_dbt_project
@@ -514,8 +524,12 @@ class DbtCleanOperator(DbtBaseOperator):
     https://docs.getdbt.com/reference/commands/debug.
     """
 
-    def __init__(self, **kwargs) -> None:
+    def __init__(
+        self, push_dbt_project: bool = True, delete_before_push: bool = True, **kwargs
+    ) -> None:
         super().__init__(**kwargs)
+        self.push_dbt_project = push_dbt_project
+        self.delete_before_push = delete_before_push
 
     @property
     def command(self) -> str:
@@ -658,9 +672,11 @@ class DbtParseOperator(DbtBaseOperator):
 
     def __init__(
         self,
+        push_dbt_project: bool = True,
         **kwargs,
     ) -> None:
         super().__init__(**kwargs)
+        self.push_dbt_project = push_dbt_project
 
     @property
     def command(self) -> str:
@@ -681,6 +697,7 @@ class DbtSourceFreshnessOperator(DbtBaseOperator):
         dbt_output: Optional[Union[str, Path]] = None,
         exclude: Optional[list[str]] = None,
         selector_name: Optional[str] = None,
+        push_dbt_project: bool = True,
         **kwargs,
     ) -> None:
         super().__init__(**kwargs)
@@ -688,6 +705,7 @@ class DbtSourceFreshnessOperator(DbtBaseOperator):
         self.exclude = exclude
         self.selector_name = selector_name
         self.dbt_output = dbt_output
+        self.push_dbt_project = push_dbt_project
 
     @property
     def command(self) -> str:

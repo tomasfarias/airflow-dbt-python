@@ -8,11 +8,11 @@ from airflow_dbt_python.operators.dbt import DbtDocsGenerateOperator
 
 condition = False
 try:
-    from airflow_dbt_python.hooks.s3 import DbtS3Hook
+    from airflow_dbt_python.hooks.backends import DbtS3Backend
 except ImportError:
     condition = True
-no_s3_hook = pytest.mark.skipif(
-    condition, reason="S3Hook not available, consider installing amazon extras"
+no_s3_backend = pytest.mark.skipif(
+    condition, reason="S3 Backend not available, consider installing amazon extras"
 )
 
 
@@ -70,13 +70,12 @@ def test_dbt_docs_generate_produces_documentation_files(
     assert "index.html" in files
 
 
-@no_s3_hook
+@no_s3_backend
 def test_dbt_docs_generate_push_to_s3(
-    s3_bucket, profiles_file, dbt_project_file, model_files
+    s3_bucket, s3_hook, profiles_file, dbt_project_file, model_files
 ):
     """Test execution of DbtDocsGenerateOperator with a push to S3 at the end."""
-    hook = DbtS3Hook()
-    bucket = hook.get_bucket(s3_bucket)
+    bucket = s3_hook.get_bucket(s3_bucket)
 
     with open(dbt_project_file) as pf:
         project_content = pf.read()
@@ -94,16 +93,16 @@ def test_dbt_docs_generate_push_to_s3(
             )
 
     # Ensure we are working with an empty target in S3.
-    keys = hook.list_keys(
+    keys = s3_hook.list_keys(
         s3_bucket,
         f"s3://{s3_bucket}/project/target/",
     )
     if keys is not None and len(keys) > 0:
-        hook.delete_objects(
+        s3_hook.delete_objects(
             s3_bucket,
             keys,
         )
-        keys = hook.list_keys(
+        keys = s3_hook.list_keys(
             s3_bucket,
             f"s3://{s3_bucket}/project/target/",
         )
@@ -118,7 +117,7 @@ def test_dbt_docs_generate_push_to_s3(
     results = op.execute({})
     assert results is not None
 
-    keys = hook.list_keys(
+    keys = s3_hook.list_keys(
         s3_bucket,
         f"s3://{s3_bucket}/project/target/",
     )

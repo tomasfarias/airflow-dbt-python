@@ -9,7 +9,6 @@ from moto import mock_s3
 from pytest_postgresql.janitor import DatabaseJanitor
 
 from airflow_dbt_python.hooks.dbt import DbtHook
-from airflow_dbt_python.hooks.s3 import DbtS3Hook
 
 PROFILES = """
 default:
@@ -236,8 +235,13 @@ def mocked_s3_res():
 
 @pytest.fixture
 def s3_hook():
-    """Provide a DbtHook."""
-    return DbtS3Hook()
+    """Provide an S3 for testing."""
+    try:
+        from airflow.providers.amazon.aws.hooks.s3 import S3Hook
+    except ImportError:
+        from airflow.hooks.S3_hook import S3Hook
+
+    return S3Hook()
 
 
 @pytest.fixture

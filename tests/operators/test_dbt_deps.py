@@ -13,11 +13,11 @@ from airflow_dbt_python.operators.dbt import DbtDepsOperator
 
 condition = False
 try:
-    from airflow_dbt_python.hooks.s3 import DbtS3Hook
+    from airflow_dbt_python.hooks.backends import DbtS3Backend
 except ImportError:
     condition = True
-no_s3_hook = pytest.mark.skipif(
-    condition, reason="S3Hook not available, consider installing amazon extras"
+no_s3_backend = pytest.mark.skipif(
+    condition, reason="S3 Backend not available, consider installing amazon extras"
 )
 
 
@@ -82,16 +82,16 @@ def test_dbt_deps_downloads_dbt_utils(
         ), f"DbtDepsOperator changed an unexpected file: {_file}"
 
 
-@no_s3_hook
+@no_s3_backend
 def test_dbt_deps_push_to_s3(
     s3_bucket,
+    s3_hook,
     profiles_file,
     dbt_project_file,
     packages_file,
 ):
     """Test execution of DbtDepsOperator with a push to S3 at the end."""
-    hook = DbtS3Hook()
-    bucket = hook.get_bucket(s3_bucket)
+    bucket = s3_hook.get_bucket(s3_bucket)
 
     with open(dbt_project_file) as pf:
         project_content = pf.read()
@@ -106,16 +106,16 @@ def test_dbt_deps_push_to_s3(
     bucket.put_object(Key="project/packages.yml", Body=packages_content.encode())
 
     # Ensure we are working with an empty dbt_packages dir in S3.
-    keys = hook.list_keys(
+    keys = s3_hook.list_keys(
         s3_bucket,
         f"s3://{s3_bucket}/project/dbt_packages/",
     )
     if keys is not None and len(keys) > 0:
-        hook.delete_objects(
+        s3_hook.delete_objects(
             s3_bucket,
             keys,
         )
-        keys = hook.list_keys(
+        keys = s3_hook.list_keys(
             s3_bucket,
             f"s3://{s3_bucket}/project/dbt_packages/",
         )
@@ -137,7 +137,7 @@ def test_dbt_deps_push_to_s3(
     results = op.execute({})
     assert results is None
 
-    keys = hook.list_keys(
+    keys = s3_hook.list_keys(
         s3_bucket,
         f"s3://{s3_bucket}/project/dbt_packages/",
     )
@@ -204,9 +204,10 @@ def test_dbt_deps_doesnt_affect_non_package_files(
         ), f"DbtDepsOperator did not change a package file: {_file}"
 
 
-@no_s3_hook
+@no_s3_backend
 def test_dbt_deps_push_to_s3_with_no_replace(
     s3_bucket,
+    s3_hook,
     profiles_file,
     dbt_project_file,
     packages_file,
@@ -216,8 +217,7 @@ def test_dbt_deps_push_to_s3_with_no_replace(
     We would expect dbt_packages to be pushed (since they don't exist) but the rest of the project
     files should not be replaced.
     """
-    hook = DbtS3Hook()
-    bucket = hook.get_bucket(s3_bucket)
+    bucket = s3_hook.get_bucket(s3_bucket)
 
     project_files = (dbt_project_file, profiles_file, packages_file)
     with freezegun.freeze_time("2022-01-01"):
@@ -227,16 +227,16 @@ def test_dbt_deps_push_to_s3_with_no_replace(
             bucket.put_object(Key=f"project/{_file.name}", Body=content.encode())
 
     # Ensure we are working with an empty dbt_packages dir in S3.
-    keys = hook.list_keys(
+    keys = s3_hook.list_keys(
         s3_bucket,
         f"s3://{s3_bucket}/project/dbt_packages/",
     )
     if keys is not None and len(keys) > 0:
-        hook.delete_objects(
+        s3_hook.delete_objects(
             s3_bucket,
             keys,
         )
-        keys = hook.list_keys(
+        keys = s3_hook.list_keys(
             s3_bucket,
             f"s3://{s3_bucket}/project/dbt_packages/",
         )
@@ -254,7 +254,7 @@ def test_dbt_deps_push_to_s3_with_no_replace(
         results = op.execute({})
         assert results is None
 
-    keys = hook.list_keys(
+    keys = s3_hook.list_keys(
         s3_bucket,
         f"s3://{s3_bucket}/project/dbt_packages/",
     )
@@ -265,7 +265,7 @@ def test_dbt_deps_push_to_s3_with_no_replace(
 
     file_names = {(f.name for f in project_files)}
     for key in keys:
-        obj = hook.get_key(
+        obj = s3_hook.get_key(
             key,
             s3_bucket,
         )
