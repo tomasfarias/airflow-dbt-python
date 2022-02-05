@@ -75,7 +75,8 @@ with DAG(
         exclude=["tag:deprecated"],
         target="production",
         profile="my-project",
-        full_refresh=True,
+        full_refresh=True,See the full example [here](examples/use_dbt_artifacts_dag.py).
+
         do_xcom_push_artifacts=["manifest.json", "run_results.json"],
     )
 
