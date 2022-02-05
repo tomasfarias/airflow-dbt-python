@@ -92,8 +92,9 @@ postgresql_password = "test"
 postgresql_dbname = "test"
 python_classes = "!TestStatus !TestTaskConfig"
 filterwarnings = [
-    # Warning raised by dbt dependency
+    # Warnings raised by dbt dependencies
     'ignore: write_gpickle is deprecated:DeprecationWarning',
+    "ignore: 'soft_unicode' has been renamed to 'soft_str':DeprecationWarning"
 ]
 
 [tool.mypy]
