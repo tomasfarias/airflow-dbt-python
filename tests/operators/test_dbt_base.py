@@ -9,11 +9,11 @@ from airflow_dbt_python.operators.dbt import DbtBaseOperator
 
 condition = False
 try:
-    from airflow_dbt_python.hooks.s3 import DbtS3Hook
+    from airflow_dbt_python.hooks.backends import DbtS3Backend
 except ImportError:
     condition = True
-no_s3_hook = pytest.mark.skipif(
-    condition, reason="S3Hook not available, consider installing amazon extras"
+no_s3_backend = pytest.mark.skipif(
+    condition, reason="S3 Backend not available, consider installing amazon extras"
 )
 
 
@@ -24,30 +24,30 @@ def test_dbt_base_does_not_implement_command():
         op.command
 
 
-@no_s3_hook
-def test_dbt_base_dbt_directory():
+def test_dbt_base_dbt_directory(profiles_file, dbt_project_file, model_files):
     """Test dbt_directory yields a temporary directory."""
     op = DbtBaseOperator(
         task_id="dbt_task",
-        project_dir="/path/to/project/",
-        profiles_dir="/path/to/profiles/",
+        project_dir=dbt_project_file.parent,
+        profiles_dir=profiles_file.parent,
     )
     op.state = "target/"
 
     with op.dbt_directory() as tmp_dir:
         assert Path(tmp_dir).exists()
-        assert op.project_dir == "/path/to/project/"
-        assert op.profiles_dir == "/path/to/profiles/"
+        assert Path(op.project_dir) == Path(tmp_dir)
+        assert Path(op.profiles_dir) == Path(tmp_dir)
         assert op.state == f"{tmp_dir}/target"
 
 
-@no_s3_hook
-def test_dbt_base_dbt_directory_with_absolute_state():
+def test_dbt_base_dbt_directory_with_absolute_state(
+    profiles_file, dbt_project_file, model_files
+):
     """Test dbt_directory does not alter state when not needed."""
     op = DbtBaseOperator(
         task_id="dbt_task",
-        project_dir="/path/to/project/",
-        profiles_dir="/path/to/profiles/",
+        project_dir=dbt_project_file.parent,
+        profiles_dir=profiles_file.parent,
     )
     op.state = "/absolute/path/to/target/"
 
@@ -56,13 +56,14 @@ def test_dbt_base_dbt_directory_with_absolute_state():
         assert op.state == "/absolute/path/to/target/"
 
 
-@no_s3_hook
-def test_dbt_base_dbt_directory_with_no_state():
+def test_dbt_base_dbt_directory_with_no_state(
+    profiles_file, dbt_project_file, model_files
+):
     """Test dbt_directory does not alter state when not needed."""
     op = DbtBaseOperator(
         task_id="dbt_task",
-        project_dir="/path/to/project/",
-        profiles_dir="/path/to/profiles/",
+        project_dir=dbt_project_file.parent,
+        profiles_dir=profiles_file.parent,
     )
 
     with op.dbt_directory() as tmp_dir:
@@ -70,9 +71,9 @@ def test_dbt_base_dbt_directory_with_no_state():
         assert getattr(op, "state", None) is None
 
 
-@no_s3_hook
+@no_s3_backend
 def test_dbt_base_dbt_directory_changed_to_s3(
-    dbt_project_file, profiles_file, s3_bucket
+    dbt_project_file, profiles_file, s3_bucket, s3_hook
 ):
     """Test dbt_directory yields a temporary directory and updates attributes.
 
@@ -80,8 +81,7 @@ def test_dbt_base_dbt_directory_changed_to_s3(
     work once a temporary directory has been created, in particular, when pulling from
     S3.
     """
-    hook = DbtS3Hook()
-    bucket = hook.get_bucket(s3_bucket)
+    bucket = s3_hook.get_bucket(s3_bucket)
 
     with open(dbt_project_file) as pf:
         project_content = pf.read()

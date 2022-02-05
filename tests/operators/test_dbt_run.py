@@ -11,11 +11,11 @@ from airflow_dbt_python.operators.dbt import DbtRunOperator
 
 condition = False
 try:
-    from airflow_dbt_python.hooks.s3 import DbtS3Hook
+    from airflow_dbt_python.hooks.backends import DbtS3Backend
 except ImportError:
     condition = True
-no_s3_hook = pytest.mark.skipif(
-    condition, reason="S3Hook not available, consider installing amazon extras"
+no_s3_backend = pytest.mark.skipif(
+    condition, reason="S3 Backend not available, consider installing amazon extras"
 )
 
 
@@ -143,13 +143,12 @@ def test_dbt_run_fails_with_non_existent_project(profiles_file, dbt_project_file
         op.execute({})
 
 
-@no_s3_hook
+@no_s3_backend
 def test_dbt_run_models_from_s3(
-    s3_bucket, profiles_file, dbt_project_file, model_files
+    s3_bucket, s3_hook, profiles_file, dbt_project_file, model_files
 ):
     """Test execution of DbtRunOperator with all models from s3."""
-    hook = DbtS3Hook()
-    bucket = hook.get_bucket(s3_bucket)
+    bucket = s3_hook.get_bucket(s3_bucket)
 
     with open(dbt_project_file) as pf:
         project_content = pf.read()
@@ -185,13 +184,12 @@ def test_dbt_run_models_from_s3(
     assert ti.xcom["run_results.json"][0]["results"][0]["status"] == "success"
 
 
-@no_s3_hook
+@no_s3_backend
 def test_dbt_run_models_with_profile_from_s3(
-    s3_bucket, profiles_file, dbt_project_file, model_files
+    s3_bucket, s3_hook, profiles_file, dbt_project_file, model_files
 ):
     """Test execution of DbtRunOperator with a profile file from s3."""
-    hook = DbtS3Hook()
-    bucket = hook.get_bucket(s3_bucket)
+    bucket = s3_hook.get_bucket(s3_bucket)
 
     with open(profiles_file) as pf:
         profiles_content = pf.read()
@@ -210,13 +208,12 @@ def test_dbt_run_models_with_profile_from_s3(
     assert run_result["status"] == RunStatus.Success
 
 
-@no_s3_hook
+@no_s3_backend
 def test_dbt_run_models_with_project_from_s3(
-    s3_bucket, profiles_file, dbt_project_file, model_files
+    s3_bucket, s3_hook, profiles_file, dbt_project_file, model_files
 ):
     """Test execution of DbtRunOperator with a project from s3."""
-    hook = DbtS3Hook()
-    bucket = hook.get_bucket(s3_bucket)
+    bucket = s3_hook.get_bucket(s3_bucket)
 
     with open(dbt_project_file) as pf:
         project_content = pf.read()
