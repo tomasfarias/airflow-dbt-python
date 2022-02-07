@@ -9,8 +9,7 @@ from contextlib import contextmanager
 from dataclasses import asdict, is_dataclass
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import Any, Iterator, Optional, Union
-from urllib.parse import urlparse
+from typing import Any, Callable, Iterator, Optional, TypeVar, Union
 
 from dbt.contracts.results import RunExecutionResult, agate
 
@@ -25,8 +24,10 @@ from airflow_dbt_python.hooks.dbt import BaseConfig, DbtHook, LogFormat, Output
 if int(version[0]) == 1:
     from airflow.utils.decorators import apply_defaults
 else:
+    T = TypeVar("T", bound=Callable)
 
-    def apply_defaults(func):
+    def apply_defaults(func: T) -> T:
+        """Empty function to support apply defaults in post 2.0 Airflow versions."""
         return func
 
 

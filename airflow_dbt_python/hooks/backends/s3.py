@@ -1,20 +1,51 @@
+"""An implementation for an S3 backend for dbt."""
 from __future__ import annotations
 
 from pathlib import Path
+from typing import TYPE_CHECKING, Optional
 from zipfile import ZipFile
 
-from .base import DbtBackend, PathAble
+from .base import DbtBackend, StrPath, zip_all_paths
 
 try:
     from airflow.providers.amazon.aws.hooks.s3 import S3Hook
 except ImportError:
     from airflow.hooks.S3_hook import S3Hook
 
+if TYPE_CHECKING:  # pragma: no cover
+    # Safe to exclude as this only runs during static type checking.
+    from mypy_boto3_s3.service_resource import Object as S3Object
+
 
 class DbtS3Backend(DbtBackend):
-    _hook_cls = S3Hook
+    """A dbt backend implementation for S3.
 
-    def pull_one(self, source: PathAble, destination: PathAble, /) -> None:
+    This concrete backend class implements the DbtBackend interface by using S3 as a
+    storage for pushing and pulling dbt files to and from.
+    The backend relies on Airflow's S3Hook to interact with S3. A connection id
+    may be passed to instantiate the S3Hook.
+
+    Attributes:
+        connection_id: An optional string of an Airflow connection id to use for the
+            S3Hook.
+    """
+
+    def __init__(self, connection_id: Optional[str] = None, *args, **kwargs):
+        self.connection_id = connection_id
+        self._hook: Optional[S3Hook] = None
+        super().__init__(*args, **kwargs)
+
+    @property
+    def hook(self) -> S3Hook:
+        """Return the Airflow hook associated with this backend."""
+        if self._hook is None:
+            if self.connection_id is not None:
+                self._hook = S3Hook(self.connection_id)
+            else:
+                self._hook = S3Hook()
+        return self._hook
+
+    def pull_one(self, source: StrPath, destination: StrPath, /) -> Path:
         """Pull a file from S3.
 
         Args:
@@ -25,8 +56,9 @@ class DbtS3Backend(DbtBackend):
         s3_object = self.hook.get_key(key=key, bucket_name=bucket_name)
 
         self.download_one_s3_object(s3_object, destination)
+        return Path(destination)
 
-    def pull_many(self, source: PathAble, destination: PathAble, /) -> None:
+    def pull_many(self, source: StrPath, destination: StrPath, /) -> Path:
         """Pull many files from S3.
 
         Lists all S3 keys that have source as a prefix to find what to pull.
@@ -35,7 +67,7 @@ class DbtS3Backend(DbtBackend):
             source: An S3 URL to a directory containing the file to pull.
             destination: A destination path where to pull the file to.
         """
-        bucket_name, key_prefix = self.hook.parse_s3_url(source)
+        bucket_name, key_prefix = self.hook.parse_s3_url(str(source))
 
         if key_prefix.endswith(".zip"):
             s3_object = self.hook.get_key(key=key_prefix, bucket_name=bucket_name)
@@ -47,8 +79,10 @@ class DbtS3Backend(DbtBackend):
                 key_prefix += "/"
             self.download_many_from_key_prefix(key_prefix, bucket_name, destination)
 
+        return Path(destination)
+
     def push_one(
-        self, source: PathAble, destination: PathAble, /, *, replace: bool = False
+        self, source: StrPath, destination: StrPath, /, *, replace: bool = False
     ) -> None:
         """Push a file to S3.
 
@@ -58,7 +92,7 @@ class DbtS3Backend(DbtBackend):
                 name and key prefix will be extracted by calling S3Hook.parse_s3_url.
             replace (bool): Whether to replace existing files or not.
         """
-        bucket_name, key = self.hook.parse_s3_url(destination)
+        bucket_name, key = self.hook.parse_s3_url(str(destination))
 
         self.load_file_handle_replace_error(
             Path(source),
@@ -69,8 +103,8 @@ class DbtS3Backend(DbtBackend):
 
     def push_many(
         self,
-        source: PathAble,
-        destination: PathAble,
+        source: StrPath,
+        destination: StrPath,
         /,
         *,
         replace: bool = False,
@@ -88,9 +122,8 @@ class DbtS3Backend(DbtBackend):
             replace (bool): Whether to replace existing files or not.
 
         """
-        bucket_name, key = self.hook.parse_s3_url(destination)
+        bucket_name, key = self.hook.parse_s3_url(str(destination))
         all_files = Path(source).glob("**/*")
-        print("pushing stuff")
 
         if delete_before:
             keys = self.hook.list_keys(bucket_name, destination)
@@ -101,8 +134,8 @@ class DbtS3Backend(DbtBackend):
             zip_all_paths(all_files, zip_path=zip_path)
 
             self.load_file_handle_replace_error(
-                Path(zip_file_path),
-                key=key,
+                Path(zip_path),
+                key=str(destination),
                 bucket_name=bucket_name,
                 replace=replace,
             )
@@ -121,20 +154,24 @@ class DbtS3Backend(DbtBackend):
                     replace=replace,
                 )
 
-    def download_zip_s3_object(s3_object: "S3Object", *, destination: PathAble) -> None:
-        """Download an S3 Object and extract its contents."""
-        self.download_one_s3_object(s3_object, destination)
+    def download_zip_s3_object(
+        self, s3_object: "S3Object", destination: StrPath, /
+    ) -> None:
+        """Download an S3Object and extract its contents."""
+        destination_path = Path(destination)
 
-        with ZipFile(destination, "r") as zf:
-            zf.extractall(destination.parent)
+        self.download_one_s3_object(s3_object, destination_path)
 
-        destination.unlink()
+        with ZipFile(destination_path, "r") as zf:
+            zf.extractall(destination_path.parent)
+
+        destination_path.unlink()
 
     def download_many_from_key_prefix(
         self,
         key_prefix: str,
         bucket_name: str,
-        destination: PathAble,
+        destination: StrPath,
     ) -> None:
         """Download all available S3 objects from a S3 key prefix.
 
@@ -163,11 +200,11 @@ class DbtS3Backend(DbtBackend):
     def download_one_s3_object(
         self,
         s3_object: "S3Object",
-        destination: PathAble,
+        destination: StrPath,
         /,
     ) -> None:
         """Download an S3 object into a local destination."""
-        self.log.info("Downloading S3 Object %s to: %s", s3_object, destination)
+        self.log.info("Downloading S3Object %s to: %s", s3_object, destination)
 
         try:
             with open(destination, "wb+") as f:
@@ -182,7 +219,7 @@ class DbtS3Backend(DbtBackend):
 
     def load_file_handle_replace_error(
         self,
-        file_path: PathAble,
+        file_path: StrPath,
         key: str,
         bucket_name: Optional[str] = None,
         replace: bool = False,
@@ -216,10 +253,3 @@ class DbtS3Backend(DbtBackend):
             self.log.warning("Failed to load %s: key already exists in S3.", key)
 
         return success
-
-
-def zip_all_paths(paths: Iterable[Path], /, *, zip_path: Path) -> None:
-    """Add all paths to a zip file in zip_path."""
-    with ZipFile(zip_path, "w") as zf:
-        for _file in paths:
-            zf.write(_file, arcname=_file.relative_to(zip_path.parent))

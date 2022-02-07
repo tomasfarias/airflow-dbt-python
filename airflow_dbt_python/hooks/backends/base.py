@@ -1,12 +1,15 @@
+"""Base dbt backend interface.
+
+Ensures methods for pulling and pushing files are defined.
+"""
 from abc import ABC, abstractmethod
 from os import PathLike
 from pathlib import Path
-from typing import Optional, Union
+from typing import Generic, Iterable, Optional, TypeVar, Union
 from urllib.parse import urlparse
+from zipfile import ZipFile
 
 from airflow.utils.log.logging_mixin import LoggingMixin
-
-PathAble = Union[str, bytes, PathLike]
 
 try:
     from airflow.hooks.base import BaseHook
@@ -14,28 +17,32 @@ except ImportError:
     from airflow.hooks.base_hook import BaseHook
 
 
+StrPath = Union[str, PathLike[str]]
+
+
 class DbtBackend(ABC, LoggingMixin):
-    _hook_cls = BaseHook
+    """A backend storing any dbt files.
 
-    def __init__(self, connection_id: Optional[str]):
-        self.connection_id = connection_id
-        self._hook = None
+    A concrete backend class should implement the push and pull methods to fetch one
+    or more dbt files. Backends can rely on an Airflow connection with a corresponding
+    hook, but this is not enforced.
 
-    @property
-    def hook(self) -> BaseHook:
-        """Return the Airflow hook associated with this backend."""
-        if self._hook is None:
-            if self.connection_id is not None:
-                self._hook = self._hook_cls(self.connection_id)
-            else:
-                self._hook = self._hook_cls()
-        return self._hook
+    Delegating the responsibility of dealing with dbt files to backend subclasses
+    allows us to support more backends without changing the DbtHook.
 
-    def pull_dbt_profiles(self, source_prefix: PathAble, destination: PathAble) -> Path:
+    Attributes:
+        connection_id: An optional Airflow connection. If defined, will be used to
+            instantiate a hook for this backend.
+        _hook_cls: A subclass of BaseHook associated with this DbtBackend subclass.
+    """
+
+    def pull_dbt_profiles(
+        self, source_prefix: StrPath, destination: StrPath, /
+    ) -> Path:
         """Pull a dbt profiles.yml file from a given source_prefix.
 
         Args:
-            source_prefix: Path to a directory containing a profiles.yml file.
+            source_prefix: Path pointing to a directory containing a profiles.yml file.
             destination: Path to a directory where the profiles.yml will be stored.
 
         returns:
@@ -53,15 +60,14 @@ class DbtBackend(ABC, LoggingMixin):
             destination_path /= "profiles.yml"
 
         self.pull_one(source_prefix, destination_path)
-
         return destination_path
 
-    def pull_dbt_project(self, source_prefix: PathAble, destination: PathAble) -> Path:
-        """Pull a dbt profiles.yml file from a given source_prefix.
+    def pull_dbt_project(self, source_prefix: StrPath, destination: StrPath) -> Path:
+        """Pull all dbt project files from a given source_prefix.
 
         Args:
-            source_prefix: Path to a directory containing a profiles.yml file.
-            destination: Path to a directory where the profiles.yml will be stored.
+            source_prefix: Path to a directory containing a dbt project.
+            destination: Path to a directory where the  will be stored.
 
         returns:
             The destination Path.
@@ -73,44 +79,81 @@ class DbtBackend(ABC, LoggingMixin):
 
     def push_dbt_project(
         self,
-        source: PathAble,
-        destination: PathAble,
+        source: StrPath,
+        destination: StrPath,
         /,
         *,
         replace: bool = False,
         delete_before: bool = False,
     ) -> None:
+        """Push all dbt project files from a given source_prefix.
+
+        Args:
+            source_prefix: Path to a directory containing a dbt project.
+            destination: Path or URL to a directory where the  will be stored.
+            replace: Flag to indicate whether to replace existing files.
+            delete_before: Flag to indicate wheter to clear any existing files before
+                pushing the dbt project.
+        """
+
         self.log.info("Pushing dbt project files to: %s", destination)
-        return self.push_many(
+        self.push_many(
             source, destination, replace=replace, delete_before=delete_before
         )
 
     @abstractmethod
-    def pull_one(self, source: PathAble, destination: PathAble, /) -> Path:
-        """Pull a single dbt file from source and store it in destination."""
+    def pull_one(self, source: StrPath, destination: StrPath, /) -> Path:
+        """Pull a single dbt file from source and store it in destination.
+
+        Args:
+            source: The string representation of a path or a path object pointing to
+                the file to pull. This could be a URL.
+            destination: The string representation of a path or a path object pointing
+                to the location where the file will be stored.
+
+        Returns:
+            The directory where the file was stored.
+        """
         return NotImplemented
 
     @abstractmethod
-    def pull_many(self, source: PathAble, destination: PathAble, /) -> Path:
-        """Pull all dbt files under source and store them under destination."""
+    def pull_many(self, source: StrPath, destination: StrPath, /) -> Path:
+        """Pull all dbt files under source and store them under destination.
+
+        Args:
+            source: The string representation of a path or a path object pointing to
+                the a directory containing all dbt files to pull.
+            destination: The string representation of a path or a path object pointing
+                to a local directory where all files will be stored.
+
+        Returns:
+            The directory where all files were stored.
+        """
         return NotImplemented
 
     @abstractmethod
     def push_one(
-        self, source: PathAble, destination: PathAble, /, *, replace: bool = False
-    ) -> None:
+        self, source: StrPath, destination: StrPath, /, *, replace: bool = False
+    ):
         """Push a single dbt file from source and store it in destination."""
         return NotImplemented
 
     @abstractmethod
     def push_many(
         self,
-        source: PathAble,
-        destination: PathAble,
+        source: StrPath,
+        destination: StrPath,
         /,
         *,
         replace: bool = False,
         delete_before: bool = False,
-    ) -> None:
+    ):
         """Push all dbt files under source and store them under destination."""
         return NotImplemented
+
+
+def zip_all_paths(paths: Iterable[Path], /, *, zip_path: Path) -> None:
+    """Add all paths to a zip file in zip_path."""
+    with ZipFile(zip_path, "w") as zf:
+        for _file in paths:
+            zf.write(_file, arcname=_file.relative_to(zip_path.parent))

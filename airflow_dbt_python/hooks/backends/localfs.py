@@ -1,18 +1,37 @@
+"""A local filesystem backend.
+
+Intended to be used only when running Airflow with a LocalExceutor.
+"""
 from __future__ import annotations
 
 import shutil
 from functools import partial
 from pathlib import Path
+from typing import Optional
 from zipfile import ZipFile
 
-from .base import DbtBackend, PathAble
+from .base import DbtBackend, StrPath, zip_all_paths
 
 
 class DbtLocalFsBackend(DbtBackend):
-    def pull_one(self, source: PathAble, destination: PathAble, /) -> None:
-        shutil.copy(source, destination)
+    """A concrete dbt backend for a local filesystem.
 
-    def pull_many(self, source: PathAble, destination: PathAble, /) -> None:
+    This backend is intended to be used when running Airflow with a LocalExecutor, and
+    it relies on shutil from the standard library to do all the file manipulation. For
+    these reasons, running multiple concurrent tasks with this backend may lead to race
+    conditions if attempting to push files to the backend.
+    """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    def pull_one(self, source: StrPath, destination: StrPath, /) -> Path:
+        destination_path = Path(destination)
+        Path(destination).parent.mkdir(exist_ok=True, parents=True)
+
+        return shutil.copy(source, destination)
+
+    def pull_many(self, source: StrPath, destination: StrPath, /) -> Path:
         if Path(source).suffix == ".zip":
             zip_destination = Path(destination) / "dbt_project.zip"
             shutil.copy(source, zip_destination)
@@ -24,8 +43,10 @@ class DbtLocalFsBackend(DbtBackend):
         else:
             shutil.copytree(source, destination, dirs_exist_ok=True)
 
+        return Path(destination)
+
     def push_one(
-        self, source: PathAble, destination: PathAble, /, *, replace: bool = False
+        self, source: StrPath, destination: StrPath, /, *, replace: bool = False
     ) -> None:
         if replace is False and Path(destination).exists():
             return
@@ -33,8 +54,8 @@ class DbtLocalFsBackend(DbtBackend):
 
     def push_many(
         self,
-        source: PathAble,
-        destination: PathAble,
+        source: StrPath,
+        destination: StrPath,
         /,
         *,
         replace: bool = False,

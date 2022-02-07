@@ -43,7 +43,7 @@ try:
 except ImportError:
     from airflow.hooks.base_hook import BaseHook
 
-from .backends import DbtBackend, build_backend
+from .backends import DbtBackend, StrPath, build_backend
 
 
 class FromStrMixin(Enum):
@@ -91,7 +91,7 @@ class BaseConfig:
     target: Optional[str] = None
 
     # Execution configuration
-    compiled_target: Optional[Union["os.PathAble[str]", str]] = None
+    compiled_target: Optional[StrPath] = None
     fail_fast: Optional[bool] = None
     single_threaded: Optional[bool] = None
     threads: Optional[int] = None
@@ -163,7 +163,9 @@ class BaseConfig:
     def dbt_task(self) -> BaseTask:
         """Access to the underlyingn dbt task class."""
         if getattr(self, "cls", None) is None:
-            raise NotImplementedError()
+            raise NotImplementedError(
+                "Dbt task is not implemented. Use a subclass of BaseConfig."
+            )
         return getattr(self, "cls")
 
     def patch_manifest_task(self, task: BaseTask):
@@ -406,7 +408,7 @@ class SourceFreshnessTaskConfig(SelectionConfig):
     """Dbt source freshness task arguments."""
 
     cls: BaseTask = dataclasses.field(default=FreshnessTask, init=False)
-    output: Optional[Union[os.PathAble, str, bytes]] = None
+    output: Optional[StrPath] = None
     which: str = dataclasses.field(default="source-freshness", init=False)
 
 
@@ -472,7 +474,9 @@ class DbtHook(BaseHook):
     Allows for running dbt tasks and provides required configurations for each task.
     """
 
-    backends: dict[tuple[str, Optional[str]], DbtBackend] = {}
+    def __init__(self, *args, **kwargs):
+        self.backends: dict[tuple[str, Optional[str]], DbtBackend] = {}
+        super().__init__(*args, **kwargs)
 
     def get_backend(self, scheme: str, conn_id: Optional[str]) -> DbtBackend:
         try:
@@ -484,8 +488,8 @@ class DbtHook(BaseHook):
 
     def pull_dbt_profiles(
         self,
-        profiles_dir: PathAble,
-        destination: PathAble,
+        profiles_dir: StrPath,
+        destination: StrPath,
         /,
         *,
         conn_id: Optional[str] = None,
@@ -497,8 +501,8 @@ class DbtHook(BaseHook):
 
     def pull_dbt_project(
         self,
-        project_dir: PathAble,
-        destination: PathAble,
+        project_dir: StrPath,
+        destination: StrPath,
         /,
         *,
         conn_id: Optional[str] = None,
@@ -510,8 +514,8 @@ class DbtHook(BaseHook):
 
     def push_dbt_project(
         self,
-        project_dir: PathAble,
-        destination: PathAble,
+        project_dir: StrPath,
+        destination: StrPath,
         /,
         *,
         conn_id: Optional[str] = None,
