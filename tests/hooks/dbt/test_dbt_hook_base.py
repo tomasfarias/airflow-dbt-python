@@ -32,17 +32,11 @@ def test_dbt_hook_get_s3_backend():
 
 def test_dbt_hook_get_local_fs_backend():
     """Test the correct backend is procured."""
-    try:
-        from airflow.hooks.base import BaseHook
-    except ImportError:
-        from airflow.hooks.base_hook import BaseHook
-
     hook = DbtHook()
 
     backend = hook.get_backend("", None)
 
     assert isinstance(backend, DbtLocalFsBackend)
-    assert isinstance(backend.hook, BaseHook)
 
 
 def test_dbt_hook_get_backend_raises_not_implemented():

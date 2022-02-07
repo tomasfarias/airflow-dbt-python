@@ -43,19 +43,17 @@ class MyHook:
 
 
 class MyBackend(DbtBackend):
-    _hook_cls = MyHook
-
     def pull_one(self, source, destination, /) -> Path:
         """Pull a single dbt file from source and store it in destination."""
-        return NotImplemented
+        return super().pull_one(source, destination)
 
     def pull_many(self, source, destination, /) -> Path:
         """Pull all dbt files under source and store them under destination."""
-        return NotImplemented
+        return super().pull_many(source, destination)
 
     def push_one(self, source, destination, /, *, replace: bool = False) -> None:
         """Push a single dbt file from source and store it in destination."""
-        return NotImplemented
+        return super().push_one(source, destination)
 
     def push_many(
         self,
@@ -67,18 +65,7 @@ class MyBackend(DbtBackend):
         delete_before: bool = False,
     ) -> None:
         """Push all dbt files under source and store them under destination."""
-        return NotImplemented
-
-
-def test_dbt_backend_returns_proper_hook():
-    """Test the hook property of the base backend class."""
-    backend = MyBackend("my_conn_id")
-    assert isinstance(backend.hook, MyHook)
-    assert backend.hook.connection_id == "my_conn_id"
-
-    backend = MyBackend(None)
-    assert isinstance(backend.hook, MyHook)
-    assert backend.hook.connection_id is "default"
+        return super().push_many(source, destination)
 
 
 def test_dbt_backend_pull_dbt_profiles():
@@ -137,3 +124,14 @@ def test_dbt_backend_push_dbt_project():
         "/path/to/my/project", "/target/to/my/project", replace=True, delete_before=True
     )
     assert result is None
+
+
+def test_dbt_backend_interface():
+    with pytest.raises(TypeError):
+        backend = DbtBackend()
+
+    backend = MyBackend()
+    assert backend.pull_one("", "") is NotImplemented
+    assert backend.push_one("", "") is NotImplemented
+    assert backend.pull_many("", "") is NotImplemented
+    assert backend.push_many("", "") is NotImplemented

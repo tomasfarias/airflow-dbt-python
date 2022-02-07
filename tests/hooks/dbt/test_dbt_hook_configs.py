@@ -1,4 +1,5 @@
 """Unit test module for dbt task configurations found as part of the DbtHook."""
+import pytest
 from dbt.task.base import BaseTask
 from dbt.task.build import BuildTask
 from dbt.task.compile import CompileTask
@@ -14,6 +15,7 @@ from dbt.task.test import TestTask
 
 from airflow_dbt_python.hooks.dbt import (
     BaseConfig,
+    BuildTaskConfig,
     CompileTaskConfig,
     ConfigFactory,
     DbtHook,
@@ -101,3 +103,61 @@ def test_base_config():
     assert config.version_check is False
     assert config.static_parser is False
     assert config.send_anonymous_usage_stats is True
+
+    config.cls = None
+    with pytest.raises(NotImplementedError):
+        config.dbt_task
+
+
+def test_base_config_with_mutually_exclusive_arguments():
+    """Test a BaseConfig with mutually exclusive arguments."""
+    with pytest.raises(ValueError):
+        config = BaseConfig(
+            no_version_check=True,
+            version_check=True,
+        )
+
+
+def test_build_task_minimal_config(hook, profiles_file, dbt_project_file):
+    """Test the creation of a BuildTask from arguments."""
+    cfg = BuildTaskConfig(
+        profiles_dir=profiles_file.parent, project_dir=dbt_project_file.parent
+    )
+    hook.initialize_runtime_config(cfg)
+    task = cfg.create_dbt_task()
+
+    assert task.args.profiles_dir == profiles_file.parent
+    assert task.args.project_dir == dbt_project_file.parent
+    assert isinstance(task, BuildTask)
+
+
+def test_build_task_minimal_config_generic(hook, profiles_file, dbt_project_file):
+    """Test the creation of a BuildTask from arguments with generic = True."""
+    cfg = BuildTaskConfig(
+        profiles_dir=profiles_file.parent,
+        project_dir=dbt_project_file.parent,
+        generic=True,
+    )
+    hook.initialize_runtime_config(cfg)
+    task = cfg.create_dbt_task()
+
+    assert cfg.select == ["test_type:generic"]
+    assert task.args.profiles_dir == profiles_file.parent
+    assert task.args.project_dir == dbt_project_file.parent
+    assert isinstance(task, BuildTask)
+
+
+def test_build_task_minimal_config_singular(hook, profiles_file, dbt_project_file):
+    """Test the creation of a BuildTask from arguments with singular = True."""
+    cfg = BuildTaskConfig(
+        profiles_dir=profiles_file.parent,
+        project_dir=dbt_project_file.parent,
+        singular=True,
+    )
+    hook.initialize_runtime_config(cfg)
+    task = cfg.create_dbt_task()
+
+    assert cfg.select == ["test_type:singular"]
+    assert task.args.profiles_dir == profiles_file.parent
+    assert task.args.project_dir == dbt_project_file.parent
+    assert isinstance(task, BuildTask)

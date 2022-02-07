@@ -6,9 +6,9 @@ Internally, backends use Airflow hooks to execute the actual pushing and pulling
 
 Currently, only AWS S3 and the local filesystem are supported as backends.
 """
-from typing import Optional
+from typing import Optional, Type
 
-from .base import DbtBackend
+from .base import DbtBackend, StrPath
 from .localfs import DbtLocalFsBackend
 
 try:
@@ -18,9 +18,9 @@ except ImportError:
     pass
 
 
-def build_backend(scheme: str, conn_id: Optional[str] = None):
+def build_backend(scheme: str, conn_id: Optional[str] = None) -> DbtBackend:
     if scheme == "s3":
-        backend_cls = DbtS3Backend
+        backend_cls: Type[DbtBackend] = DbtS3Backend
     elif scheme == "":
         backend_cls = DbtLocalFsBackend
     else:

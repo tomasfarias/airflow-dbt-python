@@ -3,6 +3,8 @@
 Common fixtures include a connection to a postgres database, a set of sample model and
  seed files, dbt configuration files, and temporary directories for everything.
 """
+import shutil
+
 import boto3
 import pytest
 from moto import mock_s3
@@ -449,3 +451,32 @@ def macro_file(dbt_project_dir):
     m = d / "my_macro.sql"
     m.write_text(MACRO)
     return m
+
+
+@pytest.fixture
+def test_files(tmp_path_factory, dbt_project_file):
+    """Create test files for backends."""
+    d = tmp_path_factory.mktemp("test_s3")
+    seed_dir = d / "seeds"
+    seed_dir.mkdir(exist_ok=True)
+    f1 = seed_dir / "a_seed.csv"
+
+    with open(f1, "w+") as f:
+        f.write("col1,col2\n1,2")
+
+    models_dir = d / "models"
+    models_dir.mkdir(exist_ok=True)
+    f2 = models_dir / "a_model.sql"
+    with open(f2, "w+") as f:
+        f.write("SELECT 1")
+    f3 = models_dir / "another_model.sql"
+    with open(f3, "w+") as f:
+        f.write("SELECT 2")
+
+    shutil.copyfile(dbt_project_file, d / "dbt_project.yml")
+
+    yield [f1, f2, f3]
+
+    f1.unlink()
+    f2.unlink()
+    f3.unlink()
