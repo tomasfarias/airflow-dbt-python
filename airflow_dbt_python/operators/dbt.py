@@ -48,6 +48,7 @@ class DbtBaseOperator(BaseOperator):
         "profile",
         "target",
         "state",
+        "vars",
     ]
 
     @apply_defaults
