@@ -9,6 +9,7 @@ import freezegun
 import pytest
 
 from airflow_dbt_python.hooks.backends import DbtLocalFsBackend
+from airflow_dbt_python.hooks.backends.localfs import py37_copytree
 
 
 def test_pull_dbt_profiles(tmpdir, profiles_file):
@@ -187,3 +188,48 @@ def test_push_dbt_project_to_zip_file(tmpdir, test_files):
     backend.push_dbt_project(test_files[0].parent.parent, zip_path)
 
     assert zip_path.exists()
+
+
+def test_py37_copytree(test_files, tmpdir):
+    """The Python 3.7 workaround should produce the same results as copytree."""
+    py37_dir = tmpdir / "py37_copytree_target"
+    assert not py37_dir.exists()
+    copytree_dir = tmpdir / "copytree_target"
+    assert not copytree_dir.exists()
+
+    shutil.copytree(test_files[0].parent.parent, copytree_dir)
+    py37_copytree(test_files[0].parent.parent, py37_dir)
+
+    for path in Path(copytree_dir).glob("**/*"):
+        if path.is_dir():
+            continue
+
+        py37_path = py37_dir / path.relative_to(copytree_dir)
+        assert py37_path.exists()
+
+
+def test_py37_copytree_no_replace(test_files, tmpdir):
+    """The Python 3.7 workaround should produce the same results as copytree."""
+    source = test_files[0].parent.parent
+    py37_copytree(source, source, replace=False)
+
+    all_paths = [p for p in source.glob("**/*") if not p.is_dir()]
+    assert len(all_paths) == 4
+
+
+def test_py37_copytree_if_exists(test_files, tmpdir):
+    """The Python 3.7 workaround should produce the same results as copytree."""
+    py37_dir = tmpdir / "py37_copytree_target"
+    py37_dir.mkdir()
+
+    assert py37_dir.exists()
+
+    source = test_files[0].parent.parent
+    py37_copytree(source, py37_dir)
+
+    for path in source.glob("**/*"):
+        if path.is_dir():
+            continue
+
+        py37_path = py37_dir / path.relative_to(source)
+        assert py37_path.exists()
