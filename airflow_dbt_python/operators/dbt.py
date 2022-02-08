@@ -175,22 +175,29 @@ class DbtBaseOperator(BaseOperator):
                 except Exception as e:
                     self.log.exception("There was an error executing dbt", exc_info=e)
                     success, results = False, {}
+                    raise AirflowException(
+                        f"An error has occurred while executing dbt: {config.dbt_task}"
+                    ) from e
 
-                if self.do_xcom_push is True:
-                    # Some dbt operations use dataclasses for its results,
-                    # found in dbt.contracts.results. Each DbtBaseOperator
-                    # subclass should implement prepare_results to return a
-                    # serializable object
+                finally:
                     res = self.serializable_result(results)
-                    if context.get("ti", None) is not None:
+
+                    if (
+                        self.do_xcom_push is True
+                        and context.get("ti", None) is not None
+                    ):
+                        # Some dbt operations use dataclasses for its results,
+                        # found in dbt.contracts.results. Each DbtBaseOperator
+                        # subclass should implement prepare_results to return a
+                        # serializable object
                         self.xcom_push_artifacts(context, dbt_dir)
+                        self.xcom_push(context, key=XCOM_RETURN_KEY, value=res)
 
         if success is not True:
-            if self.do_xcom_push is True and context.get("ti", None) is not None:
-                self.xcom_push(context, key=XCOM_RETURN_KEY, value=res)
             raise AirflowException(
-                f"An error has occurred executing dbt {config.dbt_task}"
+                f"Dbt has failed to execute the following task: {config.dbt_task}"
             )
+
         return res
 
     @property
