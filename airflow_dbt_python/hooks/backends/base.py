@@ -30,9 +30,7 @@ class DbtBackend(ABC, LoggingMixin):
             instantiate a hook for this backend.
     """
 
-    def pull_dbt_profiles(
-        self, source_prefix: StrPath, destination: StrPath, /  # noqa: W504
-    ) -> Path:
+    def pull_dbt_profiles(self, source_prefix: StrPath, destination: StrPath) -> Path:
         """Pull a dbt profiles.yml file from a given source_prefix.
 
         Args:
@@ -75,15 +73,13 @@ class DbtBackend(ABC, LoggingMixin):
         self,
         source: StrPath,
         destination: StrPath,
-        /,
-        *,
         replace: bool = False,
         delete_before: bool = False,
     ) -> None:
         """Push all dbt project files from a given source_prefix.
 
         Args:
-            source_prefix: Path to a directory containing a dbt project.
+            source: Path to a directory containing a dbt project.
             destination: Path or URL to a directory where the  will be stored.
             replace: Flag to indicate whether to replace existing files.
             delete_before: Flag to indicate wheter to clear any existing files before
@@ -95,7 +91,7 @@ class DbtBackend(ABC, LoggingMixin):
         )
 
     @abstractmethod
-    def pull_one(self, source: StrPath, destination: StrPath, /) -> Path:
+    def pull_one(self, source: StrPath, destination: StrPath) -> Path:
         """Pull a single dbt file from source and store it in destination.
 
         Args:
@@ -110,7 +106,7 @@ class DbtBackend(ABC, LoggingMixin):
         return NotImplemented
 
     @abstractmethod
-    def pull_many(self, source: StrPath, destination: StrPath, /) -> Path:
+    def pull_many(self, source: StrPath, destination: StrPath) -> Path:
         """Pull all dbt files under source and store them under destination.
 
         Args:
@@ -125,9 +121,7 @@ class DbtBackend(ABC, LoggingMixin):
         return NotImplemented
 
     @abstractmethod
-    def push_one(
-        self, source: StrPath, destination: StrPath, /, *, replace: bool = False
-    ):
+    def push_one(self, source: StrPath, destination: StrPath, replace: bool = False):
         """Push a single dbt file from source and store it in destination."""
         return NotImplemented
 
@@ -136,8 +130,6 @@ class DbtBackend(ABC, LoggingMixin):
         self,
         source: StrPath,
         destination: StrPath,
-        /,
-        *,
         replace: bool = False,
         delete_before: bool = False,
     ):
@@ -145,7 +137,7 @@ class DbtBackend(ABC, LoggingMixin):
         return NotImplemented
 
 
-def zip_all_paths(paths: Iterable[Path], /, *, zip_path: Path) -> None:
+def zip_all_paths(paths: Iterable[Path], zip_path: Path) -> None:
     """Add all paths to a zip file in zip_path."""
     with ZipFile(zip_path, "w") as zf:
         for _file in paths:

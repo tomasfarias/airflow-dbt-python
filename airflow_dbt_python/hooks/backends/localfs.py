@@ -24,7 +24,7 @@ class DbtLocalFsBackend(DbtBackend):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-    def pull_one(self, source: StrPath, destination: StrPath, /) -> Path:
+    def pull_one(self, source: StrPath, destination: StrPath) -> Path:
         """Pull a file from local path.
 
         Args:
@@ -36,7 +36,7 @@ class DbtLocalFsBackend(DbtBackend):
 
         return shutil.copy(source, destination)
 
-    def pull_many(self, source: StrPath, destination: StrPath, /) -> Path:
+    def pull_many(self, source: StrPath, destination: StrPath) -> Path:
         """Pull many files from local path.
 
         Args:
@@ -57,7 +57,7 @@ class DbtLocalFsBackend(DbtBackend):
         return Path(destination)
 
     def push_one(
-        self, source: StrPath, destination: StrPath, /, *, replace: bool = False
+        self, source: StrPath, destination: StrPath, replace: bool = False
     ) -> None:
         """Pull many files from local path.
 
@@ -77,8 +77,6 @@ class DbtLocalFsBackend(DbtBackend):
         self,
         source: StrPath,
         destination: StrPath,
-        /,
-        *,
         replace: bool = False,
         delete_before: bool = False,
     ) -> None:

@@ -43,15 +43,15 @@ class MyHook:
 
 
 class MyBackend(DbtBackend):
-    def pull_one(self, source, destination, /) -> Path:
+    def pull_one(self, source, destination) -> Path:
         """Pull a single dbt file from source and store it in destination."""
         return super().pull_one(source, destination)
 
-    def pull_many(self, source, destination, /) -> Path:
+    def pull_many(self, source, destination) -> Path:
         """Pull all dbt files under source and store them under destination."""
         return super().pull_many(source, destination)
 
-    def push_one(self, source, destination, /, *, replace: bool = False) -> None:
+    def push_one(self, source, destination, replace: bool = False) -> None:
         """Push a single dbt file from source and store it in destination."""
         return super().push_one(source, destination)
 
@@ -59,8 +59,6 @@ class MyBackend(DbtBackend):
         self,
         source,
         destination,
-        /,
-        *,
         replace: bool = False,
         delete_before: bool = False,
     ) -> None:
