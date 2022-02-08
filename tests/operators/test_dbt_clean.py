@@ -92,7 +92,6 @@ def test_dbt_clean_after_compile_in_s3(
         project_dir=f"s3://{s3_bucket}/project/",
         profiles_dir=f"s3://{s3_bucket}/project/",
     )
-    print(comp.delete_before_push)
     op = DbtCleanOperator(
         task_id="dbt_task",
         project_dir=f"s3://{s3_bucket}/project/",

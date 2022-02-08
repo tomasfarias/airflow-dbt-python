@@ -1,5 +1,4 @@
-"""
-Backends for storing dbt projects and profiles.
+"""Backends for storing dbt projects and profiles.
 
 The backend interface includes methods for pulling and pushing one or many files.
 Internally, backends use Airflow hooks to execute the actual pushing and pulling.
@@ -19,6 +18,7 @@ except ImportError:
 
 
 def build_backend(scheme: str, conn_id: Optional[str] = None) -> DbtBackend:
+    """Build a DbtBackend as long as the scheme is supported."""
     if scheme == "s3":
         backend_cls: Type[DbtBackend] = DbtS3Backend
     elif scheme == "":

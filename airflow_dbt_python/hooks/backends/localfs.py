@@ -7,7 +7,6 @@ from __future__ import annotations
 import shutil
 from functools import partial
 from pathlib import Path
-from typing import Optional
 from zipfile import ZipFile
 
 from .base import DbtBackend, StrPath, zip_all_paths
@@ -26,12 +25,24 @@ class DbtLocalFsBackend(DbtBackend):
         super().__init__(*args, **kwargs)
 
     def pull_one(self, source: StrPath, destination: StrPath, /) -> Path:
+        """Pull a file from local path.
+
+        Args:
+            source: A local path to a directory containing the file to pull.
+            destination: A destination path where to pull the file to.
+        """
         destination_path = Path(destination)
-        Path(destination).parent.mkdir(exist_ok=True, parents=True)
+        destination_path.parent.mkdir(exist_ok=True, parents=True)
 
         return shutil.copy(source, destination)
 
     def pull_many(self, source: StrPath, destination: StrPath, /) -> Path:
+        """Pull many files from local path.
+
+        Args:
+            source: A local path to a directory containing the files to pull.
+            destination: A destination path where to pull the file to.
+        """
         if Path(source).suffix == ".zip":
             zip_destination = Path(destination) / "dbt_project.zip"
             shutil.copy(source, zip_destination)
@@ -48,6 +59,16 @@ class DbtLocalFsBackend(DbtBackend):
     def push_one(
         self, source: StrPath, destination: StrPath, /, *, replace: bool = False
     ) -> None:
+        """Pull many files from local path.
+
+        If the file already exists, it will be ignored if replace is False (the
+        default).
+
+        Args:
+            source: A local path to a directory containing the files to pull.
+            destination: A destination path where to pull the file to.
+            replace: A bool flag to indicate whether to replace existing files.
+        """
         if replace is False and Path(destination).exists():
             return
         shutil.copy(source, destination)
@@ -61,6 +82,17 @@ class DbtLocalFsBackend(DbtBackend):
         replace: bool = False,
         delete_before: bool = False,
     ) -> None:
+        """Push all dbt files under the source directory to another local path.
+
+        Pushing supports zipped projects: the destination will be used to determine
+        if we are working with a zip file by looking at the file extension.
+
+        Args:
+            source: A local file path where to fetch the files to push.
+            destination: A local path where the file should be copied.
+            replace: Whether to replace existing files or not.
+            delete_before: Whether to delete the contents of destination before pushing.
+        """
         if Path(destination).suffix == ".zip":
             if delete_before:
                 Path(destination).unlink()

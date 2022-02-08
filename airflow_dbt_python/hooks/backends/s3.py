@@ -87,7 +87,7 @@ class DbtS3Backend(DbtBackend):
         """Push a file to S3.
 
         Args:
-            source: A local file path where to fetch the file to push.
+            source: A local file path where to fetch the files to push.
             destination: An S3 URL where the file should be uploaded. The bucket
                 name and key prefix will be extracted by calling S3Hook.parse_s3_url.
             replace (bool): Whether to replace existing files or not.
@@ -110,7 +110,7 @@ class DbtS3Backend(DbtBackend):
         replace: bool = False,
         delete_before: bool = False,
     ) -> None:
-        """Push all S3 files under the source directory to S3.
+        """Push all dbt files under the source directory to S3.
 
         Pushing supports zipped projects: the destination will be used to determine
         if we are working with a zip file by looking at the file extension.
@@ -119,8 +119,8 @@ class DbtS3Backend(DbtBackend):
             source: A local file path where to fetch the file to push.
             destination: An S3 URL where the file should be uploaded. The bucket
                 name and key prefix will be extracted by calling S3Hook.parse_s3_url.
-            replace (bool): Whether to replace existing files or not.
-
+            replace: Whether to replace existing files or not.
+            delete_before: Whether to delete the contents of destination before pushing.
         """
         bucket_name, key = self.hook.parse_s3_url(str(destination))
         all_files = Path(source).glob("**/*")
@@ -155,7 +155,7 @@ class DbtS3Backend(DbtBackend):
                 )
 
     def download_zip_s3_object(
-        self, s3_object: "S3Object", destination: StrPath, /
+        self, s3_object: "S3Object", destination: StrPath, /  # noqa: W504
     ) -> None:
         """Download an S3Object and extract its contents."""
         destination_path = Path(destination)
