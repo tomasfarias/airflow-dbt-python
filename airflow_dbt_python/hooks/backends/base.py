@@ -2,6 +2,8 @@
 
 Ensures methods for pulling and pushing files are defined.
 """
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
 from os import PathLike
 from pathlib import Path
@@ -10,7 +12,7 @@ from zipfile import ZipFile
 
 from airflow.utils.log.logging_mixin import LoggingMixin
 
-StrPath = Union[str, PathLike[str]]
+StrPath = Union[str, "PathLike[str]"]
 
 
 class DbtBackend(ABC, LoggingMixin):
