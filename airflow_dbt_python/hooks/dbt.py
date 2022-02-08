@@ -493,8 +493,6 @@ class DbtHook(BaseHook):
         self,
         profiles_dir: StrPath,
         destination: StrPath,
-        /,
-        *,
         conn_id: Optional[str] = None,
     ) -> Path:
         """Pull a dbt profiles.yml file from a given profiles_dir.
@@ -511,8 +509,6 @@ class DbtHook(BaseHook):
         self,
         project_dir: StrPath,
         destination: StrPath,
-        /,
-        *,
         conn_id: Optional[str] = None,
     ) -> Path:
         """Pull a dbt project from a given project_dir.
@@ -529,8 +525,6 @@ class DbtHook(BaseHook):
         self,
         project_dir: StrPath,
         destination: StrPath,
-        /,
-        *,
         conn_id: Optional[str] = None,
         replace: bool = False,
         delete_before: bool = False,

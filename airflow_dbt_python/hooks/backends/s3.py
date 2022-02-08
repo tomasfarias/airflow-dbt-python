@@ -45,7 +45,7 @@ class DbtS3Backend(DbtBackend):
                 self._hook = S3Hook()
         return self._hook
 
-    def pull_one(self, source: StrPath, destination: StrPath, /) -> Path:
+    def pull_one(self, source: StrPath, destination: StrPath) -> Path:
         """Pull a file from S3.
 
         Args:
@@ -58,7 +58,7 @@ class DbtS3Backend(DbtBackend):
         self.download_one_s3_object(s3_object, destination)
         return Path(destination)
 
-    def pull_many(self, source: StrPath, destination: StrPath, /) -> Path:
+    def pull_many(self, source: StrPath, destination: StrPath) -> Path:
         """Pull many files from S3.
 
         Lists all S3 keys that have source as a prefix to find what to pull.
@@ -82,7 +82,7 @@ class DbtS3Backend(DbtBackend):
         return Path(destination)
 
     def push_one(
-        self, source: StrPath, destination: StrPath, /, *, replace: bool = False
+        self, source: StrPath, destination: StrPath, replace: bool = False
     ) -> None:
         """Push a file to S3.
 
@@ -105,8 +105,6 @@ class DbtS3Backend(DbtBackend):
         self,
         source: StrPath,
         destination: StrPath,
-        /,
-        *,
         replace: bool = False,
         delete_before: bool = False,
     ) -> None:
@@ -155,7 +153,7 @@ class DbtS3Backend(DbtBackend):
                 )
 
     def download_zip_s3_object(
-        self, s3_object: "S3Object", destination: StrPath, /  # noqa: W504
+        self, s3_object: "S3Object", destination: StrPath
     ) -> None:
         """Download an S3Object and extract its contents."""
         destination_path = Path(destination)
@@ -201,7 +199,6 @@ class DbtS3Backend(DbtBackend):
         self,
         s3_object: "S3Object",
         destination: StrPath,
-        /,
     ) -> None:
         """Download an S3 object into a local destination."""
         self.log.info("Downloading S3Object %s to: %s", s3_object, destination)
