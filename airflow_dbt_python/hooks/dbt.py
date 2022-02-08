@@ -3,13 +3,11 @@ from __future__ import annotations
 
 import dataclasses
 import json
-import os
 import pickle
 from dataclasses import dataclass
 from enum import Enum
-from functools import wraps
 from pathlib import Path
-from typing import Any, Optional, Union
+from typing import Any, Optional
 from urllib.parse import urlparse
 
 import dbt.flags as flags
@@ -479,6 +477,11 @@ class DbtHook(BaseHook):
         super().__init__(*args, **kwargs)
 
     def get_backend(self, scheme: str, conn_id: Optional[str]) -> DbtBackend:
+        """Get a backend to interact with dbt files.
+
+        Backends are defined by the scheme we are looking for and an optional connection
+        id if we are looking to interface with any Airflow hook that uses a connection.
+        """
         try:
             return self.backends[(scheme, conn_id)]
         except KeyError:
@@ -494,6 +497,11 @@ class DbtHook(BaseHook):
         *,
         conn_id: Optional[str] = None,
     ) -> Path:
+        """Pull a dbt profiles.yml file from a given profiles_dir.
+
+        This operation is delegated to a DbtBackend. An optional connection id is
+        supported for backends that require it.
+        """
         scheme = urlparse(str(profiles_dir)).scheme
         backend = self.get_backend(scheme, conn_id)
 
@@ -507,6 +515,11 @@ class DbtHook(BaseHook):
         *,
         conn_id: Optional[str] = None,
     ) -> Path:
+        """Pull a dbt project from a given project_dir.
+
+        This operation is delegated to a DbtBackend. An optional connection id is
+        supported for backends that require it.
+        """
         scheme = urlparse(str(project_dir)).scheme
         backend = self.get_backend(scheme, conn_id)
 
@@ -522,6 +535,11 @@ class DbtHook(BaseHook):
         replace: bool = False,
         delete_before: bool = False,
     ) -> None:
+        """Push a dbt project from a given project_dir.
+
+        This operation is delegated to a DbtBackend. An optional connection id is
+        supported for backends that require it.
+        """
         scheme = urlparse(str(destination)).scheme
         backend = self.get_backend(scheme, conn_id)
 

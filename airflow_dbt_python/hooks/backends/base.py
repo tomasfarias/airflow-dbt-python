@@ -5,17 +5,10 @@ Ensures methods for pulling and pushing files are defined.
 from abc import ABC, abstractmethod
 from os import PathLike
 from pathlib import Path
-from typing import Generic, Iterable, Optional, TypeVar, Union
-from urllib.parse import urlparse
+from typing import Iterable, Union
 from zipfile import ZipFile
 
 from airflow.utils.log.logging_mixin import LoggingMixin
-
-try:
-    from airflow.hooks.base import BaseHook
-except ImportError:
-    from airflow.hooks.base_hook import BaseHook
-
 
 StrPath = Union[str, PathLike[str]]
 
@@ -33,11 +26,10 @@ class DbtBackend(ABC, LoggingMixin):
     Attributes:
         connection_id: An optional Airflow connection. If defined, will be used to
             instantiate a hook for this backend.
-        _hook_cls: A subclass of BaseHook associated with this DbtBackend subclass.
     """
 
     def pull_dbt_profiles(
-        self, source_prefix: StrPath, destination: StrPath, /
+        self, source_prefix: StrPath, destination: StrPath, /  # noqa: W504
     ) -> Path:
         """Pull a dbt profiles.yml file from a given source_prefix.
 
@@ -45,7 +37,7 @@ class DbtBackend(ABC, LoggingMixin):
             source_prefix: Path pointing to a directory containing a profiles.yml file.
             destination: Path to a directory where the profiles.yml will be stored.
 
-        returns:
+        Returns:
             The destination Path.
         """
         self.log.info("Pulling dbt profiles file from: %s", source_prefix)
@@ -69,7 +61,7 @@ class DbtBackend(ABC, LoggingMixin):
             source_prefix: Path to a directory containing a dbt project.
             destination: Path to a directory where the  will be stored.
 
-        returns:
+        Returns:
             The destination Path.
         """
         self.log.info("Pulling dbt project files from: %s", source_prefix)
@@ -95,7 +87,6 @@ class DbtBackend(ABC, LoggingMixin):
             delete_before: Flag to indicate wheter to clear any existing files before
                 pushing the dbt project.
         """
-
         self.log.info("Pushing dbt project files to: %s", destination)
         self.push_many(
             source, destination, replace=replace, delete_before=delete_before
