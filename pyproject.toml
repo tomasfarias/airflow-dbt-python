@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "airflow-dbt-python"
-version = "0.11.0"
+version = "0.12.0"
 description = "A dbt operator and hook for Airflow"
 authors = ["Tomás Farías Santana <tomas@tomasfarias.dev>"]
 license = "MIT"
@@ -88,7 +88,7 @@ exclude = '''
 
 [tool.pytest.ini_options]
 postgresql_user = "test"
-postgresql_password = "test"
+postgresql_password = "test" # pragma: allowlist secret
 postgresql_dbname = "test"
 filterwarnings = [
     # Warning raised by dbt dependency
