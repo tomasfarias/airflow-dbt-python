@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Getting started &mdash; airflow-dbt-python 0.12.0 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Example DAGs" href="example_dags.html" />
+    <link rel="prev" title="Introduction" href="introduction.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="index.html" class="icon icon-home"> airflow-dbt-python
+          </a>
+              <div class="version">
+                0.12.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="introduction.html">Introduction</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Getting started</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#requirements">Requirements</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#installation">Installation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#from-pypi">From PyPI</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#building-from-source">Building from source</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#installing-in-mwaa">Installing in MWAA</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#setting-up-a-dbt-project">Setting up a dbt project</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#single-machine-setup">Single-machine setup</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#multi-machine-cloud-installation">Multi-machine/cloud installation</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="example_dags.html">Example DAGs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="development.html">Development</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reference.html">Reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">airflow-dbt-python</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+      <li>Getting started</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/getting_started.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <div class="section" id="getting-started">
+<h1>Getting started<a class="headerlink" href="#getting-started" title="Permalink to this headline"></a></h1>
+<p>This section gives a quick run-down on installing airflow-dbt-python and getting your first DAG running.</p>
+<div class="section" id="requirements">
+<span id="id1"></span><h2>Requirements<a class="headerlink" href="#requirements" title="Permalink to this headline"></a></h2>
+<p>airflow-dbt-python requires the latest major version of <a class="reference external" href="https://pypi.org/project/dbt-core/">dbt-core</a> which at the time of writing is version 1. Since <code class="docutils literal notranslate"><span class="pre">dbt-core</span></code> follows <a class="reference external" href="https://semver.org/">semantic versioning</a>, we do not impose any restrictions on the minor and patch versions, but do keep in mind that the latest <code class="docutils literal notranslate"><span class="pre">dbt-core</span></code> features incorporated as minor releases may not yet be supported.</p>
+<p>To line up with <code class="docutils literal notranslate"><span class="pre">dbt-core</span></code>, airflow-dbt-python supports Python 3.7, 3.8, and 3.9. We also include Python 3.10 in our testing pipeline, although as of the time of writing <code class="docutils literal notranslate"><span class="pre">dbt-core</span></code> does not yet support it.</p>
+<p>On the Airflow side, we support the release version 1.10.12 and all Airflow major version 2 releases.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p><code class="docutils literal notranslate"><span class="pre">apache-airflow==1.10.12</span></code> has a dependency conflict with <code class="docutils literal notranslate"><span class="pre">dbt-core&gt;=1.0.0</span></code>. airflow-dbt-python does not require the conflicting dependency, nor does it access the parts of <code class="docutils literal notranslate"><span class="pre">dbt-core</span></code> that use it, so it should work regardless.</p>
+<p>That being said, installing airflow-dbt-python in an environment with <code class="docutils literal notranslate"><span class="pre">apache-airflow==1.10.12</span></code> will produce warnings, and we do recommend upgrading to version 2 or later due to higher likelihood of future versions of airflow-dbt-python dropping support for version 1.10.12 entirely if the conflicts become unmanageable.</p>
+</div>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Due to the dependency conflict just now described, airflow-dbt-python does not include Airflow as a dependency. We expect it to be installed into an environment with Airflow already in it. For instructions on setting up a development environment, see <a class="reference internal" href="development.html#development"><span class="std std-ref">Development</span></a>.</p>
+</div>
+</div>
+<div class="section" id="installation">
+<h2>Installation<a class="headerlink" href="#installation" title="Permalink to this headline"></a></h2>
+<p>airflow-dbt-python can be installed in any environment that has a supported version of Airflow already installed. See <a class="reference internal" href="#requirements"><span class="std std-ref">Requirements</span></a> for details, and refer to the <a class="reference external" href="https://airflow.apache.org/docs/apache-airflow/stable/installation/index.html">Airflow documentation</a> for instructions on how to install it.</p>
+<div class="section" id="from-pypi">
+<h3>From PyPI<a class="headerlink" href="#from-pypi" title="Permalink to this headline"></a></h3>
+<p>airflow-dbt-python is available in <a class="reference external" href="https://pypi.org/project/airflow-dbt-python/">PyPI</a> and can be installed with <code class="docutils literal notranslate"><span class="pre">pip</span></code>:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>pip install airflow-dbt-python
+</pre></div>
+</div>
+<p>As a convenience, any dbt adapters that are required can be installed by specifying extras. The <code class="docutils literal notranslate"><span class="pre">all</span></code> extra includes all adapters:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>pip install airflow-dbt-python<span class="o">[</span>snowflake,postgres,redshift,bigquery<span class="o">]</span>
+pip install airflow-dbt-python<span class="o">[</span>all<span class="o">]</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="building-from-source">
+<h3>Building from source<a class="headerlink" href="#building-from-source" title="Permalink to this headline"></a></h3>
+<p>airflow-dbt-python can also be built from source by cloning the main repo:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>git clone https://github.com/tomasfarias/airflow-dbt-python.git
+<span class="nb">cd</span> airflow-dbt-python
+</pre></div>
+</div>
+<p>And installing with <code class="docutils literal notranslate"><span class="pre">poetry</span></code> (without development dependencies):</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>poetry install --no-dev
+</pre></div>
+</div>
+<p>As with <code class="docutils literal notranslate"><span class="pre">pip</span></code>, any extra adapters can be installed:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>poetry install -E postgres -E redshift -E bigquery -E snowflake --no-dev
+poetry install -E all --no-dev
+</pre></div>
+</div>
+</div>
+<div class="section" id="installing-in-mwaa">
+<h3>Installing in MWAA<a class="headerlink" href="#installing-in-mwaa" title="Permalink to this headline"></a></h3>
+<p>airflow-dbt-python can be installed in an Airflow environment managed by AWS via their <a class="reference external" href="https://aws.amazon.com/managed-workflows-for-apache-airflow/">Managed Workflows for Apache Airflow</a> service. To do so, include airflow-dbt-python in MWAA’s <code class="docutils literal notranslate"><span class="pre">requirements.txt</span></code> file, for example:</p>
+<div class="literal-block-wrapper docutils container" id="id2">
+<div class="code-block-caption"><span class="caption-text">requirements.txt</span><a class="headerlink" href="#id2" title="Permalink to this code"></a></div>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>airflow-dbt-python<span class="o">[</span>redshift,amazon<span class="o">]</span>
+</pre></div>
+</div>
+</div>
+<p>Installs airflow-dbt-python, dbt’s Redshift adapter, and Airflow’s Amazon providers library.</p>
+</div>
+</div>
+<div class="section" id="setting-up-a-dbt-project">
+<h2>Setting up a dbt project<a class="headerlink" href="#setting-up-a-dbt-project" title="Permalink to this headline"></a></h2>
+<p>Setting up a dbt project for airflow-dbt-python to run depends on the type of executor running in your production Airflow environment:</p>
+<ol class="arabic simple">
+<li><p>Using a <a class="reference external" href="https://airflow.apache.org/docs/apache-airflow/stable/executor/local.html">LocalExecutor</a> with a single-machine deployment means we can rely on the local machine’s filesystem to store our project. This also applies to DebugExecutor and SequentialExecutor, but these executors are generally only used for debugging/development so we will ignore them.</p></li>
+<li><p>However, once your setup has evolved to a multi-machine/cloud installation, we must rely on an external backend to store any dbt files. The only currently supported backend is S3 although more are in plans to be added (see <a class="reference internal" href="introduction.html#download-dbt-files-from-s3"><span class="std std-ref">Download dbt files from S3</span></a>).</p></li>
+</ol>
+<div class="section" id="single-machine-setup">
+<h3>Single-machine setup<a class="headerlink" href="#single-machine-setup" title="Permalink to this headline"></a></h3>
+<p>As we can rely on the local machine’s filesystem, simply copy your dbt project files and dbt <code class="docutils literal notranslate"><span class="pre">profiles.yml</span></code> to a path in your local machine. Files may be laid out as:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>.
+|-- ~/.dbt/
+|   `-- profiles.yml
+`-- /path/to/project/
+    |-- dbt_project.yml
+    |-- models/
+    |   |-- model1.sql
+    |   `-- model2.sql
+    |-- seeds/
+    |   |-- seed1.csv
+    |   `-- seed2.csv
+    |-- macros/
+    |   |-- macro1.csv
+    |   `-- macro2.csv
+    `-- tests/
+        |-- test1.sql
+        `-- test2.sql
+</pre></div>
+</div>
+<p>So we can simply set <code class="docutils literal notranslate"><span class="pre">project_dir</span></code> and <code class="docutils literal notranslate"><span class="pre">profiles_dir</span></code> to <code class="docutils literal notranslate"><span class="pre">&quot;/path/to/project/&quot;</span></code> and <code class="docutils literal notranslate"><span class="pre">&quot;~/.dbt/&quot;</span></code> respectively:</p>
+<div class="literal-block-wrapper docutils container" id="id3">
+<div class="code-block-caption"><span class="caption-text">example_local_1.py</span><a class="headerlink" href="#id3" title="Permalink to this code"></a></div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="linenos"> 1</span><span class="kn">import</span> <span class="nn">datetime</span> <span class="k">as</span> <span class="nn">dt</span>
+<span class="linenos"> 2</span>
+<span class="linenos"> 3</span><span class="kn">from</span> <span class="nn">airflow.utils.dates</span> <span class="kn">import</span> <span class="n">days_ago</span>
+<span class="linenos"> 4</span><span class="kn">from</span> <span class="nn">airflow_dbt_python.operators.dbt</span> <span class="kn">import</span> <span class="n">DbtRunOperator</span>
+<span class="linenos"> 5</span>
+<span class="linenos"> 6</span><span class="k">with</span> <span class="n">DAG</span><span class="p">(</span>
+<span class="linenos"> 7</span>    <span class="n">dag_id</span><span class="o">=</span><span class="s2">&quot;example_dbt_artifacts&quot;</span><span class="p">,</span>
+<span class="linenos"> 8</span>    <span class="n">schedule_interval</span><span class="o">=</span><span class="s2">&quot;0 0 * * *&quot;</span><span class="p">,</span>
+<span class="linenos"> 9</span>    <span class="n">start_date</span><span class="o">=</span><span class="n">days_ago</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span>
+<span class="linenos">10</span>    <span class="n">catchup</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+<span class="linenos">11</span>    <span class="n">dagrun_timeout</span><span class="o">=</span><span class="n">dt</span><span class="o">.</span><span class="n">timedelta</span><span class="p">(</span><span class="n">minutes</span><span class="o">=</span><span class="mi">60</span><span class="p">),</span>
+<span class="linenos">12</span><span class="p">)</span> <span class="k">as</span> <span class="n">dag</span><span class="p">:</span>
+<span class="linenos">13</span>    <span class="n">dbt_run</span> <span class="o">=</span> <span class="n">DbtRunOperator</span><span class="p">(</span>
+<span class="linenos">14</span>        <span class="n">task_id</span><span class="o">=</span><span class="s2">&quot;dbt_run_daily&quot;</span><span class="p">,</span>
+<span class="linenos">15</span>        <span class="n">project_dir</span><span class="o">=</span><span class="s2">&quot;/path/to/project&quot;</span><span class="p">,</span>
+<span class="linenos">16</span>        <span class="n">profiles_dir</span><span class="o">=</span><span class="s2">&quot;~/.dbt/&quot;</span><span class="p">,</span>
+<span class="linenos">17</span>        <span class="n">select</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;+tag:daily&quot;</span><span class="p">],</span>
+<span class="linenos">18</span>        <span class="n">exclude</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;tag:deprecated&quot;</span><span class="p">],</span>
+<span class="linenos">19</span>        <span class="n">target</span><span class="o">=</span><span class="s2">&quot;production&quot;</span><span class="p">,</span>
+<span class="linenos">20</span>        <span class="n">profile</span><span class="o">=</span><span class="s2">&quot;my-project&quot;</span><span class="p">,</span>
+<span class="linenos">21</span>   <span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Setting <code class="docutils literal notranslate"><span class="pre">profiles_dir</span></code> to <code class="docutils literal notranslate"><span class="pre">&quot;~/.dbt/&quot;</span></code> can be omitted as this is the default value.</p>
+</div>
+<p>If we have multiple operators, we can also utilize default arguments and include other parameters like the profile and target to use:</p>
+<div class="literal-block-wrapper docutils container" id="id4">
+<div class="code-block-caption"><span class="caption-text">example_local_2.py</span><a class="headerlink" href="#id4" title="Permalink to this code"></a></div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="linenos"> 1</span><span class="kn">import</span> <span class="nn">datetime</span> <span class="k">as</span> <span class="nn">dt</span>
+<span class="linenos"> 2</span>
+<span class="linenos"> 3</span><span class="kn">from</span> <span class="nn">airflow.utils.dates</span> <span class="kn">import</span> <span class="n">days_ago</span>
+<span class="linenos"> 4</span><span class="kn">from</span> <span class="nn">airflow_dbt_python.operators.dbt</span> <span class="kn">import</span> <span class="n">DbtRunOperator</span><span class="p">,</span> <span class="n">DbtSeedOperator</span>
+<span class="linenos"> 5</span>
+<span class="linenos"> 6</span><span class="n">default_args</span> <span class="o">=</span> <span class="p">{</span>
+<span class="linenos"> 7</span>   <span class="s2">&quot;project_dir&quot;</span><span class="p">:</span> <span class="s2">&quot;/path/to/project/&quot;</span><span class="p">,</span>
+<span class="linenos"> 8</span>   <span class="s2">&quot;profiles_dir&quot;</span><span class="p">:</span> <span class="s2">&quot;~/.dbt/&quot;</span><span class="p">,</span>
+<span class="linenos"> 9</span>   <span class="s2">&quot;target&quot;</span><span class="p">:</span> <span class="s2">&quot;production&quot;</span><span class="p">,</span>
+<span class="linenos">10</span>   <span class="s2">&quot;profile&quot;</span><span class="p">:</span> <span class="s2">&quot;my-project&quot;</span><span class="p">,</span>
+<span class="linenos">11</span><span class="p">}</span>
+<span class="linenos">12</span>
+<span class="linenos">13</span><span class="k">with</span> <span class="n">DAG</span><span class="p">(</span>
+<span class="linenos">14</span>    <span class="n">dag_id</span><span class="o">=</span><span class="s2">&quot;example_dbt_artifacts&quot;</span><span class="p">,</span>
+<span class="linenos">15</span>    <span class="n">schedule_interval</span><span class="o">=</span><span class="s2">&quot;0 0 * * *&quot;</span><span class="p">,</span>
+<span class="linenos">16</span>    <span class="n">start_date</span><span class="o">=</span><span class="n">days_ago</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span>
+<span class="linenos">17</span>    <span class="n">catchup</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+<span class="linenos">18</span>    <span class="n">dagrun_timeout</span><span class="o">=</span><span class="n">dt</span><span class="o">.</span><span class="n">timedelta</span><span class="p">(</span><span class="n">minutes</span><span class="o">=</span><span class="mi">60</span><span class="p">),</span>
+<span class="linenos">19</span>    <span class="n">default_args</span><span class="o">=</span><span class="n">default_args</span><span class="p">,</span>
+<span class="linenos">20</span><span class="p">)</span> <span class="k">as</span> <span class="n">dag</span><span class="p">:</span>
+<span class="linenos">21</span>    <span class="n">dbt_seed</span> <span class="o">=</span> <span class="n">DbtSeedOperator</span><span class="p">(</span>
+<span class="linenos">22</span>        <span class="n">task_id</span><span class="o">=</span><span class="s2">&quot;dbt_seed&quot;</span><span class="p">,</span>
+<span class="linenos">23</span>    <span class="p">)</span>
+<span class="linenos">24</span>
+<span class="linenos">25</span>    <span class="n">dbt_run</span> <span class="o">=</span> <span class="n">DbtRunOperator</span><span class="p">(</span>
+<span class="linenos">26</span>        <span class="n">task_id</span><span class="o">=</span><span class="s2">&quot;dbt_run_daily&quot;</span><span class="p">,</span>
+<span class="linenos">27</span>        <span class="n">select</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;+tag:daily&quot;</span><span class="p">],</span>
+<span class="linenos">28</span>        <span class="n">exclude</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;tag:deprecated&quot;</span><span class="p">],</span>
+<span class="linenos">29</span>    <span class="p">)</span>
+<span class="linenos">30</span>
+<span class="linenos">31</span>    <span class="n">dbt_seed</span> <span class="o">&gt;&gt;</span> <span class="n">dbt_run</span>
+</pre></div>
+</div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>dbt supports configuration via environment variables, which may also be used. Additionally, <code class="docutils literal notranslate"><span class="pre">profile</span></code> and <code class="docutils literal notranslate"><span class="pre">target</span></code> may be omitted if already specified in <code class="docutils literal notranslate"><span class="pre">dbt_project.yml</span></code> and <code class="docutils literal notranslate"><span class="pre">profiles.yml</span></code> respectively.</p>
+</div>
+</div>
+<div class="section" id="multi-machine-cloud-installation">
+<h3>Multi-machine/cloud installation<a class="headerlink" href="#multi-machine-cloud-installation" title="Permalink to this headline"></a></h3>
+<p>A multi-machine or cloud installation does not have access to a common filesystem that we can reliably use to store dbt project files, at least assuming any deployment with more than one executor. This includes both self-hosted deployments as well as managed Airflow deployments like MWAA or Astronomer.</p>
+<p>For these deployments we must rely on a DbtBackend to pull and, eventually, push all required dbt project files. The remote DbtBackend address may be used in place of a local <code class="docutils literal notranslate"><span class="pre">project_dir</span></code> or <code class="docutils literal notranslate"><span class="pre">profiles_dir</span></code> to have airflow-dbt-python setup a directory for dbt with the files available in the remote backend.</p>
+<p>At the time of writing, only S3 is supported as a non-local backend.</p>
+<p>As an example, we can setup a <code class="docutils literal notranslate"><span class="pre">DbtS3Backend</span></code> by uploading our dbt project files to our S3 bucket. The bucket may be structured as:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>s3://my-bucket/
+.
+|-- profiles/
+|   `-- profiles.yml
+`-- project/
+    |-- dbt_project.yml
+    |-- models/
+    |   |-- model1.sql
+    |   `-- model2.sql
+    |-- seeds/
+    |   |-- seed1.csv
+    |   `-- seed2.csv
+    |-- macros/
+    |   |-- macro1.csv
+    |   `-- macro2.csv
+    `-- tests/
+        |-- test1.sql
+        `-- test2.sql
+</pre></div>
+</div>
+<p>Then, we can alter the previous example to set <code class="docutils literal notranslate"><span class="pre">project_dir</span></code> and <code class="docutils literal notranslate"><span class="pre">profiles_dir</span></code> to <code class="docutils literal notranslate"><span class="pre">&quot;s3://my-bucket/project/&quot;</span></code> and <code class="docutils literal notranslate"><span class="pre">&quot;s3://my-bucket/profiles/&quot;</span></code> respectively:</p>
+<div class="literal-block-wrapper docutils container" id="id5">
+<div class="code-block-caption"><span class="caption-text">example_s3_1.py</span><a class="headerlink" href="#id5" title="Permalink to this code"></a></div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="linenos"> 1</span><span class="kn">import</span> <span class="nn">datetime</span> <span class="k">as</span> <span class="nn">dt</span>
+<span class="linenos"> 2</span>
+<span class="linenos"> 3</span><span class="kn">from</span> <span class="nn">airflow.utils.dates</span> <span class="kn">import</span> <span class="n">days_ago</span>
+<span class="linenos"> 4</span><span class="kn">from</span> <span class="nn">airflow_dbt_python.operators.dbt</span> <span class="kn">import</span> <span class="n">DbtRunOperator</span>
+<span class="linenos"> 5</span>
+<span class="linenos"> 6</span><span class="k">with</span> <span class="n">DAG</span><span class="p">(</span>
+<span class="linenos"> 7</span>    <span class="n">dag_id</span><span class="o">=</span><span class="s2">&quot;example_dbt_artifacts&quot;</span><span class="p">,</span>
+<span class="linenos"> 8</span>    <span class="n">schedule_interval</span><span class="o">=</span><span class="s2">&quot;0 0 * * *&quot;</span><span class="p">,</span>
+<span class="linenos"> 9</span>    <span class="n">start_date</span><span class="o">=</span><span class="n">days_ago</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span>
+<span class="linenos">10</span>    <span class="n">catchup</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+<span class="linenos">11</span>    <span class="n">dagrun_timeout</span><span class="o">=</span><span class="n">dt</span><span class="o">.</span><span class="n">timedelta</span><span class="p">(</span><span class="n">minutes</span><span class="o">=</span><span class="mi">60</span><span class="p">),</span>
+<span class="linenos">12</span><span class="p">)</span> <span class="k">as</span> <span class="n">dag</span><span class="p">:</span>
+<span class="linenos">13</span>    <span class="n">dbt_run</span> <span class="o">=</span> <span class="n">DbtRunOperator</span><span class="p">(</span>
+<span class="linenos">14</span>        <span class="n">task_id</span><span class="o">=</span><span class="s2">&quot;dbt_run_daily&quot;</span><span class="p">,</span>
+<span class="hll"><span class="linenos">15</span>        <span class="n">project_dir</span><span class="o">=</span><span class="s2">&quot;s3://my-bucket/project/&quot;</span><span class="p">,</span>
+</span><span class="hll"><span class="linenos">16</span>        <span class="n">profiles_dir</span><span class="o">=</span><span class="s2">&quot;s3://my-bucket/profiles/&quot;</span><span class="p">,</span>
+</span><span class="linenos">17</span>        <span class="n">select</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;+tag:daily&quot;</span><span class="p">],</span>
+<span class="linenos">18</span>        <span class="n">exclude</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;tag:deprecated&quot;</span><span class="p">],</span>
+<span class="linenos">19</span>        <span class="n">target</span><span class="o">=</span><span class="s2">&quot;production&quot;</span><span class="p">,</span>
+<span class="linenos">20</span>        <span class="n">profile</span><span class="o">=</span><span class="s2">&quot;my-project&quot;</span><span class="p">,</span>
+<span class="linenos">21</span>   <span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<p>airflow-dbt-python uses the URL scheme (in this example, <code class="docutils literal notranslate"><span class="pre">s3</span></code>) to figure out the type of backend, and the corresponding <code class="docutils literal notranslate"><span class="pre">DbtBackend</span></code> implementation to pull all required files. An exception would be raised if the scheme does not point to a supported backend.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">DbtBackend</span></code> abstraction means that no other changes are needed and the DAG works as the local one. airflow-dbt-python also takes care of adjusting any parameters that depend on absolute paths so that they are moved to the directory where all the files are pulled from the remote <code class="docutils literal notranslate"><span class="pre">DbtBackend</span></code>.</p>
+</div>
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="introduction.html" class="btn btn-neutral float-left" title="Introduction" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="example_dags.html" class="btn btn-neutral float-right" title="Example DAGs" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright Copyright 2021 Tomás Farías Santana.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

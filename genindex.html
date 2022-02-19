@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Index &mdash; airflow-dbt-python 0.9.1 documentation</title>
+  <title>Index &mdash; airflow-dbt-python 0.12.0 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -27,7 +27,7 @@
             <a href="index.html" class="icon icon-home"> airflow-dbt-python
           </a>
               <div class="version">
-                0.9.1
+                0.12.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
@@ -39,8 +39,11 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="autodoc.html">Airflow operators</a></li>
-<li class="toctree-l1"><a class="reference internal" href="autodoc.html#airflow-hooks">Airflow hooks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="introduction.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="example_dags.html">Example DAGs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="development.html">Development</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reference.html">Reference</a></li>
 </ul>
 
         </div>
@@ -75,7 +78,10 @@
  | <a href="#C"><strong>C</strong></a>
  | <a href="#D"><strong>D</strong></a>
  | <a href="#E"><strong>E</strong></a>
+ | <a href="#F"><strong>F</strong></a>
  | <a href="#G"><strong>G</strong></a>
+ | <a href="#H"><strong>H</strong></a>
+ | <a href="#I"><strong>I</strong></a>
  | <a href="#L"><strong>L</strong></a>
  | <a href="#M"><strong>M</strong></a>
  | <a href="#O"><strong>O</strong></a>
@@ -91,19 +97,57 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li>
+    airflow_dbt_python.hooks.backends
+
+      <ul>
+        <li><a href="reference/backends.html#module-airflow_dbt_python.hooks.backends">module</a>
+</li>
+      </ul></li>
+      <li>
+    airflow_dbt_python.hooks.backends.localfs
+
+      <ul>
+        <li><a href="reference/backends.html#module-airflow_dbt_python.hooks.backends.localfs">module</a>
+</li>
+      </ul></li>
+      <li>
+    airflow_dbt_python.hooks.backends.s3
+
+      <ul>
+        <li><a href="reference/backends.html#module-airflow_dbt_python.hooks.backends.s3">module</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li>
+    airflow_dbt_python.hooks.dbt
+
+      <ul>
+        <li><a href="reference/hooks.html#module-airflow_dbt_python.hooks.dbt">module</a>
+</li>
+      </ul></li>
+      <li>
     airflow_dbt_python.operators.dbt
 
       <ul>
-        <li><a href="autodoc.html#module-airflow_dbt_python.operators.dbt">module</a>
+        <li><a href="reference/operators.html#module-airflow_dbt_python.operators.dbt">module</a>
 </li>
       </ul></li>
+      <li><a href="reference/operators.html#airflow_dbt_python.operators.dbt.apply_defaults">apply_defaults() (in module airflow_dbt_python.operators.dbt)</a>
+</li>
   </ul></td>
 </tr></table>
 
 <h2 id="B">B</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="autodoc.html#airflow_dbt_python.operators.dbt.DbtBaseOperator.bypass_cache">bypass_cache (airflow_dbt_python.operators.dbt.DbtBaseOperator attribute)</a>
+      <li><a href="reference/hooks.html#airflow_dbt_python.hooks.dbt.BaseConfig">BaseConfig (class in airflow_dbt_python.hooks.dbt)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="reference/backends.html#airflow_dbt_python.hooks.backends.build_backend">build_backend() (in module airflow_dbt_python.hooks.backends)</a>
+</li>
+      <li><a href="reference/hooks.html#airflow_dbt_python.hooks.dbt.BuildTaskConfig">BuildTaskConfig (class in airflow_dbt_python.hooks.dbt)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -111,81 +155,123 @@
 <h2 id="C">C</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="autodoc.html#airflow_dbt_python.operators.dbt.DbtBaseOperator.command">command (airflow_dbt_python.operators.dbt.DbtBaseOperator attribute)</a>
+      <li><a href="reference/hooks.html#airflow_dbt_python.hooks.dbt.CleanTaskConfig">CleanTaskConfig (class in airflow_dbt_python.hooks.dbt)</a>
+</li>
+      <li><a href="reference/hooks.html#airflow_dbt_python.hooks.dbt.BuildTaskConfig.cls">cls (airflow_dbt_python.hooks.dbt.BuildTaskConfig attribute)</a>
 
       <ul>
-        <li><a href="autodoc.html#id0">(airflow_dbt_python.operators.dbt.DbtBaseOperator property)</a>
-</li>
-        <li><a href="autodoc.html#airflow_dbt_python.operators.dbt.DbtBuildOperator.command">(airflow_dbt_python.operators.dbt.DbtBuildOperator property)</a>
-</li>
-        <li><a href="autodoc.html#airflow_dbt_python.operators.dbt.DbtCleanOperator.command">(airflow_dbt_python.operators.dbt.DbtCleanOperator property)</a>
-</li>
-        <li><a href="autodoc.html#airflow_dbt_python.operators.dbt.DbtCompileOperator.command">(airflow_dbt_python.operators.dbt.DbtCompileOperator property)</a>
-</li>
-        <li><a href="autodoc.html#airflow_dbt_python.operators.dbt.DbtDebugOperator.command">(airflow_dbt_python.operators.dbt.DbtDebugOperator property)</a>
-</li>
-        <li><a href="autodoc.html#airflow_dbt_python.operators.dbt.DbtDepsOperator.command">(airflow_dbt_python.operators.dbt.DbtDepsOperator property)</a>
-</li>
-        <li><a href="autodoc.html#airflow_dbt_python.operators.dbt.DbtLsOperator.command">(airflow_dbt_python.operators.dbt.DbtLsOperator property)</a>
-</li>
-        <li><a href="autodoc.html#airflow_dbt_python.operators.dbt.DbtParseOperator.command">(airflow_dbt_python.operators.dbt.DbtParseOperator property)</a>
-</li>
-        <li><a href="autodoc.html#airflow_dbt_python.operators.dbt.DbtRunOperationOperator.command">(airflow_dbt_python.operators.dbt.DbtRunOperationOperator property)</a>
-</li>
-        <li><a href="autodoc.html#airflow_dbt_python.operators.dbt.DbtRunOperator.command">(airflow_dbt_python.operators.dbt.DbtRunOperator property)</a>
-</li>
-        <li><a href="autodoc.html#airflow_dbt_python.operators.dbt.DbtSeedOperator.command">(airflow_dbt_python.operators.dbt.DbtSeedOperator property)</a>
-</li>
-        <li><a href="autodoc.html#airflow_dbt_python.operators.dbt.DbtSnapshotOperator.command">(airflow_dbt_python.operators.dbt.DbtSnapshotOperator property)</a>
-</li>
-        <li><a href="autodoc.html#airflow_dbt_python.operators.dbt.DbtSourceFreshnessOperator.command">(airflow_dbt_python.operators.dbt.DbtSourceFreshnessOperator property)</a>
-</li>
-        <li><a href="autodoc.html#airflow_dbt_python.operators.dbt.DbtTestOperator.command">(airflow_dbt_python.operators.dbt.DbtTestOperator property)</a>
+        <li><a href="reference/hooks.html#airflow_dbt_python.hooks.dbt.TestTaskConfig.cls">(airflow_dbt_python.hooks.dbt.TestTaskConfig attribute)</a>
 </li>
       </ul></li>
+      <li><a href="reference/operators.html#airflow_dbt_python.operators.dbt.DbtBaseOperator.command">command (airflow_dbt_python.operators.dbt.DbtBaseOperator attribute)</a>
+
+      <ul>
+        <li><a href="reference/operators.html#id0">(airflow_dbt_python.operators.dbt.DbtBaseOperator property)</a>
+</li>
+        <li><a href="reference/operators.html#airflow_dbt_python.operators.dbt.DbtBuildOperator.command">(airflow_dbt_python.operators.dbt.DbtBuildOperator property)</a>
+</li>
+        <li><a href="reference/operators.html#airflow_dbt_python.operators.dbt.DbtCleanOperator.command">(airflow_dbt_python.operators.dbt.DbtCleanOperator property)</a>
+</li>
+        <li><a href="reference/operators.html#airflow_dbt_python.operators.dbt.DbtCompileOperator.command">(airflow_dbt_python.operators.dbt.DbtCompileOperator property)</a>
+</li>
+        <li><a href="reference/operators.html#airflow_dbt_python.operators.dbt.DbtDebugOperator.command">(airflow_dbt_python.operators.dbt.DbtDebugOperator property)</a>
+</li>
+        <li><a href="reference/operators.html#airflow_dbt_python.operators.dbt.DbtDepsOperator.command">(airflow_dbt_python.operators.dbt.DbtDepsOperator property)</a>
+</li>
+        <li><a href="reference/operators.html#airflow_dbt_python.operators.dbt.DbtDocsGenerateOperator.command">(airflow_dbt_python.operators.dbt.DbtDocsGenerateOperator property)</a>
+</li>
+        <li><a href="reference/operators.html#airflow_dbt_python.operators.dbt.DbtLsOperator.command">(airflow_dbt_python.operators.dbt.DbtLsOperator property)</a>
+</li>
+        <li><a href="reference/operators.html#airflow_dbt_python.operators.dbt.DbtParseOperator.command">(airflow_dbt_python.operators.dbt.DbtParseOperator property)</a>
+</li>
+        <li><a href="reference/operators.html#airflow_dbt_python.operators.dbt.DbtRunOperationOperator.command">(airflow_dbt_python.operators.dbt.DbtRunOperationOperator property)</a>
+</li>
+        <li><a href="reference/operators.html#airflow_dbt_python.operators.dbt.DbtRunOperator.command">(airflow_dbt_python.operators.dbt.DbtRunOperator property)</a>
+</li>
+        <li><a href="reference/operators.html#airflow_dbt_python.operators.dbt.DbtSeedOperator.command">(airflow_dbt_python.operators.dbt.DbtSeedOperator property)</a>
+</li>
+        <li><a href="reference/operators.html#airflow_dbt_python.operators.dbt.DbtSnapshotOperator.command">(airflow_dbt_python.operators.dbt.DbtSnapshotOperator property)</a>
+</li>
+        <li><a href="reference/operators.html#airflow_dbt_python.operators.dbt.DbtSourceFreshnessOperator.command">(airflow_dbt_python.operators.dbt.DbtSourceFreshnessOperator property)</a>
+</li>
+        <li><a href="reference/operators.html#airflow_dbt_python.operators.dbt.DbtTestOperator.command">(airflow_dbt_python.operators.dbt.DbtTestOperator property)</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="reference/hooks.html#airflow_dbt_python.hooks.dbt.CompileTaskConfig">CompileTaskConfig (class in airflow_dbt_python.hooks.dbt)</a>
+</li>
+      <li><a href="reference/hooks.html#airflow_dbt_python.hooks.dbt.ConfigFactory">ConfigFactory (class in airflow_dbt_python.hooks.dbt)</a>
+</li>
+      <li><a href="reference/backends.html#airflow_dbt_python.hooks.backends.s3.DbtS3Backend.connection_id">connection_id (airflow_dbt_python.hooks.backends.s3.DbtS3Backend attribute)</a>
+</li>
+      <li><a href="reference/hooks.html#airflow_dbt_python.hooks.dbt.ConfigFactory.create_config">create_config() (airflow_dbt_python.hooks.dbt.ConfigFactory method)</a>
+</li>
+      <li><a href="reference/hooks.html#airflow_dbt_python.hooks.dbt.BaseConfig.create_dbt_task">create_dbt_task() (airflow_dbt_python.hooks.dbt.BaseConfig method)</a>
+</li>
   </ul></td>
 </tr></table>
 
 <h2 id="D">D</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="autodoc.html#airflow_dbt_python.operators.dbt.DbtBaseOperator.dbt_directory">dbt_directory() (airflow_dbt_python.operators.dbt.DbtBaseOperator method)</a>
+      <li><a href="reference/operators.html#airflow_dbt_python.operators.dbt.DbtBaseOperator.dbt_directory">dbt_directory() (airflow_dbt_python.operators.dbt.DbtBaseOperator method)</a>
 </li>
-      <li><a href="autodoc.html#airflow_dbt_python.operators.dbt.DbtBaseOperator.dbt_hook">dbt_hook (airflow_dbt_python.operators.dbt.DbtBaseOperator property)</a>
+      <li><a href="reference/operators.html#airflow_dbt_python.operators.dbt.DbtBaseOperator.dbt_hook">dbt_hook (airflow_dbt_python.operators.dbt.DbtBaseOperator property)</a>
 </li>
-      <li><a href="autodoc.html#airflow_dbt_python.operators.dbt.DbtBaseOperator">DbtBaseOperator (class in airflow_dbt_python.operators.dbt)</a>
+      <li><a href="reference/hooks.html#airflow_dbt_python.hooks.dbt.BaseConfig.dbt_task">dbt_task (airflow_dbt_python.hooks.dbt.BaseConfig property)</a>
 </li>
-      <li><a href="autodoc.html#airflow_dbt_python.operators.dbt.DbtBuildOperator">DbtBuildOperator (class in airflow_dbt_python.operators.dbt)</a>
+      <li><a href="reference/operators.html#airflow_dbt_python.operators.dbt.DbtBaseOperator">DbtBaseOperator (class in airflow_dbt_python.operators.dbt)</a>
 </li>
-      <li><a href="autodoc.html#airflow_dbt_python.operators.dbt.DbtCleanOperator">DbtCleanOperator (class in airflow_dbt_python.operators.dbt)</a>
+      <li><a href="reference/operators.html#airflow_dbt_python.operators.dbt.DbtBuildOperator">DbtBuildOperator (class in airflow_dbt_python.operators.dbt)</a>
 </li>
-      <li><a href="autodoc.html#airflow_dbt_python.operators.dbt.DbtCompileOperator">DbtCompileOperator (class in airflow_dbt_python.operators.dbt)</a>
+      <li><a href="reference/operators.html#airflow_dbt_python.operators.dbt.DbtCleanOperator">DbtCleanOperator (class in airflow_dbt_python.operators.dbt)</a>
 </li>
-      <li><a href="autodoc.html#airflow_dbt_python.operators.dbt.DbtDebugOperator">DbtDebugOperator (class in airflow_dbt_python.operators.dbt)</a>
+      <li><a href="reference/operators.html#airflow_dbt_python.operators.dbt.DbtCompileOperator">DbtCompileOperator (class in airflow_dbt_python.operators.dbt)</a>
 </li>
-      <li><a href="autodoc.html#airflow_dbt_python.operators.dbt.DbtDepsOperator">DbtDepsOperator (class in airflow_dbt_python.operators.dbt)</a>
+      <li><a href="reference/operators.html#airflow_dbt_python.operators.dbt.DbtDebugOperator">DbtDebugOperator (class in airflow_dbt_python.operators.dbt)</a>
 </li>
-      <li><a href="autodoc.html#airflow_dbt_python.operators.dbt.DbtListOperator">DbtListOperator (in module airflow_dbt_python.operators.dbt)</a>
+      <li><a href="reference/operators.html#airflow_dbt_python.operators.dbt.DbtDepsOperator">DbtDepsOperator (class in airflow_dbt_python.operators.dbt)</a>
+</li>
+      <li><a href="reference/operators.html#airflow_dbt_python.operators.dbt.DbtDocsGenerateOperator">DbtDocsGenerateOperator (class in airflow_dbt_python.operators.dbt)</a>
+</li>
+      <li><a href="reference/hooks.html#airflow_dbt_python.hooks.dbt.DbtHook">DbtHook (class in airflow_dbt_python.hooks.dbt)</a>
+</li>
+      <li><a href="reference/operators.html#airflow_dbt_python.operators.dbt.DbtListOperator">DbtListOperator (in module airflow_dbt_python.operators.dbt)</a>
+</li>
+      <li><a href="reference/backends.html#airflow_dbt_python.hooks.backends.localfs.DbtLocalFsBackend">DbtLocalFsBackend (class in airflow_dbt_python.hooks.backends.localfs)</a>
+</li>
+      <li><a href="reference/operators.html#airflow_dbt_python.operators.dbt.DbtLsOperator">DbtLsOperator (class in airflow_dbt_python.operators.dbt)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="autodoc.html#airflow_dbt_python.operators.dbt.DbtLsOperator">DbtLsOperator (class in airflow_dbt_python.operators.dbt)</a>
+      <li><a href="reference/operators.html#airflow_dbt_python.operators.dbt.DbtParseOperator">DbtParseOperator (class in airflow_dbt_python.operators.dbt)</a>
 </li>
-      <li><a href="autodoc.html#airflow_dbt_python.operators.dbt.DbtParseOperator">DbtParseOperator (class in airflow_dbt_python.operators.dbt)</a>
+      <li><a href="reference/operators.html#airflow_dbt_python.operators.dbt.DbtRunOperationOperator">DbtRunOperationOperator (class in airflow_dbt_python.operators.dbt)</a>
 </li>
-      <li><a href="autodoc.html#airflow_dbt_python.operators.dbt.DbtRunOperationOperator">DbtRunOperationOperator (class in airflow_dbt_python.operators.dbt)</a>
+      <li><a href="reference/operators.html#airflow_dbt_python.operators.dbt.DbtRunOperator">DbtRunOperator (class in airflow_dbt_python.operators.dbt)</a>
 </li>
-      <li><a href="autodoc.html#airflow_dbt_python.operators.dbt.DbtRunOperator">DbtRunOperator (class in airflow_dbt_python.operators.dbt)</a>
+      <li><a href="reference/backends.html#airflow_dbt_python.hooks.backends.s3.DbtS3Backend">DbtS3Backend (class in airflow_dbt_python.hooks.backends.s3)</a>
 </li>
-      <li><a href="autodoc.html#airflow_dbt_python.operators.dbt.DbtSeedOperator">DbtSeedOperator (class in airflow_dbt_python.operators.dbt)</a>
+      <li><a href="reference/operators.html#airflow_dbt_python.operators.dbt.DbtSeedOperator">DbtSeedOperator (class in airflow_dbt_python.operators.dbt)</a>
 </li>
-      <li><a href="autodoc.html#airflow_dbt_python.operators.dbt.DbtSnapshotOperator">DbtSnapshotOperator (class in airflow_dbt_python.operators.dbt)</a>
+      <li><a href="reference/operators.html#airflow_dbt_python.operators.dbt.DbtSnapshotOperator">DbtSnapshotOperator (class in airflow_dbt_python.operators.dbt)</a>
 </li>
-      <li><a href="autodoc.html#airflow_dbt_python.operators.dbt.DbtSourceFreshnessOperator">DbtSourceFreshnessOperator (class in airflow_dbt_python.operators.dbt)</a>
+      <li><a href="reference/operators.html#airflow_dbt_python.operators.dbt.DbtSourceFreshnessOperator">DbtSourceFreshnessOperator (class in airflow_dbt_python.operators.dbt)</a>
 </li>
-      <li><a href="autodoc.html#airflow_dbt_python.operators.dbt.DbtTestOperator">DbtTestOperator (class in airflow_dbt_python.operators.dbt)</a>
+      <li><a href="reference/operators.html#airflow_dbt_python.operators.dbt.DbtTestOperator">DbtTestOperator (class in airflow_dbt_python.operators.dbt)</a>
 </li>
-      <li><a href="autodoc.html#airflow_dbt_python.operators.dbt.DbtBaseOperator.do_xcom_push_artifacts">do_xcom_push_artifacts (airflow_dbt_python.operators.dbt.DbtBaseOperator attribute)</a>
+      <li><a href="reference/hooks.html#airflow_dbt_python.hooks.dbt.DebugTaskConfig">DebugTaskConfig (class in airflow_dbt_python.hooks.dbt)</a>
+</li>
+      <li><a href="reference/hooks.html#airflow_dbt_python.hooks.dbt.DepsTaskConfig">DepsTaskConfig (class in airflow_dbt_python.hooks.dbt)</a>
+</li>
+      <li><a href="reference/operators.html#airflow_dbt_python.operators.dbt.DbtBaseOperator.do_xcom_push_artifacts">do_xcom_push_artifacts (airflow_dbt_python.operators.dbt.DbtBaseOperator attribute)</a>
+</li>
+      <li><a href="reference/backends.html#airflow_dbt_python.hooks.backends.s3.DbtS3Backend.download_many_from_key_prefix">download_many_from_key_prefix() (airflow_dbt_python.hooks.backends.s3.DbtS3Backend method)</a>
+</li>
+      <li><a href="reference/backends.html#airflow_dbt_python.hooks.backends.s3.DbtS3Backend.download_one_s3_object">download_one_s3_object() (airflow_dbt_python.hooks.backends.s3.DbtS3Backend method)</a>
+</li>
+      <li><a href="reference/backends.html#airflow_dbt_python.hooks.backends.s3.DbtS3Backend.download_zip_s3_object">download_zip_s3_object() (airflow_dbt_python.hooks.backends.s3.DbtS3Backend method)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -193,7 +279,21 @@
 <h2 id="E">E</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="autodoc.html#airflow_dbt_python.operators.dbt.DbtBaseOperator.execute">execute() (airflow_dbt_python.operators.dbt.DbtBaseOperator method)</a>
+      <li><a href="reference/operators.html#airflow_dbt_python.operators.dbt.DbtBaseOperator.execute">execute() (airflow_dbt_python.operators.dbt.DbtBaseOperator method)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="F">F</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="reference/hooks.html#airflow_dbt_python.hooks.dbt.ConfigFactory.fields">fields (airflow_dbt_python.hooks.dbt.ConfigFactory property)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="reference/hooks.html#airflow_dbt_python.hooks.dbt.FromStrMixin.from_str">from_str() (airflow_dbt_python.hooks.dbt.FromStrMixin class method)</a>
+</li>
+      <li><a href="reference/hooks.html#airflow_dbt_python.hooks.dbt.FromStrMixin">FromStrMixin (class in airflow_dbt_python.hooks.dbt)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -201,7 +301,31 @@
 <h2 id="G">G</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="autodoc.html#airflow_dbt_python.operators.dbt.DbtBaseOperator.get_dbt_config">get_dbt_config() (airflow_dbt_python.operators.dbt.DbtBaseOperator method)</a>
+      <li><a href="reference/hooks.html#airflow_dbt_python.hooks.dbt.GenerateTaskConfig">GenerateTaskConfig (class in airflow_dbt_python.hooks.dbt)</a>
+</li>
+      <li><a href="reference/hooks.html#airflow_dbt_python.hooks.dbt.DbtHook.get_backend">get_backend() (airflow_dbt_python.hooks.dbt.DbtHook method)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="reference/hooks.html#airflow_dbt_python.hooks.dbt.DbtHook.get_config_factory">get_config_factory() (airflow_dbt_python.hooks.dbt.DbtHook method)</a>
+</li>
+      <li><a href="reference/operators.html#airflow_dbt_python.operators.dbt.DbtBaseOperator.get_dbt_config">get_dbt_config() (airflow_dbt_python.operators.dbt.DbtBaseOperator method)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="H">H</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="reference/backends.html#airflow_dbt_python.hooks.backends.s3.DbtS3Backend.hook">hook (airflow_dbt_python.hooks.backends.s3.DbtS3Backend property)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="I">I</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="reference/hooks.html#airflow_dbt_python.hooks.dbt.DbtHook.initialize_runtime_config">initialize_runtime_config() (airflow_dbt_python.hooks.dbt.DbtHook method)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -209,7 +333,15 @@
 <h2 id="L">L</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="autodoc.html#airflow_dbt_python.operators.dbt.DbtBaseOperator.log_cache_events">log_cache_events (airflow_dbt_python.operators.dbt.DbtBaseOperator attribute)</a>
+      <li><a href="reference/hooks.html#airflow_dbt_python.hooks.dbt.ListTaskConfig">ListTaskConfig (class in airflow_dbt_python.hooks.dbt)</a>
+</li>
+      <li><a href="reference/backends.html#airflow_dbt_python.hooks.backends.s3.DbtS3Backend.load_file_handle_replace_error">load_file_handle_replace_error() (airflow_dbt_python.hooks.backends.s3.DbtS3Backend method)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="reference/operators.html#airflow_dbt_python.operators.dbt.DbtBaseOperator.log_cache_events">log_cache_events (airflow_dbt_python.operators.dbt.DbtBaseOperator attribute)</a>
+</li>
+      <li><a href="reference/hooks.html#airflow_dbt_python.hooks.dbt.LogFormat">LogFormat (class in airflow_dbt_python.hooks.dbt)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -221,7 +353,15 @@
     module
 
       <ul>
-        <li><a href="autodoc.html#module-airflow_dbt_python.operators.dbt">airflow_dbt_python.operators.dbt</a>
+        <li><a href="reference/backends.html#module-airflow_dbt_python.hooks.backends">airflow_dbt_python.hooks.backends</a>
+</li>
+        <li><a href="reference/backends.html#module-airflow_dbt_python.hooks.backends.localfs">airflow_dbt_python.hooks.backends.localfs</a>
+</li>
+        <li><a href="reference/backends.html#module-airflow_dbt_python.hooks.backends.s3">airflow_dbt_python.hooks.backends.s3</a>
+</li>
+        <li><a href="reference/hooks.html#module-airflow_dbt_python.hooks.dbt">airflow_dbt_python.hooks.dbt</a>
+</li>
+        <li><a href="reference/operators.html#module-airflow_dbt_python.operators.dbt">airflow_dbt_python.operators.dbt</a>
 </li>
       </ul></li>
   </ul></td>
@@ -230,7 +370,11 @@
 <h2 id="O">O</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="autodoc.html#airflow_dbt_python.operators.dbt.DbtBaseOperator.override_dbt_logging">override_dbt_logging() (airflow_dbt_python.operators.dbt.DbtBaseOperator method)</a>
+      <li><a href="reference/hooks.html#airflow_dbt_python.hooks.dbt.Output">Output (class in airflow_dbt_python.hooks.dbt)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="reference/operators.html#airflow_dbt_python.operators.dbt.DbtBaseOperator.override_dbt_logging">override_dbt_logging() (airflow_dbt_python.operators.dbt.DbtBaseOperator method)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -238,15 +382,51 @@
 <h2 id="P">P</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="autodoc.html#airflow_dbt_python.operators.dbt.DbtBaseOperator.prepare_directory">prepare_directory() (airflow_dbt_python.operators.dbt.DbtBaseOperator method)</a>
+      <li><a href="reference/hooks.html#airflow_dbt_python.hooks.dbt.ParseTaskConfig">ParseTaskConfig (class in airflow_dbt_python.hooks.dbt)</a>
 </li>
-      <li><a href="autodoc.html#airflow_dbt_python.operators.dbt.DbtBaseOperator.profile">profile (airflow_dbt_python.operators.dbt.DbtBaseOperator attribute)</a>
+      <li><a href="reference/hooks.html#airflow_dbt_python.hooks.dbt.BaseConfig.patch_manifest_task">patch_manifest_task() (airflow_dbt_python.hooks.dbt.BaseConfig method)</a>
 </li>
+      <li><a href="reference/operators.html#airflow_dbt_python.operators.dbt.DbtBaseOperator.prepare_directory">prepare_directory() (airflow_dbt_python.operators.dbt.DbtBaseOperator method)</a>
+</li>
+      <li><a href="reference/operators.html#airflow_dbt_python.operators.dbt.DbtBaseOperator.profile">profile (airflow_dbt_python.operators.dbt.DbtBaseOperator attribute)</a>
+</li>
+      <li><a href="reference/operators.html#airflow_dbt_python.operators.dbt.DbtBaseOperator.profiles_dir">profiles_dir (airflow_dbt_python.operators.dbt.DbtBaseOperator attribute)</a>
+</li>
+      <li><a href="reference/operators.html#airflow_dbt_python.operators.dbt.DbtBaseOperator.project_dir">project_dir (airflow_dbt_python.operators.dbt.DbtBaseOperator attribute)</a>
+</li>
+      <li><a href="reference/hooks.html#airflow_dbt_python.hooks.dbt.DbtHook.pull_dbt_profiles">pull_dbt_profiles() (airflow_dbt_python.hooks.dbt.DbtHook method)</a>
+</li>
+      <li><a href="reference/hooks.html#airflow_dbt_python.hooks.dbt.DbtHook.pull_dbt_project">pull_dbt_project() (airflow_dbt_python.hooks.dbt.DbtHook method)</a>
+</li>
+      <li><a href="reference/backends.html#airflow_dbt_python.hooks.backends.localfs.DbtLocalFsBackend.pull_many">pull_many() (airflow_dbt_python.hooks.backends.localfs.DbtLocalFsBackend method)</a>
+
+      <ul>
+        <li><a href="reference/backends.html#airflow_dbt_python.hooks.backends.s3.DbtS3Backend.pull_many">(airflow_dbt_python.hooks.backends.s3.DbtS3Backend method)</a>
+</li>
+      </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="autodoc.html#airflow_dbt_python.operators.dbt.DbtBaseOperator.profiles_dir">profiles_dir (airflow_dbt_python.operators.dbt.DbtBaseOperator attribute)</a>
+      <li><a href="reference/backends.html#airflow_dbt_python.hooks.backends.localfs.DbtLocalFsBackend.pull_one">pull_one() (airflow_dbt_python.hooks.backends.localfs.DbtLocalFsBackend method)</a>
+
+      <ul>
+        <li><a href="reference/backends.html#airflow_dbt_python.hooks.backends.s3.DbtS3Backend.pull_one">(airflow_dbt_python.hooks.backends.s3.DbtS3Backend method)</a>
 </li>
-      <li><a href="autodoc.html#airflow_dbt_python.operators.dbt.DbtBaseOperator.project_dir">project_dir (airflow_dbt_python.operators.dbt.DbtBaseOperator attribute)</a>
+      </ul></li>
+      <li><a href="reference/hooks.html#airflow_dbt_python.hooks.dbt.DbtHook.push_dbt_project">push_dbt_project() (airflow_dbt_python.hooks.dbt.DbtHook method)</a>
+</li>
+      <li><a href="reference/backends.html#airflow_dbt_python.hooks.backends.localfs.DbtLocalFsBackend.push_many">push_many() (airflow_dbt_python.hooks.backends.localfs.DbtLocalFsBackend method)</a>
+
+      <ul>
+        <li><a href="reference/backends.html#airflow_dbt_python.hooks.backends.s3.DbtS3Backend.push_many">(airflow_dbt_python.hooks.backends.s3.DbtS3Backend method)</a>
+</li>
+      </ul></li>
+      <li><a href="reference/backends.html#airflow_dbt_python.hooks.backends.localfs.DbtLocalFsBackend.push_one">push_one() (airflow_dbt_python.hooks.backends.localfs.DbtLocalFsBackend method)</a>
+
+      <ul>
+        <li><a href="reference/backends.html#airflow_dbt_python.hooks.backends.s3.DbtS3Backend.push_one">(airflow_dbt_python.hooks.backends.s3.DbtS3Backend method)</a>
+</li>
+      </ul></li>
+      <li><a href="reference/backends.html#airflow_dbt_python.hooks.backends.localfs.py37_copytree">py37_copytree() (in module airflow_dbt_python.hooks.backends.localfs)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -254,7 +434,15 @@
 <h2 id="R">R</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="autodoc.html#airflow_dbt_python.operators.dbt.run_result_factory">run_result_factory() (in module airflow_dbt_python.operators.dbt)</a>
+      <li><a href="reference/hooks.html#airflow_dbt_python.hooks.dbt.DbtHook.run_dbt_task">run_dbt_task() (airflow_dbt_python.hooks.dbt.DbtHook method)</a>
+</li>
+      <li><a href="reference/operators.html#airflow_dbt_python.operators.dbt.run_result_factory">run_result_factory() (in module airflow_dbt_python.operators.dbt)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="reference/hooks.html#airflow_dbt_python.hooks.dbt.RunOperationTaskConfig">RunOperationTaskConfig (class in airflow_dbt_python.hooks.dbt)</a>
+</li>
+      <li><a href="reference/hooks.html#airflow_dbt_python.hooks.dbt.RunTaskConfig">RunTaskConfig (class in airflow_dbt_python.hooks.dbt)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -262,13 +450,19 @@
 <h2 id="S">S</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="autodoc.html#airflow_dbt_python.operators.dbt.DbtBaseOperator.s3_conn_id">s3_conn_id (airflow_dbt_python.operators.dbt.DbtBaseOperator attribute)</a>
+      <li><a href="reference/operators.html#airflow_dbt_python.operators.dbt.DbtBaseOperator.s3_conn_id">s3_conn_id (airflow_dbt_python.operators.dbt.DbtBaseOperator attribute)</a>
+</li>
+      <li><a href="reference/hooks.html#airflow_dbt_python.hooks.dbt.SeedTaskConfig">SeedTaskConfig (class in airflow_dbt_python.hooks.dbt)</a>
+</li>
+      <li><a href="reference/hooks.html#airflow_dbt_python.hooks.dbt.SelectionConfig">SelectionConfig (class in airflow_dbt_python.hooks.dbt)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="autodoc.html#airflow_dbt_python.operators.dbt.DbtBaseOperator.s3_hook">s3_hook (airflow_dbt_python.operators.dbt.DbtBaseOperator property)</a>
+      <li><a href="reference/operators.html#airflow_dbt_python.operators.dbt.DbtBaseOperator.serializable_result">serializable_result() (airflow_dbt_python.operators.dbt.DbtBaseOperator method)</a>
 </li>
-      <li><a href="autodoc.html#airflow_dbt_python.operators.dbt.DbtBaseOperator.serializable_result">serializable_result() (airflow_dbt_python.operators.dbt.DbtBaseOperator method)</a>
+      <li><a href="reference/hooks.html#airflow_dbt_python.hooks.dbt.SnapshotTaskConfig">SnapshotTaskConfig (class in airflow_dbt_python.hooks.dbt)</a>
+</li>
+      <li><a href="reference/hooks.html#airflow_dbt_python.hooks.dbt.SourceFreshnessTaskConfig">SourceFreshnessTaskConfig (class in airflow_dbt_python.hooks.dbt)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -276,7 +470,13 @@
 <h2 id="T">T</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="autodoc.html#airflow_dbt_python.operators.dbt.DbtBaseOperator.target">target (airflow_dbt_python.operators.dbt.DbtBaseOperator attribute)</a>
+      <li><a href="reference/hooks.html#airflow_dbt_python.hooks.dbt.TableMutabilityConfig">TableMutabilityConfig (class in airflow_dbt_python.hooks.dbt)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="reference/operators.html#airflow_dbt_python.operators.dbt.DbtBaseOperator.target">target (airflow_dbt_python.operators.dbt.DbtBaseOperator attribute)</a>
+</li>
+      <li><a href="reference/hooks.html#airflow_dbt_python.hooks.dbt.TestTaskConfig">TestTaskConfig (class in airflow_dbt_python.hooks.dbt)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -284,7 +484,7 @@
 <h2 id="V">V</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="autodoc.html#airflow_dbt_python.operators.dbt.DbtBaseOperator.vars">vars (airflow_dbt_python.operators.dbt.DbtBaseOperator attribute)</a>
+      <li><a href="reference/operators.html#airflow_dbt_python.operators.dbt.DbtBaseOperator.vars">vars (airflow_dbt_python.operators.dbt.DbtBaseOperator attribute)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -292,7 +492,7 @@
 <h2 id="X">X</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="autodoc.html#airflow_dbt_python.operators.dbt.DbtBaseOperator.xcom_push_artifacts">xcom_push_artifacts() (airflow_dbt_python.operators.dbt.DbtBaseOperator method)</a>
+      <li><a href="reference/operators.html#airflow_dbt_python.operators.dbt.DbtBaseOperator.xcom_push_artifacts">xcom_push_artifacts() (airflow_dbt_python.operators.dbt.DbtBaseOperator method)</a>
 </li>
   </ul></td>
 </tr></table>

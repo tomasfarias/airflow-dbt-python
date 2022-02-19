@@ -5,7 +5,11 @@ Welcome to airflow-dbt-python's documentation!
    :maxdepth: 2
    :caption: Contents:
 
-   autodoc
+   introduction.rst
+   getting_started.rst
+   example_dags.rst
+   development.rst
+   reference.rst
 
 Indices and tables
 ==================

@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Development &mdash; airflow-dbt-python 0.12.0 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Reference" href="reference.html" />
+    <link rel="prev" title="Example DAGs" href="example_dags.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="index.html" class="icon icon-home"> airflow-dbt-python
+          </a>
+              <div class="version">
+                0.12.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="introduction.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="example_dags.html">Example DAGs</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Development</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#poetry">Poetry</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#installing-airflow">Installing Airflow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#building-from-source">Building from source</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#pre-commit-hooks">Pre-commit hooks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#testing">Testing</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#requirements">Requirements</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#running-unit-tests-with-pytest">Running unit tests with pytest</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="reference.html">Reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">airflow-dbt-python</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+      <li>Development</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/development.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <div class="section" id="development">
+<span id="id1"></span><h1>Development<a class="headerlink" href="#development" title="Permalink to this headline"></a></h1>
+<p>This section describes how to setup a development environment. If you are looking to dig into the internals of airflow-dbt-python and make a (very appreciated) contribution to the project, read along.</p>
+<div class="section" id="poetry">
+<h2>Poetry<a class="headerlink" href="#poetry" title="Permalink to this headline"></a></h2>
+<p>airflow-dbt-python uses <a class="reference external" href="https://python-poetry.org/">Poetry</a> for project management. Ensure it’s installed before running: see <a class="reference external" href="https://python-poetry.org/docs/#installation">Poetry’s installation documentation</a>.</p>
+</div>
+<div class="section" id="installing-airflow">
+<h2>Installing Airflow<a class="headerlink" href="#installing-airflow" title="Permalink to this headline"></a></h2>
+<p>Development requires a local installation of Airflow, as airflow-dbt-python doesn’t come bundled with one. We can install a specific version using <code class="docutils literal notranslate"><span class="pre">pip</span></code>:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>pip install apache-airflow<span class="o">==</span><span class="m">2</span>.2
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Installing any 1.X version of Airflow will raise warnings due to dependency conflicts with <code class="docutils literal notranslate"><span class="pre">dbt-core</span></code>. However, these conflicts should not impact airflow-dbt-python.</p>
+</div>
+<p>Installing the <code class="docutils literal notranslate"><span class="pre">airflow</span></code> extra will fetch the latest version of Airflow with major version 2:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span> airflow-dbt-python
+poetry install -E airflow
+</pre></div>
+</div>
+</div>
+<div class="section" id="building-from-source">
+<h2>Building from source<a class="headerlink" href="#building-from-source" title="Permalink to this headline"></a></h2>
+<p>Clone the main repo and install it:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>git clone https://github.com/tomasfarias/airflow-dbt-python.git
+<span class="nb">cd</span> airflow-dbt-python
+poetry install
+</pre></div>
+</div>
+</div>
+<div class="section" id="pre-commit-hooks">
+<h2>Pre-commit hooks<a class="headerlink" href="#pre-commit-hooks" title="Permalink to this headline"></a></h2>
+<p>A handful of <a class="reference external" href="https://pre-commit.com/">pre-commit</a> hooks are provided, including:</p>
+<ul class="simple">
+<li><p>Trailing whitespace trimming.</p></li>
+<li><p>Ensure EOF newline.</p></li>
+<li><p>Detect secrets.</p></li>
+<li><p>Code formatting (<a class="reference external" href="https://github.com/psf/black">black</a>).</p></li>
+<li><p>PEP8 linting (<a class="reference external" href="https://github.com/pycqa/flake8/">flake8</a>).</p></li>
+<li><p>Static type checking (<a class="reference external" href="https://github.com/python/mypy">mypy</a>).</p></li>
+<li><p>Import sorting (<a class="reference external" href="https://github.com/PyCQA/isort">isort</a>).</p></li>
+</ul>
+<p>Install hooks after cloning airflow-dbt-python:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>pre-commit install
+</pre></div>
+</div>
+<p>Ensuring hooks pass is highly recommended as hooks are mapped to CI/CD checks that will block PRs.</p>
+</div>
+<div class="section" id="testing">
+<h2>Testing<a class="headerlink" href="#testing" title="Permalink to this headline"></a></h2>
+<p>Unit tests are available for all operators and hooks. That being said, only a fraction of the large amount of possible inputs that the operators and hooks can take is currently covered, so the unit tests do not offer perfect coverage (a single peek at the <code class="docutils literal notranslate"><span class="pre">DbtBaseOperator</span></code> should give you an idea of the level of state explosion we manage).</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Unit tests (and airflow-dbt-python) assume dbt works correctly and do not assert the behavior of the dbt commands themselves.</p>
+</div>
+<div class="section" id="requirements">
+<h3>Requirements<a class="headerlink" href="#requirements" title="Permalink to this headline"></a></h3>
+<p>Unit tests interact with a <a class="reference external" href="https://www.postgresql.org/">PostgreSQL</a> database as a target to run dbt commands. This requires PostgreSQL to be installed in your local environment. Installation instructions for all major platforms can be found here: <a class="reference external" href="https://www.postgresql.org/download/">https://www.postgresql.org/download/</a>.</p>
+<p>Some unit tests require the <a class="reference external" href="https://pypi.org/project/apache-airflow-providers-amazon/">Amazon provider package for Airflow</a>. Ensure it’s installed via the <code class="docutils literal notranslate"><span class="pre">amazon</span></code> extra:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>poetry install -E amazon
+</pre></div>
+</div>
+</div>
+<div class="section" id="running-unit-tests-with-pytest">
+<h3>Running unit tests with pytest<a class="headerlink" href="#running-unit-tests-with-pytest" title="Permalink to this headline"></a></h3>
+<p>airflow-dbt-python uses <a class="reference external" href="https://docs.pytest.org/">pytest</a> as its testing framework. After you have saved your changes, all unit tests can be run with:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>poetry run pytest tests/ -vv
+</pre></div>
+</div>
+<p>Generating coverage reports with pytest-cov can be done with:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>poetry run pytest -vv --cov<span class="o">=</span>./airflow_dbt_python --cov-report<span class="o">=</span>xml:./coverage.xml --cov-report term-missing tests/
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="example_dags.html" class="btn btn-neutral float-left" title="Example DAGs" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="reference.html" class="btn btn-neutral float-right" title="Reference" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright Copyright 2021 Tomás Farías Santana.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
