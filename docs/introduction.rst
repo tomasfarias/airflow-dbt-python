@@ -9,12 +9,14 @@ Use airflow-dbt-python to run your `dbt <https://www.getdbt.com/>`_ transformati
 Features
 --------
 
-Besides running your dbt transformation pipelines, airflow-dbt-python aims to make dbt a **first-class citizen** of Airflow by supporting additional features that integrate both tools.
+Airflow-dbt-python aims to make dbt a **first-class citizen** of Airflow by supporting additional features that integrate both tools. As you would expect, airflow-dbt-python can run all your dbt workflows in Airflow with the same interface you are used to from the CLI, but without being a mere wrapper: airflow-dbt-python directly interfaces with internal `dbt-core <https://pypi.org/project/dbt-core/>`_ classes, bridging the gap between them and Airflow's operator interface.
+
+As this integration was completed, several features were developed to **extend the capabilities of dbt** to leverage Airflow as much as possible. Can you think of a way dbt could leverage Airflow that is not currently supported? Let us know in a `GitHub issue <https://github.com/tomasfarias/airflow-dbt-python/issues/new/choose>`_! The current list of supported features is as follows:
 
 .. _independent-task-execution:
 
 Independent task execution
---------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Airflow executes `Tasks <https://airflow.apache.org/docs/apache-airflow/stable/concepts/tasks.html>`_ independent of one another: even though downstream and upstream dependencies between tasks exist, the execution of an individual task happens entirely independently of any other task execution (see: `Tasks Relationships <https://airflow.apache.org/docs/apache-airflow/stable/concepts/tasks.html#relationships>`_).
 
@@ -23,7 +25,7 @@ In order to work with this constraint, airflow-dbt-python runs each dbt command 
 .. _download-dbt-files-from-s3:
 
 Download dbt files from S3
---------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The dbt parameters ``profiles_dir`` and ``project_dir`` would normally point to a directory containing a ``profiles.yml`` file and a dbt project in the local environment respectively (defined by the presence of a ``dbt_project.yml`` file). airflow-dbt-python extends these parameters to also accept an `AWS S3 <https://aws.amazon.com/s3/>`_ URL (identified by a ``s3://`` scheme):
 
@@ -39,7 +41,7 @@ In our world, that means task should be responsible of fetching all the dbt rela
 As of the time of writing S3 is the only supported backend for dbt projects, but we have plans to extend this to support more backends, initially targeting other file storages that are commonly used in Airflow connections.
 
 Push dbt artifacts to XCom
---------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Each dbt execution produces one or more JSON `artifacts <https://docs.getdbt.com/reference/artifacts/dbt-artifacts/>`_ that are valuable to produce meta-metrics, build conditional workflows, for reporting purposes, and other uses. airflow-dbt-python can push these artifacts to `XCom <https://airflow.apache.org/docs/apache-airflow/stable/concepts/xcoms.html>`_ as requested via the ``do_xcom_push_artifacts`` parameter, which takes a list of artifacts to push.
 

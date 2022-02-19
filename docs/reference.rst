@@ -6,3 +6,4 @@ Reference
 
    reference/hooks.rst
    reference/operators.rst
+   reference/backends.rst
