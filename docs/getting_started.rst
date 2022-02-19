@@ -8,7 +8,7 @@ This section gives a quick run-down on installing airflow-dbt-python and getting
 Requirements
 ------------
 
-airflow-dbt-python requires the latest major version of ```dbt-core`` <https://pypi.org/project/dbt-core/>`_ which at the time of writing is version 1. Since ``dbt-core`` follows `semantic versioning <https://semver.org/>`_, we do not impose any restrictions on the minor and patch versions, but do keep in mind that the latest ``dbt-core`` features incorporated as minor releases may not yet be supported.
+airflow-dbt-python requires the latest major version of `dbt-core <https://pypi.org/project/dbt-core/>`_ which at the time of writing is version 1. Since ``dbt-core`` follows `semantic versioning <https://semver.org/>`_, we do not impose any restrictions on the minor and patch versions, but do keep in mind that the latest ``dbt-core`` features incorporated as minor releases may not yet be supported.
 
 To line up with ``dbt-core``, airflow-dbt-python supports Python 3.7, 3.8, and 3.9. We also include Python 3.10 in our testing pipeline, although as of the time of writing ``dbt-core`` does not yet support it.
 
