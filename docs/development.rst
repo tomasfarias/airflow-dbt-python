@@ -47,6 +47,7 @@ Pre-commit hooks
 ----------------
 
 A handful of `pre-commit <https://pre-commit.com/>`_ hooks are provided, including:
+
 * Trailing whitespace trimming.
 * Ensure EOF newline.
 * Detect secrets.
