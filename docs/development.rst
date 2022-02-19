@@ -10,21 +10,19 @@ Poetry
 
 airflow-dbt-python uses `Poetry <https://python-poetry.org/>`_ for project management. Ensure it's installed before running: see `Poetry's installation documentation <https://python-poetry.org/docs/#installation>`_.
 
-Additionally, we recommend running the following commands in a virtual environment.
-
 Installing Airflow
 ------------------
 
-For running unit-tests we require a local installation of Airflow. We can install a specific version using ``pip``:
+Development requires a local installation of Airflow, as airflow-dbt-python doesn't come bundled with one. We can install a specific version using ``pip``:
 
 .. code-block:: shell
 
-   pip install apache-airflow==1.10.12
+   pip install apache-airflow==2.2
 
 .. note::
-   Installin any 1.X version of Airflow will raise warnings due to dependency conflicts with ``dbt-core``. These conflicts should not impact airflow-dbt-python.
+   Installing any 1.X version of Airflow will raise warnings due to dependency conflicts with ``dbt-core``. However, these conflicts should not impact airflow-dbt-python.
 
-Or install the ``airflow`` extra which will fetch the latest version of Airflow with major version 2:
+Installing the ``airflow`` extra will fetch the latest version of Airflow with major version 2:
 
 .. code-block:: shell
 
@@ -44,6 +42,27 @@ Clone the main repo and install it:
    cd airflow-dbt-python
    poetry install
 
+
+Pre-commit hooks
+----------------
+
+A handful of `pre-commit <https://pre-commit.com/>`_ hooks are provided, including:
+* Trailing whitespace trimming.
+* Ensure EOF newline.
+* Detect secrets.
+* Code formatting (`black <https://github.com/psf/black>`_).
+* PEP8 linting (`flake8 <https://github.com/pycqa/flake8/>`_).
+* Static type checking (`mypy <https://github.com/python/mypy>`_).
+* Import sorting (`isort <https://github.com/PyCQA/isort>`_).
+
+
+Install hooks after cloning airflow-dbt-python:
+
+.. code-block:: shell
+
+   pre-commit install
+
+Ensuring hooks pass is highly recommended as hooks are mapped to CI/CD checks that will block PRs.
 
 Testing
 -------
@@ -78,6 +97,3 @@ Generating coverage reports with pytest-cov can be done with:
 .. code-block:: shell
 
    poetry run pytest -vv --cov=./airflow_dbt_python --cov-report=xml:./coverage.xml --cov-report term-missing tests/
-
-Pre-commit hooks
-----------------
