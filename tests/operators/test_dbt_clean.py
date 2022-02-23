@@ -100,12 +100,12 @@ def test_dbt_clean_after_compile_in_s3(
     # Run compile first to ensure a target/ directory exists to be cleaned
     comp.execute({})
 
-    keys = s3_hook.list_keys(s3_bucket, f"s3://{s3_bucket}/project/target")
+    keys = s3_hook.list_keys(s3_bucket, prefix="project/target")
     assert len(keys) > 0
 
     clean_result = op.execute({})
 
     assert clean_result is None
 
-    keys = s3_hook.list_keys(s3_bucket, f"s3://{s3_bucket}/project/target")
+    keys = s3_hook.list_keys(s3_bucket, prefix="project/target")
     assert len(keys) == 0
