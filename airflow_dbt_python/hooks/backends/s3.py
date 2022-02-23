@@ -92,12 +92,9 @@ class DbtS3Backend(DbtBackend):
                 name and key prefix will be extracted by calling S3Hook.parse_s3_url.
             replace (bool): Whether to replace existing files or not.
         """
-        bucket_name, key = self.hook.parse_s3_url(str(destination))
-
         self.load_file_handle_replace_error(
             Path(source),
-            key=key,
-            bucket_name=bucket_name,
+            key=str(destination),
             replace=replace,
         )
 
@@ -134,7 +131,6 @@ class DbtS3Backend(DbtBackend):
             self.load_file_handle_replace_error(
                 Path(zip_path),
                 key=str(destination),
-                bucket_name=bucket_name,
                 replace=replace,
             )
 
@@ -148,7 +144,6 @@ class DbtS3Backend(DbtBackend):
                 self.load_file_handle_replace_error(
                     _file,
                     key=s3_key,
-                    bucket_name=bucket_name,
                     replace=replace,
                 )
 
@@ -233,6 +228,9 @@ class DbtS3Backend(DbtBackend):
             True if no ValueError was raised, False otherwise.
         """
         success = True
+
+        if bucket_name is None:
+            bucket_name, key = self.hook.parse_s3_url(key)
 
         self.log.info("Loading file %s to S3: %s", file_path, key)
         try:
