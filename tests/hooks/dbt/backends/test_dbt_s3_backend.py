@@ -277,8 +277,6 @@ def test_push_dbt_project_to_zip_file(s3_bucket, s3_hook, tmpdir, test_files):
     backend = DbtS3Backend()
     backend.push_dbt_project(test_files[0].parent.parent, zip_s3_key)
 
-    keys = s3_hook.list_keys(s3_bucket, f"s3://{s3_bucket}/project/")
-
     key = s3_hook.check_for_key(
         "project/project.zip",
         s3_bucket,
