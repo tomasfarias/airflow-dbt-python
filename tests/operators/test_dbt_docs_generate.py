@@ -93,19 +93,13 @@ def test_dbt_docs_generate_push_to_s3(
             )
 
     # Ensure we are working with an empty target in S3.
-    keys = s3_hook.list_keys(
-        s3_bucket,
-        f"s3://{s3_bucket}/project/target/",
-    )
+    keys = s3_hook.list_keys(s3_bucket, "project/target")
     if keys is not None and len(keys) > 0:
         s3_hook.delete_objects(
             s3_bucket,
             keys,
         )
-        keys = s3_hook.list_keys(
-            s3_bucket,
-            f"s3://{s3_bucket}/project/target/",
-        )
+        keys = s3_hook.list_keys(s3_bucket, "project/target")
     assert keys is None or len(keys) == 0
 
     op = DbtDocsGenerateOperator(
@@ -117,10 +111,7 @@ def test_dbt_docs_generate_push_to_s3(
     results = op.execute({})
     assert results is not None
 
-    keys = s3_hook.list_keys(
-        s3_bucket,
-        f"s3://{s3_bucket}/project/target/",
-    )
-    assert f"s3://{s3_bucket}/project/target/manifest.json" in keys
-    assert f"s3://{s3_bucket}/project/target/catalog.json" in keys
-    assert f"s3://{s3_bucket}/project/target/index.html" in keys
+    keys = s3_hook.list_keys(s3_bucket)
+    assert f"project/target/manifest.json" in keys
+    assert f"project/target/catalog.json" in keys
+    assert f"project/target/index.html" in keys

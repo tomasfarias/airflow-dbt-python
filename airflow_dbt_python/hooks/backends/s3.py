@@ -121,7 +121,7 @@ class DbtS3Backend(DbtBackend):
         all_files = Path(source).glob("**/*")
 
         if delete_before:
-            keys = self.hook.list_keys(bucket_name)
+            keys = self.hook.list_keys(bucket_name, prefix=key)
             self.hook.delete_objects(bucket_name, keys)
 
         if key.endswith(".zip"):
@@ -230,6 +230,10 @@ class DbtS3Backend(DbtBackend):
         success = True
 
         if bucket_name is None:
+            # We can't call S3Hook.load_file with bucket_name=None as it checks for the
+            # presence of the parameter to decide whether setting a bucket_name is
+            # required. By passing bucket_name=None, the parameter is set, and
+            # 'None' will be used as the bucket name.
             bucket_name, key = self.hook.parse_s3_url(key)
 
         self.log.info("Loading file %s to S3: %s", file_path, key)
