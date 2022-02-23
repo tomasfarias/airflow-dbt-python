@@ -294,10 +294,7 @@ def test_push_dbt_project_to_files(s3_bucket, s3_hook, tmpdir, test_files):
     backend = DbtS3Backend()
     backend.push_dbt_project(test_files[0].parent.parent, prefix)
 
-    keys = s3_hook.list_keys(
-        s3_bucket,
-        prefix,
-    )
+    keys = s3_hook.list_keys(bucket_name=s3_bucket)
     assert len(keys) == 4
 
 
@@ -323,7 +320,7 @@ def test_push_dbt_project_with_no_replace(s3_bucket, s3_hook, tmpdir, test_files
             with open(_file) as f:
                 file_content = f.read()
 
-            key = f"s3://{s3_bucket}/project/{_file.relative_to(project_dir)}"
+            key = f"project/{_file.relative_to(project_dir)}"
             bucket.put_object(Key=key, Body=file_content.encode())
             obj = s3_hook.get_key(
                 key,
@@ -339,10 +336,7 @@ def test_push_dbt_project_with_no_replace(s3_bucket, s3_hook, tmpdir, test_files
             project_dir, f"s3://{s3_bucket}/project/", replace=False
         )
 
-    keys = s3_hook.list_keys(
-        s3_bucket,
-        f"s3://{s3_bucket}/project/",
-    )
+    keys = s3_hook.list_keys(bucket_name=s3_bucket)
     assert len(keys) == 4, keys
 
     last_modified_result = {}
@@ -376,7 +370,7 @@ def test_push_dbt_project_with_partial_replace(s3_bucket, s3_hook, tmpdir, test_
             with open(_file) as f:
                 file_content = f.read()
 
-            key = f"s3://{s3_bucket}/project/{_file.relative_to(project_dir)}"
+            key = f"project/{_file.relative_to(project_dir)}"
             bucket.put_object(Key=key, Body=file_content.encode())
             obj = s3_hook.get_key(
                 key,
@@ -399,10 +393,7 @@ def test_push_dbt_project_with_partial_replace(s3_bucket, s3_hook, tmpdir, test_
             project_dir, f"s3://{s3_bucket}/project/", replace=False
         )
 
-    keys = s3_hook.list_keys(
-        s3_bucket,
-        f"s3://{s3_bucket}/project/",
-    )
+    keys = s3_hook.list_keys(bucket_name=s3_bucket)
     assert len(keys) == 4
 
     last_modified_result = {}
@@ -433,7 +424,7 @@ def test_push_dbt_project_with_delete_before(s3_bucket, s3_hook, tmpdir, test_fi
 
     with freezegun.freeze_time("2022-01-01"):
         # delete_before = True should delete this random file not part of the project
-        bucket.put_object(Key=f"{prefix}file_to_be_deleted", Body="content".encode())
+        bucket.put_object(Key=f"project/file_to_be_deleted", Body="content".encode())
 
         for _file in project_dir.glob("**/*"):
             if _file.is_dir():
@@ -442,7 +433,7 @@ def test_push_dbt_project_with_delete_before(s3_bucket, s3_hook, tmpdir, test_fi
             with open(_file) as f:
                 file_content = f.read()
 
-            key = f"s3://{s3_bucket}/project/{_file.relative_to(project_dir)}"
+            key = f"project/{_file.relative_to(project_dir)}"
             bucket.put_object(Key=key, Body=file_content.encode())
             obj = s3_hook.get_key(
                 key,
@@ -450,10 +441,7 @@ def test_push_dbt_project_with_delete_before(s3_bucket, s3_hook, tmpdir, test_fi
             )
             last_modified_expected[key] = obj.last_modified
 
-    keys = s3_hook.list_keys(
-        s3_bucket,
-        prefix,
-    )
+    keys = s3_hook.list_keys(bucket_name=s3_bucket)
     assert len(keys) == 5
 
     backend = DbtS3Backend()
@@ -461,10 +449,7 @@ def test_push_dbt_project_with_delete_before(s3_bucket, s3_hook, tmpdir, test_fi
         # Try to push the same files, a month after.
         backend.push_dbt_project(project_dir, prefix, delete_before=True)
 
-    keys = s3_hook.list_keys(
-        s3_bucket,
-        prefix,
-    )
+    keys = s3_hook.list_keys(bucket_name=s3_bucket)
     assert len(keys) == 4, keys
 
     last_modified_result = {}
@@ -483,6 +468,15 @@ def test_push_dbt_project_with_delete_before(s3_bucket, s3_hook, tmpdir, test_fi
 class FakeHook:
     def load_file(*args, **kwargs):
         raise ValueError()
+
+    def parse_s3_url(self, key):
+        try:
+            from airflow.providers.amazon.aws.hooks.s3 import S3Hook
+        except ImportError:
+            from airflow.hooks.S3_hook import S3Hook
+
+        hook = S3Hook()
+        return hook.parse_s3_url(key)
 
 
 def test_load_file_handle_replace_error_returns_false_on_valueerror():
