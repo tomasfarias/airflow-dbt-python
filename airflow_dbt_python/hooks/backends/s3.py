@@ -121,7 +121,7 @@ class DbtS3Backend(DbtBackend):
         all_files = Path(source).glob("**/*")
 
         if delete_before:
-            keys = self.hook.list_keys(bucket_name, destination)
+            keys = self.hook.list_keys(bucket_name)
             self.hook.delete_objects(bucket_name, keys)
 
         if key.endswith(".zip"):
