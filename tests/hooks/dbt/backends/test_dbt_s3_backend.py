@@ -280,10 +280,13 @@ def test_push_dbt_project_to_zip_file(s3_bucket, s3_hook, tmpdir, test_files):
     keys = s3_hook.list_keys(s3_bucket, f"s3://{s3_bucket}/project/")
 
     key = s3_hook.check_for_key(
-        zip_s3_key,
+        "project/project.zip",
         s3_bucket,
     )
+    keys = s3_hook.list_keys(bucket_name=s3_bucket)
+
     assert key is True
+    assert "project/project.zip" in keys
 
 
 def test_push_dbt_project_to_files(s3_bucket, s3_hook, tmpdir, test_files):
