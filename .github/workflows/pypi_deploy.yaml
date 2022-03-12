@@ -14,9 +14,9 @@ jobs:
           python-version: 3.9
       - name: Install Poetry
         uses: abatilo/actions-poetry@v2.1.3
-      - name: Install redtape with Poetry
+      - name: Install airflow-dbt-python with Poetry
         run: poetry install
-      - name: Build redtape with Poetry
+      - name: Build airflow-dbt-python with Poetry
         run: poetry build
-      - name: Publish redtape to Pypi with Poetry
+      - name: Publish airflow-dbt-python to PyPI with Poetry
         run: poetry publish --username __token__ --password ${{ secrets.PYPI_API_TOKEN }}
