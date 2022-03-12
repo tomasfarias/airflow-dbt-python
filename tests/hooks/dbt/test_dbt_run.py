@@ -149,3 +149,42 @@ def test_dbt_run_task_compiled(
     for index, result in enumerate(results.results, start=2):
         assert result.status == RunStatus.Success
         assert result.node.unique_id == f"model.test.model_{index}"
+
+
+def test_dbt_run_task_that_fails_to_connect(
+    hook, profiles_file, dbt_project_file, model_files
+):
+    """
+    Test a dbt run task while failing to connect.
+
+    As dbt handles exceptions with track_run, we need to ensure we don't fail when
+    dbt is not bubbling up exceptions. In particular, FailedToConnectException is not
+    re-raised.
+    """
+    factory = hook.get_config_factory("run")
+    config = factory.create_config(
+        project_dir=dbt_project_file.parent,
+        profiles_dir=profiles_file.parent,
+    )
+
+    def create_fake_task():
+        task = config.dbt_task.from_args(config)
+
+        def run():
+            from dbt.exceptions import FailedToConnectException
+
+            raise FailedToConnectException("I failed")
+
+        def interpret_results(*args):
+            return False
+
+        task.run = run
+        task.interpret_results = interpret_results
+        return task
+
+    config.create_dbt_task = create_fake_task
+
+    success, results = hook.run_dbt_task(config)
+
+    assert success is False
+    assert results is None
