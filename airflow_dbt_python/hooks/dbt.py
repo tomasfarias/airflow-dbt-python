@@ -572,6 +572,8 @@ class DbtHook(BaseHook):
             # before deps runs and the following would raise a CompilationError.
             runtime_config.load_dependencies()
 
+        results = None
+
         with adapter_management():
             register_adapter(runtime_config)
 
