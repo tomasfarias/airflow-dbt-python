@@ -3,22 +3,28 @@ from __future__ import annotations
 
 import dataclasses
 import json
+import os
 import pickle
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any, Optional, Union
 from urllib.parse import urlparse
 
 import dbt.flags as flags
+import yaml
 from dbt.adapters.factory import register_adapter
-from dbt.config.runtime import RuntimeConfig
+from dbt.clients import yaml_helper
+from dbt.config.profile import Profile, read_profile
+from dbt.config.project import PartialProject, Project
+from dbt.config.renderer import DbtProjectYamlRenderer, ProfileRenderer
+from dbt.config.runtime import RuntimeConfig, UnsetProfileConfig
 from dbt.contracts.graph.manifest import Manifest
 from dbt.contracts.results import RunResult
 from dbt.exceptions import InternalException
 from dbt.graph import Graph
-from dbt.main import adapter_management, read_user_config, track_run
-from dbt.task.base import BaseTask
+from dbt.main import adapter_management, track_run
+from dbt.task.base import BaseTask, move_to_nearest_project_dir
 from dbt.task.build import BuildTask
 from dbt.task.clean import CleanTask
 from dbt.task.compile import CompileTask
@@ -36,6 +42,8 @@ from dbt.task.snapshot import SnapshotTask
 from dbt.task.test import TestTask
 from dbt.tracking import initialize_from_flags
 
+from airflow.exceptions import AirflowException
+
 try:
     from airflow.hooks.base import BaseHook
 except ImportError:
@@ -44,7 +52,7 @@ except ImportError:
 from .backends import DbtBackend, StrPath, build_backend
 
 
-class FromStrMixin(Enum):
+class FromStrEnum(Enum):
     """Access enum variants with strings ensuring uppercase."""
 
     @classmethod
@@ -53,7 +61,7 @@ class FromStrMixin(Enum):
         return cls[s.replace("-", "_").upper()]
 
 
-class LogFormat(FromStrMixin, Enum):
+class LogFormat(FromStrEnum):
     """Allowed dbt log formats."""
 
     DEFAULT = "default"
@@ -61,7 +69,7 @@ class LogFormat(FromStrMixin, Enum):
     TEXT = "text"
 
 
-class Output(FromStrMixin, Enum):
+class Output(FromStrEnum):
     """Allowed output arguments."""
 
     JSON = "json"
@@ -74,6 +82,22 @@ class Output(FromStrMixin, Enum):
         if isinstance(other, str):
             return other.upper() == self.name
         return Enum.__eq__(self, other)
+
+
+def parse_vars(vars: Optional[Union[str, dict[str, Any]]]) -> dict[str, Any]:
+    """Parse CLI vars as dbt would.
+
+    This means:
+        - When vars is a string, we treat it as a YAML dict str.
+        - If it's already a dictionary, we just return it.
+        - Otherwise (it's None), we return an empty dictionary.
+    """
+    if isinstance(vars, str):
+        return yaml_helper.load_yaml_text(vars)
+    elif isinstance(vars, dict):
+        return vars
+    else:
+        return {}
 
 
 @dataclass
@@ -94,7 +118,7 @@ class BaseConfig:
     single_threaded: Optional[bool] = None
     threads: Optional[int] = None
     use_experimental_parser: Optional[bool] = None
-    vars: str = "{}"
+    vars: Optional[Union[str, dict[str, Any]]] = None
     warn_error: Optional[bool] = None
 
     # Logging
@@ -129,9 +153,21 @@ class BaseConfig:
     no_write_json: Optional[bool] = dataclasses.field(default=None, repr=False)
 
     def __post_init__(self):
-        """Support dictionary args by casting them to str after setting."""
-        if isinstance(self.vars, dict):
-            self.vars = json.dumps(self.vars)
+        """Post initialization actions for a dbt configuration.
+
+        There are two actions:
+            1. Parse self.vars to ensure we have a dictionary as if it had been
+                parsed by dbt.
+            2. Support mutually exclusive parameters (i.e. "{param}" and "no_{param}").
+                A ValueError will be raised if both mutually exclusive parameters are
+                not None.
+
+        Raises:
+            ValueError: When setting two mutually exclusive parameters.
+        """
+        self.parsed_vars = parse_vars(self.vars)
+        self.vars = yaml.dump(self.parsed_vars)
+
         mutually_exclusive_attrs = (
             "defer",
             "partial_parse",
@@ -159,7 +195,7 @@ class BaseConfig:
 
     @property
     def dbt_task(self) -> BaseTask:
-        """Access to the underlyingn dbt task class."""
+        """Access to the underlying dbt task class."""
         if getattr(self, "cls", None) is None:
             raise NotImplementedError(
                 "Dbt task is not implemented. Use a subclass of BaseConfig."
@@ -221,9 +257,24 @@ class BaseConfig:
 
         task._runtime_initialize = _runtime_initialize
 
-    def create_dbt_task(self) -> BaseTask:
-        """Create a dbt task given with this configuration."""
-        task = self.dbt_task.from_args(self)
+    def create_dbt_task(
+        self, extra_targets: Optional[dict[str, Any]] = None
+    ) -> tuple[BaseTask, RuntimeConfig]:
+        """Create a dbt task given with this configuration.
+
+        Extra targets may be specified to be appended to this task's dbt project's
+        profile.
+
+        Args:
+            extra_targets: Additional targets for a dbt project's Profile.
+
+        Returns:
+            A tuple with the corresnponding subclass of a dbt BaseTask and the
+            RuntimeConfig for the task.
+        """
+        runtime_config = self.create_runtime_config(extra_targets)
+        task = self.dbt_task(args=self, config=runtime_config)
+
         if (
             self.compiled_target is not None
             and issubclass(self.dbt_task, ManifestTask) is True
@@ -232,7 +283,135 @@ class BaseConfig:
             # Represented here by the presence of the compiled_target attribute.
             self.patch_manifest_task(task)
 
-        return task
+        return (task, runtime_config)
+
+    def create_runtime_config(
+        self, extra_targets: Optional[dict[str, Any]]
+    ) -> Optional[RuntimeConfig]:
+        """Crete a dbt RuntimeConfig, if possible.
+
+        If the given task's ConfigType is not RuntimeConfig, None will be returned
+        instead.
+        Flags are also initialized as configuration is created.
+
+        Args:
+            extra_targets: Additional targets for a dbt project's Profile.
+
+        Returns:
+            A RuntimeConfig instance.
+        """
+        project, profile = self.create_dbt_project_and_profile(extra_targets)
+        initialize_from_flags()
+        self.cls.set_log_format()
+        flags.set_from_args(self, profile.user_config)
+
+        cfg_type = self.dbt_task.ConfigType
+
+        if issubclass(cfg_type, RuntimeConfig):
+            return cfg_type.from_parts(project=project, profile=profile, args=self)
+        return None
+
+    def create_dbt_project_and_profile(
+        self, extra_targets: Optional[dict[str, Any]] = None
+    ) -> tuple[Project, Profile]:
+        """Create a dbt Project and Profile using this configuration.
+
+        Args:
+            extra_targets: Additional targets for a dbt project's Profile.
+
+        Returns:
+            A tuple with an instance of Project and Profile.
+        """
+        profile = self.create_dbt_profile(extra_targets)
+
+        project_renderer = DbtProjectYamlRenderer(profile, self.parsed_vars)
+        project = Project.from_project_root(
+            self.project_dir, project_renderer, verify_version=bool(flags.VERSION_CHECK)
+        )
+        project.project_env_vars = project_renderer.ctx_obj.env_vars
+
+        return (project, profile)
+
+    @property
+    def profile_name(self) -> str:
+        """Return the profile name for the dbt project given by this configuration.
+
+        The profile name can be set by the profile attribute or read from a dbt
+        project's configuration file (dbt_project.yml). We rely on
+        Profile.pick_profile_name to pick between the two.
+
+        Returns:
+            The dbt project's profile name.
+        """
+        project_profile_name = self.partial_project.render_profile_name(
+            self.profile_renderer
+        )
+        profile_name = Profile.pick_profile_name(self.profile, project_profile_name)
+
+        return profile_name
+
+    @property
+    def profile_renderer(self) -> ProfileRenderer:
+        """Return a ProfileRenderer with this config's parsed vars."""
+        profile_renderer = ProfileRenderer(self.parsed_vars)
+        return profile_renderer
+
+    @property
+    def partial_project(self) -> PartialProject:
+        """Return a PartialProject for the dbt project given by this configuration.
+
+        A PartialProject loads a dbt project configuration and handles access to
+        configuration values. It is used by us to determine the profile name to use.
+
+        Returns:
+            A PartialProject instance for this configuration.
+        """
+        project_root = self.project_dir if self.project_dir else os.getcwd()
+        version_check = bool(flags.VERSION_CHECK)
+        partial_project = Project.partial_load(
+            project_root, verify_version=version_check
+        )
+
+        return partial_project
+
+    def create_dbt_profile(
+        self,
+        extra_targets: Optional[dict[str, Any]] = None,
+    ) -> Profile:
+        """Create a dbt Profile with any added extra targets.
+
+        Extra targets are appended under the given profile_name. If no profile is found
+        with the given profile_name it is created with any extra_targets.
+
+        Returns:
+            A dbt profile for the task represented by this configuration.
+        """
+        if self.profiles_dir is not None:
+            raw_profiles = read_profile(self.profiles_dir)
+        else:
+            raw_profiles = {}
+
+        if extra_targets:
+            profile = raw_profiles.setdefault(self.profile_name, {})
+            outputs = profile.setdefault("outputs", {})
+            outputs.setdefault("target", self.target)
+            profile["outputs"] = {**outputs, **extra_targets}
+
+        user_config = raw_profiles.get("config", {})
+
+        profile = Profile.from_raw_profile_info(
+            raw_profile=raw_profiles.get(
+                self.profile_name, {}
+            ),  # Let dbt handle missing profile errors.
+            profile_name=self.profile_name,
+            renderer=self.profile_renderer,
+            user_config=user_config,
+            target_override=self.target,
+            threads_override=self.threads,
+        )
+        profile.profile_env_vars = self.profile_renderer.ctx_obj.env_vars
+
+        return profile
 
 
 @dataclass
@@ -437,7 +616,7 @@ class TestTaskConfig(SelectionConfig):
                 self.select = ["test_type:generic"]
 
 
-class ConfigFactory(FromStrMixin, Enum):
+class ConfigFactory(FromStrEnum):
     """Produce configurations for each dbt task."""
 
     BUILD = BuildTaskConfig
@@ -545,14 +724,6 @@ class DbtHook(BaseHook):
         """Get a ConfigFactory given a dbt command string."""
         return ConfigFactory.from_str(command)
 
-    def initialize_runtime_config(self, config: BaseConfig) -> RuntimeConfig:
-        """Set environment flags and return a RuntimeConfig."""
-        user_config = read_user_config(flags.PROFILES_DIR)
-        initialize_from_flags()
-        config.cls.set_log_format()
-        flags.set_from_args(config, user_config)
-        return RuntimeConfig.from_args(config)
-
     def run_dbt_task(self, config: BaseConfig) -> tuple[bool, Optional[RunResult]]:
         """Run a dbt task with a given configuration and return the results.
 
@@ -562,23 +733,87 @@ class DbtHook(BaseHook):
             A tuple containing a boolean indicating success and optionally the results
                 of running the dbt command.
         """
-        runtime_config = self.initialize_runtime_config(config)
+        extra_target = self.get_target_from_connection(config.target)
 
         config.dbt_task.pre_init_hook(config)
-        task = config.create_dbt_task()
+        task, runtime_config = config.create_dbt_task(extra_target)
 
-        if not isinstance(task, DepsTask):
+        # When creating tasks via from_args, dbt switches to the project directory.
+        # We have to do that here as we are not using from_args.
+        move_to_nearest_project_dir(config)
+
+        if not isinstance(runtime_config, (UnsetProfileConfig, type(None))):
             # The deps command installs the dependencies, which means they may not exist
             # before deps runs and the following would raise a CompilationError.
+            print(runtime_config.args)
             runtime_config.load_dependencies()
 
         results = None
 
         with adapter_management():
-            register_adapter(runtime_config)
+            if not isinstance(runtime_config, (UnsetProfileConfig, type(None))):
+                register_adapter(runtime_config)
 
             with track_run(task):
                 results = task.run()
         success = task.interpret_results(results)
 
         return success, results
+
+    def get_target_from_connection(
+        self, target: Optional[str]
+    ) -> Optional[dict[str, Any]]:
+        """Return an Airflow connection that matches a given dbt target, if exists.
+
+        Subclasses may override this method to support different connection types for
+        each target type supported for dbt. This default implementation simply returns
+        everything from the extra field and some common dbt parameters, but subclasses
+        can implement a proper UI override to match each dbt target type and validate
+        the fields.
+
+        Args:
+            target: The target name to use as an Airflow connection ID.
+
+        Returns:
+            A dictionary with a configuration for a dbt target, or None if a matching
+                Airflow connection is not found for given dbt target.
+        """
+        if target is None:
+            return None
+
+        try:
+            conn = self.get_connection(target)
+        except AirflowException:
+            self.log.debug(
+                "No Airflow connection matching dbt target %s was found.", target
+            )
+            return None
+
+        # These parameters are available in *most* dbt target types, so we include them
+        # if they are set.
+        dbt_params = ("host", "login", "password", "schema", "port", "conn_type")
+        params = {
+            key: getattr(conn, key)
+            for key in dbt_params
+            if getattr(conn, key, None) is not None
+        }
+
+        try:
+            user = params.pop("login")
+        except KeyError:
+            pass
+        else:
+            params["user"] = user
+
+        try:
+            conn_type = params.pop("conn_type")
+        except KeyError:
+            pass
+        else:
+            params["type"] = conn_type
+
+        extra = conn.extra_dejson
+        if "dbname" not in extra:
+            extra["dbname"] = conn.conn_id
+
+        return {target: {**params, **extra}}

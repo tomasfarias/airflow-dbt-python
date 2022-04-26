@@ -93,3 +93,24 @@ def test_dbt_hook_pull_dbt_project():
 
     assert args == ("/path/to/profiles", "/path/to/store")
     assert kwargs == {}
+
+
+def test_dbt_hook_get_target_from_connection(airflow_conns, database):
+    """Test fetching Airflow connections."""
+    hook = DbtHook()
+
+    for conn_id in airflow_conns:
+        extra_target = hook.get_target_from_connection(conn_id)
+
+        assert conn_id in extra_target
+        assert extra_target[conn_id]["type"] == "postgres"
+        assert extra_target[conn_id]["user"] == database.user
+        assert extra_target[conn_id]["password"] == database.password
+        assert extra_target[conn_id]["dbname"] == database.dbname
+
+
+@pytest.mark.parametrize("conn_id", [("non_existent",), (None,)])
+def test_dbt_hook_get_target_from_connection_non_existent(conn_id):
+    """Test None is returned when Airflow connections do not exist."""
+    hook = DbtHook()
+    assert hook.get_target_from_connection(conn_id) is None

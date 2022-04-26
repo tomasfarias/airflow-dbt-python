@@ -294,12 +294,13 @@ class DbtBaseOperator(BaseOperator):
 
     def prepare_directory(self, tmp_dir: str):
         """Prepares a dbt directory by pulling files from S3."""
-        profiles_file_path = self.dbt_hook.pull_dbt_profiles(
-            self.profiles_dir,
-            tmp_dir,
-            conn_id=self.profiles_conn_id,
-        )
-        self.profiles_dir = str(profiles_file_path.parent) + "/"
+        if self.profiles_dir is not None:
+            profiles_file_path = self.dbt_hook.pull_dbt_profiles(
+                self.profiles_dir,
+                tmp_dir,
+                conn_id=self.profiles_conn_id,
+            )
+            self.profiles_dir = str(profiles_file_path.parent) + "/"
 
         project_dir_path = self.dbt_hook.pull_dbt_project(
             self.project_dir,
@@ -759,7 +760,7 @@ class DbtBuildOperator(DbtBaseOperator):
 
     @property
     def command(self) -> str:
-        """Return the parse command."""
+        """Return the build command."""
         return "build"
 
 
