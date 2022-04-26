@@ -45,7 +45,7 @@ def test_dbt_run_mocked_all_args():
     assert config.profiles_dir == "/path/to/profiles/"
     assert config.profile == "dbt-profile"
     assert config.target == "dbt-target"
-    assert config.vars == '{"target": "override"}'
+    assert config.parsed_vars == {"target": "override"}
     assert config.log_cache_events is True
     assert config.full_refresh is True
     assert config.fail_fast is True
@@ -260,3 +260,50 @@ def test_dbt_run_uses_correct_argument_according_to_version():
 
     assert op.select == ["/path/to/model.sql", "+/another/model.sql+2"]
     assert getattr(op, "models", None) is None
+
+
+def test_dbt_run_models_with_airflow_connection(
+    dbt_project_file, model_files, airflow_conns
+):
+    """Test execution of DbtRunOperator with an Airflow connection target."""
+    for conn_id in airflow_conns:
+        op = DbtRunOperator(
+            task_id="dbt_task",
+            project_dir=dbt_project_file.parent,
+            models=[str(m.stem) for m in model_files],
+            target=conn_id,
+        )
+
+        execution_results = op.execute({})
+        run_result = execution_results["results"][0]
+
+        assert run_result["status"] == RunStatus.Success
+        assert op.profiles_dir is None
+        assert op.target == conn_id
+
+
+def test_dbt_run_with_airflow_connection_and_profile(
+    profiles_file, dbt_project_file, model_files, airflow_conns
+):
+    """Test execution of DbtRunOperator with a connection and a profiles file.
+
+    An Airflow connection target should still be usable even in the presence of
+    profiles file, and vice-versa.
+    """
+    all_targets = airflow_conns + ("test",)
+
+    for target in all_targets:
+        op = DbtRunOperator(
+            task_id="dbt_task",
+            project_dir=dbt_project_file.parent,
+            profiles_dir=profiles_file.parent,
+            select=[str(m.stem) for m in model_files],
+            target=target,
+        )
+
+        execution_results = op.execute({})
+        run_result = execution_results["results"][0]
+
+        assert run_result["status"] == RunStatus.Success
+        assert op.profiles_dir == profiles_file.parent
+        assert op.target == target

@@ -3,6 +3,7 @@
 Common fixtures include a connection to a postgres database, a set of sample model and
  seed files, dbt configuration files, and temporary directories for everything.
 """
+import os
 import shutil
 
 import boto3
@@ -13,6 +14,9 @@ from pytest_postgresql.janitor import DatabaseJanitor
 from airflow_dbt_python.hooks.dbt import DbtHook
 
 PROFILES = """
+config:
+  send_anonymous_usage_stats: false
+
 default:
   target: test
   outputs:
@@ -480,3 +484,27 @@ def test_files(tmp_path_factory, dbt_project_file):
     f1.unlink()
     f2.unlink()
     f3.unlink()
+
+
+@pytest.fixture()
+def airflow_conns(database):
+    """Craete Airflow connections for testing.
+
+    We create them by setting AIRFLOW_CONN_{CONN_ID} env variables. Only postgres
+    connections are set for now as our testing database is postgres.
+    """
+    uris = (
+        f"postgres://{database.user}:{database.password}@{database.host}:{database.port}/public?dbname={database.dbname}",
+        f"postgres://{database.user}:{database.password}@{database.host}:{database.port}/public",
+    )
+    ids = (
+        "dbt_test_postgres_1",
+        database.dbname,
+    )
+    for conn_id, uri in zip(ids, uris):
+        os.environ[f"AIRFLOW_CONN_{conn_id.upper()}"] = uri
+
+    yield ids
+
+    for conn_id in ids:
+        os.environ.pop(f"AIRFLOW_CONN_{conn_id.upper()}")

@@ -3,6 +3,7 @@ from pathlib import Path
 
 import pytest
 from dbt.contracts.results import RunStatus
+from dbt.exceptions import DbtProfileError
 
 from airflow_dbt_python.hooks.dbt import DbtHook
 
@@ -131,3 +132,84 @@ def test_dbt_seed_task_compiled(
     for index, result in enumerate(results.results, start=1):
         assert result.status == RunStatus.Success
         assert result.node.unique_id == f"seed.test.seed_{index}"
+
+
+def test_dbt_seed_with_airflow_connection(
+    profiles_file, dbt_project_file, airflow_conns, seed_files
+):
+    """Pulling a target from an Airflow connection."""
+    for conn_id in airflow_conns:
+        hook = DbtHook()
+        factory = hook.get_config_factory("seed")
+        config = factory.create_config(
+            project_dir=dbt_project_file.parent,
+            profiles_dir=profiles_file.parent,
+            target=conn_id,
+            select=[str(s.stem) for s in seed_files],
+        )
+        success, results = hook.run_dbt_task(config)
+
+        assert success is True
+        assert results.args["target"] == conn_id
+        assert len(results.results) == 2
+
+        for index, result in enumerate(results.results, start=1):
+            assert result.status == RunStatus.Success
+            assert result.node.unique_id == f"seed.test.seed_{index}"
+
+
+def test_dbt_seed_with_airflow_connection_and_no_profiles(
+    hook, dbt_project_file, seed_files, airflow_conns
+):
+    """Using an Airflow connection in place of a profiles file.
+
+    We omit the profiles_file hook as it should not be needed.
+    """
+    for conn_id in airflow_conns:
+        factory = hook.get_config_factory("seed")
+        config = factory.create_config(
+            project_dir=dbt_project_file.parent,
+            profiles_dir=None,
+            target=conn_id,
+            select=[str(s.stem) for s in seed_files],
+        )
+        success, results = hook.run_dbt_task(config)
+
+        assert success is True
+        assert results.args["target"] == conn_id
+        assert len(results.results) == 2
+
+        for index, result in enumerate(results.results, start=1):
+            assert result.status == RunStatus.Success
+            assert result.node.unique_id == f"seed.test.seed_{index}"
+
+
+def test_dbt_seed_with_non_existent_airflow_connection(
+    hook, dbt_project_file, seed_files, airflow_conns
+):
+    """An Exception should be raised if a connection is not found."""
+    factory = hook.get_config_factory("seed")
+    config = factory.create_config(
+        project_dir=dbt_project_file.parent,
+        target="invalid_conn_id",
+        select=[str(s.stem) for s in seed_files],
+    )
+
+    with pytest.raises(DbtProfileError):
+        hook.run_dbt_task(config)
+
+
+def test_dbt_run_with_non_existent_airflow_connection_and_profiles(
+    hook, dbt_project_file, seed_files, airflow_conns, profiles_file
+):
+    """An Exception should be raised if a connection is not found."""
+    factory = hook.get_config_factory("seed")
+    config = factory.create_config(
+        project_dir=dbt_project_file.parent,
+        profiles_dir=profiles_file.parent,
+        target="invalid_conn_id",
+        select=[str(s.stem) for s in seed_files],
+    )
+
+    with pytest.raises(DbtProfileError):
+        hook.run_dbt_task(config)

@@ -28,7 +28,7 @@ def test_dbt_source_mocked_all_args():
     assert config.profiles_dir == "/path/to/profiles/"
     assert config.profile == "dbt-profile"
     assert config.target == "dbt-target"
-    assert config.vars == '{"target": "override"}'
+    assert config.parsed_vars == {"target": "override"}
     assert config.log_cache_events is True
     assert config.select == ["/path/to/models"]
     assert config.exclude == ["/path/to/data/to/exclude.sql"]

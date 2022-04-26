@@ -3,7 +3,7 @@ from pathlib import Path
 
 import pytest
 from dbt.contracts.results import RunStatus
-from dbt.exceptions import DbtProjectError
+from dbt.exceptions import DbtProfileError, DbtProjectError
 
 
 def test_dbt_run_task(hook, profiles_file, dbt_project_file, model_files):
@@ -167,7 +167,7 @@ def test_dbt_run_task_that_fails_to_connect(
         profiles_dir=profiles_file.parent,
     )
 
-    def create_fake_task():
+    def create_fake_task(*_):
         task = config.dbt_task.from_args(config)
 
         def run():
@@ -180,7 +180,7 @@ def test_dbt_run_task_that_fails_to_connect(
 
         task.run = run
         task.interpret_results = interpret_results
-        return task
+        return task, None
 
     config.create_dbt_task = create_fake_task
 
@@ -188,3 +188,85 @@ def test_dbt_run_task_that_fails_to_connect(
 
     assert success is False
     assert results is None
+
+
+def test_dbt_run_with_airflow_connection(
+    hook, dbt_project_file, model_files, airflow_conns, profiles_file
+):
+    """Pulling a target from an Airflow connection."""
+    for conn_id in airflow_conns:
+        factory = hook.get_config_factory("run")
+        config = factory.create_config(
+            project_dir=dbt_project_file.parent,
+            profiles_dir=profiles_file.parent,
+            target=conn_id,
+            select=[str(m.stem) for m in model_files],
+        )
+        success, results = hook.run_dbt_task(config)
+
+        assert success is True
+        assert len(results.results) == 3
+        assert results.args["target"] == conn_id
+
+        # Start from 2 as model_1 is ephemeral, and ephemeral models are not built.
+        for index, result in enumerate(results.results, start=2):
+            assert result.status == RunStatus.Success
+            assert result.node.unique_id == f"model.test.model_{index}"
+
+
+def test_dbt_run_with_airflow_connection_and_no_profiles(
+    hook, dbt_project_file, model_files, airflow_conns
+):
+    """Using an Airflow connection in place of a profiles file.
+
+    We omit the profiles_file hook as it should not be needed.
+    """
+    for conn_id in airflow_conns:
+        factory = hook.get_config_factory("run")
+        config = factory.create_config(
+            project_dir=dbt_project_file.parent,
+            profiles_dir=None,
+            target=conn_id,
+            select=[str(m.stem) for m in model_files],
+        )
+        success, results = hook.run_dbt_task(config)
+
+        assert success is True
+        assert len(results.results) == 3
+        assert results.args["target"] == conn_id
+
+        # Start from 2 as model_1 is ephemeral, and ephemeral models are not built.
+        for index, result in enumerate(results.results, start=2):
+            assert result.status == RunStatus.Success
+            assert result.node.unique_id == f"model.test.model_{index}"
+
+
+def test_dbt_run_with_non_existent_airflow_connection(
+    hook, dbt_project_file, model_files, airflow_conns
+):
+    """An Exception should be raised if a connection is not found."""
+    factory = hook.get_config_factory("run")
+    config = factory.create_config(
+        project_dir=dbt_project_file.parent,
+        target="invalid_conn_id",
+        select=[str(m.stem) for m in model_files],
+    )
+
+    with pytest.raises(DbtProfileError):
+        hook.run_dbt_task(config)
+
+
+def test_dbt_run_with_non_existent_airflow_connection_and_profiles(
+    hook, dbt_project_file, model_files, airflow_conns, profiles_file
+):
+    """An Exception should be raised if a connection is not found."""
+    factory = hook.get_config_factory("run")
+    config = factory.create_config(
+        project_dir=dbt_project_file.parent,
+        profiles_dir=profiles_file.parent,
+        target="invalid_conn_id",
+        select=[str(m.stem) for m in model_files],
+    )
+
+    with pytest.raises(DbtProfileError):
+        hook.run_dbt_task(config)
