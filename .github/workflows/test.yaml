@@ -14,32 +14,50 @@ jobs:
       fail-fast: false
       matrix:
         python-version: [3.7, 3.8, 3.9]
-        airflow-version: ['1.10.12', '2.0.2', '2.2.2']
+        airflow-version: ['1.10.12', '2.2.2', '2.2.5']
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v2
         with:
           python-version: ${{ matrix.python-version }}
+
       - name: Install Poetry
         uses: abatilo/actions-poetry@v2.1.4
         with:
-          poetry-version: 1.1.12
-      - name: Install Airflow ${{ matrix.airflow-version }}
-        run: python -m pip install apache-airflow==${{ matrix.airflow-version }}
+          poetry-version: 1.2.0b1
+
       - name: Install airflow-dbt-python with Poetry
-        run: poetry install -E amazon -E postgres
+        run: poetry install -E postgres --with dev
+
+      - name: Install Airflow > 2
+        if: matrix.airflow-version != '1.10.12'
+        run: |
+          wget https://raw.githubusercontent.com/apache/airflow/constraints-${{ matrix.airflow-version }}/constraints-${{ matrix.python-version }}.txt -O constraints.txt
+          poetry run pip install apache-airflow==${{ matrix.airflow-version }} apache-airflow-providers-amazon -c constraints.txt
+          poetry run airflow db init
+
+      - name: Install Airflow 1.10.12
+        if: matrix.airflow-version == '1.10.12'
+        run: |
+          wget https://raw.githubusercontent.com/apache/airflow/constraints-1-10/constraints-3.8.txt -O constraints.txt
+          poetry run pip install apache-airflow==${{ matrix.airflow-version }} -c constraints.txt
+          poetry run airflow initdb
+
       - name: Style guide enforcement with flake8
         run: poetry run flake8 .
+
       - name: Static type checking with mypy
         run: poetry run mypy .
+
       - name: Code formatting with black
         run: poetry run black --check .
-      - name: Initialize Airflow db for testing
-        run: poetry run airflow db init
+
       - name: Run tests with pytest
         run: poetry run pytest -v --cov=./airflow_dbt_python --cov-report=xml:./coverage.xml --cov-report term-missing tests/
+
       - name: Upload code coverage
         uses: codecov/codecov-action@v2
         with:
