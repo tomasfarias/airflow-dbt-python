@@ -10,9 +10,6 @@ def test_dbt_clean_task(
         project_dir=dbt_project_file.parent,
         profiles_dir=profiles_file.parent,
     )
-    print(f"{config = }\n {factory = }")
-
-    print(f"{dbt_project_file = }")
     compile_dir = dbt_project_file.parent / "target"
     assert compile_dir.exists() is True
 
