@@ -3873,6 +3873,14 @@ optional = false
 python-versions = "*"
 
 [[package]]
+name = "types-pyyaml"
+version = "6.0.7"
+description = "Typing stubs for PyYAML"
+category = "dev"
+optional = false
+python-versions = "*"
+
+[[package]]
 name = "typing-extensions"
 version = "3.10.0.2"
 description = "Backported and Experimental Type Hints for Python 3.5+"
@@ -4073,7 +4081,7 @@ snowflake = ["dbt-snowflake"]
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.7.2, <3.10.0"
-content-hash = "b43915e17fa6b06d98f50ef5c64276211067942931a27a7dab403d520ae80b69"
+content-hash = "b1ed63fe74c3067796b2c10bad193851ca89188b053dd78d4e5651428fdead88"
 
 [metadata.files]
 agate = [
@@ -6042,6 +6050,10 @@ typed-ast = [
 types-freezegun = [
     {file = "types-freezegun-1.1.9.tar.gz", hash = "sha256:6f05108d468baecadf999873bd37e57b25ceb35d35d3f83e7a742f25d6fe8b0e"},
     {file = "types_freezegun-1.1.9-py3-none-any.whl", hash = "sha256:fe1dd73372d96358dcb93e3aeb66d39f6ac63749e0724f13554cc145e2120efe"},
+]
+types-pyyaml = [
+    {file = "types-PyYAML-6.0.7.tar.gz", hash = "sha256:59480cf44595d836aaae050f35e3c39f197f3a833679ef3978d97aa9f2fb7def"},
+    {file = "types_PyYAML-6.0.7-py3-none-any.whl", hash = "sha256:7b273a34f32af9910cf9405728c9d2ad3afc4be63e4048091a1a73d76681fe67"},
 ]
 typing-extensions = [
     {file = "typing_extensions-3.10.0.2-py2-none-any.whl", hash = "sha256:d8226d10bc02a29bcc81df19a26e56a9647f8b0a6d4a83924139f4a8b01f17b7"},
