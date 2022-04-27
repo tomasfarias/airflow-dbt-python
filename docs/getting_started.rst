@@ -54,18 +54,18 @@ airflow-dbt-python can also be built from source by cloning the main repo:
    git clone https://github.com/tomasfarias/airflow-dbt-python.git
    cd airflow-dbt-python
 
-And installing with ``poetry`` (without development dependencies):
+And installing with ``poetry``:
 
 .. code-block:: shell
 
-   poetry install --no-dev
+   poetry install
 
 As with ``pip``, any extra adapters can be installed:
 
 .. code-block:: shell
 
-   poetry install -E postgres -E redshift -E bigquery -E snowflake --no-dev
-   poetry install -E all --no-dev
+   poetry install -E postgres -E redshift -E bigquery -E snowflake
+   poetry install -E all
 
 Installing in MWAA
 ^^^^^^^^^^^^^^^^^^

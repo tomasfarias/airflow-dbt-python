@@ -10,6 +10,8 @@ Poetry
 
 airflow-dbt-python uses `Poetry <https://python-poetry.org/>`_ for project management. Ensure it's installed before running: see `Poetry's installation documentation <https://python-poetry.org/docs/#installation>`_.
 
+As of `airflow-dbt-python` version 0.14, we have moved the project to Poetry version >= 1.2.0 to allow us to use dependency groups.
+
 Installing Airflow
 ------------------
 
@@ -26,22 +28,26 @@ Installing the ``airflow`` extra will fetch the latest version of Airflow with m
 
 .. code-block:: shell
 
-   cd airflow-dbt-python
    poetry install -E airflow
 
+Some features require Airflow providers. For example, any S3 backend operations require ``apache-airflow-providers-amazon``. These providers may be installed individually or with the ``airflow-providers`` extra:
+
+.. code-block:: shell
+
+   poetry install -E airflow-providers
 
 Building from source
 --------------------
 
 Clone the main repo and install it:
 
-
 .. code-block:: shell
 
    git clone https://github.com/tomasfarias/airflow-dbt-python.git
    cd airflow-dbt-python
-   poetry install
+   poetry install --with dev
 
+The dev dependency group includes development tools for code formatting, type checking, and testing.
 
 Pre-commit hooks
 ----------------
@@ -78,11 +84,11 @@ Requirements
 
 Unit tests interact with a `PostgreSQL <https://www.postgresql.org/>`_ database as a target to run dbt commands. This requires PostgreSQL to be installed in your local environment. Installation instructions for all major platforms can be found here: https://www.postgresql.org/download/.
 
-Some unit tests require the `Amazon provider package for Airflow <https://pypi.org/project/apache-airflow-providers-amazon/>`_. Ensure it's installed via the ``amazon`` extra:
+Some unit tests require the `Amazon provider package for Airflow <https://pypi.org/project/apache-airflow-providers-amazon/>`_. Ensure it's installed via the ``airflow-providers`` extra:
 
 .. code-block:: shell
 
-   poetry install -E amazon
+   poetry install -E airflow-providers
 
 Running unit tests with pytest
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

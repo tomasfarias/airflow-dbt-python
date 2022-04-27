@@ -44,7 +44,7 @@ With poetry:
 poetry install
 ```
 
-Install any extras you need, and only those you need:
+Install with any necessary extras:
 ``` shell
 poetry install -E postgres -E redshift
 ```
@@ -84,6 +84,12 @@ As of the time of writing S3 is the only supported backend for dbt projects, but
 ## Push dbt artifacts to XCom
 
 Each dbt execution produces one or more [JSON artifacts](https://docs.getdbt.com/reference/artifacts/dbt-artifacts/) that are valuable to produce meta-metrics, build conditional workflows, for reporting purposes, and other uses. airflow-dbt-python can push these artifacts to [XCom](https://airflow.apache.org/docs/apache-airflow/stable/concepts/xcoms.html) as requested via the `do_xcom_push_artifacts` parameter, which takes a list of artifacts to push.
+
+## Use Airflow connections as dbt targets (without a profiles.yml)
+
+[Airflow connections](https://airflow.apache.org/docs/apache-airflow/stable/howto/connection.html) allow users to manage and store connection information, such as hostname, port, user name, and password, for operators to use when accessing certain applications, like databases. Similarly, a dbt `profiles.yml` file stores connection information under each target key. `airflow-dbt-python` bridges the gap between the two and allows you to use connection information stored as an Airflow connection by specifying the connection id as the `target` parameter of any of the dbt operators it provides. What's more, if using an Airflow connection, the `profiles.yml` file may be entirely omitted (although keep in mind a `profiles.yml` file contains a configuration block besides target connection information).
+
+See an example DAG [here](examples/airflow_connection_target_dag.py).
 
 # Motivation
 
