@@ -11,6 +11,8 @@ import pytest
 from moto import mock_s3
 from pytest_postgresql.janitor import DatabaseJanitor
 
+from airflow import settings
+from airflow.models.connection import Connection
 from airflow_dbt_python.hooks.dbt import DbtHook
 
 PROFILES = """
@@ -174,6 +176,41 @@ def profiles_file(tmp_path_factory, database):
     )
     p.write_text(profiles_content)
     return p
+
+
+@pytest.fixture(scope="session")
+def airflow_conns(database):
+    """Craete Airflow connections for testing.
+
+    We create them by setting AIRFLOW_CONN_{CONN_ID} env variables. Only postgres
+    connections are set for now as our testing database is postgres.
+    """
+    uris = (
+        f"postgres://{database.user}:{database.password}@{database.host}:{database.port}/public?dbname={database.dbname}",
+        f"postgres://{database.user}:{database.password}@{database.host}:{database.port}/public",
+    )
+    ids = (
+        "dbt_test_postgres_1",
+        database.dbname,
+    )
+    session = settings.Session()
+
+    connections = []
+    for conn_id, uri in zip(ids, uris):
+        existing = session.query(Connection).filter_by(conn_id=conn_id).first()
+        if existing is not None:
+            # Connections may exist from previous test run.
+            session.delete(existing)
+            session.commit()
+        connections.append(Connection(conn_id=conn_id, uri=uri))
+
+    session.add_all(connections)
+
+    session.commit()
+
+    yield ids
+
+    session.close()
 
 
 @pytest.fixture(scope="session")
@@ -484,27 +521,3 @@ def test_files(tmp_path_factory, dbt_project_file):
     f1.unlink()
     f2.unlink()
     f3.unlink()
-
-
-@pytest.fixture()
-def airflow_conns(database):
-    """Craete Airflow connections for testing.
-
-    We create them by setting AIRFLOW_CONN_{CONN_ID} env variables. Only postgres
-    connections are set for now as our testing database is postgres.
-    """
-    uris = (
-        f"postgres://{database.user}:{database.password}@{database.host}:{database.port}/public?dbname={database.dbname}",
-        f"postgres://{database.user}:{database.password}@{database.host}:{database.port}/public",
-    )
-    ids = (
-        "dbt_test_postgres_1",
-        database.dbname,
-    )
-    for conn_id, uri in zip(ids, uris):
-        os.environ[f"AIRFLOW_CONN_{conn_id.upper()}"] = uri
-
-    yield ids
-
-    for conn_id in ids:
-        os.environ.pop(f"AIRFLOW_CONN_{conn_id.upper()}")
