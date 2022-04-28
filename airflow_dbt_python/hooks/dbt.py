@@ -389,6 +389,10 @@ class BaseConfig:
         if self.profiles_dir is not None:
             raw_profiles = read_profile(self.profiles_dir)
         else:
+            profiles_path = Path.home() / ".dbt/profiles.yml"
+            if not profiles_path.exists():
+                profiles_path.parent.mkdir(exist_ok=True)
+                profiles_path.touch()
             raw_profiles = {}
 
         if extra_targets:
