@@ -818,12 +818,8 @@ class DbtHook(BaseHook):
         else:
             params["user"] = user
 
-        try:
-            conn_type = params.pop("conn_type")
-        except KeyError:
-            pass
-        else:
-            params["type"] = conn_type
+        conn_type = params.pop("conn_type")
+        params["type"] = conn_type
 
         extra = conn.extra_dejson
         if "dbname" not in extra:
