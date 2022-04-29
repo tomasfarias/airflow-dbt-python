@@ -180,7 +180,7 @@ def profiles_file(tmp_path_factory, database):
 
 @pytest.fixture(scope="session")
 def airflow_conns(database):
-    """Craete Airflow connections for testing.
+    """Create Airflow connections for testing.
 
     We create them by setting AIRFLOW_CONN_{CONN_ID} env variables. Only postgres
     connections are set for now as our testing database is postgres.
