@@ -25,10 +25,7 @@ my_conn = Connection(
 )
 
 
-if settings.Session is None:
-    settings.configure_orm()
-
-session = settings.Session()
+session = settings.Session()  # type: ignore
 session.add(my_conn)
 session.commit()
 
