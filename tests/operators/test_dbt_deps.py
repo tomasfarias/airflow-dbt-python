@@ -108,7 +108,7 @@ def test_dbt_deps_push_to_s3(
     # Ensure we are working with an empty dbt_packages dir in S3.
     keys = s3_hook.list_keys(
         s3_bucket,
-        f"s3://{s3_bucket}/project/dbt_packages/",
+        "project/dbt_packages/",
     )
     if keys is not None and len(keys) > 0:
         s3_hook.delete_objects(
@@ -117,7 +117,7 @@ def test_dbt_deps_push_to_s3(
         )
         keys = s3_hook.list_keys(
             s3_bucket,
-            f"s3://{s3_bucket}/project/dbt_packages/",
+            "project/dbt_packages/",
         )
     assert keys is None or len(keys) == 0
 
@@ -139,7 +139,7 @@ def test_dbt_deps_push_to_s3(
 
     keys = s3_hook.list_keys(
         s3_bucket,
-        f"s3://{s3_bucket}/project/dbt_packages/",
+        f"project/dbt_packages/",
     )
     assert len(keys) >= 0
     # dbt_utils files may be anything, let's just check that at least
@@ -229,7 +229,7 @@ def test_dbt_deps_push_to_s3_with_no_replace(
     # Ensure we are working with an empty dbt_packages dir in S3.
     keys = s3_hook.list_keys(
         s3_bucket,
-        f"s3://{s3_bucket}/project/dbt_packages/",
+        f"project/dbt_packages/",
     )
     if keys is not None and len(keys) > 0:
         s3_hook.delete_objects(
@@ -238,7 +238,7 @@ def test_dbt_deps_push_to_s3_with_no_replace(
         )
         keys = s3_hook.list_keys(
             s3_bucket,
-            f"s3://{s3_bucket}/project/dbt_packages/",
+            f"project/dbt_packages/",
         )
     assert keys is None or len(keys) == 0
 
@@ -256,7 +256,7 @@ def test_dbt_deps_push_to_s3_with_no_replace(
 
     keys = s3_hook.list_keys(
         s3_bucket,
-        f"s3://{s3_bucket}/project/dbt_packages/",
+        f"project/dbt_packages/",
     )
     assert len(keys) >= 0
     # dbt_utils files may be anything, let's just check that at least

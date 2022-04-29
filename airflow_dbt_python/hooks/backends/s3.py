@@ -1,6 +1,7 @@
 """An implementation for an S3 backend for dbt."""
 from __future__ import annotations
 
+import os
 from pathlib import Path
 from typing import TYPE_CHECKING, Optional
 from zipfile import ZipFile
@@ -139,7 +140,9 @@ class DbtS3Backend(DbtBackend):
                 if _file.is_dir():
                     continue
 
-                s3_key = f"s3://{bucket_name}/{key}{ _file.relative_to(source)}"
+                s3_key = os.path.join(
+                    f"s3://{bucket_name}/{key}", str(_file.relative_to(source))
+                )
 
                 self.load_file_handle_replace_error(
                     _file,
@@ -239,7 +242,7 @@ class DbtS3Backend(DbtBackend):
         self.log.info("Loading file %s to S3: %s", file_path, key)
         try:
             self.hook.load_file(
-                file_path,
+                str(file_path),
                 key,
                 bucket_name=bucket_name,
                 replace=replace,

@@ -43,6 +43,7 @@ from dbt.task.test import TestTask
 from dbt.tracking import initialize_from_flags
 
 from airflow.exceptions import AirflowException
+from airflow.version import version as airflow_version
 
 try:
     from airflow.hooks.base import BaseHook
@@ -389,10 +390,6 @@ class BaseConfig:
         if self.profiles_dir is not None:
             raw_profiles = read_profile(self.profiles_dir)
         else:
-            profiles_path = Path.home() / ".dbt/profiles.yml"
-            if not profiles_path.exists():
-                profiles_path.parent.mkdir(exist_ok=True)
-                profiles_path.touch()
             raw_profiles = {}
 
         if extra_targets:
@@ -657,6 +654,8 @@ class DbtHook(BaseHook):
 
     def __init__(self, *args, **kwargs):
         self.backends: dict[tuple[str, Optional[str]], DbtBackend] = {}
+        if airflow_version.split(".")[0] == "1":
+            kwargs["source"] = None
         super().__init__(*args, **kwargs)
 
     def get_backend(self, scheme: str, conn_id: Optional[str]) -> DbtBackend:
@@ -741,6 +740,7 @@ class DbtHook(BaseHook):
 
         config.dbt_task.pre_init_hook(config)
         task, runtime_config = config.create_dbt_task(extra_target)
+        self.ensure_profiles(config.profiles_dir)
 
         # When creating tasks via from_args, dbt switches to the project directory.
         # We have to do that here as we are not using from_args.
@@ -749,11 +749,9 @@ class DbtHook(BaseHook):
         if not isinstance(runtime_config, (UnsetProfileConfig, type(None))):
             # The deps command installs the dependencies, which means they may not exist
             # before deps runs and the following would raise a CompilationError.
-            print(runtime_config.args)
             runtime_config.load_dependencies()
 
         results = None
-
         with adapter_management():
             if not isinstance(runtime_config, (UnsetProfileConfig, type(None))):
                 register_adapter(runtime_config)
@@ -763,6 +761,17 @@ class DbtHook(BaseHook):
         success = task.interpret_results(results)
 
         return success, results
+
+    def ensure_profiles(self, profiles_dir: Optional[str]):
+        """Ensure a profiles file exists."""
+        if profiles_dir is not None:
+            # We expect one to exist given that we have passsed a profiles_dir.
+            return
+
+        profiles_path = Path.home() / ".dbt/profiles.yml"
+        if not profiles_path.exists():
+            profiles_path.parent.mkdir(exist_ok=True)
+            profiles_path.touch()
 
     def get_target_from_connection(
         self, target: Optional[str]
