@@ -266,12 +266,9 @@ def test_push_dbt_project_to_zip_file(s3_bucket, s3_hook, tmpdir, test_files):
     # Ensure zip file is not already present.
     s3_hook.delete_objects(
         s3_bucket,
-        [zip_s3_key],
+        "project/project.zip",
     )
-    key = s3_hook.check_for_key(
-        zip_s3_key,
-        s3_bucket,
-    )
+    key = s3_hook.check_for_key(zip_s3_key)
     assert key is False
 
     backend = DbtS3Backend()
@@ -289,6 +286,11 @@ def test_push_dbt_project_to_zip_file(s3_bucket, s3_hook, tmpdir, test_files):
 
 def test_push_dbt_project_to_files(s3_bucket, s3_hook, tmpdir, test_files):
     """Test pushing a dbt project to a S3 path."""
+    keys = s3_hook.list_keys(bucket_name=s3_bucket)
+    if keys is not None:
+        # Airflow v1 returns None instead of an empty list if no results are found.
+        assert len(keys) == 0
+
     prefix = f"s3://{s3_bucket}/project/"
 
     backend = DbtS3Backend()

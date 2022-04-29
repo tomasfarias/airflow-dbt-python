@@ -108,4 +108,6 @@ def test_dbt_clean_after_compile_in_s3(
     assert clean_result is None
 
     keys = s3_hook.list_keys(s3_bucket, prefix="project/target")
-    assert len(keys) == 0
+    if keys is not None:
+        # Airflow v1 returns None instead of an empty list if no results are found.
+        assert len(keys) == 0

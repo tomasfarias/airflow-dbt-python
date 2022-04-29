@@ -109,7 +109,7 @@ def test_dbt_hook_get_target_from_connection(airflow_conns, database):
         assert extra_target[conn_id]["dbname"] == database.dbname
 
 
-@pytest.mark.parametrize("conn_id", [("non_existent",), (None,)])
+@pytest.mark.parametrize("conn_id", ["non_existent", None])
 def test_dbt_hook_get_target_from_connection_non_existent(conn_id):
     """Test None is returned when Airflow connections do not exist."""
     hook = DbtHook()
