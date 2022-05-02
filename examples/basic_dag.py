@@ -3,11 +3,12 @@ import datetime as dt
 
 from airflow import DAG
 from airflow.utils.dates import days_ago
-from airflow_dbt_python.dbt.operators import DbtRunOperator
+
+from airflow_dbt_python.operators.dbt import DbtRunOperator
 
 with DAG(
-    dag_id="example_basic_dbt_run",
-    schedule_interval="0 * * * *",
+    dag_id="example_basic_dbt",
+    schedule_interval=None,
     start_date=days_ago(1),
     catchup=False,
     dagrun_timeout=dt.timedelta(minutes=60),

@@ -4,7 +4,8 @@ import datetime as dt
 from airflow import DAG
 from airflow.operators.python_operator import PythonOperator
 from airflow.utils.dates import days_ago
-from airflow_dbt_python.dbt.operators import DbtRunOperator
+
+from airflow_dbt_python.operators.dbt import DbtRunOperator
 
 
 def process_dbt_artifacts(**context):
