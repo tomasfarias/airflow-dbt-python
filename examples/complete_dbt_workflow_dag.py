@@ -6,22 +6,23 @@ import datetime as dt
 
 from airflow import DAG
 from airflow.utils.dates import days_ago
-from airflow_dbt_python.dbt.operators import (
+
+from airflow_dbt_python.operators.dbt import (
     DbtRunOperator,
     DbtSeedOperator,
-    DbtSourceOperator,
+    DbtSourceFreshnessOperator,
     DbtTestOperator,
 )
 
 with DAG(
     dag_id="example_complete_dbt_workflow",
-    schedule_interval="0 * * * *",
+    schedule_interval=None,
     start_date=days_ago(1),
     catchup=False,
     dagrun_timeout=dt.timedelta(minutes=60),
 ) as dag:
-    dbt_source = DbtSourceOperator(
-        task_id="dbt_run_incremental_hourly",
+    dbt_source = DbtSourceFreshnessOperator(
+        task_id="dbt_source",
         project_dir="/path/to/my/dbt/project/",
         profiles_dir="~/.dbt/",
         target="production",

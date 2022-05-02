@@ -3,11 +3,12 @@ import datetime as dt
 
 from airflow import DAG
 from airflow.utils.dates import days_ago
-from airflow_dbt_python.dbt.operators import DbtDocsGenerateOperator, DbtRunOperator
+
+from airflow_dbt_python.operators.dbt import DbtDocsGenerateOperator, DbtRunOperator
 
 with DAG(
     dag_id="example_basic_dbt_run_with_s3",
-    schedule_interval="0 * * * *",
+    schedule_interval=None,
     start_date=days_ago(1),
     catchup=False,
     dagrun_timeout=dt.timedelta(minutes=60),
@@ -27,7 +28,7 @@ with DAG(
     # Documentation files (target/manifest.json, target/index.html, and
     # target/catalog.json) will be pushed back to S3 after compilation is done.
     dbt_docs = DbtDocsGenerateOperator(
-        task_id="dbt_run_hourly",
+        task_id="dbt_docs",
         project_dir="s3://my-bucket/dbt/project/key/prefix/",
         profiles_dir="s3://my-bucket/dbt/profiles/key/prefix/",
     )

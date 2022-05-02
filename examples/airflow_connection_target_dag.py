@@ -6,28 +6,32 @@ from airflow import DAG, settings
 from airflow.models.connection import Connection
 from airflow.utils.dates import days_ago
 
-from airflow_dbt_python.dbt.operators import DbtRunOperator
-
-# For illustration purposes, and to keep the example self-contained, we create
-# a Connection using Airflow's ORM. However, any method of loading connections would
-# work, like Airflow's UI, Airflow's CLI, or in deployment scripts.
-my_conn = Connection(
-    conn_id="my_db_connection",
-    conn_type="postgres",
-    description="A test postgres connection",
-    host="localhost",
-    login="username",
-    port=5432,
-    schema="my_dbt_schema",
-    password="password",  # pragma: allowlist secret
-    # Other dbt parameters can be added as extras
-    extra=json.dumps(dict(threads=4, sslmode="require")),
-)
-
+from airflow_dbt_python.operators.dbt import DbtRunOperator
 
 session = settings.Session()  # type: ignore
-session.add(my_conn)
-session.commit()
+existing = session.query(Connection).filter_by(conn_id="my_db_connection").first()
+
+if existing is None:
+    # For illustration purposes, and to keep the example self-contained, we create
+    # a Connection using Airflow's ORM. However, any method of loading connections would
+    # work, like Airflow's UI, Airflow's CLI, or in deployment scripts.
+
+    my_conn = Connection(
+        conn_id="my_db_connection",
+        conn_type="postgres",
+        description="A test postgres connection",
+        host="localhost",
+        login="username",
+        port=5432,
+        schema="my_dbt_schema",
+        password="password",  # pragma: allowlist secret
+        # Other dbt parameters can be added as extras
+        extra=json.dumps(dict(threads=4, sslmode="require")),
+    )
+
+    session.add(my_conn)
+    session.commit()
+
 
 with DAG(
     dag_id="example_airflow_connection",
