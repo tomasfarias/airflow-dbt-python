@@ -16,3 +16,4 @@ dbt.log
 models/
 data/
 dbt_packages/
+.env/
