@@ -58,7 +58,8 @@ SELECT
 MODEL_2 = """
 {{ config(
     materialized="table",
-    schema="another"
+    schema="another",
+    tags=["deprecated"],
 ) }}
 
 SELECT
@@ -69,7 +70,8 @@ SELECT
 MODEL_3 = """
 {{ config(
     materialized="incremental",
-    schema="a_schema"
+    schema="a_schema",
+    tags=["hourly"],
 ) }}
 
 SELECT
@@ -86,6 +88,7 @@ SELECT
 MODEL_4 = """
 {{ config(
     materialized="view",
+    tags=["hourly"],
 ) }}
 {% set l = ("a", "b", "c") %}
 
@@ -521,3 +524,24 @@ def test_files(tmp_path_factory, dbt_project_file):
     f1.unlink()
     f2.unlink()
     f3.unlink()
+
+
+def pytest_addoption(parser):
+    parser.addoption(
+        "--run-integration",
+        action="store_true",
+        default=False,
+        help="run integration tests",
+    )
+
+
+def pytest_collection_modifyitems(config, items):
+    if config.getoption("--run-integration"):
+        return
+
+    skip_integration = pytest.mark.skip(
+        reason="need --run-integration to run integration tests"
+    )
+    for item in items:
+        if "integration" in item.keywords:
+            item.add_marker(skip_integration)
