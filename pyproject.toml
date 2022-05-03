@@ -105,11 +105,6 @@ filelock = "3.6.0"
 flower = "1.0.0"
 fsspec = "2022.2.0"
 gevent = "21.12.0"
-google-ads = "14.0.0"
-google-api-core = "2.7.1"
-google-auth-oauthlib = "0.5.1"
-google-auth = "2.6.2"
-googleapis-common-protos = "1.56.0"
 graphviz = "0.19.1"
 greenlet = "1.1.2"
 grpcio = "1.44.0"
@@ -243,7 +238,7 @@ redshift = ["dbt-redshift"]
 snowflake = ["dbt-snowflake"]
 
 [build-system]
-requires = ["poetry-core"]
+requires = ["poetry-core>=1.1.0a7"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.isort]
@@ -278,6 +273,10 @@ filterwarnings = [
     'ignore: write_gpickle is deprecated:DeprecationWarning',
     "ignore: 'soft_unicode' has been renamed to 'soft_str':DeprecationWarning"
 ]
+markers = [
+    "integration: mark test as an integration test"
+]
+
 
 [tool.mypy]
 ignore_missing_imports = true
