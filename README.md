@@ -142,6 +142,8 @@ Currently, the following `dbt` commands are supported:
 
 ## Examples
 
+All example DAGs are tested against against `apache-airflow==2.2.5`. Some changes, like modifying `import` statements or changing types, may be required for them to work in other versions.
+
 ``` python
 from datetime import timedelta
 

@@ -3,6 +3,9 @@ Example DAGs
 
 This section contains a few DAGs showing off some dbt pipelines to get you going.
 
+.. warning::
+   All example DAGs are tested against against `apache-airflow==2.2.5`. Some changes, like modifying `import` statements or changing types, may be required for them to work in environments running other versions of Airflow.
+
 Basic DAG
 ^^^^^^^^^
 
@@ -17,7 +20,7 @@ This basic DAG shows off a single ``DbtRunOperator`` that executes daily:
 
       from airflow import DAG
       from airflow.utils.dates import days_ago
-      from airflow_dbt_python.dbt.operators import DbtRunOperator
+      from airflow_dbt_python.operators.dbt import DbtRunOperator
 
       with DAG(
           dag_id="example_basic_dbt_run",
@@ -53,7 +56,7 @@ This DAG shows off a ``DbtRunOperator`` followed by a ``DbtDocsGenerateOperator`
 
    from airflow import DAG
    from airflow.utils.dates import days_ago
-   from airflow_dbt_python.dbt.operators import DbtDocsGenerateOperator, DbtRunOperator
+   from airflow_dbt_python.operators.dbt import DbtDocsGenerateOperator, DbtRunOperator
 
    with DAG(
        dag_id="example_basic_dbt_run_with_s3",
@@ -62,28 +65,27 @@ This DAG shows off a ``DbtRunOperator`` followed by a ``DbtDocsGenerateOperator`
        catchup=False,
        dagrun_timeout=dt.timedelta(minutes=60),
    ) as dag:
+       # Project files will be pulled from "s3://my-bucket/dbt/profiles/key/prefix/"
+       dbt_run = DbtRunOperator(
+           task_id="dbt_run_hourly",
+           project_dir="s3://my-bucket/dbt/project/key/prefix/",
+           profiles_dir="s3://my-bucket/dbt/profiles/key/prefix/",
+           select=["+tag:hourly"],
+           exclude=["tag:deprecated"],
+           target="production",
+           profile="my-project",
+           full_refresh=False,
+       )
 
-   # Project files will be pulled from "s3://my-bucket/dbt/profiles/key/prefix/"
-   dbt_run = DbtRunOperator(
-       task_id="dbt_run_hourly",
-       project_dir="s3://my-bucket/dbt/project/key/prefix/",
-       profiles_dir="s3://my-bucket/dbt/profiles/key/prefix/",
-       select=["+tag:hourly"],
-       exclude=["tag:deprecated"],
-       target="production",
-       profile="my-project",
-       full_refresh=False,
-   )
+       # Documentation files (target/manifest.json, target/index.html, and
+       # target/catalog.json) will be pushed back to S3 after compilation is done.
+       dbt_docs = DbtDocsGenerateOperator(
+           task_id="dbt_run_hourly",
+           project_dir="s3://my-bucket/dbt/project/key/prefix/",
+           profiles_dir="s3://my-bucket/dbt/profiles/key/prefix/",
+       )
 
-   # Documentation files (target/manifest.json, target/index.html, and
-   # target/catalog.json) will be pushed back to S3 after compilation is done.
-   dbt_docs = DbtDocsGenerateOperator(
-       task_id="dbt_run_hourly",
-       project_dir="s3://my-bucket/dbt/project/key/prefix/",
-       profiles_dir="s3://my-bucket/dbt/profiles/key/prefix/",
-   )
-
-   dbt_run >> dbt_docs
+       dbt_run >> dbt_docs
 
 Complete dbt workflow
 ^^^^^^^^^^^^^^^^^^^^^
@@ -102,7 +104,7 @@ This DAG shows off a (almost) complete dbt workflow as it would be run from the 
 
    from airflow import DAG
    from airflow.utils.dates import days_ago
-   from airflow_dbt_python.dbt.operators import (
+   from airflow_dbt_python.operators.dbt import (
        DbtRunOperator,
        DbtSeedOperator,
        DbtSourceOperator,
@@ -180,7 +182,7 @@ The following DAG showcases how to use `dbt artifacts <https://docs.getdbt.com/r
    from airflow import DAG
    from airflow.operators.python_operator import PythonOperator
    from airflow.utils.dates import days_ago
-   from airflow_dbt_python.dbt.operators import DbtRunOperator
+   from airflow_dbt_python.operators.dbt import DbtRunOperator
 
 
    def process_dbt_artifacts(**context):
