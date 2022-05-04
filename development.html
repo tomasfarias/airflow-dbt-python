@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Development &mdash; airflow-dbt-python 0.13.1 documentation</title>
+  <title>Development &mdash; airflow-dbt-python 0.14.0 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -29,7 +29,7 @@
             <a href="index.html" class="icon icon-home"> airflow-dbt-python
           </a>
               <div class="version">
-                0.13.1
+                0.14.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
@@ -89,6 +89,7 @@
 <div class="section" id="poetry">
 <h2>Poetry<a class="headerlink" href="#poetry" title="Permalink to this headline"></a></h2>
 <p>airflow-dbt-python uses <a class="reference external" href="https://python-poetry.org/">Poetry</a> for project management. Ensure it’s installed before running: see <a class="reference external" href="https://python-poetry.org/docs/#installation">Poetry’s installation documentation</a>.</p>
+<p>As of <cite>airflow-dbt-python</cite> version 0.14, we have moved the project to Poetry version &gt;= 1.2.0 to allow us to use dependency groups.</p>
 </div>
 <div class="section" id="installing-airflow">
 <h2>Installing Airflow<a class="headerlink" href="#installing-airflow" title="Permalink to this headline"></a></h2>
@@ -101,8 +102,11 @@
 <p>Installing any 1.X version of Airflow will raise warnings due to dependency conflicts with <code class="docutils literal notranslate"><span class="pre">dbt-core</span></code>. However, these conflicts should not impact airflow-dbt-python.</p>
 </div>
 <p>Installing the <code class="docutils literal notranslate"><span class="pre">airflow</span></code> extra will fetch the latest version of Airflow with major version 2:</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span> airflow-dbt-python
-poetry install -E airflow
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>poetry install -E airflow
+</pre></div>
+</div>
+<p>Some features require Airflow providers. For example, any S3 backend operations require <code class="docutils literal notranslate"><span class="pre">apache-airflow-providers-amazon</span></code>. These providers may be installed individually or with the <code class="docutils literal notranslate"><span class="pre">airflow-providers</span></code> extra:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>poetry install -E airflow-providers
 </pre></div>
 </div>
 </div>
@@ -111,9 +115,10 @@ poetry install -E airflow
 <p>Clone the main repo and install it:</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>git clone https://github.com/tomasfarias/airflow-dbt-python.git
 <span class="nb">cd</span> airflow-dbt-python
-poetry install
+poetry install --with dev
 </pre></div>
 </div>
+<p>The dev dependency group includes development tools for code formatting, type checking, and testing.</p>
 </div>
 <div class="section" id="pre-commit-hooks">
 <h2>Pre-commit hooks<a class="headerlink" href="#pre-commit-hooks" title="Permalink to this headline"></a></h2>
@@ -143,8 +148,8 @@ poetry install
 <div class="section" id="requirements">
 <h3>Requirements<a class="headerlink" href="#requirements" title="Permalink to this headline"></a></h3>
 <p>Unit tests interact with a <a class="reference external" href="https://www.postgresql.org/">PostgreSQL</a> database as a target to run dbt commands. This requires PostgreSQL to be installed in your local environment. Installation instructions for all major platforms can be found here: <a class="reference external" href="https://www.postgresql.org/download/">https://www.postgresql.org/download/</a>.</p>
-<p>Some unit tests require the <a class="reference external" href="https://pypi.org/project/apache-airflow-providers-amazon/">Amazon provider package for Airflow</a>. Ensure it’s installed via the <code class="docutils literal notranslate"><span class="pre">amazon</span></code> extra:</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>poetry install -E amazon
+<p>Some unit tests require the <a class="reference external" href="https://pypi.org/project/apache-airflow-providers-amazon/">Amazon provider package for Airflow</a>. Ensure it’s installed via the <code class="docutils literal notranslate"><span class="pre">airflow-providers</span></code> extra:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>poetry install -E airflow-providers
 </pre></div>
 </div>
 </div>

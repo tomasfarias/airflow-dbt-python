@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Index &mdash; airflow-dbt-python 0.13.1 documentation</title>
+  <title>Index &mdash; airflow-dbt-python 0.14.0 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -27,7 +27,7 @@
             <a href="index.html" class="icon icon-home"> airflow-dbt-python
           </a>
               <div class="version">
-                0.13.1
+                0.14.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
@@ -81,7 +81,6 @@
  | <a href="#F"><strong>F</strong></a>
  | <a href="#G"><strong>G</strong></a>
  | <a href="#H"><strong>H</strong></a>
- | <a href="#I"><strong>I</strong></a>
  | <a href="#L"><strong>L</strong></a>
  | <a href="#M"><strong>M</strong></a>
  | <a href="#O"><strong>O</strong></a>
@@ -207,7 +206,13 @@
 </li>
       <li><a href="reference/hooks.html#airflow_dbt_python.hooks.dbt.ConfigFactory.create_config">create_config() (airflow_dbt_python.hooks.dbt.ConfigFactory method)</a>
 </li>
+      <li><a href="reference/hooks.html#airflow_dbt_python.hooks.dbt.BaseConfig.create_dbt_profile">create_dbt_profile() (airflow_dbt_python.hooks.dbt.BaseConfig method)</a>
+</li>
+      <li><a href="reference/hooks.html#airflow_dbt_python.hooks.dbt.BaseConfig.create_dbt_project_and_profile">create_dbt_project_and_profile() (airflow_dbt_python.hooks.dbt.BaseConfig method)</a>
+</li>
       <li><a href="reference/hooks.html#airflow_dbt_python.hooks.dbt.BaseConfig.create_dbt_task">create_dbt_task() (airflow_dbt_python.hooks.dbt.BaseConfig method)</a>
+</li>
+      <li><a href="reference/hooks.html#airflow_dbt_python.hooks.dbt.BaseConfig.create_runtime_config">create_runtime_config() (airflow_dbt_python.hooks.dbt.BaseConfig method)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -279,6 +284,10 @@
 <h2 id="E">E</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="reference/hooks.html#airflow_dbt_python.hooks.dbt.DbtHook.ensure_profiles">ensure_profiles() (airflow_dbt_python.hooks.dbt.DbtHook method)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="reference/operators.html#airflow_dbt_python.operators.dbt.DbtBaseOperator.execute">execute() (airflow_dbt_python.operators.dbt.DbtBaseOperator method)</a>
 </li>
   </ul></td>
@@ -291,9 +300,9 @@
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="reference/hooks.html#airflow_dbt_python.hooks.dbt.FromStrMixin.from_str">from_str() (airflow_dbt_python.hooks.dbt.FromStrMixin class method)</a>
+      <li><a href="reference/hooks.html#airflow_dbt_python.hooks.dbt.FromStrEnum.from_str">from_str() (airflow_dbt_python.hooks.dbt.FromStrEnum class method)</a>
 </li>
-      <li><a href="reference/hooks.html#airflow_dbt_python.hooks.dbt.FromStrMixin">FromStrMixin (class in airflow_dbt_python.hooks.dbt)</a>
+      <li><a href="reference/hooks.html#airflow_dbt_python.hooks.dbt.FromStrEnum">FromStrEnum (class in airflow_dbt_python.hooks.dbt)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -311,6 +320,8 @@
 </li>
       <li><a href="reference/operators.html#airflow_dbt_python.operators.dbt.DbtBaseOperator.get_dbt_config">get_dbt_config() (airflow_dbt_python.operators.dbt.DbtBaseOperator method)</a>
 </li>
+      <li><a href="reference/hooks.html#airflow_dbt_python.hooks.dbt.DbtHook.get_target_from_connection">get_target_from_connection() (airflow_dbt_python.hooks.dbt.DbtHook method)</a>
+</li>
   </ul></td>
 </tr></table>
 
@@ -318,14 +329,6 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="reference/backends.html#airflow_dbt_python.hooks.backends.s3.DbtS3Backend.hook">hook (airflow_dbt_python.hooks.backends.s3.DbtS3Backend property)</a>
-</li>
-  </ul></td>
-</tr></table>
-
-<h2 id="I">I</h2>
-<table style="width: 100%" class="indextable genindextable"><tr>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="reference/hooks.html#airflow_dbt_python.hooks.dbt.DbtHook.initialize_runtime_config">initialize_runtime_config() (airflow_dbt_python.hooks.dbt.DbtHook method)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -382,7 +385,11 @@
 <h2 id="P">P</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="reference/hooks.html#airflow_dbt_python.hooks.dbt.parse_vars">parse_vars() (in module airflow_dbt_python.hooks.dbt)</a>
+</li>
       <li><a href="reference/hooks.html#airflow_dbt_python.hooks.dbt.ParseTaskConfig">ParseTaskConfig (class in airflow_dbt_python.hooks.dbt)</a>
+</li>
+      <li><a href="reference/hooks.html#airflow_dbt_python.hooks.dbt.BaseConfig.partial_project">partial_project (airflow_dbt_python.hooks.dbt.BaseConfig property)</a>
 </li>
       <li><a href="reference/hooks.html#airflow_dbt_python.hooks.dbt.BaseConfig.patch_manifest_task">patch_manifest_task() (airflow_dbt_python.hooks.dbt.BaseConfig method)</a>
 </li>
@@ -390,12 +397,18 @@
 </li>
       <li><a href="reference/operators.html#airflow_dbt_python.operators.dbt.DbtBaseOperator.profile">profile (airflow_dbt_python.operators.dbt.DbtBaseOperator attribute)</a>
 </li>
+      <li><a href="reference/hooks.html#airflow_dbt_python.hooks.dbt.BaseConfig.profile_name">profile_name (airflow_dbt_python.hooks.dbt.BaseConfig property)</a>
+</li>
+      <li><a href="reference/hooks.html#airflow_dbt_python.hooks.dbt.BaseConfig.profile_renderer">profile_renderer (airflow_dbt_python.hooks.dbt.BaseConfig property)</a>
+</li>
       <li><a href="reference/operators.html#airflow_dbt_python.operators.dbt.DbtBaseOperator.profiles_dir">profiles_dir (airflow_dbt_python.operators.dbt.DbtBaseOperator attribute)</a>
 </li>
       <li><a href="reference/operators.html#airflow_dbt_python.operators.dbt.DbtBaseOperator.project_dir">project_dir (airflow_dbt_python.operators.dbt.DbtBaseOperator attribute)</a>
 </li>
       <li><a href="reference/hooks.html#airflow_dbt_python.hooks.dbt.DbtHook.pull_dbt_profiles">pull_dbt_profiles() (airflow_dbt_python.hooks.dbt.DbtHook method)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="reference/hooks.html#airflow_dbt_python.hooks.dbt.DbtHook.pull_dbt_project">pull_dbt_project() (airflow_dbt_python.hooks.dbt.DbtHook method)</a>
 </li>
       <li><a href="reference/backends.html#airflow_dbt_python.hooks.backends.localfs.DbtLocalFsBackend.pull_many">pull_many() (airflow_dbt_python.hooks.backends.localfs.DbtLocalFsBackend method)</a>
@@ -404,8 +417,6 @@
         <li><a href="reference/backends.html#airflow_dbt_python.hooks.backends.s3.DbtS3Backend.pull_many">(airflow_dbt_python.hooks.backends.s3.DbtS3Backend method)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="reference/backends.html#airflow_dbt_python.hooks.backends.localfs.DbtLocalFsBackend.pull_one">pull_one() (airflow_dbt_python.hooks.backends.localfs.DbtLocalFsBackend method)</a>
 
       <ul>

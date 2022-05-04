@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Introduction &mdash; airflow-dbt-python 0.13.1 documentation</title>
+  <title>Introduction &mdash; airflow-dbt-python 0.14.0 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -29,7 +29,7 @@
             <a href="index.html" class="icon icon-home"> airflow-dbt-python
           </a>
               <div class="version">
-                0.13.1
+                0.14.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
@@ -46,6 +46,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#independent-task-execution">Independent task execution</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#download-dbt-files-from-s3">Download dbt files from S3</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#push-dbt-artifacts-to-xcom">Push dbt artifacts to XCom</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#use-airflow-connections-as-dbt-targets-without-a-profiles-yml">Use Airflow connections as dbt targets (without a profiles.yml)</a></li>
 </ul>
 </li>
 </ul>
@@ -112,7 +113,7 @@
 <p>Each dbt execution produces one or more JSON <a class="reference external" href="https://docs.getdbt.com/reference/artifacts/dbt-artifacts/">artifacts</a> that are valuable to produce meta-metrics, build conditional workflows, for reporting purposes, and other uses. airflow-dbt-python can push these artifacts to <a class="reference external" href="https://airflow.apache.org/docs/apache-airflow/stable/concepts/xcoms.html">XCom</a> as requested via the <code class="docutils literal notranslate"><span class="pre">do_xcom_push_artifacts</span></code> parameter, which takes a list of artifacts to push.</p>
 <p>This way, artifacts may be pulled and operated on by downstream tasks. For example:</p>
 <div class="literal-block-wrapper docutils container" id="id4">
-<div class="code-block-caption"><span class="caption-text">example_dbt_artifacts.py</span><a class="headerlink" href="#id4" title="Permalink to this code"></a></div>
+<div class="code-block-caption"><span class="caption-text">example_dbt_artifacts_dag.py</span><a class="headerlink" href="#id4" title="Permalink to this code"></a></div>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="linenos"> 1</span><span class="kn">import</span> <span class="nn">datetime</span> <span class="k">as</span> <span class="nn">dt</span>
 <span class="linenos"> 2</span>
 <span class="linenos"> 3</span><span class="kn">from</span> <span class="nn">airflow.operators.python</span> <span class="kn">import</span> <span class="n">PythonOperator</span>
@@ -149,6 +150,62 @@
 <span class="linenos">34</span>   <span class="p">)</span>
 <span class="linenos">35</span>
 <span class="linenos">36</span>   <span class="n">dbt_run</span> <span class="o">&gt;&gt;</span> <span class="n">process_artifacts</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="use-airflow-connections-as-dbt-targets-without-a-profiles-yml">
+<h3>Use Airflow connections as dbt targets (without a profiles.yml)<a class="headerlink" href="#use-airflow-connections-as-dbt-targets-without-a-profiles-yml" title="Permalink to this headline"></a></h3>
+<p><a class="reference external" href="https://airflow.apache.org/docs/apache-airflow/stable/howto/connection.html">Airflow connections</a> allow users to manage and store connection information, such as hostname, port, user name, and password, for operators to use when accessing certain applications, like databases. Similarly, a dbt <code class="docutils literal notranslate"><span class="pre">profiles.yml</span></code> file stores connection information under each target key.</p>
+<p><code class="docutils literal notranslate"><span class="pre">airflow-dbt-python</span></code> bridges the gap between the two and allows you to use connection information stored as an Airflow connection by specifying the connection id as the <code class="docutils literal notranslate"><span class="pre">target</span></code> parameter of any of the dbt operators it provides. What’s more, if using an Airflow connection, the <code class="docutils literal notranslate"><span class="pre">profiles.yml</span></code> file may be entirely omitted (although keep in mind a <code class="docutils literal notranslate"><span class="pre">profiles.yml</span></code> file contains a configuration block besides target connection information).</p>
+<div class="literal-block-wrapper docutils container" id="id5">
+<div class="code-block-caption"><span class="caption-text">airflow_connection_target_dag.py</span><a class="headerlink" href="#id5" title="Permalink to this code"></a></div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="linenos"> 1</span><span class="kn">import</span> <span class="nn">datetime</span> <span class="k">as</span> <span class="nn">dt</span>
+<span class="linenos"> 2</span><span class="kn">import</span> <span class="nn">json</span>
+<span class="linenos"> 3</span><span class="kn">import</span> <span class="nn">os</span>
+<span class="linenos"> 4</span>
+<span class="linenos"> 5</span><span class="kn">from</span> <span class="nn">airflow</span> <span class="kn">import</span> <span class="n">DAG</span><span class="p">,</span> <span class="n">settings</span>
+<span class="linenos"> 6</span><span class="kn">from</span> <span class="nn">airflow.models.connection</span> <span class="kn">import</span> <span class="n">Connection</span>
+<span class="linenos"> 7</span><span class="kn">from</span> <span class="nn">airflow.utils.dates</span> <span class="kn">import</span> <span class="n">days_ago</span>
+<span class="linenos"> 8</span><span class="kn">from</span> <span class="nn">airflow_dbt_python.dbt.operators</span> <span class="kn">import</span> <span class="n">DbtRunOperator</span>
+<span class="linenos"> 9</span>
+<span class="linenos">10</span><span class="c1"># For illustration purposes, and to keep the example self-contained, we create</span>
+<span class="linenos">11</span><span class="c1"># a Connection using Airflow&#39;s ORM. However, any method of loading connections would</span>
+<span class="linenos">12</span><span class="c1"># work, like Airflow&#39;s UI, Airflow&#39;s CLI, or in deployment scripts.</span>
+<span class="linenos">13</span><span class="n">my_conn</span> <span class="o">=</span> <span class="n">Connection</span><span class="p">(</span>
+<span class="linenos">14</span>    <span class="n">conn_id</span><span class="o">=</span><span class="s2">&quot;my_db_connection&quot;</span><span class="p">,</span>
+<span class="linenos">15</span>    <span class="n">conn_type</span><span class="o">=</span><span class="s2">&quot;postgres&quot;</span><span class="p">,</span>
+<span class="linenos">16</span>    <span class="n">description</span><span class="o">=</span><span class="s2">&quot;A test postgres connection&quot;</span><span class="p">,</span>
+<span class="linenos">17</span>    <span class="n">host</span><span class="o">=</span><span class="s2">&quot;localhost&quot;</span><span class="p">,</span>
+<span class="linenos">18</span>    <span class="n">login</span><span class="o">=</span><span class="s2">&quot;username&quot;</span><span class="p">,</span>
+<span class="linenos">19</span>    <span class="n">port</span><span class="o">=</span><span class="mi">5432</span><span class="p">,</span>
+<span class="linenos">20</span>    <span class="n">schema</span><span class="o">=</span><span class="s2">&quot;my_dbt_schema&quot;</span><span class="p">,</span>
+<span class="linenos">21</span>    <span class="n">password</span><span class="o">=</span><span class="s2">&quot;password&quot;</span><span class="p">,</span> <span class="c1"># pragma: allowlist secret</span>
+<span class="linenos">22</span>    <span class="c1"># Other dbt parameters can be added as extras</span>
+<span class="linenos">23</span>    <span class="n">extra</span><span class="o">=</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="n">threads</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">sslmode</span><span class="o">=</span><span class="s2">&quot;require&quot;</span><span class="p">)),</span>
+<span class="linenos">24</span><span class="p">)</span>
+<span class="linenos">25</span><span class="n">session</span> <span class="o">=</span> <span class="n">settings</span><span class="o">.</span><span class="n">Session</span><span class="p">()</span>
+<span class="linenos">26</span><span class="n">session</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">my_conn</span><span class="p">)</span>
+<span class="linenos">27</span><span class="n">session</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+<span class="linenos">28</span>
+<span class="linenos">29</span><span class="k">with</span> <span class="n">DAG</span><span class="p">(</span>
+<span class="linenos">30</span>    <span class="n">dag_id</span><span class="o">=</span><span class="s2">&quot;example_airflow_connection&quot;</span><span class="p">,</span>
+<span class="linenos">31</span>    <span class="n">schedule_interval</span><span class="o">=</span><span class="s2">&quot;0 * * * *&quot;</span><span class="p">,</span>
+<span class="linenos">32</span>    <span class="n">start_date</span><span class="o">=</span><span class="n">days_ago</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span>
+<span class="linenos">33</span>    <span class="n">catchup</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+<span class="linenos">34</span>    <span class="n">dagrun_timeout</span><span class="o">=</span><span class="n">dt</span><span class="o">.</span><span class="n">timedelta</span><span class="p">(</span><span class="n">minutes</span><span class="o">=</span><span class="mi">60</span><span class="p">),</span>
+<span class="linenos">35</span><span class="p">)</span> <span class="k">as</span> <span class="n">dag</span><span class="p">:</span>
+<span class="linenos">36</span><span class="n">dbt_run</span> <span class="o">=</span> <span class="n">DbtRunOperator</span><span class="p">(</span>
+<span class="linenos">37</span>    <span class="n">task_id</span><span class="o">=</span><span class="s2">&quot;dbt_run_hourly&quot;</span><span class="p">,</span>
+<span class="linenos">38</span>    <span class="n">target</span><span class="o">=</span><span class="s2">&quot;my_db_connection&quot;</span><span class="p">,</span>
+<span class="linenos">39</span>    <span class="c1"># Profiles file is not needed as we are using an Airflow connection.</span>
+<span class="linenos">40</span>    <span class="c1"># If a profiles file is used, the Airflow connection will be merged to the</span>
+<span class="linenos">41</span>    <span class="c1"># existing targets</span>
+<span class="linenos">42</span>    <span class="n">profiles_dir</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>  <span class="c1"># Defaults to None so this may be omitted.</span>
+<span class="linenos">43</span>    <span class="n">project_dir</span><span class="o">=</span><span class="s2">&quot;/path/to/my/dbt/project/&quot;</span><span class="p">,</span>
+<span class="linenos">44</span>    <span class="n">select</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;+tag:hourly&quot;</span><span class="p">],</span>
+<span class="linenos">45</span>    <span class="n">exclude</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;tag:deprecated&quot;</span><span class="p">],</span>
+<span class="linenos">46</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>

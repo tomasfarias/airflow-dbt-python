@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Getting started &mdash; airflow-dbt-python 0.13.1 documentation</title>
+  <title>Getting started &mdash; airflow-dbt-python 0.14.0 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -29,7 +29,7 @@
             <a href="index.html" class="icon icon-home"> airflow-dbt-python
           </a>
               <div class="version">
-                0.13.1
+                0.14.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
@@ -126,13 +126,13 @@ pip install airflow-dbt-python<span class="o">[</span>all<span class="o">]</span
 <span class="nb">cd</span> airflow-dbt-python
 </pre></div>
 </div>
-<p>And installing with <code class="docutils literal notranslate"><span class="pre">poetry</span></code> (without development dependencies):</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>poetry install --no-dev
+<p>And installing with <code class="docutils literal notranslate"><span class="pre">poetry</span></code>:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>poetry install
 </pre></div>
 </div>
 <p>As with <code class="docutils literal notranslate"><span class="pre">pip</span></code>, any extra adapters can be installed:</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>poetry install -E postgres -E redshift -E bigquery -E snowflake --no-dev
-poetry install -E all --no-dev
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>poetry install -E postgres -E redshift -E bigquery -E snowflake
+poetry install -E all
 </pre></div>
 </div>
 </div>
