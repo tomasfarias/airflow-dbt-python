@@ -1,3 +1,6 @@
+"""Test dbt operators with sample DAGs."""
+from __future__ import annotations
+
 import datetime as dt
 import typing
 
