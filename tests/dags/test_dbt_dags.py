@@ -8,12 +8,12 @@ import pendulum
 import pytest
 from dbt.contracts.results import RunStatus, TestStatus
 
+airflow = pytest.importorskip("airflow", minversion="2.2")
+
 from airflow import DAG, settings
-from airflow.decorators import dag, task
 from airflow.models import DagBag, DagRun
 from airflow.utils.state import DagRunState, TaskInstanceState
 from airflow.utils.types import DagRunType
-from airflow.version import version
 from airflow_dbt_python.operators.dbt import (
     DbtBaseOperator,
     DbtRunOperator,
@@ -132,6 +132,8 @@ def taskflow_dag(
     singular_tests_files,
     generic_tests_files,
 ):
+    from airflow.decorators import dag, task
+
     @dag(
         dag_id="taskflow_dbt_dag",
         start_date=DATA_INTERVAL_START,
@@ -188,9 +190,6 @@ def taskflow_dag(
     session.query(DagRun).delete()
 
 
-@pytest.mark.skipif(
-    int(version.split(".")[0]) < 2, reason="TaskFlow API was introduced in Airflow 2"
-)
 def test_dbt_operators_in_taskflow_dag(taskflow_dag, dbt_project_file, profiles_file):
     dagrun = taskflow_dag.create_dagrun(
         state=DagRunState.RUNNING,
