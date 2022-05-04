@@ -83,38 +83,37 @@
 <p>This section contains a few DAGs showing off some dbt pipelines to get you going.</p>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
-<p>All example DAGs are tested against against <cite>apache-airflow==2.2.5</cite>. Some changes, like modifying <cite>import</cite> statements or changing types, may be required for them to work in environments running other versions of Airflow.</p>
+<p>All example DAGs are tested against against <code class="docutils literal notranslate"><span class="pre">apache-airflow==2.2.5</span></code>. Some changes, like modifying <code class="docutils literal notranslate"><span class="pre">import</span></code> statements or changing types, may be required for them to work in environments running other versions of Airflow.</p>
 </div>
 <div class="section" id="basic-dag">
 <h2>Basic DAG<a class="headerlink" href="#basic-dag" title="Permalink to this headline"></a></h2>
 <p>This basic DAG shows off a single <code class="docutils literal notranslate"><span class="pre">DbtRunOperator</span></code> that executes daily:</p>
 <div class="literal-block-wrapper docutils container" id="id1">
 <div class="code-block-caption"><span class="caption-text">basic_dag.py</span><a class="headerlink" href="#id1" title="Permalink to this code"></a></div>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="linenos"> 1</span>   <span class="sd">&quot;&quot;&quot;Sample basic DAG which dbt runs a project.&quot;&quot;&quot;</span>
-<span class="linenos"> 2</span>   <span class="kn">import</span> <span class="nn">datetime</span> <span class="k">as</span> <span class="nn">dt</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="linenos"> 1</span><span class="sd">&quot;&quot;&quot;Sample basic DAG which dbt runs a project.&quot;&quot;&quot;</span>
+<span class="linenos"> 2</span><span class="kn">import</span> <span class="nn">datetime</span> <span class="k">as</span> <span class="nn">dt</span>
 <span class="linenos"> 3</span>
-<span class="linenos"> 4</span>   <span class="kn">from</span> <span class="nn">airflow</span> <span class="kn">import</span> <span class="n">DAG</span>
-<span class="linenos"> 5</span>   <span class="kn">from</span> <span class="nn">airflow.utils.dates</span> <span class="kn">import</span> <span class="n">days_ago</span>
-<span class="linenos"> 6</span>   <span class="kn">from</span> <span class="nn">airflow_dbt_python.operators.dbt</span> <span class="kn">import</span> <span class="n">DbtRunOperator</span>
+<span class="linenos"> 4</span><span class="kn">from</span> <span class="nn">airflow</span> <span class="kn">import</span> <span class="n">DAG</span>
+<span class="linenos"> 5</span><span class="kn">from</span> <span class="nn">airflow.utils.dates</span> <span class="kn">import</span> <span class="n">days_ago</span>
+<span class="linenos"> 6</span><span class="kn">from</span> <span class="nn">airflow_dbt_python.operators.dbt</span> <span class="kn">import</span> <span class="n">DbtRunOperator</span>
 <span class="linenos"> 7</span>
-<span class="linenos"> 8</span>   <span class="k">with</span> <span class="n">DAG</span><span class="p">(</span>
-<span class="linenos"> 9</span>       <span class="n">dag_id</span><span class="o">=</span><span class="s2">&quot;example_basic_dbt_run&quot;</span><span class="p">,</span>
-<span class="linenos">10</span>       <span class="n">schedule_interval</span><span class="o">=</span><span class="s2">&quot;0 * * * *&quot;</span><span class="p">,</span>
-<span class="linenos">11</span>       <span class="n">start_date</span><span class="o">=</span><span class="n">days_ago</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span>
-<span class="linenos">12</span>       <span class="n">catchup</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-<span class="linenos">13</span>       <span class="n">dagrun_timeout</span><span class="o">=</span><span class="n">dt</span><span class="o">.</span><span class="n">timedelta</span><span class="p">(</span><span class="n">minutes</span><span class="o">=</span><span class="mi">60</span><span class="p">),</span>
-<span class="linenos">14</span>   <span class="p">)</span> <span class="k">as</span> <span class="n">dag</span><span class="p">:</span>
-<span class="linenos">15</span>
-<span class="linenos">16</span>   <span class="n">dbt_run</span> <span class="o">=</span> <span class="n">DbtRunOperator</span><span class="p">(</span>
-<span class="linenos">17</span>       <span class="n">task_id</span><span class="o">=</span><span class="s2">&quot;dbt_run_hourly&quot;</span><span class="p">,</span>
-<span class="linenos">18</span>       <span class="n">project_dir</span><span class="o">=</span><span class="s2">&quot;/path/to/my/dbt/project/&quot;</span><span class="p">,</span>
-<span class="linenos">19</span>       <span class="n">profiles_dir</span><span class="o">=</span><span class="s2">&quot;~/.dbt/&quot;</span><span class="p">,</span>
-<span class="linenos">20</span>       <span class="n">select</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;+tag:hourly&quot;</span><span class="p">],</span>
-<span class="linenos">21</span>       <span class="n">exclude</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;tag:deprecated&quot;</span><span class="p">],</span>
-<span class="linenos">22</span>       <span class="n">target</span><span class="o">=</span><span class="s2">&quot;production&quot;</span><span class="p">,</span>
-<span class="linenos">23</span>       <span class="n">profile</span><span class="o">=</span><span class="s2">&quot;my-project&quot;</span><span class="p">,</span>
-<span class="linenos">24</span>       <span class="n">full_refresh</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-<span class="linenos">25</span>   <span class="p">)</span>
+<span class="linenos"> 8</span><span class="k">with</span> <span class="n">DAG</span><span class="p">(</span>
+<span class="linenos"> 9</span>    <span class="n">dag_id</span><span class="o">=</span><span class="s2">&quot;example_basic_dbt_run&quot;</span><span class="p">,</span>
+<span class="linenos">10</span>    <span class="n">schedule_interval</span><span class="o">=</span><span class="s2">&quot;0 * * * *&quot;</span><span class="p">,</span>
+<span class="linenos">11</span>    <span class="n">start_date</span><span class="o">=</span><span class="n">days_ago</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span>
+<span class="linenos">12</span>    <span class="n">catchup</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+<span class="linenos">13</span>    <span class="n">dagrun_timeout</span><span class="o">=</span><span class="n">dt</span><span class="o">.</span><span class="n">timedelta</span><span class="p">(</span><span class="n">minutes</span><span class="o">=</span><span class="mi">60</span><span class="p">),</span>
+<span class="linenos">14</span><span class="p">)</span> <span class="k">as</span> <span class="n">dag</span><span class="p">:</span>
+<span class="linenos">15</span>    <span class="n">dbt_run</span> <span class="o">=</span> <span class="n">DbtRunOperator</span><span class="p">(</span>
+<span class="linenos">16</span>        <span class="n">task_id</span><span class="o">=</span><span class="s2">&quot;dbt_run_hourly&quot;</span><span class="p">,</span>
+<span class="linenos">17</span>        <span class="n">project_dir</span><span class="o">=</span><span class="s2">&quot;/path/to/my/dbt/project/&quot;</span><span class="p">,</span>
+<span class="linenos">18</span>        <span class="n">profiles_dir</span><span class="o">=</span><span class="s2">&quot;~/.dbt/&quot;</span><span class="p">,</span>
+<span class="linenos">19</span>        <span class="n">select</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;+tag:hourly&quot;</span><span class="p">],</span>
+<span class="linenos">20</span>        <span class="n">exclude</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;tag:deprecated&quot;</span><span class="p">],</span>
+<span class="linenos">21</span>        <span class="n">target</span><span class="o">=</span><span class="s2">&quot;production&quot;</span><span class="p">,</span>
+<span class="linenos">22</span>        <span class="n">profile</span><span class="o">=</span><span class="s2">&quot;my-project&quot;</span><span class="p">,</span>
+<span class="linenos">23</span>        <span class="n">full_refresh</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+<span class="linenos">24</span>    <span class="p">)</span>
 </pre></div>
 </div>
 </div>

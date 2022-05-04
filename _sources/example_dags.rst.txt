@@ -4,7 +4,7 @@ Example DAGs
 This section contains a few DAGs showing off some dbt pipelines to get you going.
 
 .. warning::
-   All example DAGs are tested against against `apache-airflow==2.2.5`. Some changes, like modifying `import` statements or changing types, may be required for them to work in environments running other versions of Airflow.
+   All example DAGs are tested against against ``apache-airflow==2.2.5``. Some changes, like modifying ``import`` statements or changing types, may be required for them to work in environments running other versions of Airflow.
 
 Basic DAG
 ^^^^^^^^^
@@ -15,31 +15,30 @@ This basic DAG shows off a single ``DbtRunOperator`` that executes daily:
    :linenos:
    :caption: basic_dag.py
 
-      """Sample basic DAG which dbt runs a project."""
-      import datetime as dt
+   """Sample basic DAG which dbt runs a project."""
+   import datetime as dt
 
-      from airflow import DAG
-      from airflow.utils.dates import days_ago
-      from airflow_dbt_python.operators.dbt import DbtRunOperator
+   from airflow import DAG
+   from airflow.utils.dates import days_ago
+   from airflow_dbt_python.operators.dbt import DbtRunOperator
 
-      with DAG(
-          dag_id="example_basic_dbt_run",
-          schedule_interval="0 * * * *",
-          start_date=days_ago(1),
-          catchup=False,
-          dagrun_timeout=dt.timedelta(minutes=60),
-      ) as dag:
-
-      dbt_run = DbtRunOperator(
-          task_id="dbt_run_hourly",
-          project_dir="/path/to/my/dbt/project/",
-          profiles_dir="~/.dbt/",
-          select=["+tag:hourly"],
-          exclude=["tag:deprecated"],
-          target="production",
-          profile="my-project",
-          full_refresh=False,
-      )
+   with DAG(
+       dag_id="example_basic_dbt_run",
+       schedule_interval="0 * * * *",
+       start_date=days_ago(1),
+       catchup=False,
+       dagrun_timeout=dt.timedelta(minutes=60),
+   ) as dag:
+       dbt_run = DbtRunOperator(
+           task_id="dbt_run_hourly",
+           project_dir="/path/to/my/dbt/project/",
+           profiles_dir="~/.dbt/",
+           select=["+tag:hourly"],
+           exclude=["tag:deprecated"],
+           target="production",
+           profile="my-project",
+           full_refresh=False,
+       )
 
 
 Run and Docs from S3
