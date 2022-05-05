@@ -115,6 +115,7 @@ class BaseConfig:
 
     # Execution configuration
     compiled_target: Optional[StrPath] = None
+    cache_selected_only: Optional[bool] = None
     fail_fast: Optional[bool] = None
     single_threaded: Optional[bool] = None
     threads: Optional[int] = None
@@ -127,6 +128,8 @@ class BaseConfig:
     log_cache_events: Optional[bool] = None
     record_timing_info: Optional[str] = None
     debug: Optional[bool] = None
+    quiet: Optional[bool] = None
+    no_print: Optional[bool] = None
 
     # Mutually exclusive attributes
     defer: Optional[bool] = None

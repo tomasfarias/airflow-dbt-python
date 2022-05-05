@@ -72,6 +72,7 @@ class DbtBaseOperator(BaseOperator):
         state: Optional[str] = None,
         # Execution configuration
         compiled_target: Optional[Union[os.PathLike, str, bytes]] = None,
+        cache_selected_only: Optional[bool] = None,
         fail_fast: Optional[bool] = None,
         single_threaded: Optional[bool] = None,
         threads: Optional[int] = None,
@@ -82,6 +83,8 @@ class DbtBaseOperator(BaseOperator):
         debug: Optional[bool] = None,
         log_format: Optional[str] = None,
         log_cache_events: Optional[bool] = False,
+        quiet: Optional[bool] = None,
+        no_print: Optional[bool] = None,
         record_timing_info: Optional[str] = None,
         # Mutually exclusive
         defer: Optional[bool] = None,
@@ -113,6 +116,7 @@ class DbtBaseOperator(BaseOperator):
         self.state = state
 
         self.compiled_target = compiled_target
+        self.cache_selected_only = cache_selected_only
         self.fail_fast = fail_fast
         self.single_threaded = single_threaded
         self.threads = threads
@@ -122,6 +126,8 @@ class DbtBaseOperator(BaseOperator):
 
         self.debug = debug
         self.log_cache_events = log_cache_events
+        self.quiet = quiet
+        self.no_print = no_print
         self.log_format = (
             LogFormat.from_str(log_format) if log_format is not None else None
         )
