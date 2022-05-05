@@ -479,14 +479,14 @@ python-versions = "*"
 
 [[package]]
 name = "boto3"
-version = "1.22.1"
+version = "1.22.8"
 description = "The AWS SDK for Python"
 category = "main"
 optional = false
 python-versions = ">= 3.6"
 
 [package.dependencies]
-botocore = ">=1.25.1,<1.26.0"
+botocore = ">=1.25.8,<1.26.0"
 jmespath = ">=0.7.1,<2.0.0"
 s3transfer = ">=0.5.0,<0.6.0"
 
@@ -813,7 +813,7 @@ xray = ["mypy-boto3-xray (>=1.21.0)"]
 
 [[package]]
 name = "botocore"
-version = "1.25.1"
+version = "1.25.8"
 description = "Low-level, data-driven core of boto 3."
 category = "main"
 optional = false
@@ -1170,14 +1170,14 @@ test = ["pytest", "pytest-rerunfailures", "pytest-xdist", "pre-commit"]
 
 [[package]]
 name = "dbt-bigquery"
-version = "1.0.0"
+version = "1.1.0"
 description = "The BigQuery adapter plugin for dbt"
 category = "main"
 optional = true
 python-versions = ">=3.7"
 
 [package.dependencies]
-dbt-core = ">=1.0.0,<1.1.0"
+dbt-core = ">=1.1.0,<1.2.0"
 google-api-core = ">=1.16.0,<3"
 google-cloud-bigquery = ">=1.25.0,<3"
 google-cloud-core = ">=1.3.0,<3"
@@ -1186,11 +1186,11 @@ protobuf = ">=3.13.0,<4"
 
 [[package]]
 name = "dbt-core"
-version = "1.0.5"
+version = "1.1.0"
 description = "With dbt, data analysts and engineers can build analytics the way engineers build applications."
 category = "main"
 optional = false
-python-versions = ">=3.7"
+python-versions = ">=3.7.2"
 
 [package.dependencies]
 agate = ">=1.6,<1.6.4"
@@ -1203,14 +1203,14 @@ idna = ">=2.5,<4"
 isodate = ">=0.6,<0.7"
 Jinja2 = "2.11.3"
 logbook = ">=1.5,<1.6"
-MarkupSafe = ">=0.23,<2.1"
+MarkupSafe = "2.0.1"
 mashumaro = "2.9"
 minimal-snowplow-tracker = "0.0.2"
 networkx = ">=2.3,<3"
 packaging = ">=20.9,<22.0"
 requests = "<3.0.0"
 sqlparse = ">=0.2.3,<0.5"
-typing-extensions = ">=3.7.4,<3.11"
+typing-extensions = ">=3.7.4"
 werkzeug = ">=1,<3"
 
 [[package]]
@@ -1223,19 +1223,19 @@ python-versions = ">=3.6.1"
 
 [[package]]
 name = "dbt-postgres"
-version = "1.0.5"
+version = "1.1.0"
 description = "The postgres adpter plugin for dbt (data build tool)"
 category = "main"
 optional = true
 python-versions = ">=3.7"
 
 [package.dependencies]
-dbt-core = "1.0.5"
+dbt-core = "1.1.0"
 psycopg2-binary = ">=2.8,<3.0"
 
 [[package]]
 name = "dbt-redshift"
-version = "1.0.1"
+version = "1.1.0"
 description = "The Redshift adapter plugin for dbt"
 category = "main"
 optional = true
@@ -1243,12 +1243,12 @@ python-versions = ">=3.7"
 
 [package.dependencies]
 boto3 = ">=1.4.4,<2.0.0"
-dbt-core = ">=1.0.0,<1.1.0"
-dbt-postgres = ">=1.0.0,<1.1.0"
+dbt-core = ">=1.1.0,<1.2.0"
+dbt-postgres = ">=1.1.0,<1.2.0"
 
 [[package]]
 name = "dbt-snowflake"
-version = "1.0.1"
+version = "1.1.0"
 description = "The Snowflake adapter plugin for dbt"
 category = "main"
 optional = true
@@ -1256,7 +1256,7 @@ python-versions = ">=3.7"
 
 [package.dependencies]
 cryptography = ">=3.2,<4"
-dbt-core = ">=1.0.0,<1.1.0"
+dbt-core = ">=1.1.0,<1.2.0"
 requests = "<3.0.0"
 snowflake-connector-python = {version = ">=2.4.1,<2.8.0", extras = ["secure-local-storage"]}
 
@@ -1681,29 +1681,11 @@ recommended = ["cffi (>=1.12.2)", "dnspython (>=1.16.0,<2.0)", "idna", "selector
 test = ["requests", "objgraph", "cffi (>=1.12.2)", "dnspython (>=1.16.0,<2.0)", "idna", "selectors2", "futures", "mock", "backports.socketpair", "contextvars (==2.4)", "coverage (>=5.0)", "coveralls (>=1.7.0)", "psutil (>=5.7.0)"]
 
 [[package]]
-name = "google-ads"
-version = "14.0.0"
-description = "Client library for the Google Ads API"
-category = "dev"
-optional = false
-python-versions = ">=3.7"
-
-[package.dependencies]
-google-api-core = ">=1.31.2,<3.0.0"
-google-auth-oauthlib = ">=0.3.0,<1.0.0"
-googleapis-common-protos = ">=1.5.8,<2.0.0"
-grpcio = ">=1.38.1,<2.0.0"
-nox = "2020.12.31"
-proto-plus = "1.18.1"
-PyYAML = ">=5.1,<6.0"
-setuptools = ">=40.3.0"
-
-[[package]]
 name = "google-api-core"
-version = "2.7.1"
+version = "2.7.3"
 description = "Google API client core library"
 category = "main"
-optional = false
+optional = true
 python-versions = ">=3.6"
 
 [package.dependencies]
@@ -1721,7 +1703,7 @@ grpcio-gcp = ["grpcio-gcp (>=0.2.2)"]
 
 [[package]]
 name = "google-auth"
-version = "2.6.2"
+version = "2.6.6"
 description = "Google Authentication Library"
 category = "main"
 optional = false
@@ -1737,21 +1719,6 @@ six = ">=1.9.0"
 aiohttp = ["requests (>=2.20.0,<3.0.0dev)", "aiohttp (>=3.6.2,<4.0.0dev)"]
 pyopenssl = ["pyopenssl (>=20.0.0)"]
 reauth = ["pyu2f (>=0.1.5)"]
-
-[[package]]
-name = "google-auth-oauthlib"
-version = "0.5.1"
-description = "Google Authentication Library"
-category = "dev"
-optional = false
-python-versions = ">=3.6"
-
-[package.dependencies]
-google-auth = ">=1.0.0"
-requests-oauthlib = ">=0.7.0"
-
-[package.extras]
-tool = ["click (>=6.0.0)"]
 
 [[package]]
 name = "google-cloud-bigquery"
@@ -1828,7 +1795,7 @@ name = "googleapis-common-protos"
 version = "1.56.0"
 description = "Common protobufs used in Google APIs"
 category = "main"
-optional = false
+optional = true
 python-versions = ">=3.6"
 
 [package.dependencies]
@@ -1999,7 +1966,7 @@ tests = ["freezegun", "pytest", "pytest-cov"]
 
 [[package]]
 name = "identify"
-version = "2.4.12"
+version = "2.5.0"
 description = "File identification library for Python"
 category = "dev"
 optional = false
@@ -2811,7 +2778,7 @@ tests = ["pytest", "pytest-cov"]
 
 [[package]]
 name = "pre-commit"
-version = "2.18.1"
+version = "2.19.0"
 description = "A framework for managing and maintaining multi-language pre-commit hooks."
 category = "dev"
 optional = false
@@ -3243,7 +3210,7 @@ python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*, !=3.5.*"
 
 [[package]]
 name = "redshift-connector"
-version = "2.0.906"
+version = "2.0.907"
 description = "Redshift interface library"
 category = "main"
 optional = true
@@ -3480,7 +3447,7 @@ python-versions = "*"
 
 [[package]]
 name = "snowflake-connector-python"
-version = "2.7.6"
+version = "2.7.7"
 description = "Snowflake Connector for Python"
 category = "main"
 optional = true
@@ -3504,7 +3471,7 @@ setuptools = ">34.0.0"
 
 [package.extras]
 development = ["cython", "coverage", "more-itertools", "numpy (<1.23.0)", "pendulum (!=2.1.1)", "pexpect", "pytest (<6.3.0)", "pytest-cov", "pytest-rerunfailures", "pytest-timeout", "pytest-xdist", "pytzdata"]
-pandas = ["pandas (>=1.0.0,<1.4.0)", "pyarrow (>=6.0.0,<6.1.0)"]
+pandas = ["pandas (>=1.0.0,<1.5.0)", "pyarrow (>=6.0.0,<6.1.0)"]
 secure-local-storage = ["keyring (!=16.1.0,<24.0.0)"]
 
 [[package]]
@@ -4081,7 +4048,7 @@ snowflake = ["dbt-snowflake"]
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.7.2, <3.10.0"
-content-hash = "b1ed63fe74c3067796b2c10bad193851ca89188b053dd78d4e5651428fdead88"
+content-hash = "0840bb872e3c1a46d1ed520057edcc59c43a4e697b252d65875a62758c90986f"
 
 [metadata.files]
 agate = [
@@ -4205,16 +4172,16 @@ blinker = [
     {file = "blinker-1.4.tar.gz", hash = "sha256:471aee25f3992bd325afa3772f1063dbdbbca947a041b8b89466dc00d606f8b6"},
 ]
 boto3 = [
-    {file = "boto3-1.22.1-py3-none-any.whl", hash = "sha256:c7c996aa06a754e3e5cc5c64c840f02314333bdf6fe33054de9083be56aa6521"},
-    {file = "boto3-1.22.1.tar.gz", hash = "sha256:096ff3255c1327f14e63d29d7bed4900cc350d42916498c5cc37a90a7051d3dc"},
+    {file = "boto3-1.22.8-py3-none-any.whl", hash = "sha256:a6925fe88cc9cd6aab35ea950cdb1678a88210ece5271bb64c1593a46ed6de6c"},
+    {file = "boto3-1.22.8.tar.gz", hash = "sha256:222cfb68bd4f46f4beae7770f1f6b066786254462f289027ca123fe77eb50ff9"},
 ]
 boto3-stubs = [
     {file = "boto3-stubs-1.21.23.post1.tar.gz", hash = "sha256:c97cac698c00829ac3e29c0b258e9ff15bff4d8de83abcfdf9c73cca81620a01"},
     {file = "boto3_stubs-1.21.23.post1-py3-none-any.whl", hash = "sha256:b94f78512e0dfa3ae08bc71d55cc7d48254efb34b9f803b6903d8444cf3f4275"},
 ]
 botocore = [
-    {file = "botocore-1.25.1-py3-none-any.whl", hash = "sha256:33bb9659d4327f4f3aed6d6aee0fa467ffe635eee2a091cb6befe66e8956f234"},
-    {file = "botocore-1.25.1.tar.gz", hash = "sha256:ede020a3ee2ed1110b415af4bbd57b7275df66bbc96d20aa6310cabf0c5cfe36"},
+    {file = "botocore-1.25.8-py3-none-any.whl", hash = "sha256:5b342da3487e5669801f5589cc15e379fc9f7803a426584d08a6329575644da3"},
+    {file = "botocore-1.25.8.tar.gz", hash = "sha256:f0a7e9fb6000a6cfc7ca63971d8d1ab4ed3c38514ded439bcf1fc8bca162dc1b"},
 ]
 botocore-stubs = [
     {file = "botocore-stubs-1.24.23.post1.tar.gz", hash = "sha256:97fd5875167bd2f5a484a8dd3e1cbae7b54aea797d0e99f4e8cdafbf06ed4990"},
@@ -4419,12 +4386,12 @@ dask = [
     {file = "dask-2022.2.0.tar.gz", hash = "sha256:cefb5c63d1e26f6dfa650ddd1eb1a53e0cef623141b838820c6b34e6534ea409"},
 ]
 dbt-bigquery = [
-    {file = "dbt-bigquery-1.0.0.tar.gz", hash = "sha256:e22442f00fcec155dcbfe8be351a11c35913fb6edd11bd5e52fafc3218abd12e"},
-    {file = "dbt_bigquery-1.0.0-py3-none-any.whl", hash = "sha256:48778c89a37dd866ffd3718bf6b78e1139b7fb4cc0377f2feaa95e10dc3ce9c2"},
+    {file = "dbt-bigquery-1.1.0.tar.gz", hash = "sha256:ea82705dd497d635c730706fa6620fde2cb690a48e4b4659de95031aabebef66"},
+    {file = "dbt_bigquery-1.1.0-py3-none-any.whl", hash = "sha256:eef5954acf98686b7392a615089b684fd2683b8256bf42bd26606b0fbb573a48"},
 ]
 dbt-core = [
-    {file = "dbt-core-1.0.5.tar.gz", hash = "sha256:0691b470de8834db55a9925bf01492eae730e0513c1fe640730fb3d03efad315"},
-    {file = "dbt_core-1.0.5-py3-none-any.whl", hash = "sha256:65ac36615c19ac2b2eec768f1e97b65378b024faf58575fadb9cfc182fc8bb9a"},
+    {file = "dbt-core-1.1.0.tar.gz", hash = "sha256:3e33ce5be74e0d4f9f28ad76b4b1de55cb343d4c53c3a8f98c24551881aedf3e"},
+    {file = "dbt_core-1.1.0-py3-none-any.whl", hash = "sha256:4af9124e6ec188db2ce9a32d6b26757fd42c2e14238770ca0661d8963f1ba7ea"},
 ]
 dbt-extractor = [
     {file = "dbt_extractor-0.4.1-cp36-abi3-macosx_10_7_x86_64.whl", hash = "sha256:4dc715bd740e418d8dc1dd418fea508e79208a24cf5ab110b0092a3cbe96bf71"},
@@ -4445,16 +4412,16 @@ dbt-extractor = [
     {file = "dbt_extractor-0.4.1.tar.gz", hash = "sha256:75b1c665699ec0f1ffce1ba3d776f7dfce802156f22e70a7b9c8f0b4d7e80f42"},
 ]
 dbt-postgres = [
-    {file = "dbt-postgres-1.0.5.tar.gz", hash = "sha256:47bd755b8ae8f0ef2d19e6f972398aa58bdf7f24a49571c9ca04a6ddb3ddbd7b"},
-    {file = "dbt_postgres-1.0.5-py3-none-any.whl", hash = "sha256:44ee18cc313e72ef863f7e7295ba0111fde37055211468e9c0810c3c9aa0dcae"},
+    {file = "dbt-postgres-1.1.0.tar.gz", hash = "sha256:7f3d6e49d163bb91e95022ae4d2050ccfc626eb25531f0fe7abeb399fa7d0761"},
+    {file = "dbt_postgres-1.1.0-py3-none-any.whl", hash = "sha256:1c7cbd80040cb4f7a799f4562d5e12bb874d0e5b3b02d51e98bc0f50ea60f188"},
 ]
 dbt-redshift = [
-    {file = "dbt-redshift-1.0.1.tar.gz", hash = "sha256:1e45d2948313a588d54d7b59354e7850a969cf2aafb4d3581f3a733cb0170e68"},
-    {file = "dbt_redshift-1.0.1-py3-none-any.whl", hash = "sha256:1e5219d67c6c7a52235c46c7ca559b118ac7a5e1e62e6b3138eaa1cb67597751"},
+    {file = "dbt-redshift-1.1.0.tar.gz", hash = "sha256:08d902391095740b44d780b1286a6179790eab84324eafe1b91d08590cc75a62"},
+    {file = "dbt_redshift-1.1.0-py3-none-any.whl", hash = "sha256:960d7a0283e5566f02087ebc9e5b5ca3b0b16225e79c09db12f70e8cbe749f14"},
 ]
 dbt-snowflake = [
-    {file = "dbt-snowflake-1.0.1.tar.gz", hash = "sha256:8d286527f9bf3ced6196d509f249e6076adb79102712428699f3344a8b756558"},
-    {file = "dbt_snowflake-1.0.1-py3-none-any.whl", hash = "sha256:b3262f3f6ef434d8ac288eda91d96b139d75b665ed3ff8c60472826f24999e9d"},
+    {file = "dbt-snowflake-1.1.0.tar.gz", hash = "sha256:4d192795232c2d575602d8c7996f98e3f6a3500e4b8ad84a4dfab110294adede"},
+    {file = "dbt_snowflake-1.1.0-py3-none-any.whl", hash = "sha256:cd7a264f815f5a1a042e00866806768fab8eb2caaee4c542537c51e03b76146d"},
 ]
 decorator = [
     {file = "decorator-5.1.1-py3-none-any.whl", hash = "sha256:b8c3f85900b9dc423225913c5aace94729fe1fa9763b38939a95226f02d37186"},
@@ -4598,21 +4565,13 @@ gevent = [
     {file = "gevent-21.12.0-pp27-pypy_73-win_amd64.whl", hash = "sha256:9f9652d1e4062d4b5b5a0a49ff679fa890430b5f76969d35dccb2df114c55e0f"},
     {file = "gevent-21.12.0.tar.gz", hash = "sha256:f48b64578c367b91fa793bf8eaaaf4995cb93c8bc45860e473bf868070ad094e"},
 ]
-google-ads = [
-    {file = "google-ads-14.0.0.tar.gz", hash = "sha256:c6879f1f84c408547e88906e3f021172eda48d9c7d678e7877c618efe5e6de5a"},
-    {file = "google_ads-14.0.0-py3-none-any.whl", hash = "sha256:2236dd5bd0e9f555df95bc74cab7e2ef50b2c9f219e2806cc407224ebe147098"},
-]
 google-api-core = [
-    {file = "google-api-core-2.7.1.tar.gz", hash = "sha256:b0fa577e512f0c8e063386b974718b8614586a798c5894ed34bedf256d9dae24"},
-    {file = "google_api_core-2.7.1-py3-none-any.whl", hash = "sha256:6be1fc59e2a7ba9f66808bbc22f976f81e4c3e7ab20fa0620ce42686288787d0"},
+    {file = "google-api-core-2.7.3.tar.gz", hash = "sha256:17957f0704cbe95bd2ce25019efd2046423978594d181d4263e5dcffd2dbbc79"},
+    {file = "google_api_core-2.7.3-py3-none-any.whl", hash = "sha256:bb40d2d6412c77c367943b88d08323091d724deaea96892fff4a1ebd06f6e5be"},
 ]
 google-auth = [
-    {file = "google-auth-2.6.2.tar.gz", hash = "sha256:60d449f8142c742db760f4c0be39121bc8d9be855555d784c252deaca1ced3f5"},
-    {file = "google_auth-2.6.2-py2.py3-none-any.whl", hash = "sha256:3ba4d63cb29c1e6d5ffcc1c0623c03cf02ede6240a072f213084749574e691ab"},
-]
-google-auth-oauthlib = [
-    {file = "google-auth-oauthlib-0.5.1.tar.gz", hash = "sha256:30596b824fc6808fdaca2f048e4998cc40fb4b3599eaea66d28dc7085b36c5b8"},
-    {file = "google_auth_oauthlib-0.5.1-py2.py3-none-any.whl", hash = "sha256:24f67735513c4c7134dbde2f1dee5a1deb6acc8dfcb577d7bff30d213a28e7b0"},
+    {file = "google-auth-2.6.6.tar.gz", hash = "sha256:1ba4938e032b73deb51e59c4656a00e0939cf0b1112575099f136babb4563312"},
+    {file = "google_auth-2.6.6-py2.py3-none-any.whl", hash = "sha256:349ac49b18b01019453cc99c11c92ed772739778c92f184002b7ab3a5b7ac77d"},
 ]
 google-cloud-bigquery = [
     {file = "google-cloud-bigquery-2.34.3.tar.gz", hash = "sha256:0ab6362a86a29f17e379e886b49544bc0b75626902a48d12c13a0b47f821bf4a"},
@@ -4836,8 +4795,8 @@ humanize = [
     {file = "humanize-4.0.0.tar.gz", hash = "sha256:ee1f872fdfc7d2ef4a28d4f80ddde9f96d36955b5d6b0dac4bdeb99502bddb00"},
 ]
 identify = [
-    {file = "identify-2.4.12-py2.py3-none-any.whl", hash = "sha256:5f06b14366bd1facb88b00540a1de05b69b310cbc2654db3c7e07fa3a4339323"},
-    {file = "identify-2.4.12.tar.gz", hash = "sha256:3f3244a559290e7d3deb9e9adc7b33594c1bc85a9dd82e0f1be519bf12a1ec17"},
+    {file = "identify-2.5.0-py2.py3-none-any.whl", hash = "sha256:3acfe15a96e4272b4ec5662ee3e231ceba976ef63fd9980ed2ce9cc415df393f"},
+    {file = "identify-2.5.0.tar.gz", hash = "sha256:c83af514ea50bf2be2c4a3f2fb349442b59dc87284558ae9ff54191bff3541d2"},
 ]
 idna = [
     {file = "idna-3.3-py3-none-any.whl", hash = "sha256:84d9dd047ffa80596e0f246e2eab0b391788b0503584e8945f2368256d2735ff"},
@@ -5377,8 +5336,8 @@ port-for = [
     {file = "port_for-0.6.2-py3-none-any.whl", hash = "sha256:be154fdc1d8b2c50820cf1910151e0e9792f82a00ed09b8c277b551e5c99bb5a"},
 ]
 pre-commit = [
-    {file = "pre_commit-2.18.1-py2.py3-none-any.whl", hash = "sha256:02226e69564ebca1a070bd1f046af866aa1c318dbc430027c50ab832ed2b73f2"},
-    {file = "pre_commit-2.18.1.tar.gz", hash = "sha256:5d445ee1fa8738d506881c5d84f83c62bb5be6b2838e32207433647e8e5ebe10"},
+    {file = "pre_commit-2.19.0-py2.py3-none-any.whl", hash = "sha256:10c62741aa5704faea2ad69cb550ca78082efe5697d6f04e5710c3c229afdd10"},
+    {file = "pre_commit-2.19.0.tar.gz", hash = "sha256:4233a1e38621c87d9dda9808c6606d7e7ba0e087cd56d3fe03202a01d2919615"},
 ]
 prison = [
     {file = "prison-0.2.1-py2.py3-none-any.whl", hash = "sha256:f90bab63fca497aa0819a852f64fb21a4e181ed9f6114deaa5dc04001a7555c5"},
@@ -5736,7 +5695,7 @@ pyyaml = [
     {file = "PyYAML-5.4.1.tar.gz", hash = "sha256:607774cbba28732bfa802b54baa7484215f530991055bb562efbed5b2f20a45e"},
 ]
 redshift-connector = [
-    {file = "redshift_connector-2.0.906-py3-none-any.whl", hash = "sha256:b8f075d0669f938e12af6e7ecfc32889a439f4d9decdc6141b21d82c9442fd0f"},
+    {file = "redshift_connector-2.0.907-py3-none-any.whl", hash = "sha256:f0c75df717dd2eb7e9299dc3e83c9d505186490d4baac944e0bfd23414beca6b"},
 ]
 requests = [
     {file = "requests-2.27.1-py2.py3-none-any.whl", hash = "sha256:f22fa1e554c9ddfd16e6e41ac79759e17be9e492b3587efa038054674760e72d"},
@@ -5822,19 +5781,18 @@ snowballstemmer = [
     {file = "snowballstemmer-2.2.0.tar.gz", hash = "sha256:09b16deb8547d3412ad7b590689584cd0fe25ec8db3be37788be3810cbf19cb1"},
 ]
 snowflake-connector-python = [
-    {file = "snowflake-connector-python-2.7.6.tar.gz", hash = "sha256:331628e0ca02764492b83b5e47703bd857115ae29346b72de32d7fb7c9ec548b"},
-    {file = "snowflake_connector_python-2.7.6-cp310-cp310-macosx_10_14_universal2.whl", hash = "sha256:4aa90cddbc46f8f580ad78cbb9d4741fd66e665d3223f7f907d859554d2025c2"},
-    {file = "snowflake_connector_python-2.7.6-cp310-cp310-manylinux_2_12_x86_64.manylinux2010_x86_64.manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:ea850b2d816263ae63c00ad60f4df7006ddb1854f28aaa5b3688bf0e5e458dca"},
-    {file = "snowflake_connector_python-2.7.6-cp310-cp310-win_amd64.whl", hash = "sha256:5f3faa237f22d8305c8e48d8b5110c4015485b2cfa683e176fa89eafe57f6a8e"},
-    {file = "snowflake_connector_python-2.7.6-cp37-cp37m-macosx_10_14_x86_64.whl", hash = "sha256:74f55a0d25a53378994939b43a2a55105f12b1b92c8b7cb863b490c9a4243147"},
-    {file = "snowflake_connector_python-2.7.6-cp37-cp37m-manylinux_2_12_x86_64.manylinux2010_x86_64.manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:781473bd60388ce651ad094288f231bcae7fa5cd447e64d12577736cb37b8c96"},
-    {file = "snowflake_connector_python-2.7.6-cp37-cp37m-win_amd64.whl", hash = "sha256:8cfce34bbb910a396b230768658ac65578f28073b62cc9c85289ebbd217e839d"},
-    {file = "snowflake_connector_python-2.7.6-cp38-cp38-macosx_10_14_x86_64.whl", hash = "sha256:e180d285e93d5e3fe2b7b4958212d4964d45f1eca94f03dedc4e569bcc550bfd"},
-    {file = "snowflake_connector_python-2.7.6-cp38-cp38-manylinux_2_12_x86_64.manylinux2010_x86_64.manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:f59ed0c3223548a25aca9bcacf2c5cde04ad5e15366f0cf9e7b20dc34554b1cf"},
-    {file = "snowflake_connector_python-2.7.6-cp38-cp38-win_amd64.whl", hash = "sha256:8c82eda884967ef00d1b7aa59c925c83368f886bfa447c8fa2a81dced03dea70"},
-    {file = "snowflake_connector_python-2.7.6-cp39-cp39-macosx_10_14_universal2.whl", hash = "sha256:22437ee26baaa83cabcebbe9fbc9c95b36bdca441db61822588a622e32bcbecd"},
-    {file = "snowflake_connector_python-2.7.6-cp39-cp39-manylinux_2_12_x86_64.manylinux2010_x86_64.manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:8dbaf2dfed6c7ba4fd90c9f0ec604f86a2e070e4219c182f79f44ca225749c18"},
-    {file = "snowflake_connector_python-2.7.6-cp39-cp39-win_amd64.whl", hash = "sha256:d94eea3047c6cf6d5e4bb8a4b9f961f77f87e25671e7cb6257c0459419a9b194"},
+    {file = "snowflake-connector-python-2.7.7.tar.gz", hash = "sha256:3992ff0a51d8f326ad474009572a2606aec08c1c10c26e5ff549e67652fc205c"},
+    {file = "snowflake_connector_python-2.7.7-cp310-cp310-macosx_10_14_universal2.whl", hash = "sha256:50cc26f84ec916668fbaa7714a7161403ed55b007bd3ed7ddcc9cd95390923f0"},
+    {file = "snowflake_connector_python-2.7.7-cp310-cp310-manylinux_2_12_x86_64.manylinux2010_x86_64.manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:2031f5aab578b6f2266970649e8bd60ed132c347a8c915097256d3d4d390ce06"},
+    {file = "snowflake_connector_python-2.7.7-cp310-cp310-win_amd64.whl", hash = "sha256:727b3295a2cacabef87e5fa226151ddbfcfb4d11b42de7f8a9ff6840dd6c98e6"},
+    {file = "snowflake_connector_python-2.7.7-cp37-cp37m-macosx_10_14_x86_64.whl", hash = "sha256:dfaf5d7731688932ba00a3fb47e944c453801e2a986431a28d4f9b89e0a8118f"},
+    {file = "snowflake_connector_python-2.7.7-cp37-cp37m-manylinux_2_12_x86_64.manylinux2010_x86_64.manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:2a990f8af17ab5545ffdf754be829fb7c6ebdcea646fb96260dddd97cfa6d251"},
+    {file = "snowflake_connector_python-2.7.7-cp37-cp37m-win_amd64.whl", hash = "sha256:a7f3b4b3798749c60b66e23d97d0a4f92de714c8780bb2e3d33be4d188250782"},
+    {file = "snowflake_connector_python-2.7.7-cp38-cp38-macosx_10_14_x86_64.whl", hash = "sha256:635c0fe12f0d423f46abe79b379bbf06d6c9cbe695cafea0ab53b9eb17470546"},
+    {file = "snowflake_connector_python-2.7.7-cp38-cp38-manylinux_2_12_x86_64.manylinux2010_x86_64.manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:fb5bd1e7a9a0f92c30395555cf7d2b81845e922ad22eeee22210ef4c2b1adcf7"},
+    {file = "snowflake_connector_python-2.7.7-cp38-cp38-win_amd64.whl", hash = "sha256:d461ad72d400ec3cdac1e3ecc98b2c86cd22a90be2d980725684bfdda2ff6e6d"},
+    {file = "snowflake_connector_python-2.7.7-cp39-cp39-macosx_10_14_universal2.whl", hash = "sha256:a4d4ac287358489ef8165c003b02e01a4a9d7b4ea0da3e196cf059430c1bd065"},
+    {file = "snowflake_connector_python-2.7.7-cp39-cp39-manylinux_2_12_x86_64.manylinux2010_x86_64.manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:89e5ebaac94633f11d798cfcfdc0d2ba9ca45d2426c44125311a4e179f950fd9"},
 ]
 sortedcontainers = [
     {file = "sortedcontainers-2.4.0-py2.py3-none-any.whl", hash = "sha256:a163dcaede0f1c021485e957a39245190e74249897e2ae4b2aa38595db237ee0"},

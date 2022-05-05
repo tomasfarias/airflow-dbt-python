@@ -24,11 +24,11 @@ python = ">=3.7.2, <3.10.0"
 apache-airflow = { version = ">=2.2", optional = true }
 apache-airflow-providers-amazon = { version = ">=3.0.0", optional = true }
 
-dbt-core = ">=1.0.0, <1.1.0"
-dbt-postgres = { version = ">=1.0.0, <1.1.0", optional = true }
-dbt-redshift = { version = ">=1.0.0, <1.1.0", optional = true }
-dbt-snowflake = { version = ">=1.0.0, <1.1.0", optional = true }
-dbt-bigquery = { version = ">=1.0.0, <1.1.0", optional = true }
+dbt-core = ">=1.0.0, <1.2.0"
+dbt-postgres = { version = ">=1.0.0, <1.2.0", optional = true }
+dbt-redshift = { version = ">=1.0.0, <1.2.0", optional = true }
+dbt-snowflake = { version = ">=1.0.0, <1.2.0", optional = true }
+dbt-bigquery = { version = ">=1.0.0, <1.2.0", optional = true }
 
 [tool.poetry.group.airflow-constraints]
 optional = true
