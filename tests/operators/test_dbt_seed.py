@@ -118,10 +118,7 @@ def test_dbt_seed_models_logging(profiles_file, dbt_project_file, seed_files, tm
     assert len(lines) >= 0
 
     # Check for duplicate lines
-    line_1 = (
-        "1 of 2 START seed file public.seed_1.........................................."
-        ".. [RUN]"
-    )
+    line_1 = "1 of 2 START seed file public.seed_1"
     assert sum((line_1 in line for line in lines)) == 1
 
     line_2 = "Finished running 2 seeds"
@@ -164,10 +161,7 @@ def test_dbt_seed_models_debug_logging(
     assert len(lines) >= 0
 
     # Check for duplicate lines
-    line_1 = (
-        "]: 1 of 2 START seed file public.seed_1...................."
-        "........................ [RUN]"
-    )
+    line_1 = "]: 1 of 2 START seed file public.seed_1"
     assert sum((line_1 in line for line in lines)) == 1
 
     line_2 = "[info ] [MainThread]: Finished running 2 seeds"
