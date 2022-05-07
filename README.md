@@ -15,7 +15,7 @@ Read the [documentation](https://tomasfarias.github.io/airflow-dbt-python/) for 
 
 airflow-dbt-python requires the latest major version of [`dbt-core`](https://pypi.org/project/dbt-core/) which at the time of writing is version 1. Since `dbt-core` follows [semantic versioning](https://semver.org/), we do not impose any restrictions on the minor and patch versions, but do keep in mind that the latest `dbt-core` features incorporated as minor releases may not yet be supported.
 
-To line up with `dbt-core`, airflow-dbt-python supports Python 3.7, 3.8, and 3.9. We also include Python 3.10 in our testing pipeline, although as of the time of writing `dbt-core` does not yet support it.
+To line up with `dbt-core`, airflow-dbt-python supports Python 3.7, 3.8, 3.9, and 3.10. However, due to installation conflicts, we only test Python 3.10 with `apache-airflow>=2.2`.
 
 Due to the dependency conflict, airflow-dbt-python **does not include Airflow as a dependency**. We expect airflow-dbt-python to be installed into an environment with Airflow already in it. For more detailed instructions see the [docs](https://tomasfarias.github.io/airflow-dbt-python/getting_started.html).
 
@@ -32,6 +32,7 @@ pip install airflow-dby-python[snowflake,postgres]
 ```
 
 ## From this repo:
+
 
 Clone the repo:
 ``` shell
