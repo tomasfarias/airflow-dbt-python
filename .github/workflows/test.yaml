@@ -13,8 +13,13 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: [3.7, 3.8, 3.9]
+        python-version: [3.7, 3.8, 3.9, '3.10']
         airflow-version: ['1.10.15', '2.0.2', '2.2.5']
+        exclude:
+          - python-version: '3.10'
+            airflow-version: '2.0.2'
+          - python-version: '3.10'
+            airflow-version: '1.10.15'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -42,9 +47,16 @@ jobs:
         run: poetry run black --check .
 
       - name: Install Airflow > 2
-        if: matrix.airflow-version != '1.10.15'
+        if: matrix.airflow-version != '1.10.15' && matrix.python-version != '3.10'
         run: |
           wget https://raw.githubusercontent.com/apache/airflow/constraints-${{ matrix.airflow-version }}/constraints-${{ matrix.python-version }}.txt -O constraints.txt
+          poetry run pip install apache-airflow==${{ matrix.airflow-version }} apache-airflow-providers-amazon -c constraints.txt
+          poetry run airflow db init
+
+      - name: Install Airflow > 2
+        if: matrix.airflow-version != '1.10.15' && matrix.python-version == '3.10'
+        run: |
+          wget https://raw.githubusercontent.com/apache/airflow/constraints-${{ matrix.airflow-version }}/constraints-3.9.txt -O constraints.txt
           poetry run pip install apache-airflow==${{ matrix.airflow-version }} apache-airflow-providers-amazon -c constraints.txt
           poetry run airflow db init
 

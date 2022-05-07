@@ -16,10 +16,11 @@ classifiers = [
     "Programming Language :: Python :: 3.7",
     "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
 ]
 
 [tool.poetry.dependencies]
-python = ">=3.7.2, <3.10.0"
+python = ">=3.7.2, <3.11.0"
 
 apache-airflow = { version = ">=2.2", optional = true }
 apache-airflow-providers-amazon = { version = ">=3.0.0", optional = true }
