@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Getting started &mdash; airflow-dbt-python 0.14.2 documentation</title>
+  <title>Getting started &mdash; airflow-dbt-python 0.14.3 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -29,7 +29,7 @@
             <a href="index.html" class="icon icon-home"> airflow-dbt-python
           </a>
               <div class="version">
-                0.14.2
+                0.14.3
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
@@ -92,7 +92,11 @@
 <div class="section" id="requirements">
 <span id="id1"></span><h2>Requirements<a class="headerlink" href="#requirements" title="Permalink to this headline"></a></h2>
 <p>airflow-dbt-python requires the latest major version of <a class="reference external" href="https://pypi.org/project/dbt-core/">dbt-core</a> which at the time of writing is version 1. Since <code class="docutils literal notranslate"><span class="pre">dbt-core</span></code> follows <a class="reference external" href="https://semver.org/">semantic versioning</a>, we do not impose any restrictions on the minor and patch versions, but do keep in mind that the latest <code class="docutils literal notranslate"><span class="pre">dbt-core</span></code> features incorporated as minor releases may not yet be supported.</p>
-<p>To line up with <code class="docutils literal notranslate"><span class="pre">dbt-core</span></code>, airflow-dbt-python supports Python 3.7, 3.8, and 3.9. We also include Python 3.10 in our testing pipeline, although as of the time of writing <code class="docutils literal notranslate"><span class="pre">dbt-core</span></code> does not yet support it.</p>
+<p>To line up with <code class="docutils literal notranslate"><span class="pre">dbt-core</span></code>, airflow-dbt-python supports Python 3.7, 3.8, 3.9, and 3.10.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Due to installation conflicts, we only test Python 3.10 with <cite>apache-airflow&gt;=2.2</cite>.</p>
+</div>
 <p>On the Airflow side, we support the release version 1.10.12 and all Airflow major version 2 releases.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
