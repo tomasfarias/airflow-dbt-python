@@ -22,14 +22,15 @@ classifiers = [
 [tool.poetry.dependencies]
 python = ">=3.7.2, <3.11.0"
 
-apache-airflow = { version = ">=2.2", optional = true }
+apache-airflow = { version = ">=2.0", optional = true }
 apache-airflow-providers-amazon = { version = ">=3.0.0", optional = true }
 
-dbt-core = ">=1.0.0, <1.2.0"
-dbt-postgres = { version = ">=1.0.0, <1.2.0", optional = true }
-dbt-redshift = { version = ">=1.0.0, <1.2.0", optional = true }
-dbt-snowflake = { version = ">=1.0.0, <1.2.0", optional = true }
-dbt-bigquery = { version = ">=1.0.0, <1.2.0", optional = true }
+dbt-core = ">=1.0.0"
+dbt-postgres = { version = ">=1.0.0", optional = true }
+dbt-redshift = { version = ">=1.0.0", optional = true }
+dbt-snowflake = { version = ">=1.0.0", optional = true }
+dbt-bigquery = { version = ">=1.0.0", optional = true }
+dbt-spark = { version = ">=1.0.0", optional = true }
 
 [tool.poetry.group.airflow-constraints]
 optional = true
@@ -233,11 +234,12 @@ sphinx-copybutton = "0.5"
 [tool.poetry.extras]
 airflow = ["apache-airflow"]
 airflow-providers = ["apache-airflow-providers-amazon"]
-adapters = ["dbt-bigquery", "dbt-redshift", "dbt-postgres", "dbt-snowflake"]
+adapters = ["dbt-bigquery", "dbt-redshift", "dbt-postgres", "dbt-snowflake", "dbt-spark"]
 bigquery = ["dbt-bigquery"]
 postgres = ["dbt-postgres"]
 redshift = ["dbt-redshift"]
 snowflake = ["dbt-snowflake"]
+spark = ["dbt-spark"]
 
 [build-system]
 requires = ["poetry-core>=1.1.0a7"]
