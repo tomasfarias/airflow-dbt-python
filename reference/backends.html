@@ -3,9 +3,11 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>airflow_dbt_python.hooks.backends &mdash; airflow-dbt-python 0.14.3 documentation</title>
+  <title>airflow_dbt_python.hooks.backends &mdash; airflow-dbt-python 0.14.4 documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/copybutton.css" type="text/css" />
+      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/hack-font/3.3.0/web/hack.min.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../_static/js/html5shiv.min.js"></script>
   <![endif]-->
@@ -14,6 +16,8 @@
         <script src="../_static/jquery.js"></script>
         <script src="../_static/underscore.js"></script>
         <script src="../_static/doctools.js"></script>
+        <script src="../_static/clipboard.min.js"></script>
+        <script src="../_static/copybutton.js"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -28,7 +32,7 @@
             <a href="../index.html" class="icon icon-home"> airflow-dbt-python
           </a>
               <div class="version">
-                0.14.3
+                0.14.4
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -85,15 +89,26 @@ Internally, backends use Airflow hooks to execute the actual pushing and pulling
 <p>Currently, only AWS S3 and the local filesystem are supported as backends.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="airflow_dbt_python.hooks.backends.build_backend">
-<span class="sig-prename descclassname"><span class="pre">airflow_dbt_python.hooks.backends.</span></span><span class="sig-name descname"><span class="pre">build_backend</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scheme</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">conn_id</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">airflow_dbt_python.hooks.backends.base.DbtBackend</span></span></span><a class="headerlink" href="#airflow_dbt_python.hooks.backends.build_backend" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">airflow_dbt_python.hooks.backends.</span></span><span class="sig-name descname"><span class="pre">build_backend</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scheme</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">conn_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/airflow_dbt_python/hooks/backends.html#build_backend"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#airflow_dbt_python.hooks.backends.build_backend" title="Permalink to this definition"></a></dt>
 <dd><p>Build a DbtBackend as long as the scheme is supported.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>scheme</strong> (<em>str</em>) – </p></li>
+<li><p><strong>conn_id</strong> (<em>Optional</em><em>[</em><em>str</em><em>]</em>) – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>airflow_dbt_python.hooks.backends.base.DbtBackend</p>
+</dd>
+</dl>
 </dd></dl>
 
 <span class="target" id="module-airflow_dbt_python.hooks.backends.localfs"></span><p>A local filesystem backend.</p>
 <p>Intended to be used only when running Airflow with a LocalExceutor.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="airflow_dbt_python.hooks.backends.localfs.DbtLocalFsBackend">
-<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">airflow_dbt_python.hooks.backends.localfs.</span></span><span class="sig-name descname"><span class="pre">DbtLocalFsBackend</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#airflow_dbt_python.hooks.backends.localfs.DbtLocalFsBackend" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">airflow_dbt_python.hooks.backends.localfs.</span></span><span class="sig-name descname"><span class="pre">DbtLocalFsBackend</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/airflow_dbt_python/hooks/backends/localfs.html#DbtLocalFsBackend"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#airflow_dbt_python.hooks.backends.localfs.DbtLocalFsBackend" title="Permalink to this definition"></a></dt>
 <dd><p>A concrete dbt backend for a local filesystem.</p>
 <p>This backend is intended to be used when running Airflow with a LocalExecutor, and
 it relies on shutil from the standard library to do all the file manipulation. For
@@ -101,63 +116,75 @@ these reasons, running multiple concurrent tasks with this backend may lead to r
 conditions if attempting to push files to the backend.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="airflow_dbt_python.hooks.backends.localfs.DbtLocalFsBackend.pull_many">
-<span class="sig-name descname"><span class="pre">pull_many</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">source</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">StrPath</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">destination</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">StrPath</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Path</span></span></span><a class="headerlink" href="#airflow_dbt_python.hooks.backends.localfs.DbtLocalFsBackend.pull_many" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">pull_many</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">source</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">destination</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/airflow_dbt_python/hooks/backends/localfs.html#DbtLocalFsBackend.pull_many"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#airflow_dbt_python.hooks.backends.localfs.DbtLocalFsBackend.pull_many" title="Permalink to this definition"></a></dt>
 <dd><p>Pull many files from local path.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>source</strong> – A local path to a directory containing the files to pull.</p></li>
-<li><p><strong>destination</strong> – A destination path where to pull the file to.</p></li>
+<li><p><strong>source</strong> (<em>StrPath</em>) – A local path to a directory containing the files to pull.</p></li>
+<li><p><strong>destination</strong> (<em>StrPath</em>) – A destination path where to pull the file to.</p></li>
 </ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>Path</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="airflow_dbt_python.hooks.backends.localfs.DbtLocalFsBackend.pull_one">
-<span class="sig-name descname"><span class="pre">pull_one</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">source</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">StrPath</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">destination</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">StrPath</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Path</span></span></span><a class="headerlink" href="#airflow_dbt_python.hooks.backends.localfs.DbtLocalFsBackend.pull_one" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">pull_one</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">source</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">destination</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/airflow_dbt_python/hooks/backends/localfs.html#DbtLocalFsBackend.pull_one"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#airflow_dbt_python.hooks.backends.localfs.DbtLocalFsBackend.pull_one" title="Permalink to this definition"></a></dt>
 <dd><p>Pull a file from local path.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>source</strong> – A local path to a directory containing the file to pull.</p></li>
-<li><p><strong>destination</strong> – A destination path where to pull the file to.</p></li>
+<li><p><strong>source</strong> (<em>StrPath</em>) – A local path to a directory containing the file to pull.</p></li>
+<li><p><strong>destination</strong> (<em>StrPath</em>) – A destination path where to pull the file to.</p></li>
 </ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>Path</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="airflow_dbt_python.hooks.backends.localfs.DbtLocalFsBackend.push_many">
-<span class="sig-name descname"><span class="pre">push_many</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">source</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">StrPath</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">destination</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">StrPath</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">replace</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">bool</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">delete_before</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">bool</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#airflow_dbt_python.hooks.backends.localfs.DbtLocalFsBackend.push_many" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">push_many</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">source</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">destination</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">replace</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">delete_before</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/airflow_dbt_python/hooks/backends/localfs.html#DbtLocalFsBackend.push_many"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#airflow_dbt_python.hooks.backends.localfs.DbtLocalFsBackend.push_many" title="Permalink to this definition"></a></dt>
 <dd><p>Push all dbt files under the source directory to another local path.</p>
 <p>Pushing supports zipped projects: the destination will be used to determine
 if we are working with a zip file by looking at the file extension.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>source</strong> – A local file path where to fetch the files to push.</p></li>
-<li><p><strong>destination</strong> – A local path where the file should be copied.</p></li>
-<li><p><strong>replace</strong> – Whether to replace existing files or not.</p></li>
-<li><p><strong>delete_before</strong> – Whether to delete the contents of destination before pushing.</p></li>
+<li><p><strong>source</strong> (<em>StrPath</em>) – A local file path where to fetch the files to push.</p></li>
+<li><p><strong>destination</strong> (<em>StrPath</em>) – A local path where the file should be copied.</p></li>
+<li><p><strong>replace</strong> (<em>bool</em>) – Whether to replace existing files or not.</p></li>
+<li><p><strong>delete_before</strong> (<em>bool</em>) – Whether to delete the contents of destination before pushing.</p></li>
 </ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>None</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="airflow_dbt_python.hooks.backends.localfs.DbtLocalFsBackend.push_one">
-<span class="sig-name descname"><span class="pre">push_one</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">source</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">StrPath</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">destination</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">StrPath</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">replace</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">bool</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#airflow_dbt_python.hooks.backends.localfs.DbtLocalFsBackend.push_one" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">push_one</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">source</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">destination</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">replace</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/airflow_dbt_python/hooks/backends/localfs.html#DbtLocalFsBackend.push_one"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#airflow_dbt_python.hooks.backends.localfs.DbtLocalFsBackend.push_one" title="Permalink to this definition"></a></dt>
 <dd><p>Pull many files from local path.</p>
 <p>If the file already exists, it will be ignored if replace is False (the
 default).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>source</strong> – A local path to a directory containing the files to pull.</p></li>
-<li><p><strong>destination</strong> – A destination path where to pull the file to.</p></li>
-<li><p><strong>replace</strong> – A bool flag to indicate whether to replace existing files.</p></li>
+<li><p><strong>source</strong> (<em>StrPath</em>) – A local path to a directory containing the files to pull.</p></li>
+<li><p><strong>destination</strong> (<em>StrPath</em>) – A destination path where to pull the file to.</p></li>
+<li><p><strong>replace</strong> (<em>bool</em>) – A bool flag to indicate whether to replace existing files.</p></li>
 </ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>None</p>
 </dd>
 </dl>
 </dd></dl>
@@ -166,23 +193,37 @@ default).</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="airflow_dbt_python.hooks.backends.localfs.py37_copytree">
-<span class="sig-prename descclassname"><span class="pre">airflow_dbt_python.hooks.backends.localfs.</span></span><span class="sig-name descname"><span class="pre">py37_copytree</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">source</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">StrPath</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">destination</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">StrPath</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">replace</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">bool</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#airflow_dbt_python.hooks.backends.localfs.py37_copytree" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">airflow_dbt_python.hooks.backends.localfs.</span></span><span class="sig-name descname"><span class="pre">py37_copytree</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">source</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">destination</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">replace</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/airflow_dbt_python/hooks/backends/localfs.html#py37_copytree"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#airflow_dbt_python.hooks.backends.localfs.py37_copytree" title="Permalink to this definition"></a></dt>
 <dd><p>A (probably) poor attempt at replicating shutil.copytree for Python 3.7.</p>
 <p>shutil.copytree is available in Python 3.7, however it doesn’t have the
 dirs_exist_ok parameter, and we really need that. If the destination path doesn’t
 exist, we can use shutil.copytree, however if it does then we need to copy files
 one by one and make any subdirectories ourselves.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>source</strong> (<em>StrPath</em>) – </p></li>
+<li><p><strong>destination</strong> (<em>StrPath</em>) – </p></li>
+<li><p><strong>replace</strong> (<em>bool</em>) – </p></li>
+</ul>
+</dd>
+</dl>
 </dd></dl>
 
 <span class="target" id="module-airflow_dbt_python.hooks.backends.s3"></span><p>An implementation for an S3 backend for dbt.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="airflow_dbt_python.hooks.backends.s3.DbtS3Backend">
-<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">airflow_dbt_python.hooks.backends.s3.</span></span><span class="sig-name descname"><span class="pre">DbtS3Backend</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">connection_id</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#airflow_dbt_python.hooks.backends.s3.DbtS3Backend" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">airflow_dbt_python.hooks.backends.s3.</span></span><span class="sig-name descname"><span class="pre">DbtS3Backend</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">connection_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/airflow_dbt_python/hooks/backends/s3.html#DbtS3Backend"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#airflow_dbt_python.hooks.backends.s3.DbtS3Backend" title="Permalink to this definition"></a></dt>
 <dd><p>A dbt backend implementation for S3.</p>
 <p>This concrete backend class implements the DbtBackend interface by using S3 as a
 storage for pushing and pulling dbt files to and from.
 The backend relies on Airflow’s S3Hook to interact with S3. A connection id
 may be passed to instantiate the S3Hook.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>connection_id</strong> (<em>Optional</em><em>[</em><em>str</em><em>]</em>) – </p>
+</dd>
+</dl>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="airflow_dbt_python.hooks.backends.s3.DbtS3Backend.connection_id">
 <span class="sig-name descname"><span class="pre">connection_id</span></span><a class="headerlink" href="#airflow_dbt_python.hooks.backends.s3.DbtS3Backend.connection_id" title="Permalink to this definition"></a></dt>
@@ -192,40 +233,65 @@ S3Hook.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="airflow_dbt_python.hooks.backends.s3.DbtS3Backend.download_many_from_key_prefix">
-<span class="sig-name descname"><span class="pre">download_many_from_key_prefix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key_prefix</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bucket_name</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">destination</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">StrPath</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#airflow_dbt_python.hooks.backends.s3.DbtS3Backend.download_many_from_key_prefix" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">download_many_from_key_prefix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key_prefix</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bucket_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">destination</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/airflow_dbt_python/hooks/backends/s3.html#DbtS3Backend.download_many_from_key_prefix"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#airflow_dbt_python.hooks.backends.s3.DbtS3Backend.download_many_from_key_prefix" title="Permalink to this definition"></a></dt>
 <dd><p>Download all available S3 objects from a S3 key prefix.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>key_prefix</strong> – The key prefix where the keys to download are found.</p></li>
-<li><p><strong>bucket_name</strong> – The bucket containing the key prefix.</p></li>
-<li><p><strong>destination</strong> – Directory where to download all the files.</p></li>
+<li><p><strong>key_prefix</strong> (<em>str</em>) – The key prefix where the keys to download are found.</p></li>
+<li><p><strong>bucket_name</strong> (<em>str</em>) – The bucket containing the key prefix.</p></li>
+<li><p><strong>destination</strong> (<em>StrPath</em>) – Directory where to download all the files.</p></li>
 </ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>None</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="airflow_dbt_python.hooks.backends.s3.DbtS3Backend.download_one_s3_object">
-<span class="sig-name descname"><span class="pre">download_one_s3_object</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">s3_object</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">S3Object</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">destination</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">StrPath</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#airflow_dbt_python.hooks.backends.s3.DbtS3Backend.download_one_s3_object" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">download_one_s3_object</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">s3_object</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">destination</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/airflow_dbt_python/hooks/backends/s3.html#DbtS3Backend.download_one_s3_object"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#airflow_dbt_python.hooks.backends.s3.DbtS3Backend.download_one_s3_object" title="Permalink to this definition"></a></dt>
 <dd><p>Download an S3 object into a local destination.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>s3_object</strong> (<em>S3Object</em>) – </p></li>
+<li><p><strong>destination</strong> (<em>StrPath</em>) – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="airflow_dbt_python.hooks.backends.s3.DbtS3Backend.download_zip_s3_object">
-<span class="sig-name descname"><span class="pre">download_zip_s3_object</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">s3_object</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">S3Object</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">destination</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">StrPath</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#airflow_dbt_python.hooks.backends.s3.DbtS3Backend.download_zip_s3_object" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">download_zip_s3_object</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">s3_object</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">destination</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/airflow_dbt_python/hooks/backends/s3.html#DbtS3Backend.download_zip_s3_object"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#airflow_dbt_python.hooks.backends.s3.DbtS3Backend.download_zip_s3_object" title="Permalink to this definition"></a></dt>
 <dd><p>Download an S3Object and extract its contents.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>s3_object</strong> (<em>S3Object</em>) – </p></li>
+<li><p><strong>destination</strong> (<em>StrPath</em>) – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="airflow_dbt_python.hooks.backends.s3.DbtS3Backend.hook">
-<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">hook</span></span><em class="property"><span class="pre">:</span> <span class="pre">airflow.providers.amazon.aws.hooks.s3.S3Hook</span></em><a class="headerlink" href="#airflow_dbt_python.hooks.backends.s3.DbtS3Backend.hook" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">hook</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">airflow.providers.amazon.aws.hooks.s3.S3Hook</span></em><a class="headerlink" href="#airflow_dbt_python.hooks.backends.s3.DbtS3Backend.hook" title="Permalink to this definition"></a></dt>
 <dd><p>Return the Airflow hook associated with this backend.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="airflow_dbt_python.hooks.backends.s3.DbtS3Backend.load_file_handle_replace_error">
-<span class="sig-name descname"><span class="pre">load_file_handle_replace_error</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_path</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">StrPath</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">key</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bucket_name</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">replace</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">bool</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">encrypt</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">bool</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gzip</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">bool</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">acl_policy</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">bool</span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="headerlink" href="#airflow_dbt_python.hooks.backends.s3.DbtS3Backend.load_file_handle_replace_error" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">load_file_handle_replace_error</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">key</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bucket_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">replace</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">encrypt</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gzip</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">acl_policy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/airflow_dbt_python/hooks/backends/s3.html#DbtS3Backend.load_file_handle_replace_error"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#airflow_dbt_python.hooks.backends.s3.DbtS3Backend.load_file_handle_replace_error" title="Permalink to this definition"></a></dt>
 <dd><p>Calls S3Hook.load_file but handles ValueError when replacing existing keys.</p>
 <p>Will also log a warning whenever attempting to replace an existing key with
 replace = False.</p>
@@ -233,69 +299,95 @@ replace = False.</p>
 <dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p>True if no ValueError was raised, False otherwise.</p>
 </dd>
+<dt class="field-even">Parameters</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>file_path</strong> (<em>StrPath</em>) – </p></li>
+<li><p><strong>key</strong> (<em>str</em>) – </p></li>
+<li><p><strong>bucket_name</strong> (<em>Optional</em><em>[</em><em>str</em><em>]</em>) – </p></li>
+<li><p><strong>replace</strong> (<em>bool</em>) – </p></li>
+<li><p><strong>encrypt</strong> (<em>bool</em>) – </p></li>
+<li><p><strong>gzip</strong> (<em>bool</em>) – </p></li>
+<li><p><strong>acl_policy</strong> (<em>Optional</em><em>[</em><em>bool</em><em>]</em>) – </p></li>
+</ul>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="airflow_dbt_python.hooks.backends.s3.DbtS3Backend.pull_many">
-<span class="sig-name descname"><span class="pre">pull_many</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">source</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">StrPath</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">destination</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">StrPath</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Path</span></span></span><a class="headerlink" href="#airflow_dbt_python.hooks.backends.s3.DbtS3Backend.pull_many" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">pull_many</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">source</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">destination</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/airflow_dbt_python/hooks/backends/s3.html#DbtS3Backend.pull_many"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#airflow_dbt_python.hooks.backends.s3.DbtS3Backend.pull_many" title="Permalink to this definition"></a></dt>
 <dd><p>Pull many files from S3.</p>
 <p>Lists all S3 keys that have source as a prefix to find what to pull.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>source</strong> – An S3 URL to a directory containing the file to pull.</p></li>
-<li><p><strong>destination</strong> – A destination path where to pull the file to.</p></li>
+<li><p><strong>source</strong> (<em>StrPath</em>) – An S3 URL to a directory containing the file to pull.</p></li>
+<li><p><strong>destination</strong> (<em>StrPath</em>) – A destination path where to pull the file to.</p></li>
 </ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>Path</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="airflow_dbt_python.hooks.backends.s3.DbtS3Backend.pull_one">
-<span class="sig-name descname"><span class="pre">pull_one</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">source</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">StrPath</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">destination</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">StrPath</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Path</span></span></span><a class="headerlink" href="#airflow_dbt_python.hooks.backends.s3.DbtS3Backend.pull_one" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">pull_one</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">source</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">destination</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/airflow_dbt_python/hooks/backends/s3.html#DbtS3Backend.pull_one"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#airflow_dbt_python.hooks.backends.s3.DbtS3Backend.pull_one" title="Permalink to this definition"></a></dt>
 <dd><p>Pull a file from S3.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>source</strong> – An S3 URL to a directory containing the file to pull.</p></li>
-<li><p><strong>destination</strong> – A destination path where to pull the file to.</p></li>
+<li><p><strong>source</strong> (<em>StrPath</em>) – An S3 URL to a directory containing the file to pull.</p></li>
+<li><p><strong>destination</strong> (<em>StrPath</em>) – A destination path where to pull the file to.</p></li>
 </ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>Path</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="airflow_dbt_python.hooks.backends.s3.DbtS3Backend.push_many">
-<span class="sig-name descname"><span class="pre">push_many</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">source</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">StrPath</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">destination</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">StrPath</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">replace</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">bool</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">delete_before</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">bool</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#airflow_dbt_python.hooks.backends.s3.DbtS3Backend.push_many" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">push_many</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">source</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">destination</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">replace</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">delete_before</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/airflow_dbt_python/hooks/backends/s3.html#DbtS3Backend.push_many"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#airflow_dbt_python.hooks.backends.s3.DbtS3Backend.push_many" title="Permalink to this definition"></a></dt>
 <dd><p>Push all dbt files under the source directory to S3.</p>
 <p>Pushing supports zipped projects: the destination will be used to determine
 if we are working with a zip file by looking at the file extension.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>source</strong> – A local file path where to fetch the file to push.</p></li>
-<li><p><strong>destination</strong> – An S3 URL where the file should be uploaded. The bucket
+<li><p><strong>source</strong> (<em>StrPath</em>) – A local file path where to fetch the file to push.</p></li>
+<li><p><strong>destination</strong> (<em>StrPath</em>) – An S3 URL where the file should be uploaded. The bucket
 name and key prefix will be extracted by calling S3Hook.parse_s3_url.</p></li>
-<li><p><strong>replace</strong> – Whether to replace existing files or not.</p></li>
-<li><p><strong>delete_before</strong> – Whether to delete the contents of destination before pushing.</p></li>
+<li><p><strong>replace</strong> (<em>bool</em>) – Whether to replace existing files or not.</p></li>
+<li><p><strong>delete_before</strong> (<em>bool</em>) – Whether to delete the contents of destination before pushing.</p></li>
 </ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>None</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="airflow_dbt_python.hooks.backends.s3.DbtS3Backend.push_one">
-<span class="sig-name descname"><span class="pre">push_one</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">source</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">StrPath</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">destination</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">StrPath</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">replace</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">bool</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#airflow_dbt_python.hooks.backends.s3.DbtS3Backend.push_one" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">push_one</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">source</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">destination</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">replace</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/airflow_dbt_python/hooks/backends/s3.html#DbtS3Backend.push_one"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#airflow_dbt_python.hooks.backends.s3.DbtS3Backend.push_one" title="Permalink to this definition"></a></dt>
 <dd><p>Push a file to S3.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>source</strong> – A local file path where to fetch the files to push.</p></li>
-<li><p><strong>destination</strong> – An S3 URL where the file should be uploaded. The bucket
+<li><p><strong>source</strong> (<em>StrPath</em>) – A local file path where to fetch the files to push.</p></li>
+<li><p><strong>destination</strong> (<em>StrPath</em>) – An S3 URL where the file should be uploaded. The bucket
 name and key prefix will be extracted by calling S3Hook.parse_s3_url.</p></li>
 <li><p><strong>replace</strong> (<em>bool</em>) – Whether to replace existing files or not.</p></li>
 </ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>None</p>
 </dd>
 </dl>
 </dd></dl>

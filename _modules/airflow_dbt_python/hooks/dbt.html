@@ -1,0 +1,938 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>airflow_dbt_python.hooks.dbt &mdash; airflow-dbt-python 0.14.4 documentation</title>
+      <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/copybutton.css" type="text/css" />
+      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/hack-font/3.3.0/web/hack.min.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script src="../../../_static/clipboard.min.js"></script>
+        <script src="../../../_static/copybutton.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../../index.html" class="icon icon-home"> airflow-dbt-python
+          </a>
+              <div class="version">
+                0.14.4
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../introduction.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../getting_started.html">Getting started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../example_dags.html">Example DAGs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../development.html">Development</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../reference.html">Reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">airflow-dbt-python</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+      <li>airflow_dbt_python.hooks.dbt</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for airflow_dbt_python.hooks.dbt</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Provides a hook to interact with a dbt project.&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">import</span> <span class="nn">dataclasses</span>
+<span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">pickle</span>
+<span class="kn">from</span> <span class="nn">dataclasses</span> <span class="kn">import</span> <span class="n">dataclass</span>
+<span class="kn">from</span> <span class="nn">enum</span> <span class="kn">import</span> <span class="n">Enum</span>
+<span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Union</span>
+<span class="kn">from</span> <span class="nn">urllib.parse</span> <span class="kn">import</span> <span class="n">urlparse</span>
+
+<span class="kn">import</span> <span class="nn">dbt.flags</span> <span class="k">as</span> <span class="nn">flags</span>
+<span class="kn">import</span> <span class="nn">yaml</span>
+<span class="kn">from</span> <span class="nn">dbt.adapters.factory</span> <span class="kn">import</span> <span class="n">register_adapter</span>
+<span class="kn">from</span> <span class="nn">dbt.clients</span> <span class="kn">import</span> <span class="n">yaml_helper</span>
+<span class="kn">from</span> <span class="nn">dbt.config.profile</span> <span class="kn">import</span> <span class="n">Profile</span><span class="p">,</span> <span class="n">read_profile</span>
+<span class="kn">from</span> <span class="nn">dbt.config.project</span> <span class="kn">import</span> <span class="n">PartialProject</span><span class="p">,</span> <span class="n">Project</span>
+<span class="kn">from</span> <span class="nn">dbt.config.renderer</span> <span class="kn">import</span> <span class="n">DbtProjectYamlRenderer</span><span class="p">,</span> <span class="n">ProfileRenderer</span>
+<span class="kn">from</span> <span class="nn">dbt.config.runtime</span> <span class="kn">import</span> <span class="n">RuntimeConfig</span><span class="p">,</span> <span class="n">UnsetProfileConfig</span>
+<span class="kn">from</span> <span class="nn">dbt.contracts.graph.manifest</span> <span class="kn">import</span> <span class="n">Manifest</span>
+<span class="kn">from</span> <span class="nn">dbt.contracts.results</span> <span class="kn">import</span> <span class="n">RunResult</span>
+<span class="kn">from</span> <span class="nn">dbt.exceptions</span> <span class="kn">import</span> <span class="n">InternalException</span>
+<span class="kn">from</span> <span class="nn">dbt.graph</span> <span class="kn">import</span> <span class="n">Graph</span>
+<span class="kn">from</span> <span class="nn">dbt.main</span> <span class="kn">import</span> <span class="n">adapter_management</span><span class="p">,</span> <span class="n">track_run</span>
+<span class="kn">from</span> <span class="nn">dbt.task.base</span> <span class="kn">import</span> <span class="n">BaseTask</span><span class="p">,</span> <span class="n">move_to_nearest_project_dir</span>
+<span class="kn">from</span> <span class="nn">dbt.task.build</span> <span class="kn">import</span> <span class="n">BuildTask</span>
+<span class="kn">from</span> <span class="nn">dbt.task.clean</span> <span class="kn">import</span> <span class="n">CleanTask</span>
+<span class="kn">from</span> <span class="nn">dbt.task.compile</span> <span class="kn">import</span> <span class="n">CompileTask</span>
+<span class="kn">from</span> <span class="nn">dbt.task.debug</span> <span class="kn">import</span> <span class="n">DebugTask</span>
+<span class="kn">from</span> <span class="nn">dbt.task.deps</span> <span class="kn">import</span> <span class="n">DepsTask</span>
+<span class="kn">from</span> <span class="nn">dbt.task.freshness</span> <span class="kn">import</span> <span class="n">FreshnessTask</span>
+<span class="kn">from</span> <span class="nn">dbt.task.generate</span> <span class="kn">import</span> <span class="n">GenerateTask</span>
+<span class="kn">from</span> <span class="nn">dbt.task.list</span> <span class="kn">import</span> <span class="n">ListTask</span>
+<span class="kn">from</span> <span class="nn">dbt.task.parse</span> <span class="kn">import</span> <span class="n">ParseTask</span>
+<span class="kn">from</span> <span class="nn">dbt.task.run</span> <span class="kn">import</span> <span class="n">RunTask</span>
+<span class="kn">from</span> <span class="nn">dbt.task.run_operation</span> <span class="kn">import</span> <span class="n">RunOperationTask</span>
+<span class="kn">from</span> <span class="nn">dbt.task.runnable</span> <span class="kn">import</span> <span class="n">ManifestTask</span>
+<span class="kn">from</span> <span class="nn">dbt.task.seed</span> <span class="kn">import</span> <span class="n">SeedTask</span>
+<span class="kn">from</span> <span class="nn">dbt.task.snapshot</span> <span class="kn">import</span> <span class="n">SnapshotTask</span>
+<span class="kn">from</span> <span class="nn">dbt.task.test</span> <span class="kn">import</span> <span class="n">TestTask</span>
+<span class="kn">from</span> <span class="nn">dbt.tracking</span> <span class="kn">import</span> <span class="n">initialize_from_flags</span>
+
+<span class="kn">from</span> <span class="nn">airflow.exceptions</span> <span class="kn">import</span> <span class="n">AirflowException</span>
+<span class="kn">from</span> <span class="nn">airflow.version</span> <span class="kn">import</span> <span class="n">version</span> <span class="k">as</span> <span class="n">airflow_version</span>
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">airflow.hooks.base</span> <span class="kn">import</span> <span class="n">BaseHook</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">airflow.hooks.base_hook</span> <span class="kn">import</span> <span class="n">BaseHook</span>
+
+<span class="kn">from</span> <span class="nn">.backends</span> <span class="kn">import</span> <span class="n">DbtBackend</span><span class="p">,</span> <span class="n">StrPath</span><span class="p">,</span> <span class="n">build_backend</span>
+
+
+<div class="viewcode-block" id="FromStrEnum"><a class="viewcode-back" href="../../../reference/hooks.html#airflow_dbt_python.hooks.dbt.FromStrEnum">[docs]</a><span class="k">class</span> <span class="nc">FromStrEnum</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Access enum variants with strings ensuring uppercase.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="FromStrEnum.from_str"><a class="viewcode-back" href="../../../reference/hooks.html#airflow_dbt_python.hooks.dbt.FromStrEnum.from_str">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">from_str</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">s</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Instantiate an Enum from a string.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">[</span><span class="n">s</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;-&quot;</span><span class="p">,</span> <span class="s2">&quot;_&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">upper</span><span class="p">()]</span></div></div>
+
+
+<div class="viewcode-block" id="LogFormat"><a class="viewcode-back" href="../../../reference/hooks.html#airflow_dbt_python.hooks.dbt.LogFormat">[docs]</a><span class="k">class</span> <span class="nc">LogFormat</span><span class="p">(</span><span class="n">FromStrEnum</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Allowed dbt log formats.&quot;&quot;&quot;</span>
+
+    <span class="n">DEFAULT</span> <span class="o">=</span> <span class="s2">&quot;default&quot;</span>
+    <span class="n">JSON</span> <span class="o">=</span> <span class="s2">&quot;json&quot;</span>
+    <span class="n">TEXT</span> <span class="o">=</span> <span class="s2">&quot;text&quot;</span></div>
+
+
+<div class="viewcode-block" id="Output"><a class="viewcode-back" href="../../../reference/hooks.html#airflow_dbt_python.hooks.dbt.Output">[docs]</a><span class="k">class</span> <span class="nc">Output</span><span class="p">(</span><span class="n">FromStrEnum</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Allowed output arguments.&quot;&quot;&quot;</span>
+
+    <span class="n">JSON</span> <span class="o">=</span> <span class="s2">&quot;json&quot;</span>
+    <span class="n">NAME</span> <span class="o">=</span> <span class="s2">&quot;name&quot;</span>
+    <span class="n">PATH</span> <span class="o">=</span> <span class="s2">&quot;path&quot;</span>
+    <span class="n">SELECTOR</span> <span class="o">=</span> <span class="s2">&quot;selector&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Override equality for string comparison.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">other</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span>
+        <span class="k">return</span> <span class="n">Enum</span><span class="o">.</span><span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="parse_vars"><a class="viewcode-back" href="../../../reference/hooks.html#airflow_dbt_python.hooks.dbt.parse_vars">[docs]</a><span class="k">def</span> <span class="nf">parse_vars</span><span class="p">(</span><span class="nb">vars</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]])</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+    <span class="sd">&quot;&quot;&quot;Parse CLI vars as dbt would.</span>
+
+<span class="sd">    This means:</span>
+<span class="sd">        - When vars is a string, we treat it as a YAML dict str.</span>
+<span class="sd">        - If it&#39;s already a dictionary, we just return it.</span>
+<span class="sd">        - Otherwise (it&#39;s None), we return an empty dictionary.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="nb">vars</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">yaml_helper</span><span class="o">.</span><span class="n">load_yaml_text</span><span class="p">(</span><span class="nb">vars</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="nb">vars</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">vars</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">{}</span></div>
+
+
+<div class="viewcode-block" id="BaseConfig"><a class="viewcode-back" href="../../../reference/hooks.html#airflow_dbt_python.hooks.dbt.BaseConfig">[docs]</a><span class="nd">@dataclass</span>
+<span class="k">class</span> <span class="nc">BaseConfig</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;BaseConfig dbt arguments for all tasks.&quot;&quot;&quot;</span>
+
+    <span class="bp">cls</span><span class="p">:</span> <span class="n">BaseTask</span> <span class="o">=</span> <span class="n">dataclasses</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="n">BaseTask</span><span class="p">,</span> <span class="n">init</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="nb">repr</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+    <span class="c1"># dbt project configuration</span>
+    <span class="n">project_dir</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">profiles_dir</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">profile</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">target</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="c1"># Execution configuration</span>
+    <span class="n">compiled_target</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">StrPath</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">cache_selected_only</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">fail_fast</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">single_threaded</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">threads</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">use_experimental_parser</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="nb">vars</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">warn_error</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="c1"># Logging</span>
+    <span class="n">log_format</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">LogFormat</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">log_cache_events</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">record_timing_info</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">debug</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">quiet</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">no_print</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="c1"># Mutually exclusive attributes</span>
+    <span class="n">defer</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">no_defer</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="n">dataclasses</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="nb">repr</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+    <span class="n">partial_parse</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">no_partial_parse</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="n">dataclasses</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="nb">repr</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+    <span class="n">use_colors</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">no_use_colors</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="n">dataclasses</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="nb">repr</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+    <span class="n">static_parser</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">no_static_parser</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="n">dataclasses</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="nb">repr</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+    <span class="n">version_check</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">no_version_check</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="n">dataclasses</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="nb">repr</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+    <span class="n">send_anonymous_usage_stats</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">anonymous_usage_stats</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="n">dataclasses</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="nb">repr</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">no_anonymous_usage_stats</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="n">dataclasses</span><span class="o">.</span><span class="n">field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="nb">repr</span><span class="o">=</span><span class="kc">False</span>
+    <span class="p">)</span>
+
+    <span class="n">write_json</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">no_write_json</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="n">dataclasses</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="nb">repr</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Post initialization actions for a dbt configuration.</span>
+
+<span class="sd">        There are two actions:</span>
+<span class="sd">            1. Parse self.vars to ensure we have a dictionary as if it had been</span>
+<span class="sd">                parsed by dbt.</span>
+<span class="sd">            2. Support mutually exclusive parameters (i.e. &quot;{param}&quot; and &quot;no_{param}&quot;).</span>
+<span class="sd">                A ValueError will be raised if both mutually exclusive parameters are</span>
+<span class="sd">                not None.</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            ValueError: When setting two mutually exclusive parameters.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">parsed_vars</span> <span class="o">=</span> <span class="n">parse_vars</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">vars</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">vars</span> <span class="o">=</span> <span class="n">yaml</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parsed_vars</span><span class="p">)</span>
+
+        <span class="n">mutually_exclusive_attrs</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="s2">&quot;defer&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;partial_parse&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;use_colors&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;static_parser&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;version_check&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;anonymous_usage_stats&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;write_json&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">attr</span> <span class="ow">in</span> <span class="n">mutually_exclusive_attrs</span><span class="p">:</span>
+            <span class="n">positive_value</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attr</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="n">negative_value</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;no_</span><span class="si">{</span><span class="n">attr</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">positive_value</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">negative_value</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="k">elif</span> <span class="n">positive_value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">negative_value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">attr</span><span class="si">}</span><span class="s2"> and no_</span><span class="si">{</span><span class="n">attr</span><span class="si">}</span><span class="s2"> are mutually exclusive&quot;</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">positive_value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attr</span><span class="p">,</span> <span class="n">positive_value</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attr</span><span class="p">,</span> <span class="ow">not</span> <span class="n">negative_value</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">send_anonymous_usage_stats</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">anonymous_usage_stats</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">dbt_task</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">BaseTask</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Access to the underlying dbt task class.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;cls&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
+                <span class="s2">&quot;Dbt task is not implemented. Use a subclass of BaseConfig.&quot;</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;cls&quot;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="BaseConfig.patch_manifest_task"><a class="viewcode-back" href="../../../reference/hooks.html#airflow_dbt_python.hooks.dbt.BaseConfig.patch_manifest_task">[docs]</a>    <span class="k">def</span> <span class="nf">patch_manifest_task</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">task</span><span class="p">:</span> <span class="n">BaseTask</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Patch a dbt task to use a pre-compiled graph and manifest.</span>
+
+<span class="sd">        Parsing and compilation of a dbt project starts with the invocation of</span>
+<span class="sd">        ManifestTask._runtime_initialize. Since GraphRunnableTask uses super()</span>
+<span class="sd">        to invoke _runtime_initialize, we patch this method and avoid the super()</span>
+<span class="sd">        call.</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            TypeError: If the dbt task is not a subclass of ManifestTask.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">task</span><span class="p">,</span> <span class="n">ManifestTask</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Patching requires an instance of ManifestTask, not </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">task</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">compiled_target</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Patching requires compiled_target to be defined.&quot;</span><span class="p">)</span>
+
+        <span class="n">graph_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">compiled_target</span><span class="p">)</span> <span class="o">/</span> <span class="s2">&quot;graph.gpickle&quot;</span>
+        <span class="n">manifest_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">compiled_target</span><span class="p">)</span> <span class="o">/</span> <span class="s2">&quot;manifest.json&quot;</span>
+
+        <span class="k">def</span> <span class="nf">_runtime_initialize</span><span class="p">():</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">graph_path</span><span class="p">,</span> <span class="s2">&quot;rb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                <span class="n">task</span><span class="o">.</span><span class="n">graph</span> <span class="o">=</span> <span class="n">Graph</span><span class="p">(</span><span class="n">graph</span><span class="o">=</span><span class="n">pickle</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">))</span>
+
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">manifest_path</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                <span class="n">loaded_manifest</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+                <span class="c1"># If I&#39;m taking something from this experience, it&#39;s this Mashumaro</span>
+                <span class="c1"># package. I spent a long time trying to build a manifest, when I only</span>
+                <span class="c1"># had to call from_dict. Amazing stuff.</span>
+                <span class="n">Manifest</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span><span class="n">loaded_manifest</span><span class="p">)</span>
+                <span class="n">task</span><span class="o">.</span><span class="n">manifest</span> <span class="o">=</span> <span class="n">Manifest</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span><span class="n">loaded_manifest</span><span class="p">)</span>
+
+            <span class="c1"># What follows is the remaining _runtime_initialize method of</span>
+            <span class="c1"># GraphRunnableTask.</span>
+            <span class="n">task</span><span class="o">.</span><span class="n">job_queue</span> <span class="o">=</span> <span class="n">task</span><span class="o">.</span><span class="n">get_graph_queue</span><span class="p">()</span>
+
+            <span class="n">task</span><span class="o">.</span><span class="n">_flattened_nodes</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">uid</span> <span class="ow">in</span> <span class="n">task</span><span class="o">.</span><span class="n">job_queue</span><span class="o">.</span><span class="n">get_selected_nodes</span><span class="p">():</span>
+                <span class="k">if</span> <span class="n">uid</span> <span class="ow">in</span> <span class="n">task</span><span class="o">.</span><span class="n">manifest</span><span class="o">.</span><span class="n">nodes</span><span class="p">:</span>
+                    <span class="n">task</span><span class="o">.</span><span class="n">_flattened_nodes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">task</span><span class="o">.</span><span class="n">manifest</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">uid</span><span class="p">])</span>
+                <span class="k">elif</span> <span class="n">uid</span> <span class="ow">in</span> <span class="n">task</span><span class="o">.</span><span class="n">manifest</span><span class="o">.</span><span class="n">sources</span><span class="p">:</span>
+                    <span class="n">task</span><span class="o">.</span><span class="n">_flattened_nodes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">task</span><span class="o">.</span><span class="n">manifest</span><span class="o">.</span><span class="n">sources</span><span class="p">[</span><span class="n">uid</span><span class="p">])</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="n">InternalException</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">&quot;Node selection returned </span><span class="si">{</span><span class="n">uid</span><span class="si">}</span><span class="s2">, expected a node or a &quot;</span>
+                        <span class="sa">f</span><span class="s2">&quot;source&quot;</span>
+                    <span class="p">)</span>
+            <span class="n">task</span><span class="o">.</span><span class="n">num_nodes</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span>
+                <span class="p">[</span><span class="n">n</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">task</span><span class="o">.</span><span class="n">_flattened_nodes</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">n</span><span class="o">.</span><span class="n">is_ephemeral_model</span><span class="p">]</span>
+            <span class="p">)</span>
+
+        <span class="n">task</span><span class="o">.</span><span class="n">_runtime_initialize</span> <span class="o">=</span> <span class="n">_runtime_initialize</span></div>
+
+<div class="viewcode-block" id="BaseConfig.create_dbt_task"><a class="viewcode-back" href="../../../reference/hooks.html#airflow_dbt_python.hooks.dbt.BaseConfig.create_dbt_task">[docs]</a>    <span class="k">def</span> <span class="nf">create_dbt_task</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">extra_targets</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">BaseTask</span><span class="p">,</span> <span class="n">RuntimeConfig</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;Create a dbt task given with this configuration.</span>
+
+<span class="sd">        Extra targets may be specified to be appended to this task&#39;s dbt project&#39;s</span>
+<span class="sd">        profile.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            extra_targets: Additional targets for a dbt project&#39;s Profile.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            A tuple with the corresnponding subclass of a dbt BaseTask and the</span>
+<span class="sd">            RuntimeConfig for the task.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">runtime_config</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">create_runtime_config</span><span class="p">(</span><span class="n">extra_targets</span><span class="p">)</span>
+        <span class="n">task</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dbt_task</span><span class="p">(</span><span class="n">args</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">runtime_config</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">compiled_target</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+            <span class="ow">and</span> <span class="nb">issubclass</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dbt_task</span><span class="p">,</span> <span class="n">ManifestTask</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">True</span>
+        <span class="p">):</span>
+            <span class="c1"># Only supported by subclasses of dbt&#39;s ManifestTask.</span>
+            <span class="c1"># Represented here by the presence of the compiled_target attribute.</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">patch_manifest_task</span><span class="p">(</span><span class="n">task</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="p">(</span><span class="n">task</span><span class="p">,</span> <span class="n">runtime_config</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="BaseConfig.create_runtime_config"><a class="viewcode-back" href="../../../reference/hooks.html#airflow_dbt_python.hooks.dbt.BaseConfig.create_runtime_config">[docs]</a>    <span class="k">def</span> <span class="nf">create_runtime_config</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">extra_targets</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">RuntimeConfig</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;Crete a dbt RuntimeConfig, if possible.</span>
+
+<span class="sd">        If the given task&#39;s ConfigType is not RuntimeConfig, None will be returned</span>
+<span class="sd">        instead.</span>
+<span class="sd">        Flags are also initialized as configuration is created.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            extra_targets: Additional targets for a dbt project&#39;s Profile.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            A RuntimeConfig instance.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">project</span><span class="p">,</span> <span class="n">profile</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">create_dbt_project_and_profile</span><span class="p">(</span><span class="n">extra_targets</span><span class="p">)</span>
+        <span class="n">initialize_from_flags</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cls</span><span class="o">.</span><span class="n">set_log_format</span><span class="p">()</span>
+        <span class="n">flags</span><span class="o">.</span><span class="n">set_from_args</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">profile</span><span class="o">.</span><span class="n">user_config</span><span class="p">)</span>
+
+        <span class="n">cfg_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dbt_task</span><span class="o">.</span><span class="n">ConfigType</span>
+
+        <span class="k">if</span> <span class="nb">issubclass</span><span class="p">(</span><span class="n">cfg_type</span><span class="p">,</span> <span class="n">RuntimeConfig</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">cfg_type</span><span class="o">.</span><span class="n">from_parts</span><span class="p">(</span><span class="n">project</span><span class="o">=</span><span class="n">project</span><span class="p">,</span> <span class="n">profile</span><span class="o">=</span><span class="n">profile</span><span class="p">,</span> <span class="n">args</span><span class="o">=</span><span class="bp">self</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
+
+<div class="viewcode-block" id="BaseConfig.create_dbt_project_and_profile"><a class="viewcode-back" href="../../../reference/hooks.html#airflow_dbt_python.hooks.dbt.BaseConfig.create_dbt_project_and_profile">[docs]</a>    <span class="k">def</span> <span class="nf">create_dbt_project_and_profile</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">extra_targets</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Project</span><span class="p">,</span> <span class="n">Profile</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;Create a dbt Project and Profile using this configuration.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            extra_targets: Additional targets for a dbt project&#39;s Profile.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            A tuple with an instance of Project and Profile.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">profile</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">create_dbt_profile</span><span class="p">(</span><span class="n">extra_targets</span><span class="p">)</span>
+
+        <span class="n">project_renderer</span> <span class="o">=</span> <span class="n">DbtProjectYamlRenderer</span><span class="p">(</span><span class="n">profile</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">parsed_vars</span><span class="p">)</span>
+        <span class="n">project</span> <span class="o">=</span> <span class="n">Project</span><span class="o">.</span><span class="n">from_project_root</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">project_dir</span><span class="p">,</span> <span class="n">project_renderer</span><span class="p">,</span> <span class="n">verify_version</span><span class="o">=</span><span class="nb">bool</span><span class="p">(</span><span class="n">flags</span><span class="o">.</span><span class="n">VERSION_CHECK</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">project</span><span class="o">.</span><span class="n">project_env_vars</span> <span class="o">=</span> <span class="n">project_renderer</span><span class="o">.</span><span class="n">ctx_obj</span><span class="o">.</span><span class="n">env_vars</span>
+
+        <span class="k">return</span> <span class="p">(</span><span class="n">project</span><span class="p">,</span> <span class="n">profile</span><span class="p">)</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">profile_name</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Return the profile name for the dbt project given by this configuration.</span>
+
+<span class="sd">        The profile name can be set by the profile attribute or read from a dbt</span>
+<span class="sd">        project&#39;s configuration file (dbt_project.yml). We rely on</span>
+<span class="sd">        Profile.pick_profile_name to pick between the two.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            The dbt project&#39;s profile name.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">project_profile_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">partial_project</span><span class="o">.</span><span class="n">render_profile_name</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">profile_renderer</span>
+        <span class="p">)</span>
+        <span class="n">profile_name</span> <span class="o">=</span> <span class="n">Profile</span><span class="o">.</span><span class="n">pick_profile_name</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">profile</span><span class="p">,</span> <span class="n">project_profile_name</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">profile_name</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">profile_renderer</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ProfileRenderer</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Return a ProfileRenderer with this config&#39;s parsed vars.&quot;&quot;&quot;</span>
+        <span class="n">profile_renderer</span> <span class="o">=</span> <span class="n">ProfileRenderer</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parsed_vars</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">profile_renderer</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">partial_project</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PartialProject</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Return a PartialProject for the dbt project given by this configuration.</span>
+
+<span class="sd">        A PartialProject loads a dbt project configuration and handles access to</span>
+<span class="sd">        configuration values. It is used by us to determine the profile name to use.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            A PartialProject instance for this configuration.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">project_root</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">project_dir</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">project_dir</span> <span class="k">else</span> <span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()</span>
+        <span class="n">version_check</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span><span class="n">flags</span><span class="o">.</span><span class="n">VERSION_CHECK</span><span class="p">)</span>
+        <span class="n">partial_project</span> <span class="o">=</span> <span class="n">Project</span><span class="o">.</span><span class="n">partial_load</span><span class="p">(</span>
+            <span class="n">project_root</span><span class="p">,</span> <span class="n">verify_version</span><span class="o">=</span><span class="n">version_check</span>
+        <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">partial_project</span>
+
+<div class="viewcode-block" id="BaseConfig.create_dbt_profile"><a class="viewcode-back" href="../../../reference/hooks.html#airflow_dbt_python.hooks.dbt.BaseConfig.create_dbt_profile">[docs]</a>    <span class="k">def</span> <span class="nf">create_dbt_profile</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">extra_targets</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Profile</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Create a dbt Profile with any added extra targets.</span>
+
+<span class="sd">        Extra targets are appended under the given profile_name. If no profile is found</span>
+<span class="sd">        with the given profile_name it is created with any extra_targets.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            A dbt profile for the task represented by this configuration.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">profiles_dir</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">raw_profiles</span> <span class="o">=</span> <span class="n">read_profile</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">profiles_dir</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">raw_profiles</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="k">if</span> <span class="n">extra_targets</span><span class="p">:</span>
+            <span class="n">profile</span> <span class="o">=</span> <span class="n">raw_profiles</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">profile_name</span><span class="p">,</span> <span class="p">{})</span>
+            <span class="n">outputs</span> <span class="o">=</span> <span class="n">profile</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s2">&quot;outputs&quot;</span><span class="p">,</span> <span class="p">{})</span>
+            <span class="n">outputs</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s2">&quot;target&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">target</span><span class="p">)</span>
+            <span class="n">profile</span><span class="p">[</span><span class="s2">&quot;outputs&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="o">**</span><span class="n">outputs</span><span class="p">,</span> <span class="o">**</span><span class="n">extra_targets</span><span class="p">}</span>
+
+        <span class="n">user_config</span> <span class="o">=</span> <span class="n">raw_profiles</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;config&quot;</span><span class="p">,</span> <span class="p">{})</span>
+
+        <span class="n">profile</span> <span class="o">=</span> <span class="n">Profile</span><span class="o">.</span><span class="n">from_raw_profile_info</span><span class="p">(</span>
+            <span class="n">raw_profile</span><span class="o">=</span><span class="n">raw_profiles</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">profile_name</span><span class="p">,</span> <span class="p">{}</span>
+            <span class="p">),</span>  <span class="c1"># Let dbt handle missing profile errors.</span>
+            <span class="n">profile_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">profile_name</span><span class="p">,</span>
+            <span class="n">renderer</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">profile_renderer</span><span class="p">,</span>
+            <span class="n">user_config</span><span class="o">=</span><span class="n">user_config</span><span class="p">,</span>
+            <span class="n">target_override</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">target</span><span class="p">,</span>
+            <span class="n">threads_override</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">threads</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">profile</span><span class="o">.</span><span class="n">profile_env_vars</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">profile_renderer</span><span class="o">.</span><span class="n">ctx_obj</span><span class="o">.</span><span class="n">env_vars</span>
+
+        <span class="k">return</span> <span class="n">profile</span></div></div>
+
+
+<div class="viewcode-block" id="SelectionConfig"><a class="viewcode-back" href="../../../reference/hooks.html#airflow_dbt_python.hooks.dbt.SelectionConfig">[docs]</a><span class="nd">@dataclass</span>
+<span class="k">class</span> <span class="nc">SelectionConfig</span><span class="p">(</span><span class="n">BaseConfig</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Node selection arguments for dbt tasks like run and seed.&quot;&quot;&quot;</span>
+
+    <span class="n">exclude</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">select</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">selector_name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">state</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Path</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="c1"># Kept for compatibility with dbt versions &lt; 0.21</span>
+    <span class="n">models</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">def</span> <span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Support casting state to Path.&quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">__post_init__</span><span class="p">()</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">state</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="TableMutabilityConfig"><a class="viewcode-back" href="../../../reference/hooks.html#airflow_dbt_python.hooks.dbt.TableMutabilityConfig">[docs]</a><span class="nd">@dataclass</span>
+<span class="k">class</span> <span class="nc">TableMutabilityConfig</span><span class="p">(</span><span class="n">SelectionConfig</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Specify whether tables should be dropped and recreated.&quot;&quot;&quot;</span>
+
+    <span class="n">full_refresh</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">def</span> <span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Call superclass __post_init__.&quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">__post_init__</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="BuildTaskConfig"><a class="viewcode-back" href="../../../reference/hooks.html#airflow_dbt_python.hooks.dbt.BuildTaskConfig">[docs]</a><span class="nd">@dataclass</span>
+<span class="k">class</span> <span class="nc">BuildTaskConfig</span><span class="p">(</span><span class="n">TableMutabilityConfig</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Dbt build task arguments.&quot;&quot;&quot;</span>
+
+    <span class="bp">cls</span><span class="p">:</span> <span class="n">BaseTask</span> <span class="o">=</span> <span class="n">dataclasses</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="n">BuildTask</span><span class="p">,</span> <span class="n">init</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">singular</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">indirect_selection</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">resource_types</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">generic</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">show</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">store_failures</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">which</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">dataclasses</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s2">&quot;build&quot;</span><span class="p">,</span> <span class="n">init</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Support for type casting arguments.&quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">__post_init__</span><span class="p">()</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">singular</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">select</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;test_type:singular&quot;</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">select</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;test_type:singular&quot;</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">generic</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">select</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;test_type:generic&quot;</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">select</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;test_type:generic&quot;</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="CleanTaskConfig"><a class="viewcode-back" href="../../../reference/hooks.html#airflow_dbt_python.hooks.dbt.CleanTaskConfig">[docs]</a><span class="nd">@dataclass</span>
+<span class="k">class</span> <span class="nc">CleanTaskConfig</span><span class="p">(</span><span class="n">BaseConfig</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Dbt clean task arguments.&quot;&quot;&quot;</span>
+
+    <span class="bp">cls</span><span class="p">:</span> <span class="n">BaseTask</span> <span class="o">=</span> <span class="n">dataclasses</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="n">CleanTask</span><span class="p">,</span> <span class="n">init</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">parse_only</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">which</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">dataclasses</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s2">&quot;clean&quot;</span><span class="p">,</span> <span class="n">init</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="CompileTaskConfig"><a class="viewcode-back" href="../../../reference/hooks.html#airflow_dbt_python.hooks.dbt.CompileTaskConfig">[docs]</a><span class="nd">@dataclass</span>
+<span class="k">class</span> <span class="nc">CompileTaskConfig</span><span class="p">(</span><span class="n">TableMutabilityConfig</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Dbt compile task arguments.&quot;&quot;&quot;</span>
+
+    <span class="bp">cls</span><span class="p">:</span> <span class="n">BaseTask</span> <span class="o">=</span> <span class="n">dataclasses</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="n">CompileTask</span><span class="p">,</span> <span class="n">init</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">parse_only</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">which</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">dataclasses</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s2">&quot;compile&quot;</span><span class="p">,</span> <span class="n">init</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="DebugTaskConfig"><a class="viewcode-back" href="../../../reference/hooks.html#airflow_dbt_python.hooks.dbt.DebugTaskConfig">[docs]</a><span class="nd">@dataclass</span>
+<span class="k">class</span> <span class="nc">DebugTaskConfig</span><span class="p">(</span><span class="n">BaseConfig</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Dbt debug task arguments.&quot;&quot;&quot;</span>
+
+    <span class="bp">cls</span><span class="p">:</span> <span class="n">BaseTask</span> <span class="o">=</span> <span class="n">dataclasses</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="n">DebugTask</span><span class="p">,</span> <span class="n">init</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">config_dir</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">which</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">dataclasses</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s2">&quot;debug&quot;</span><span class="p">,</span> <span class="n">init</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="DepsTaskConfig"><a class="viewcode-back" href="../../../reference/hooks.html#airflow_dbt_python.hooks.dbt.DepsTaskConfig">[docs]</a><span class="nd">@dataclass</span>
+<span class="k">class</span> <span class="nc">DepsTaskConfig</span><span class="p">(</span><span class="n">BaseConfig</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Compile task arguments.&quot;&quot;&quot;</span>
+
+    <span class="bp">cls</span><span class="p">:</span> <span class="n">BaseTask</span> <span class="o">=</span> <span class="n">dataclasses</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="n">DepsTask</span><span class="p">,</span> <span class="n">init</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">which</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">dataclasses</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s2">&quot;deps&quot;</span><span class="p">,</span> <span class="n">init</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="GenerateTaskConfig"><a class="viewcode-back" href="../../../reference/hooks.html#airflow_dbt_python.hooks.dbt.GenerateTaskConfig">[docs]</a><span class="nd">@dataclass</span>
+<span class="k">class</span> <span class="nc">GenerateTaskConfig</span><span class="p">(</span><span class="n">SelectionConfig</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Generate task arguments.&quot;&quot;&quot;</span>
+
+    <span class="bp">cls</span><span class="p">:</span> <span class="n">BaseTask</span> <span class="o">=</span> <span class="n">dataclasses</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="n">GenerateTask</span><span class="p">,</span> <span class="n">init</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="nb">compile</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">which</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">dataclasses</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s2">&quot;generate&quot;</span><span class="p">,</span> <span class="n">init</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ListTaskConfig"><a class="viewcode-back" href="../../../reference/hooks.html#airflow_dbt_python.hooks.dbt.ListTaskConfig">[docs]</a><span class="nd">@dataclass</span>
+<span class="k">class</span> <span class="nc">ListTaskConfig</span><span class="p">(</span><span class="n">SelectionConfig</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Dbt list task arguments.&quot;&quot;&quot;</span>
+
+    <span class="bp">cls</span><span class="p">:</span> <span class="n">BaseTask</span> <span class="o">=</span> <span class="n">dataclasses</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="n">ListTask</span><span class="p">,</span> <span class="n">init</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">indirect_selection</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">output</span><span class="p">:</span> <span class="n">Output</span> <span class="o">=</span> <span class="n">Output</span><span class="o">.</span><span class="n">SELECTOR</span>
+    <span class="n">output_keys</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">resource_types</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">which</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">dataclasses</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s2">&quot;list&quot;</span><span class="p">,</span> <span class="n">init</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ParseTaskConfig"><a class="viewcode-back" href="../../../reference/hooks.html#airflow_dbt_python.hooks.dbt.ParseTaskConfig">[docs]</a><span class="nd">@dataclass</span>
+<span class="k">class</span> <span class="nc">ParseTaskConfig</span><span class="p">(</span><span class="n">BaseConfig</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Dbt parse task arguments.&quot;&quot;&quot;</span>
+
+    <span class="bp">cls</span><span class="p">:</span> <span class="n">BaseTask</span> <span class="o">=</span> <span class="n">dataclasses</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="n">ParseTask</span><span class="p">,</span> <span class="n">init</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="nb">compile</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">which</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">dataclasses</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s2">&quot;parse&quot;</span><span class="p">,</span> <span class="n">init</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">write_manifest</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span></div>
+
+
+<div class="viewcode-block" id="RunTaskConfig"><a class="viewcode-back" href="../../../reference/hooks.html#airflow_dbt_python.hooks.dbt.RunTaskConfig">[docs]</a><span class="nd">@dataclass</span>
+<span class="k">class</span> <span class="nc">RunTaskConfig</span><span class="p">(</span><span class="n">TableMutabilityConfig</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Dbt run task arguments.&quot;&quot;&quot;</span>
+
+    <span class="bp">cls</span><span class="p">:</span> <span class="n">BaseTask</span> <span class="o">=</span> <span class="n">dataclasses</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="n">RunTask</span><span class="p">,</span> <span class="n">init</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">which</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">dataclasses</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s2">&quot;run&quot;</span><span class="p">,</span> <span class="n">init</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="RunOperationTaskConfig"><a class="viewcode-back" href="../../../reference/hooks.html#airflow_dbt_python.hooks.dbt.RunOperationTaskConfig">[docs]</a><span class="nd">@dataclass</span>
+<span class="k">class</span> <span class="nc">RunOperationTaskConfig</span><span class="p">(</span><span class="n">BaseConfig</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Dbt run-operation task arguments.&quot;&quot;&quot;</span>
+
+    <span class="n">args</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="bp">cls</span><span class="p">:</span> <span class="n">BaseTask</span> <span class="o">=</span> <span class="n">dataclasses</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="n">RunOperationTask</span><span class="p">,</span> <span class="n">init</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">macro</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">which</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">dataclasses</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s2">&quot;run-operation&quot;</span><span class="p">,</span> <span class="n">init</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Support dictionary args by casting them to str after setting.&quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">__post_init__</span><span class="p">()</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">args</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="SeedTaskConfig"><a class="viewcode-back" href="../../../reference/hooks.html#airflow_dbt_python.hooks.dbt.SeedTaskConfig">[docs]</a><span class="nd">@dataclass</span>
+<span class="k">class</span> <span class="nc">SeedTaskConfig</span><span class="p">(</span><span class="n">TableMutabilityConfig</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Dbt seed task arguments.&quot;&quot;&quot;</span>
+
+    <span class="bp">cls</span><span class="p">:</span> <span class="n">BaseTask</span> <span class="o">=</span> <span class="n">dataclasses</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="n">SeedTask</span><span class="p">,</span> <span class="n">init</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">show</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">which</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">dataclasses</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s2">&quot;seed&quot;</span><span class="p">,</span> <span class="n">init</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="SnapshotTaskConfig"><a class="viewcode-back" href="../../../reference/hooks.html#airflow_dbt_python.hooks.dbt.SnapshotTaskConfig">[docs]</a><span class="nd">@dataclass</span>
+<span class="k">class</span> <span class="nc">SnapshotTaskConfig</span><span class="p">(</span><span class="n">SelectionConfig</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Dbt snapshot task arguments.&quot;&quot;&quot;</span>
+
+    <span class="bp">cls</span><span class="p">:</span> <span class="n">BaseTask</span> <span class="o">=</span> <span class="n">dataclasses</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="n">SnapshotTask</span><span class="p">,</span> <span class="n">init</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">which</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">dataclasses</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s2">&quot;snapshot&quot;</span><span class="p">,</span> <span class="n">init</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="SourceFreshnessTaskConfig"><a class="viewcode-back" href="../../../reference/hooks.html#airflow_dbt_python.hooks.dbt.SourceFreshnessTaskConfig">[docs]</a><span class="nd">@dataclass</span>
+<span class="k">class</span> <span class="nc">SourceFreshnessTaskConfig</span><span class="p">(</span><span class="n">SelectionConfig</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Dbt source freshness task arguments.&quot;&quot;&quot;</span>
+
+    <span class="bp">cls</span><span class="p">:</span> <span class="n">BaseTask</span> <span class="o">=</span> <span class="n">dataclasses</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="n">FreshnessTask</span><span class="p">,</span> <span class="n">init</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">output</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">StrPath</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">which</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">dataclasses</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s2">&quot;source-freshness&quot;</span><span class="p">,</span> <span class="n">init</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="TestTaskConfig"><a class="viewcode-back" href="../../../reference/hooks.html#airflow_dbt_python.hooks.dbt.TestTaskConfig">[docs]</a><span class="nd">@dataclass</span>
+<span class="k">class</span> <span class="nc">TestTaskConfig</span><span class="p">(</span><span class="n">SelectionConfig</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Dbt test task arguments.&quot;&quot;&quot;</span>
+
+    <span class="bp">cls</span><span class="p">:</span> <span class="n">BaseTask</span> <span class="o">=</span> <span class="n">dataclasses</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="n">TestTask</span><span class="p">,</span> <span class="n">init</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">generic</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">indirect_selection</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">singular</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">store_failures</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">which</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">dataclasses</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s2">&quot;test&quot;</span><span class="p">,</span> <span class="n">init</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Support for type casting arguments.&quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">__post_init__</span><span class="p">()</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">singular</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">select</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;test_type:singular&quot;</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">select</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;test_type:singular&quot;</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">generic</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">select</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;test_type:generic&quot;</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">select</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;test_type:generic&quot;</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="ConfigFactory"><a class="viewcode-back" href="../../../reference/hooks.html#airflow_dbt_python.hooks.dbt.ConfigFactory">[docs]</a><span class="k">class</span> <span class="nc">ConfigFactory</span><span class="p">(</span><span class="n">FromStrEnum</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Produce configurations for each dbt task.&quot;&quot;&quot;</span>
+
+    <span class="n">BUILD</span> <span class="o">=</span> <span class="n">BuildTaskConfig</span>
+    <span class="n">COMPILE</span> <span class="o">=</span> <span class="n">CompileTaskConfig</span>
+    <span class="n">CLEAN</span> <span class="o">=</span> <span class="n">CleanTaskConfig</span>
+    <span class="n">DEBUG</span> <span class="o">=</span> <span class="n">DebugTaskConfig</span>
+    <span class="n">DEPS</span> <span class="o">=</span> <span class="n">DepsTaskConfig</span>
+    <span class="n">GENERATE</span> <span class="o">=</span> <span class="n">GenerateTaskConfig</span>
+    <span class="n">LIST</span> <span class="o">=</span> <span class="n">ListTaskConfig</span>
+    <span class="n">PARSE</span> <span class="o">=</span> <span class="n">ParseTaskConfig</span>
+    <span class="n">RUN</span> <span class="o">=</span> <span class="n">RunTaskConfig</span>
+    <span class="n">RUN_OPERATION</span> <span class="o">=</span> <span class="n">RunOperationTaskConfig</span>
+    <span class="n">SEED</span> <span class="o">=</span> <span class="n">SeedTaskConfig</span>
+    <span class="n">SNAPSHOT</span> <span class="o">=</span> <span class="n">SnapshotTaskConfig</span>
+    <span class="n">SOURCE</span> <span class="o">=</span> <span class="n">SourceFreshnessTaskConfig</span>
+    <span class="n">TEST</span> <span class="o">=</span> <span class="n">TestTaskConfig</span>
+
+<div class="viewcode-block" id="ConfigFactory.create_config"><a class="viewcode-back" href="../../../reference/hooks.html#airflow_dbt_python.hooks.dbt.ConfigFactory.create_config">[docs]</a>    <span class="k">def</span> <span class="nf">create_config</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">BaseConfig</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Instantiate a dbt task config with the given args and kwargs.&quot;&quot;&quot;</span>
+        <span class="n">config</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">config</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">fields</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">dataclasses</span><span class="o">.</span><span class="n">Field</span><span class="p">[</span><span class="n">Any</span><span class="p">],</span> <span class="o">...</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;Return the current configuration&#39;s fields.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">dataclasses</span><span class="o">.</span><span class="n">fields</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="DbtHook"><a class="viewcode-back" href="../../../reference/hooks.html#airflow_dbt_python.hooks.dbt.DbtHook">[docs]</a><span class="k">class</span> <span class="nc">DbtHook</span><span class="p">(</span><span class="n">BaseHook</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A hook to interact with dbt.</span>
+
+<span class="sd">    Allows for running dbt tasks and provides required configurations for each task.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">backends</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]],</span> <span class="n">DbtBackend</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">if</span> <span class="n">airflow_version</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;1&quot;</span><span class="p">:</span>
+            <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;source&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+<div class="viewcode-block" id="DbtHook.get_backend"><a class="viewcode-back" href="../../../reference/hooks.html#airflow_dbt_python.hooks.dbt.DbtHook.get_backend">[docs]</a>    <span class="k">def</span> <span class="nf">get_backend</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scheme</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">conn_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">DbtBackend</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Get a backend to interact with dbt files.</span>
+
+<span class="sd">        Backends are defined by the scheme we are looking for and an optional connection</span>
+<span class="sd">        id if we are looking to interface with any Airflow hook that uses a connection.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">backends</span><span class="p">[(</span><span class="n">scheme</span><span class="p">,</span> <span class="n">conn_id</span><span class="p">)]</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="n">backend</span> <span class="o">=</span> <span class="n">build_backend</span><span class="p">(</span><span class="n">scheme</span><span class="p">,</span> <span class="n">conn_id</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">backends</span><span class="p">[(</span><span class="n">scheme</span><span class="p">,</span> <span class="n">conn_id</span><span class="p">)]</span> <span class="o">=</span> <span class="n">backend</span>
+        <span class="k">return</span> <span class="n">backend</span></div>
+
+<div class="viewcode-block" id="DbtHook.pull_dbt_profiles"><a class="viewcode-back" href="../../../reference/hooks.html#airflow_dbt_python.hooks.dbt.DbtHook.pull_dbt_profiles">[docs]</a>    <span class="k">def</span> <span class="nf">pull_dbt_profiles</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">profiles_dir</span><span class="p">:</span> <span class="n">StrPath</span><span class="p">,</span>
+        <span class="n">destination</span><span class="p">:</span> <span class="n">StrPath</span><span class="p">,</span>
+        <span class="n">conn_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Pull a dbt profiles.yml file from a given profiles_dir.</span>
+
+<span class="sd">        This operation is delegated to a DbtBackend. An optional connection id is</span>
+<span class="sd">        supported for backends that require it.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">scheme</span> <span class="o">=</span> <span class="n">urlparse</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">profiles_dir</span><span class="p">))</span><span class="o">.</span><span class="n">scheme</span>
+        <span class="n">backend</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_backend</span><span class="p">(</span><span class="n">scheme</span><span class="p">,</span> <span class="n">conn_id</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">backend</span><span class="o">.</span><span class="n">pull_dbt_profiles</span><span class="p">(</span><span class="n">profiles_dir</span><span class="p">,</span> <span class="n">destination</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="DbtHook.pull_dbt_project"><a class="viewcode-back" href="../../../reference/hooks.html#airflow_dbt_python.hooks.dbt.DbtHook.pull_dbt_project">[docs]</a>    <span class="k">def</span> <span class="nf">pull_dbt_project</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">project_dir</span><span class="p">:</span> <span class="n">StrPath</span><span class="p">,</span>
+        <span class="n">destination</span><span class="p">:</span> <span class="n">StrPath</span><span class="p">,</span>
+        <span class="n">conn_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Pull a dbt project from a given project_dir.</span>
+
+<span class="sd">        This operation is delegated to a DbtBackend. An optional connection id is</span>
+<span class="sd">        supported for backends that require it.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">scheme</span> <span class="o">=</span> <span class="n">urlparse</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">project_dir</span><span class="p">))</span><span class="o">.</span><span class="n">scheme</span>
+        <span class="n">backend</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_backend</span><span class="p">(</span><span class="n">scheme</span><span class="p">,</span> <span class="n">conn_id</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">backend</span><span class="o">.</span><span class="n">pull_dbt_project</span><span class="p">(</span><span class="n">project_dir</span><span class="p">,</span> <span class="n">destination</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="DbtHook.push_dbt_project"><a class="viewcode-back" href="../../../reference/hooks.html#airflow_dbt_python.hooks.dbt.DbtHook.push_dbt_project">[docs]</a>    <span class="k">def</span> <span class="nf">push_dbt_project</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">project_dir</span><span class="p">:</span> <span class="n">StrPath</span><span class="p">,</span>
+        <span class="n">destination</span><span class="p">:</span> <span class="n">StrPath</span><span class="p">,</span>
+        <span class="n">conn_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">replace</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">delete_before</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Push a dbt project from a given project_dir.</span>
+
+<span class="sd">        This operation is delegated to a DbtBackend. An optional connection id is</span>
+<span class="sd">        supported for backends that require it.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">scheme</span> <span class="o">=</span> <span class="n">urlparse</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">destination</span><span class="p">))</span><span class="o">.</span><span class="n">scheme</span>
+        <span class="n">backend</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_backend</span><span class="p">(</span><span class="n">scheme</span><span class="p">,</span> <span class="n">conn_id</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">backend</span><span class="o">.</span><span class="n">push_dbt_project</span><span class="p">(</span>
+            <span class="n">project_dir</span><span class="p">,</span> <span class="n">destination</span><span class="p">,</span> <span class="n">replace</span><span class="o">=</span><span class="n">replace</span><span class="p">,</span> <span class="n">delete_before</span><span class="o">=</span><span class="n">delete_before</span>
+        <span class="p">)</span></div>
+
+<div class="viewcode-block" id="DbtHook.get_config_factory"><a class="viewcode-back" href="../../../reference/hooks.html#airflow_dbt_python.hooks.dbt.DbtHook.get_config_factory">[docs]</a>    <span class="k">def</span> <span class="nf">get_config_factory</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">command</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ConfigFactory</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Get a ConfigFactory given a dbt command string.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">ConfigFactory</span><span class="o">.</span><span class="n">from_str</span><span class="p">(</span><span class="n">command</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="DbtHook.run_dbt_task"><a class="viewcode-back" href="../../../reference/hooks.html#airflow_dbt_python.hooks.dbt.DbtHook.run_dbt_task">[docs]</a>    <span class="k">def</span> <span class="nf">run_dbt_task</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">BaseConfig</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">bool</span><span class="p">,</span> <span class="n">Optional</span><span class="p">[</span><span class="n">RunResult</span><span class="p">]]:</span>
+        <span class="sd">&quot;&quot;&quot;Run a dbt task with a given configuration and return the results.</span>
+
+<span class="sd">        The configuration used determines the task that will be ran.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            A tuple containing a boolean indicating success and optionally the results</span>
+<span class="sd">                of running the dbt command.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">extra_target</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_target_from_connection</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">target</span><span class="p">)</span>
+
+        <span class="n">config</span><span class="o">.</span><span class="n">dbt_task</span><span class="o">.</span><span class="n">pre_init_hook</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+        <span class="n">task</span><span class="p">,</span> <span class="n">runtime_config</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">create_dbt_task</span><span class="p">(</span><span class="n">extra_target</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ensure_profiles</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">profiles_dir</span><span class="p">)</span>
+
+        <span class="c1"># When creating tasks via from_args, dbt switches to the project directory.</span>
+        <span class="c1"># We have to do that here as we are not using from_args.</span>
+        <span class="n">move_to_nearest_project_dir</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">runtime_config</span><span class="p">,</span> <span class="p">(</span><span class="n">UnsetProfileConfig</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="kc">None</span><span class="p">))):</span>
+            <span class="c1"># The deps command installs the dependencies, which means they may not exist</span>
+            <span class="c1"># before deps runs and the following would raise a CompilationError.</span>
+            <span class="n">runtime_config</span><span class="o">.</span><span class="n">load_dependencies</span><span class="p">()</span>
+
+        <span class="n">results</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">with</span> <span class="n">adapter_management</span><span class="p">():</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">runtime_config</span><span class="p">,</span> <span class="p">(</span><span class="n">UnsetProfileConfig</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="kc">None</span><span class="p">))):</span>
+                <span class="n">register_adapter</span><span class="p">(</span><span class="n">runtime_config</span><span class="p">)</span>
+
+            <span class="k">with</span> <span class="n">track_run</span><span class="p">(</span><span class="n">task</span><span class="p">):</span>
+                <span class="n">results</span> <span class="o">=</span> <span class="n">task</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+        <span class="n">success</span> <span class="o">=</span> <span class="n">task</span><span class="o">.</span><span class="n">interpret_results</span><span class="p">(</span><span class="n">results</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">success</span><span class="p">,</span> <span class="n">results</span></div>
+
+<div class="viewcode-block" id="DbtHook.ensure_profiles"><a class="viewcode-back" href="../../../reference/hooks.html#airflow_dbt_python.hooks.dbt.DbtHook.ensure_profiles">[docs]</a>    <span class="k">def</span> <span class="nf">ensure_profiles</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">profiles_dir</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]):</span>
+        <span class="sd">&quot;&quot;&quot;Ensure a profiles file exists.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">profiles_dir</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># We expect one to exist given that we have passsed a profiles_dir.</span>
+            <span class="k">return</span>
+
+        <span class="n">profiles_path</span> <span class="o">=</span> <span class="n">Path</span><span class="o">.</span><span class="n">home</span><span class="p">()</span> <span class="o">/</span> <span class="s2">&quot;.dbt/profiles.yml&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">profiles_path</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+            <span class="n">profiles_path</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">profiles_path</span><span class="o">.</span><span class="n">touch</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="DbtHook.get_target_from_connection"><a class="viewcode-back" href="../../../reference/hooks.html#airflow_dbt_python.hooks.dbt.DbtHook.get_target_from_connection">[docs]</a>    <span class="k">def</span> <span class="nf">get_target_from_connection</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">target</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
+        <span class="sd">&quot;&quot;&quot;Return an Airflow connection that matches a given dbt target, if exists.</span>
+
+<span class="sd">        Subclasses may override this method to support different connection types for</span>
+<span class="sd">        each target type supported for dbt. This default implementation simply returns</span>
+<span class="sd">        everything from the extra field and some common dbt parameters, but subclasses</span>
+<span class="sd">        can implement a proper UI override to match each dbt target type and validate</span>
+<span class="sd">        the fields.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            target: The target name to use as an Airflow connection ID.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            A dictionary with a configuration for a dbt target, or None if a matching</span>
+<span class="sd">                Airflow connection is not found for given dbt target.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">target</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">conn</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_connection</span><span class="p">(</span><span class="n">target</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">AirflowException</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+                <span class="s2">&quot;No Airflow connection matching dbt target </span><span class="si">%s</span><span class="s2"> was found.&quot;</span><span class="p">,</span> <span class="n">target</span>
+            <span class="p">)</span>
+            <span class="k">return</span> <span class="kc">None</span>
+
+        <span class="c1"># These parameters are available in *most* dbt target types, so we include them</span>
+        <span class="c1"># if they are set.</span>
+        <span class="n">dbt_params</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;host&quot;</span><span class="p">,</span> <span class="s2">&quot;login&quot;</span><span class="p">,</span> <span class="s2">&quot;password&quot;</span><span class="p">,</span> <span class="s2">&quot;schema&quot;</span><span class="p">,</span> <span class="s2">&quot;port&quot;</span><span class="p">,</span> <span class="s2">&quot;conn_type&quot;</span><span class="p">)</span>
+        <span class="n">params</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="n">key</span><span class="p">:</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">conn</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">dbt_params</span>
+            <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">conn</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+        <span class="p">}</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">user</span> <span class="o">=</span> <span class="n">params</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;login&quot;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="k">pass</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">params</span><span class="p">[</span><span class="s2">&quot;user&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">user</span>
+
+        <span class="n">conn_type</span> <span class="o">=</span> <span class="n">params</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;conn_type&quot;</span><span class="p">)</span>
+        <span class="n">params</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">conn_type</span>
+
+        <span class="n">extra</span> <span class="o">=</span> <span class="n">conn</span><span class="o">.</span><span class="n">extra_dejson</span>
+        <span class="k">if</span> <span class="s2">&quot;dbname&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">extra</span><span class="p">:</span>
+            <span class="n">extra</span><span class="p">[</span><span class="s2">&quot;dbname&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">conn</span><span class="o">.</span><span class="n">conn_id</span>
+
+        <span class="k">return</span> <span class="p">{</span><span class="n">target</span><span class="p">:</span> <span class="p">{</span><span class="o">**</span><span class="n">params</span><span class="p">,</span> <span class="o">**</span><span class="n">extra</span><span class="p">}}</span></div></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright Copyright 2021 Tomás Farías Santana.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
