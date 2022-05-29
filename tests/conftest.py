@@ -488,13 +488,30 @@ MACRO = """
 
 
 @pytest.fixture
-def macro_file(dbt_project_dir):
+def macro_name(dbt_project_dir):
     """Create a dbt macro file."""
     d = dbt_project_dir / "macros"
     d.mkdir(exist_ok=True)
     m = d / "my_macro.sql"
     m.write_text(MACRO)
-    return m
+    return "my_macro"
+
+
+NON_ARG_MACRO = """
+{% macro one() %}
+  1
+{% endmacro %}
+"""
+
+
+@pytest.fixture
+def non_arg_macro_name(dbt_project_dir):
+    """Create a dbt macro file."""
+    d = dbt_project_dir / "macros"
+    d.mkdir(exist_ok=True)
+    m = d / "my_non_arg_macro.sql"
+    m.write_text(NON_ARG_MACRO)
+    return "one"
 
 
 @pytest.fixture
