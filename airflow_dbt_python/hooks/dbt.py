@@ -85,18 +85,18 @@ class Output(FromStrEnum):
         return Enum.__eq__(self, other)
 
 
-def parse_vars(vars: Optional[Union[str, dict[str, Any]]]) -> dict[str, Any]:
-    """Parse CLI vars as dbt would.
+def parse_yaml_args(args: Optional[Union[str, dict[str, Any]]]) -> dict[str, Any]:
+    """Parse YAML arguments as dbt would.
 
     This means:
-        - When vars is a string, we treat it as a YAML dict str.
+        - When args is a string, we treat it as a YAML dict str.
         - If it's already a dictionary, we just return it.
         - Otherwise (it's None), we return an empty dictionary.
     """
-    if isinstance(vars, str):
-        return yaml_helper.load_yaml_text(vars)
-    elif isinstance(vars, dict):
-        return vars
+    if isinstance(args, str):
+        return yaml_helper.load_yaml_text(args)
+    elif isinstance(args, dict):
+        return args
     else:
         return {}
 
@@ -169,7 +169,7 @@ class BaseConfig:
         Raises:
             ValueError: When setting two mutually exclusive parameters.
         """
-        self.parsed_vars = parse_vars(self.vars)
+        self.parsed_vars = parse_yaml_args(self.vars)
         self.vars = yaml.dump(self.parsed_vars)
 
         mutually_exclusive_attrs = (
@@ -555,7 +555,7 @@ class RunTaskConfig(TableMutabilityConfig):
 class RunOperationTaskConfig(BaseConfig):
     """Dbt run-operation task arguments."""
 
-    args: Optional[str] = None
+    args: str = "{}"
     cls: BaseTask = dataclasses.field(default=RunOperationTask, init=False)
     macro: Optional[str] = None
     which: str = dataclasses.field(default="run-operation", init=False)
@@ -563,8 +563,7 @@ class RunOperationTaskConfig(BaseConfig):
     def __post_init__(self):
         """Support dictionary args by casting them to str after setting."""
         super().__post_init__()
-        if isinstance(self.args, dict):
-            self.args = str(self.args)
+        self.args = str(self.args)
 
 
 @dataclass

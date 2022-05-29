@@ -38,7 +38,7 @@ def test_dbt_run_operation_mocked_all_args():
 
 
 def test_dbt_run_operation_non_existent_macro(
-    profiles_file, dbt_project_file, macro_file
+    profiles_file, dbt_project_file, macro_name
 ):
     """Test exectuion of DbtRunOperationOperator with a non-existent macro."""
     op = DbtRunOperationOperator(
@@ -53,28 +53,42 @@ def test_dbt_run_operation_non_existent_macro(
 
 
 def test_dbt_run_operation_missing_arguments(
-    profiles_file, dbt_project_file, macro_file
+    profiles_file, dbt_project_file, macro_name
 ):
     """Test exectuion of DbtRunOperationOperator with missing arguments."""
     op = DbtRunOperationOperator(
         task_id="dbt_task",
         project_dir=dbt_project_file.parent,
         profiles_dir=profiles_file.parent,
-        macro=str(macro_file.stem),
+        macro=macro_name,
     )
 
     with pytest.raises(AirflowException):
         op.execute({})
 
 
-def test_dbt_run_operation_run_macro(profiles_file, dbt_project_file, macro_file):
+def test_dbt_run_operation_run_macro(profiles_file, dbt_project_file, macro_name):
     """Test a dbt run-operation operator basic execution."""
     op = DbtRunOperationOperator(
         task_id="dbt_task",
         project_dir=dbt_project_file.parent,
         profiles_dir=profiles_file.parent,
-        macro=str(macro_file.stem),
+        macro=macro_name,
         args={"an_arg": 123},
+    )
+    execution_results = op.execute({})
+    assert execution_results["success"] is True
+
+
+def test_dbt_run_operation_run_non_arg_macro(
+    profiles_file, dbt_project_file, non_arg_macro_name
+):
+    """Test a dbt run-operation operator basic execution."""
+    op = DbtRunOperationOperator(
+        task_id="dbt_task",
+        project_dir=dbt_project_file.parent,
+        profiles_dir=profiles_file.parent,
+        macro=non_arg_macro_name,
     )
     execution_results = op.execute({})
     assert execution_results["success"] is True

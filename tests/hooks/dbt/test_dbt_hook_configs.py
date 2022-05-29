@@ -26,7 +26,7 @@ from airflow_dbt_python.hooks.dbt import (
     RunTaskConfig,
     SeedTaskConfig,
     TestTaskConfig,
-    parse_vars,
+    parse_yaml_args,
 )
 
 
@@ -214,8 +214,8 @@ def test_build_task_minimal_config_singular(hook, profiles_file, dbt_project_fil
         ),
     ],
 )
-def test_parse_vars(vars, expected):
-    result = parse_vars(vars)
+def test_parse_yaml_args(vars, expected):
+    result = parse_yaml_args(vars)
     assert result == expected
 
 
