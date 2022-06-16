@@ -28,7 +28,7 @@ pip install airflow-dbt-python
 Any `dbt` adapters you require may be installed by specifying extras:
 
 ``` shell
-pip install airflow-dby-python[snowflake,postgres]
+pip install airflow-dbt-python[snowflake,postgres]
 ```
 
 ## From this repo:
