@@ -80,7 +80,7 @@ As this integration was completed, several features were developed to **extend t
 
 ## Independent task execution
 
-Airflow executes [Tasks](https://airflow.apache.org/docs/apache-airflow/stable/concepts/tasks.html) independent of one another: even though downstream and upstream dependencies between tasks exist, the execution of an individual task happens entirely independently of any other task execution (see: [Tasks Relationships](https://airflow.apache.org/docs/apache-airflow/stable/concepts/tasks.html#relationships).
+Airflow executes [Tasks](https://airflow.apache.org/docs/apache-airflow/stable/concepts/tasks.html) independent of one another: even though downstream and upstream dependencies between tasks exist, the execution of an individual task happens entirely independently of any other task execution (see: [Tasks Relationships](https://airflow.apache.org/docs/apache-airflow/stable/concepts/tasks.html#relationships)).
 
 In order to work with this constraint, *airflow-dbt-python* runs each dbt command in a **temporary and isolated directory**. Before execution, all the relevant dbt files are copied from supported backends, and after executing the command any artifacts are exported. This ensures dbt can work with any Airflow deployment, including most production deployments as they are usually running [Remote Executors](https://airflow.apache.org/docs/apache-airflow/stable/executor/index.html#executor-types) and do not guarantee any files will be shared by default between tasks, since each task may run in a completely different environment.
 
@@ -109,7 +109,7 @@ Each dbt execution produces one or more [JSON artifacts](https://docs.getdbt.com
 
 ## Use Airflow connections as dbt targets (without a profiles.yml)
 
-[Airflow connections](https://airflow.apache.org/docs/apache-airflow/stable/howto/connection.html) allow users to manage and store connection information, such as hostname, port, user name, and password, for operators to use when accessing certain applications, like databases. Similarly, a *dbt* `profiles.yml` file stores connection information under each target key. *airflow-dbt-python* bridges the gap between the two and allows you to use connection information stored as an Airflow connection by specifying the connection id as the `target` parameter of any of the *dbt* operators it provides. What's more, if using an Airflow connection, the `profiles.yml` file may be entirely omitted (although keep in mind a `profiles.yml` file contains a configuration block besides target connection information).
+[Airflow connections](https://airflow.apache.org/docs/apache-airflow/stable/howto/connection.html) allow users to manage and store connection information, such as hostname, port, username, and password, for operators to use when accessing certain applications, like databases. Similarly, a *dbt* `profiles.yml` file stores connection information under each target key. *airflow-dbt-python* bridges the gap between the two and allows you to use connection information stored as an Airflow connection by specifying the connection id as the `target` parameter of any of the *dbt* operators it provides. What's more, if using an Airflow connection, the `profiles.yml` file may be entirely omitted (although keep in mind a `profiles.yml` file contains a configuration block besides target connection information).
 
 See an example DAG [here](examples/airflow_connection_target_dag.py).
 
@@ -164,7 +164,7 @@ Currently, the following *dbt* commands are supported:
 
 ## Examples
 
-All example DAGs are tested against against the latest Airflow version. Some changes, like modifying `import` statements or changing types, may be required for them to work in other versions.
+All example DAGs are tested against the latest Airflow version. Some changes, like modifying `import` statements or changing types, may be required for them to work in other versions.
 
 ``` python
 import datetime as dt
@@ -227,4 +227,4 @@ poetry run pytest tests/ -vv
 
 # License
 
-This project is licensed under the MIT license. See ![LICENSE](LICENSE).
+This project is licensed under the MIT license. See [LICENSE](LICENSE).
