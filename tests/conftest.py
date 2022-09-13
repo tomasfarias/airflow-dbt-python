@@ -245,7 +245,8 @@ def dbt_project_file(dbt_project_dir, logs_dir, request):
 
     yield p
 
-    (logs_dir / "dbt.log").unlink(missing_ok=True)
+    if (logs_dir / "dbt.log").exists():
+        (logs_dir / "dbt.log").unlink()
 
 
 @pytest.fixture(scope="session")
