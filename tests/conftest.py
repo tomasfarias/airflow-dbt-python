@@ -282,7 +282,7 @@ def seed_files(dbt_project_dir):
     return [s1, s2]
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="function")
 def compile_dir(dbt_project_file):
     """Return a path to the directory with compiled files."""
     d = dbt_project_file.parent
@@ -368,7 +368,7 @@ packages:
 """
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="function")
 def packages_file(dbt_project_file):
     """Create a test packages.yml file."""
     d = dbt_project_file.parent
