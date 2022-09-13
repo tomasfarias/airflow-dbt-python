@@ -45,6 +45,10 @@ dispatch:
     search_order: [dbt_utils]
 """
 
+LOG_PATH_CONFIG = """
+log-path: {log_path}
+"""
+
 MODEL_1 = """
 {{ config(
     materialized="ephemeral",
@@ -224,11 +228,24 @@ def dbt_project_dir(tmp_path_factory):
 
 
 @pytest.fixture(scope="session")
-def dbt_project_file(dbt_project_dir):
+def logs_dir(dbt_project_dir):
+    """Create a directory to persist dbt logs."""
+    d = dbt_project_dir / "logs"
+    d.mkdir(exist_ok=True)
+    return d
+
+
+@pytest.fixture(scope="function")
+def dbt_project_file(dbt_project_dir, logs_dir, request):
     """Create a test dbt_project.yml file."""
     p = dbt_project_dir / "dbt_project.yml"
-    p.write_text(PROJECT)
-    return p
+    PROJECT_CONTENT = PROJECT + LOG_PATH_CONFIG.format(log_path=str(logs_dir))
+    print(PROJECT_CONTENT)
+    p.write_text(PROJECT_CONTENT)
+
+    yield p
+
+    (logs_dir / "dbt.log").unlink(missing_ok=True)
 
 
 @pytest.fixture(scope="session")

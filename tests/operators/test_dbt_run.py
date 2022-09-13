@@ -83,7 +83,7 @@ def test_dbt_run_non_existent_model(profiles_file, dbt_project_file, model_files
     assert isinstance(json.dumps(execution_results), str)
 
 
-def test_dbt_run_models(profiles_file, dbt_project_file, model_files):
+def test_dbt_run_models(profiles_file, dbt_project_file, model_files, logs_dir):
     """Test execution of DbtRunOperator with all models."""
     op = DbtRunOperator(
         task_id="dbt_task",
@@ -97,6 +97,14 @@ def test_dbt_run_models(profiles_file, dbt_project_file, model_files):
     run_result = execution_results["results"][0]
 
     assert run_result["status"] == RunStatus.Success
+
+    log_file = logs_dir / "dbt.log"
+    assert log_file.exists()
+
+    with open(log_file) as f:
+        logs = f.read()
+
+    assert "OK created view model public.model_4" in logs
 
 
 def test_dbt_run_models_full_refresh(profiles_file, dbt_project_file, model_files):
