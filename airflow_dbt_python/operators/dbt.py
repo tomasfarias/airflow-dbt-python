@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import datetime as dt
 import json
-import logging
 import os
 from contextlib import contextmanager
 from dataclasses import asdict, is_dataclass
@@ -172,32 +171,28 @@ class DbtBaseOperator(BaseOperator):
         with self.dbt_directory() as dbt_dir:  # type: str
             os.chdir(dbt_dir)
 
-            with self.override_dbt_logging(dbt_dir):
-                config = self.get_dbt_config()
-                self.log.info("Running dbt configuration: %s", config)
+            config = self.get_dbt_config()
+            self.log.info("Running dbt configuration: %s", config)
 
-                try:
-                    success, results = self.dbt_hook.run_dbt_task(config)
-                except Exception as e:
-                    self.log.exception("There was an error executing dbt", exc_info=e)
-                    success, results = False, {}
-                    raise AirflowException(
-                        f"An error has occurred while executing dbt: {config.dbt_task}"
-                    ) from e
+            try:
+                success, results = self.dbt_hook.run_dbt_task(config)
+            except Exception as e:
+                self.log.exception("There was an error executing dbt", exc_info=e)
+                success, results = False, {}
+                raise AirflowException(
+                    f"An error has occurred while executing dbt: {config.dbt_task}"
+                ) from e
 
-                finally:
-                    res = self.serializable_result(results)
+            finally:
+                res = self.serializable_result(results)
 
-                    if (
-                        self.do_xcom_push is True
-                        and context.get("ti", None) is not None
-                    ):
-                        # Some dbt operations use dataclasses for its results,
-                        # found in dbt.contracts.results. Each DbtBaseOperator
-                        # subclass should implement prepare_results to return a
-                        # serializable object
-                        self.xcom_push_artifacts(context, dbt_dir)
-                        self.xcom_push(context, key=XCOM_RETURN_KEY, value=res)
+                if self.do_xcom_push is True and context.get("ti", None) is not None:
+                    # Some dbt operations use dataclasses for its results,
+                    # found in dbt.contracts.results. Each DbtBaseOperator
+                    # subclass should implement prepare_results to return a
+                    # serializable object
+                    self.xcom_push_artifacts(context, dbt_dir)
+                    self.xcom_push(context, key=XCOM_RETURN_KEY, value=res)
 
         if success is not True:
             raise AirflowException(
@@ -321,22 +316,6 @@ class DbtBaseOperator(BaseOperator):
         if self._dbt_hook is None:
             self._dbt_hook = DbtHook()
         return self._dbt_hook
-
-    @contextmanager
-    def override_dbt_logging(self, dbt_directory: str = None):
-        """Override dbt's logger.
-
-        Starting with dbt v1, dbt initializes two loggers: default_file and
-        default_stdout. We override default_stdout's handlers with Airflow logger's
-        handlers.
-        """
-        file_logger = logging.getLogger("default_file")
-        file_logger.handlers = []
-
-        stdout_logger = logging.getLogger("default_stdout")
-        stdout_logger.handlers = self.log.handlers
-
-        yield
 
     def serializable_result(
         self, result: Optional[RunExecutionResult]
