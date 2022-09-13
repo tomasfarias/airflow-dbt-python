@@ -21,8 +21,10 @@ from dbt.config.renderer import DbtProjectYamlRenderer, ProfileRenderer
 from dbt.config.runtime import RuntimeConfig, UnsetProfileConfig
 from dbt.contracts.graph.manifest import Manifest
 from dbt.contracts.results import RunResult
+from dbt.events.functions import setup_event_logger
 from dbt.exceptions import InternalException
 from dbt.graph import Graph
+from dbt.logger import log_manager
 from dbt.main import adapter_management, track_run
 from dbt.task.base import BaseTask, move_to_nearest_project_dir
 from dbt.task.build import BuildTask
@@ -740,13 +742,15 @@ class DbtHook(BaseHook):
         """
         extra_target = self.get_target_from_connection(config.target)
 
-        config.dbt_task.pre_init_hook(config)
+        level_override = config.dbt_task.pre_init_hook(config)
         task, runtime_config = config.create_dbt_task(extra_target)
         self.ensure_profiles(config.profiles_dir)
 
         # When creating tasks via from_args, dbt switches to the project directory.
         # We have to do that here as we are not using from_args.
         move_to_nearest_project_dir(config)
+
+        self.setup_dbt_logging(task, level_override)
 
         if not isinstance(runtime_config, (UnsetProfileConfig, type(None))):
             # The deps command installs the dependencies, which means they may not exist
@@ -763,6 +767,20 @@ class DbtHook(BaseHook):
         success = task.interpret_results(results)
 
         return success, results
+
+    def setup_dbt_logging(self, task: BaseTask, level_override):
+        """Setup dbt logging.
+
+        Starting with dbt v1, dbt initializes two loggers: default_file and
+        default_stdout. As these are initialized by the CLI app, we need to
+        initialize them here.
+        """
+        log_path = None
+        if task.config is not None:
+            log_path = getattr(task.config, "log_path", None)
+
+        log_manager.set_path(log_path)
+        setup_event_logger(log_path or str(Path.cwd() / "logs"), level_override)
 
     def ensure_profiles(self, profiles_dir: Optional[str]):
         """Ensure a profiles file exists."""
