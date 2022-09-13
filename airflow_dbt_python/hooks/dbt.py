@@ -24,7 +24,6 @@ from dbt.contracts.results import RunResult
 from dbt.events.functions import setup_event_logger
 from dbt.exceptions import InternalException
 from dbt.graph import Graph
-from dbt.logger import log_manager
 from dbt.main import adapter_management, track_run
 from dbt.task.base import BaseTask, move_to_nearest_project_dir
 from dbt.task.build import BuildTask
@@ -753,8 +752,8 @@ class DbtHook(BaseHook):
         self.setup_dbt_logging(task, level_override)
 
         if not isinstance(runtime_config, (UnsetProfileConfig, type(None))):
-            # The deps command installs the dependencies, which means they may not exist
-            # before deps runs and the following would raise a CompilationError.
+            # The deps command installs the dependencies, which means they may not
+            # exist before deps runs and the following would raise a CompilationError.
             runtime_config.load_dependencies()
 
         results = None
@@ -764,7 +763,7 @@ class DbtHook(BaseHook):
 
             with track_run(task):
                 results = task.run()
-        success = task.interpret_results(results)
+            success = task.interpret_results(results)
 
         return success, results
 
@@ -779,8 +778,7 @@ class DbtHook(BaseHook):
         if task.config is not None:
             log_path = getattr(task.config, "log_path", None)
 
-        log_manager.set_path(log_path)
-        setup_event_logger(log_path or str(Path.cwd() / "logs"), level_override)
+        setup_event_logger(log_path or "logs", level_override)
 
     def ensure_profiles(self, profiles_dir: Optional[str]):
         """Ensure a profiles file exists."""
