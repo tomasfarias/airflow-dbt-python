@@ -80,7 +80,6 @@
 
 <span class="kn">import</span> <span class="nn">datetime</span> <span class="k">as</span> <span class="nn">dt</span>
 <span class="kn">import</span> <span class="nn">json</span>
-<span class="kn">import</span> <span class="nn">logging</span>
 <span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">from</span> <span class="nn">contextlib</span> <span class="kn">import</span> <span class="n">contextmanager</span>
 <span class="kn">from</span> <span class="nn">dataclasses</span> <span class="kn">import</span> <span class="n">asdict</span><span class="p">,</span> <span class="n">is_dataclass</span>
@@ -249,32 +248,28 @@
         <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">dbt_directory</span><span class="p">()</span> <span class="k">as</span> <span class="n">dbt_dir</span><span class="p">:</span>  <span class="c1"># type: str</span>
             <span class="n">os</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="n">dbt_dir</span><span class="p">)</span>
 
-            <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">override_dbt_logging</span><span class="p">(</span><span class="n">dbt_dir</span><span class="p">):</span>
-                <span class="n">config</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_dbt_config</span><span class="p">()</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Running dbt configuration: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">config</span><span class="p">)</span>
+            <span class="n">config</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_dbt_config</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Running dbt configuration: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">config</span><span class="p">)</span>
 
-                <span class="k">try</span><span class="p">:</span>
-                    <span class="n">success</span><span class="p">,</span> <span class="n">results</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dbt_hook</span><span class="o">.</span><span class="n">run_dbt_task</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
-                <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">exception</span><span class="p">(</span><span class="s2">&quot;There was an error executing dbt&quot;</span><span class="p">,</span> <span class="n">exc_info</span><span class="o">=</span><span class="n">e</span><span class="p">)</span>
-                    <span class="n">success</span><span class="p">,</span> <span class="n">results</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="p">{}</span>
-                    <span class="k">raise</span> <span class="n">AirflowException</span><span class="p">(</span>
-                        <span class="sa">f</span><span class="s2">&quot;An error has occurred while executing dbt: </span><span class="si">{</span><span class="n">config</span><span class="o">.</span><span class="n">dbt_task</span><span class="si">}</span><span class="s2">&quot;</span>
-                    <span class="p">)</span> <span class="kn">from</span> <span class="nn">e</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">success</span><span class="p">,</span> <span class="n">results</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dbt_hook</span><span class="o">.</span><span class="n">run_dbt_task</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">exception</span><span class="p">(</span><span class="s2">&quot;There was an error executing dbt&quot;</span><span class="p">,</span> <span class="n">exc_info</span><span class="o">=</span><span class="n">e</span><span class="p">)</span>
+                <span class="n">success</span><span class="p">,</span> <span class="n">results</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="p">{}</span>
+                <span class="k">raise</span> <span class="n">AirflowException</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;An error has occurred while executing dbt: </span><span class="si">{</span><span class="n">config</span><span class="o">.</span><span class="n">dbt_task</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="p">)</span> <span class="kn">from</span> <span class="nn">e</span>
 
-                <span class="k">finally</span><span class="p">:</span>
-                    <span class="n">res</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">serializable_result</span><span class="p">(</span><span class="n">results</span><span class="p">)</span>
+            <span class="k">finally</span><span class="p">:</span>
+                <span class="n">res</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">serializable_result</span><span class="p">(</span><span class="n">results</span><span class="p">)</span>
 
-                    <span class="k">if</span> <span class="p">(</span>
-                        <span class="bp">self</span><span class="o">.</span><span class="n">do_xcom_push</span> <span class="ow">is</span> <span class="kc">True</span>
-                        <span class="ow">and</span> <span class="n">context</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;ti&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
-                    <span class="p">):</span>
-                        <span class="c1"># Some dbt operations use dataclasses for its results,</span>
-                        <span class="c1"># found in dbt.contracts.results. Each DbtBaseOperator</span>
-                        <span class="c1"># subclass should implement prepare_results to return a</span>
-                        <span class="c1"># serializable object</span>
-                        <span class="bp">self</span><span class="o">.</span><span class="n">xcom_push_artifacts</span><span class="p">(</span><span class="n">context</span><span class="p">,</span> <span class="n">dbt_dir</span><span class="p">)</span>
-                        <span class="bp">self</span><span class="o">.</span><span class="n">xcom_push</span><span class="p">(</span><span class="n">context</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="n">XCOM_RETURN_KEY</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">res</span><span class="p">)</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">do_xcom_push</span> <span class="ow">is</span> <span class="kc">True</span> <span class="ow">and</span> <span class="n">context</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;ti&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="c1"># Some dbt operations use dataclasses for its results,</span>
+                    <span class="c1"># found in dbt.contracts.results. Each DbtBaseOperator</span>
+                    <span class="c1"># subclass should implement prepare_results to return a</span>
+                    <span class="c1"># serializable object</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">xcom_push_artifacts</span><span class="p">(</span><span class="n">context</span><span class="p">,</span> <span class="n">dbt_dir</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">xcom_push</span><span class="p">(</span><span class="n">context</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="n">XCOM_RETURN_KEY</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">res</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">success</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">True</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">AirflowException</span><span class="p">(</span>
@@ -398,22 +393,6 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dbt_hook</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_dbt_hook</span> <span class="o">=</span> <span class="n">DbtHook</span><span class="p">()</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dbt_hook</span>
-
-<div class="viewcode-block" id="DbtBaseOperator.override_dbt_logging"><a class="viewcode-back" href="../../../reference/operators.html#airflow_dbt_python.operators.dbt.DbtBaseOperator.override_dbt_logging">[docs]</a>    <span class="nd">@contextmanager</span>
-    <span class="k">def</span> <span class="nf">override_dbt_logging</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dbt_directory</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Override dbt&#39;s logger.</span>
-
-<span class="sd">        Starting with dbt v1, dbt initializes two loggers: default_file and</span>
-<span class="sd">        default_stdout. We override default_stdout&#39;s handlers with Airflow logger&#39;s</span>
-<span class="sd">        handlers.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">file_logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s2">&quot;default_file&quot;</span><span class="p">)</span>
-        <span class="n">file_logger</span><span class="o">.</span><span class="n">handlers</span> <span class="o">=</span> <span class="p">[]</span>
-
-        <span class="n">stdout_logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s2">&quot;default_stdout&quot;</span><span class="p">)</span>
-        <span class="n">stdout_logger</span><span class="o">.</span><span class="n">handlers</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">handlers</span>
-
-        <span class="k">yield</span></div>
 
 <div class="viewcode-block" id="DbtBaseOperator.serializable_result"><a class="viewcode-back" href="../../../reference/operators.html#airflow_dbt_python.operators.dbt.DbtBaseOperator.serializable_result">[docs]</a>    <span class="k">def</span> <span class="nf">serializable_result</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">result</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">RunExecutionResult</span><span class="p">]</span>

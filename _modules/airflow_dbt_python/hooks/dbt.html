@@ -98,6 +98,7 @@
 <span class="kn">from</span> <span class="nn">dbt.config.runtime</span> <span class="kn">import</span> <span class="n">RuntimeConfig</span><span class="p">,</span> <span class="n">UnsetProfileConfig</span>
 <span class="kn">from</span> <span class="nn">dbt.contracts.graph.manifest</span> <span class="kn">import</span> <span class="n">Manifest</span>
 <span class="kn">from</span> <span class="nn">dbt.contracts.results</span> <span class="kn">import</span> <span class="n">RunResult</span>
+<span class="kn">from</span> <span class="nn">dbt.events.functions</span> <span class="kn">import</span> <span class="n">setup_event_logger</span>
 <span class="kn">from</span> <span class="nn">dbt.exceptions</span> <span class="kn">import</span> <span class="n">InternalException</span>
 <span class="kn">from</span> <span class="nn">dbt.graph</span> <span class="kn">import</span> <span class="n">Graph</span>
 <span class="kn">from</span> <span class="nn">dbt.main</span> <span class="kn">import</span> <span class="n">adapter_management</span><span class="p">,</span> <span class="n">track_run</span>
@@ -817,7 +818,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">extra_target</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_target_from_connection</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">target</span><span class="p">)</span>
 
-        <span class="n">config</span><span class="o">.</span><span class="n">dbt_task</span><span class="o">.</span><span class="n">pre_init_hook</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+        <span class="n">level_override</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">dbt_task</span><span class="o">.</span><span class="n">pre_init_hook</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
         <span class="n">task</span><span class="p">,</span> <span class="n">runtime_config</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">create_dbt_task</span><span class="p">(</span><span class="n">extra_target</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">ensure_profiles</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">profiles_dir</span><span class="p">)</span>
 
@@ -825,9 +826,11 @@
         <span class="c1"># We have to do that here as we are not using from_args.</span>
         <span class="n">move_to_nearest_project_dir</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
 
+        <span class="bp">self</span><span class="o">.</span><span class="n">setup_dbt_logging</span><span class="p">(</span><span class="n">task</span><span class="p">,</span> <span class="n">level_override</span><span class="p">)</span>
+
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">runtime_config</span><span class="p">,</span> <span class="p">(</span><span class="n">UnsetProfileConfig</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="kc">None</span><span class="p">))):</span>
-            <span class="c1"># The deps command installs the dependencies, which means they may not exist</span>
-            <span class="c1"># before deps runs and the following would raise a CompilationError.</span>
+            <span class="c1"># The deps command installs the dependencies, which means they may not</span>
+            <span class="c1"># exist before deps runs and the following would raise a CompilationError.</span>
             <span class="n">runtime_config</span><span class="o">.</span><span class="n">load_dependencies</span><span class="p">()</span>
 
         <span class="n">results</span> <span class="o">=</span> <span class="kc">None</span>
@@ -837,9 +840,22 @@
 
             <span class="k">with</span> <span class="n">track_run</span><span class="p">(</span><span class="n">task</span><span class="p">):</span>
                 <span class="n">results</span> <span class="o">=</span> <span class="n">task</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
-        <span class="n">success</span> <span class="o">=</span> <span class="n">task</span><span class="o">.</span><span class="n">interpret_results</span><span class="p">(</span><span class="n">results</span><span class="p">)</span>
+            <span class="n">success</span> <span class="o">=</span> <span class="n">task</span><span class="o">.</span><span class="n">interpret_results</span><span class="p">(</span><span class="n">results</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="n">success</span><span class="p">,</span> <span class="n">results</span></div>
+
+<div class="viewcode-block" id="DbtHook.setup_dbt_logging"><a class="viewcode-back" href="../../../reference/hooks.html#airflow_dbt_python.hooks.dbt.DbtHook.setup_dbt_logging">[docs]</a>    <span class="k">def</span> <span class="nf">setup_dbt_logging</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">task</span><span class="p">:</span> <span class="n">BaseTask</span><span class="p">,</span> <span class="n">level_override</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Setup dbt logging.</span>
+
+<span class="sd">        Starting with dbt v1, dbt initializes two loggers: default_file and</span>
+<span class="sd">        default_stdout. As these are initialized by the CLI app, we need to</span>
+<span class="sd">        initialize them here.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">log_path</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="n">task</span><span class="o">.</span><span class="n">config</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">log_path</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">task</span><span class="o">.</span><span class="n">config</span><span class="p">,</span> <span class="s2">&quot;log_path&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+        <span class="n">setup_event_logger</span><span class="p">(</span><span class="n">log_path</span> <span class="ow">or</span> <span class="s2">&quot;logs&quot;</span><span class="p">,</span> <span class="n">level_override</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="DbtHook.ensure_profiles"><a class="viewcode-back" href="../../../reference/hooks.html#airflow_dbt_python.hooks.dbt.DbtHook.ensure_profiles">[docs]</a>    <span class="k">def</span> <span class="nf">ensure_profiles</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">profiles_dir</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]):</span>
         <span class="sd">&quot;&quot;&quot;Ensure a profiles file exists.&quot;&quot;&quot;</span>

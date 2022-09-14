@@ -251,20 +251,6 @@ overriding the logging.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="airflow_dbt_python.operators.dbt.DbtBaseOperator.override_dbt_logging">
-<span class="sig-name descname"><span class="pre">override_dbt_logging</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dbt_directory</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/airflow_dbt_python/operators/dbt.html#DbtBaseOperator.override_dbt_logging"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#airflow_dbt_python.operators.dbt.DbtBaseOperator.override_dbt_logging" title="Permalink to this definition"></a></dt>
-<dd><p>Override dbt’s logger.</p>
-<p>Starting with dbt v1, dbt initializes two loggers: default_file and
-default_stdout. We override default_stdout’s handlers with Airflow logger’s
-handlers.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>dbt_directory</strong> (<em>str</em>) – </p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
 <dt class="sig sig-object py" id="airflow_dbt_python.operators.dbt.DbtBaseOperator.prepare_directory">
 <span class="sig-name descname"><span class="pre">prepare_directory</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tmp_dir</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/airflow_dbt_python/operators/dbt.html#DbtBaseOperator.prepare_directory"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#airflow_dbt_python.operators.dbt.DbtBaseOperator.prepare_directory" title="Permalink to this definition"></a></dt>
 <dd><p>Prepares a dbt directory by pulling files from S3.</p>

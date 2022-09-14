@@ -618,6 +618,20 @@ supported for backends that require it.</p>
 </dl>
 </dd></dl>
 
+<dl class="py method">
+<dt class="sig sig-object py" id="airflow_dbt_python.hooks.dbt.DbtHook.setup_dbt_logging">
+<span class="sig-name descname"><span class="pre">setup_dbt_logging</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">task</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">level_override</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/airflow_dbt_python/hooks/dbt.html#DbtHook.setup_dbt_logging"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#airflow_dbt_python.hooks.dbt.DbtHook.setup_dbt_logging" title="Permalink to this definition"></a></dt>
+<dd><p>Setup dbt logging.</p>
+<p>Starting with dbt v1, dbt initializes two loggers: default_file and
+default_stdout. As these are initialized by the CLI app, we need to
+initialize them here.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>task</strong> (<em>dbt.task.base.BaseTask</em>) – </p>
+</dd>
+</dl>
+</dd></dl>
+
 </dd></dl>
 
 <dl class="py class">
