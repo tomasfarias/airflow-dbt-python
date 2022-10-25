@@ -14,12 +14,17 @@ jobs:
       fail-fast: false
       matrix:
         python-version: [3.7, 3.8, 3.9, '3.10']
-        airflow-version: ['1.10.15', '2.0.2', '2.2.5']
+        airflow-version: ['1.10.15', '2.2.2', '2.4.2']
         exclude:
           - python-version: '3.10'
-            airflow-version: '2.0.2'
-          - python-version: '3.10'
             airflow-version: '1.10.15'
+          - python-version: '3.10'
+            airflow-version: '2.2.2'
+        include:
+          - airflow-version: '1.10.15'
+            constraints: 'constraints-3.8.txt'
+            install: 'apache-airflow[amazon]==1.10.15'
+
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -46,26 +51,19 @@ jobs:
       - name: Code formatting with black
         run: poetry run black --check .
 
-      - name: Install Airflow > 2
-        if: matrix.airflow-version != '1.10.15' && matrix.python-version != '3.10'
+      - name: Install Airflow with constraints
+        if: ${{ matrix.constraints }}
+        run: |
+          wget https://raw.githubusercontent.com/apache/airflow/constraints-${{ matrix.airflow-version }}/${{ matrix.constraints }} -O constraints.txt
+          poetry run pip install ${{ matrix.install }} -c constraints.txt
+          poetry run airflow db init
+
+      - name: Install Airflow with constraints
+        if: matrix.constraints == ''
         run: |
           wget https://raw.githubusercontent.com/apache/airflow/constraints-${{ matrix.airflow-version }}/constraints-${{ matrix.python-version }}.txt -O constraints.txt
           poetry run pip install apache-airflow==${{ matrix.airflow-version }} apache-airflow-providers-amazon -c constraints.txt
           poetry run airflow db init
-
-      - name: Install Airflow > 2
-        if: matrix.airflow-version != '1.10.15' && matrix.python-version == '3.10'
-        run: |
-          wget https://raw.githubusercontent.com/apache/airflow/constraints-${{ matrix.airflow-version }}/constraints-3.9.txt -O constraints.txt
-          poetry run pip install apache-airflow==${{ matrix.airflow-version }} apache-airflow-providers-amazon -c constraints.txt
-          poetry run airflow db init
-
-      - name: Install Airflow 1.10.15
-        if: matrix.airflow-version == '1.10.15'
-        run: |
-          wget https://raw.githubusercontent.com/apache/airflow/constraints-1-10/constraints-3.8.txt -O constraints.txt
-          poetry run pip install "apache-airflow[amazon]==${{ matrix.airflow-version }}" -c constraints.txt
-          poetry run airflow initdb
 
       - name: Run tests with pytest
         run: poetry run pytest -v --cov=./airflow_dbt_python --cov-report=xml:./coverage.xml --cov-report term-missing tests/
