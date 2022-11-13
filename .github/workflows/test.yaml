@@ -36,6 +36,7 @@ jobs:
           allowed-endpoints: >
             api.github.com:443
             files.pythonhosted.org:443
+            hub.getdbt.com:443
             github.com:443
             objects.githubusercontent.com:443
             raw.githubusercontent.com:443
@@ -117,12 +118,16 @@ jobs:
 
       - name: Combine coverage & fail if it's <100%.
         run: |
-          python -m coverage combine
-          python -m coverage html --skip-covered --skip-empty
+          poetry run coverage combine
+          poetry run coverage html --skip-covered --skip-empty
+          poetry run coverage json
+          # Save in env variable for badge
+          export TOTAL=$(python -c "import json;print(json.load(open('coverage.json'))['totals']['percent_covered_display'])")
+          echo "total=$TOTAL" >> $GITHUB_ENV
           # Report and write to summary.
-          python -m coverage report | sed 's/^/    /' >> $GITHUB_STEP_SUMMARY
+          poetry run coverage report | sed 's/^/    /' >> $GITHUB_STEP_SUMMARY
           # Report again and fail if under 100%.
-          python -m coverage report --fail-under=100
+          poetry run coverage report --fail-under=100
 
       - name: Upload HTML report if check failed.
         uses: actions/upload-artifact@v3
@@ -130,3 +135,15 @@ jobs:
         with:
           name: html-report
           path: htmlcov
+
+      - name: "Make coverage badge"
+        uses: schneegans/dynamic-badges-action@v1
+        with:
+          auth: ${{ secrets.GIST_TOKEN }}
+          gistID: 81ef37701aa088d18db8a58ce07c79c7
+          filename: covbadge.json
+          label: Coverage
+          message: ${{ env.total }}%
+          minColorRange: 50
+          maxColorRange: 90
+          valColorRange: ${{ env.total }}
