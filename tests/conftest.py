@@ -3,16 +3,15 @@
 Common fixtures include a connection to a postgres database, a set of sample model and
  seed files, dbt configuration files, and temporary directories for everything.
 """
-import os
 import shutil
 
 import boto3
 import pytest
+from airflow import settings
+from airflow.models.connection import Connection
 from moto import mock_s3
 from pytest_postgresql.janitor import DatabaseJanitor
 
-from airflow import settings
-from airflow.models.connection import Connection
 from airflow_dbt_python.hooks.dbt import DbtHook
 
 PROFILES = """
