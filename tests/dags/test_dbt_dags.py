@@ -1,4 +1,4 @@
-"""Test dbt operators with sample DAGs."""
+"""Test dbt operators with multiple testing DAGs."""
 from __future__ import annotations
 
 import datetime as dt
@@ -14,6 +14,7 @@ from airflow import DAG, settings
 from airflow.models import DagBag, DagRun
 from airflow.utils.state import DagRunState, TaskInstanceState
 from airflow.utils.types import DagRunType
+
 from airflow_dbt_python.operators.dbt import (
     DbtBaseOperator,
     DbtRunOperator,
@@ -28,11 +29,13 @@ DATA_INTERVAL_END = DATA_INTERVAL_START + dt.timedelta(hours=1)
 
 @pytest.fixture(scope="session")
 def dagbag():
+    """An Airflow DagBag."""
     dagbag = DagBag(dag_folder="examples/", include_examples=False)
     return dagbag
 
 
 def test_dags_loaded(dagbag):
+    """Assert DAGs have been properly loaded."""
     assert dagbag.import_errors == {}
 
     for dag_id in dagbag.dag_ids:
@@ -50,6 +53,7 @@ def basic_dag(
     singular_tests_files,
     generic_tests_files,
 ):
+    """Create a basic testing DAG that utilizes Airflow connections."""
     with DAG(
         dag_id="dbt_dag",
         start_date=DATA_INTERVAL_START,
@@ -91,6 +95,7 @@ def basic_dag(
 
 
 def test_dbt_operators_in_dag(basic_dag, dbt_project_file, profiles_file):
+    """Assert DAG contains correct dbt operators when running."""
     dagrun = basic_dag.create_dagrun(
         state=DagRunState.RUNNING,
         execution_date=DATA_INTERVAL_START,
@@ -132,6 +137,7 @@ def taskflow_dag(
     singular_tests_files,
     generic_tests_files,
 ):
+    """Create a testing DAG that utilizes Airflow taskflow decorators."""
     from airflow.decorators import dag, task
 
     @dag(
@@ -191,6 +197,7 @@ def taskflow_dag(
 
 
 def test_dbt_operators_in_taskflow_dag(taskflow_dag, dbt_project_file, profiles_file):
+    """Assert DAG contains correct dbt operators when running."""
     dagrun = taskflow_dag.create_dagrun(
         state=DagRunState.RUNNING,
         execution_date=DATA_INTERVAL_START,
@@ -221,6 +228,128 @@ def test_dbt_operators_in_taskflow_dag(taskflow_dag, dbt_project_file, profiles_
         if isinstance(ti.task, DbtBaseOperator):
             assert ti.task.profiles_dir == str(profiles_file.parent)
             assert ti.task.project_dir == str(dbt_project_file.parent)
+
+            results = ti.xcom_pull(
+                task_ids=task_id,
+                key="run_results.json",
+            )
+
+            for result in results["results"]:
+                assert (
+                    result["status"] == RunStatus.Success
+                    or result["status"] == TestStatus.Pass
+                )
+
+
+@pytest.fixture(scope="session")
+def connection(database):
+    """Create a PostgreSQL database connection in Airflow."""
+    import json
+
+    from airflow.models.connection import Connection
+
+    conn_id = "integration_test_conn"
+    session = settings.Session()
+    existing = session.query(Connection).filter_by(conn_id=conn_id).first()
+
+    if existing:
+        # Let's clean up any existing connection.
+        session.delete(existing)
+        session.commit()
+
+    integration_test_conn = Connection(
+        conn_id="integration_test_conn",
+        conn_type="postgres",
+        description="A test postgres connection",
+        host=database.host,
+        login=database.user,
+        port=database.port,
+        password=database.password,
+        schema="test",
+        extra=json.dumps({"dbname": database.dbname, "threads": 2}),
+    )
+
+    session.add(integration_test_conn)
+    session.commit()
+
+    yield conn_id
+
+    session.query(integration_test_conn).delete()
+    session.commit()
+
+
+@pytest.fixture
+def target_connection_dag(
+    dbt_project_file,
+    connection,
+    model_files,
+    seed_files,
+    singular_tests_files,
+    generic_tests_files,
+):
+    """Create a testing DAG that utilizes Airflow connections."""
+
+    with DAG(
+        dag_id="dbt_dag",
+        start_date=DATA_INTERVAL_START,
+        catchup=False,
+        schedule_interval=None,
+        tags=["context-manager", "dbt"],
+    ) as dag:
+        dbt_seed = DbtSeedOperator(
+            task_id="dbt_seed",
+            target=connection,
+            project_dir=dbt_project_file.parent,
+            profiles_dir=None,
+            do_xcom_push_artifacts=["run_results.json"],
+        )
+
+        dbt_run = DbtRunOperator(
+            task_id="dbt_run",
+            target=connection,
+            project_dir=dbt_project_file.parent,
+            profiles_dir=None,
+            do_xcom_push_artifacts=["run_results.json"],
+            full_refresh=True,
+        )
+
+        dbt_test = DbtTestOperator(
+            task_id="dbt_test",
+            target=connection,
+            project_dir=dbt_project_file.parent,
+            profiles_dir=None,
+            do_xcom_push_artifacts=["run_results.json"],
+        )
+
+        dbt_seed >> dbt_run >> dbt_test
+
+    yield dag
+
+    session = settings.Session()
+    session.query(DagRun).delete()
+
+
+def test_dbt_operators_in_connection_dag(target_connection_dag, dbt_project_file):
+    """Assert DAG contains correct dbt operators when running."""
+    dagrun = target_connection_dag.create_dagrun(
+        state=DagRunState.RUNNING,
+        execution_date=DATA_INTERVAL_START,
+        data_interval=(DATA_INTERVAL_START, DATA_INTERVAL_END),
+        start_date=DATA_INTERVAL_END,
+        run_type=DagRunType.MANUAL,
+    )
+
+    for task_id in ("dbt_seed", "dbt_run", "dbt_test"):
+        ti = dagrun.get_task_instance(task_id=task_id)
+        ti.task = target_connection_dag.get_task(task_id=task_id)
+
+        ti.run(ignore_ti_state=True)
+
+        assert ti.state == TaskInstanceState.SUCCESS
+
+        if isinstance(ti.task, DbtBaseOperator):
+            assert ti.task.target == "integration_test_conn"
+            assert ti.task.project_dir == dbt_project_file.parent
 
             results = ti.xcom_pull(
                 task_ids=task_id,
