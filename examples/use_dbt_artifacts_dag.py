@@ -2,7 +2,7 @@
 import datetime as dt
 
 from airflow import DAG
-from airflow.operators.python_operator import PythonOperator
+from airflow.operators.python import PythonOperator
 from airflow.utils.dates import days_ago
 
 from airflow_dbt_python.operators.dbt import DbtRunOperator
@@ -71,6 +71,5 @@ with DAG(
     process_artifacts = PythonOperator(
         task_id="process_artifacts",
         python_callable=process_dbt_artifacts,
-        provide_context=True,
     )
     dbt_run >> process_artifacts
