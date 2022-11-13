@@ -1,4 +1,5 @@
-name: Test
+name: CI
+
 on:
   push:
     branches: [ master ]
@@ -10,6 +11,7 @@ on:
 
 jobs:
   test:
+    name: Test on Python ${{ matrix.python-version }} and Airflow ${{ matrix.airflow-version }}
     strategy:
       fail-fast: false
       matrix:
@@ -27,10 +29,21 @@ jobs:
 
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - name: Harden Runner
+        uses: step-security/harden-runner@v1
+        with:
+          egress-policy: block
+          allowed-endpoints: >
+            api.github.com:443
+            files.pythonhosted.org:443
+            github.com:443
+            objects.githubusercontent.com:443
+            raw.githubusercontent.com:443
+            pypi.org:443
 
+      - uses: actions/checkout@v3
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
 
@@ -69,10 +82,51 @@ jobs:
         run: poetry run pytest -v --cov=./airflow_dbt_python --cov-report=xml:./coverage.xml --cov-report term-missing tests/
 
       - name: Upload code coverage
-        uses: codecov/codecov-action@v2
+        uses: actions/upload-artifact@v3
         with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          file: ./coverage.xml
-          name: redtape
-          flags: unittests
-          env_vars: OS,PYTHON
+          name: coverage-data
+          path: "coverage.*"
+          if-no-files-found: ignore
+
+  coverage:
+    name: Combine and check coverage
+    runs-on: ubuntu-latest
+    needs: test
+
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@v1
+        with:
+          egress-policy: block
+          allowed-endpoints: >
+            files.pythonhosted.org:443
+            github.com:443
+            pypi.org:443
+
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - run: python -m pip install --upgrade coverage[toml]
+
+      - name: Download coverage data.
+        uses: actions/download-artifact@v3
+        with:
+          name: coverage-data
+
+      - name: Combine coverage & fail if it's <100%.
+        run: |
+          python -m coverage combine
+          python -m coverage html --skip-covered --skip-empty
+          # Report and write to summary.
+          python -m coverage report | sed 's/^/    /' >> $GITHUB_STEP_SUMMARY
+          # Report again and fail if under 100%.
+          python -m coverage report --fail-under=100
+
+      - name: Upload HTML report if check failed.
+        uses: actions/upload-artifact@v3
+        if: ${{ failure() }}
+        with:
+          name: html-report
+          path: htmlcov
