@@ -4,10 +4,11 @@
 [![GitHub build status](https://github.com/tomasfarias/airflow-dbt-python/actions/workflows/test.yaml/badge.svg)](https://github.com/tomasfarias/airflow-dbt-python/actions)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![Test coverage](https://codecov.io/gh/tomasfarias/airflow-dbt-python/branch/master/graph/badge.svg?token=HBKZ78F11F)](https://codecov.io/gh/tomasfarias/airflow-dbt-python)
+[![Documentation](https://readthedocs.org/projects/airflow-dbt-python/badge/?version=latest)](https://airflow-dbt-python.readthedocs.io/en/latest/?badge=latest)
 
 A collection of [Airflow](https://airflow.apache.org/) operators and hooks to interface with [`dbt`](https://pypi.org/project/dbt-core/).
 
-Read the [documentation](https://tomasfarias.github.io/airflow-dbt-python/) for examples, installation instructions, and a full reference.
+Read the [documentation](https://airflow-dbt-python.readthedocs.io) for examples, installation instructions, and a full reference.
 
 # Installing
 
@@ -17,7 +18,7 @@ airflow-dbt-python requires the latest major version of [`dbt-core`](https://pyp
 
 To line up with `dbt-core`, airflow-dbt-python supports Python 3.7, 3.8, 3.9, and 3.10. However, due to installation conflicts, we only test Python 3.10 with `apache-airflow>=2.2`.
 
-Due to dependency conflicts between `dbt-core` and certain versions of `apache-airflow`, airflow-dbt-python **does not require Airflow as a dependency**. We expect airflow-dbt-python to be installed into an environment with Airflow already in it. For more detailed instructions see the [docs](https://tomasfarias.github.io/airflow-dbt-python/getting_started.html).
+Due to dependency conflicts between `dbt-core` and certain versions of `apache-airflow`, airflow-dbt-python **does not require Airflow as a dependency**. We expect airflow-dbt-python to be installed into an environment with Airflow already in it. For more detailed instructions see the [docs](https://airflow-dbt-python.readthedocs.io/en/latest/getting_started.html).
 
 ## From PyPI:
 
@@ -189,7 +190,7 @@ with DAG(
     dbt_test >> dbt_seed >> dbt_run
 ```
 
-More examples can be found in the [`examples/`](examples/) directory and the [documentation](https://tomasfarias.github.io/airflow-dbt-python/example_dags.html).
+More examples can be found in the [`examples/`](examples/) directory and the [documentation](https://airflow-dbt-python.readthedocs.io).
 
 # Testing
 
@@ -199,7 +200,7 @@ Tests are written using `pytest`, can be located in `tests/`, and they can be ru
 poetry run pytest tests/ -vv
 ```
 
-See development and testing instructions in the [documentation](https://tomasfarias.github.io/airflow-dbt-python/development.html).
+See development and testing instructions in the [documentation](https://airflow-dbt-python.readthedocs.io/en/latest/development.html).
 
 # License
 
