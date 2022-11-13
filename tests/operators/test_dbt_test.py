@@ -221,8 +221,8 @@ def test_dbt_test_with_project_from_s3(
         assert test_result["status"] == TestStatus.Pass
 
 
-def test_dbt_compile_uses_correct_argument_according_to_version():
-    """Test if dbt run operator sets the proper attribute based on dbt version."""
+def test_dbt_test_uses_correct_argument_according_to_version():
+    """Test if dbt test operator sets the proper attribute based on dbt version."""
     op = DbtTestOperator(
         task_id="dbt_task",
         project_dir="/path/to/project/",
