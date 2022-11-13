@@ -274,8 +274,7 @@ def connection(database):
 
     yield conn_id
 
-    session.query(integration_test_conn).delete()
-    session.commit()
+    session.close()
 
 
 @pytest.fixture
