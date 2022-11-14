@@ -38,6 +38,7 @@ optional = true
 [tool.poetry.group.dev.dependencies]
 black = "^22.3"
 boto3-stubs = { extras = ["s3"], version = "^1.26.8" }
+coverage = { extras = ["toml"], version = "^6.5" }
 moto = "^4.0.3"
 mypy = "0.990"
 flake8 = "<=4.0"

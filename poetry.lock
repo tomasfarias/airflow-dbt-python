@@ -3635,7 +3635,7 @@ spark = ["dbt-spark"]
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.7.2, <3.11.0"
-content-hash = "d044de6b1085ba591576364cfc902d191d8adb5e560bd8c969d4bf9776a129ec"
+content-hash = "5a7b30a327fdd1dc1844448fde82bbe87166f65dfbb196cf147659e6ec4d034d"
 
 [metadata.files]
 agate = [
