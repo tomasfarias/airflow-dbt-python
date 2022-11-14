@@ -98,8 +98,14 @@ exclude = '''
 )/
 '''
 
+[tool.coverage.run]
+source = ["airflow_dbt_python"]
+
 [tool.coverage.paths]
-source = ["airflow_dbt_python", "/home/runner/*/airflow-dbt-python/airflow_dbt_python"]
+source = [
+    "airflow_dbt_python",
+    "/home/runner/*/airflow-dbt-python/airflow_dbt_python"
+]
 
 [tool.pytest.ini_options]
 postgresql_user = "test"
