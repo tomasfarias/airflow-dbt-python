@@ -81,13 +81,13 @@ jobs:
           poetry run airflow db init
 
       - name: Run tests with pytest
-        run: poetry run pytest -v --cov=./airflow_dbt_python --cov-report=xml:./coverage.xml --cov-report term-missing tests/
+        run: poetry run pytest -v --cov=./airflow_dbt_python --cov-report term-missing tests/
 
       - name: Upload code coverage
         uses: actions/upload-artifact@v3
         with:
           name: coverage-data
-          path: "coverage.*"
+          path: ".coverage.*"
           if-no-files-found: ignore
 
   coverage:
