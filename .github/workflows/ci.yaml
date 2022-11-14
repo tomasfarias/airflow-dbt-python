@@ -81,7 +81,9 @@ jobs:
           poetry run airflow db init
 
       - name: Run tests with pytest
-        run: poetry run pytest -v --cov=airflow_dbt_python --cov-report term-missing tests/
+        run: |
+          echo "COVERAGE_FILE=.coverage.${{ matrix.python-version }}.${{ matrix.airflow-version }}" >> $GITHUB_ENV
+          poetry run pytest -v --cov=airflow_dbt_python --cov-report term-missing tests/
 
       - name: Upload code coverage
         uses: actions/upload-artifact@v3

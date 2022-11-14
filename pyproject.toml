@@ -98,6 +98,9 @@ exclude = '''
 )/
 '''
 
+[tool.coverage.paths]
+source = ["airflow_dbt_python", "/home/runner/*/airflow-dbt-python/airflow_dbt_python"]
+
 [tool.pytest.ini_options]
 postgresql_user = "test"
 postgresql_password = "test" # pragma: allowlist secret
