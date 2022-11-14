@@ -119,16 +119,16 @@ jobs:
 
       - name: Combine coverage & fail if it's <100%.
         run: |
-          poetry run coverage combine
-          poetry run coverage html --skip-covered --skip-empty
-          poetry run coverage json
+          python -m coverage combine
+          python -m coverage html --skip-covered --skip-empty
+          python -m coverage json
           # Save in env variable for badge
           export TOTAL=$(python -c "import json;print(json.load(open('coverage.json'))['totals']['percent_covered_display'])")
           echo "total=$TOTAL" >> $GITHUB_ENV
           # Report and write to summary.
-          poetry run coverage report | sed 's/^/    /' >> $GITHUB_STEP_SUMMARY
+          python -m coverage report | sed 's/^/    /' >> $GITHUB_STEP_SUMMARY
           # Report again and fail if under 100%.
-          poetry run coverage report --fail-under=100
+          python -m coverage report --fail-under=100
 
       - name: Upload HTML report if check failed.
         uses: actions/upload-artifact@v3
@@ -138,7 +138,7 @@ jobs:
           path: htmlcov
 
       - name: "Make coverage badge"
-        uses: schneegans/dynamic-badges-action@v1
+        uses: schneegans/dynamic-badges-action@v1.6.0
         with:
           auth: ${{ secrets.GIST_TOKEN }}
           gistID: 81ef37701aa088d18db8a58ce07c79c7
