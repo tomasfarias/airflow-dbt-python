@@ -1,0 +1,160 @@
+name: CI
+
+on:
+  push:
+    branches: [ master ]
+    tags:
+      - "v*"
+  pull_request:
+    branches:
+    - master
+
+jobs:
+  test:
+    name: Test on Python ${{ matrix.python-version }} and Airflow ${{ matrix.airflow-version }}
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: [3.7, 3.8, 3.9, '3.10']
+        airflow-version: ['1.10.15', '2.2.2', '2.4.2']
+        exclude:
+          - python-version: '3.10'
+            airflow-version: '1.10.15'
+          - python-version: '3.10'
+            airflow-version: '2.2.2'
+        include:
+          - airflow-version: '1.10.15'
+            constraints: 'constraints-3.8.txt'
+            install: 'apache-airflow[amazon]==1.10.15'
+
+    runs-on: ubuntu-latest
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@v1
+        with:
+          egress-policy: block
+          allowed-endpoints: >
+            api.github.com:443
+            files.pythonhosted.org:443
+            hub.getdbt.com:443
+            github.com:443
+            objects.githubusercontent.com:443
+            raw.githubusercontent.com:443
+            pypi.org:443
+
+      - uses: actions/checkout@v3
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install Poetry
+        uses: abatilo/actions-poetry@v2.1.4
+        with:
+          poetry-version: 1.2.2
+
+      - name: Install airflow-dbt-python with Poetry
+        run: poetry install -E postgres --with dev
+
+      - name: Style guide enforcement with flake8
+        run: poetry run flake8 .
+
+      - name: Static type checking with mypy
+        run: poetry run mypy .
+
+      - name: Code formatting with black
+        run: poetry run black --check .
+
+      - name: Install Airflow with constraints
+        if: ${{ matrix.constraints }}
+        run: |
+          wget https://raw.githubusercontent.com/apache/airflow/constraints-${{ matrix.airflow-version }}/${{ matrix.constraints }} -O constraints.txt
+          poetry run pip install ${{ matrix.install }} -c constraints.txt
+          poetry run airflow db init
+          poetry run pip install typing-extensions==4.4.0
+
+      - name: Install Airflow with constraints
+        if: matrix.constraints == ''
+        run: |
+          wget https://raw.githubusercontent.com/apache/airflow/constraints-${{ matrix.airflow-version }}/constraints-${{ matrix.python-version }}.txt -O constraints.txt
+          poetry run pip install apache-airflow==${{ matrix.airflow-version }} apache-airflow-providers-amazon -c constraints.txt
+          poetry run airflow db init
+
+      - name: Set COVERAGE_FILE in environment
+        run: echo "COVERAGE_FILE=.coverage.${{ matrix.python-version }}.${{ matrix.airflow-version }}" >> $GITHUB_ENV
+
+      - name: Run tests with pytest
+        run: poetry run coverage run -m pytest -v tests/
+
+      - name: Upload code coverage
+        uses: actions/upload-artifact@v3
+        with:
+          name: coverage-data
+          path: ".coverage.*"
+          if-no-files-found: ignore
+
+  coverage:
+    name: Combine and check coverage
+    runs-on: ubuntu-latest
+    needs: test
+
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@v1
+        with:
+          egress-policy: block
+          allowed-endpoints: >
+            files.pythonhosted.org:443
+            github.com:443
+            api.github.com:443
+            pypi.org:443
+
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install Poetry
+        uses: abatilo/actions-poetry@v2.1.4
+        with:
+          poetry-version: 1.2.2
+
+      - name: Install airflow-dbt-python with Poetry
+        run: poetry install --with dev -E airflow -E airflow-providers
+
+      - name: Download coverage data.
+        uses: actions/download-artifact@v3
+        with:
+          name: coverage-data
+
+      - name: Combine coverage & fail if it's <100%.
+        run: |
+          poetry run coverage combine
+          poetry run coverage html --skip-covered --skip-empty
+          poetry run coverage json
+          # Save in env variable for badge
+          export TOTAL=$(python -c "import json;print(json.load(open('coverage.json'))['totals']['percent_covered_display'])")
+          echo "total=$TOTAL" >> $GITHUB_ENV
+          # Report and write to summary.
+          poetry run coverage report | sed 's/^/    /' >> $GITHUB_STEP_SUMMARY
+          # Report again and fail if under 100%.
+          poetry run coverage report --fail-under=95
+
+      - name: Upload HTML report if check failed.
+        uses: actions/upload-artifact@v3
+        if: ${{ failure() }}
+        with:
+          name: html-report
+          path: htmlcov
+
+      - name: "Make coverage badge"
+        uses: schneegans/dynamic-badges-action@v1.6.0
+        with:
+          auth: ${{ secrets.GIST_TOKEN }}
+          gistID: 81ef37701aa088d18db8a58ce07c79c7
+          filename: covbadge.json
+          label: Coverage
+          message: ${{ env.total }}%
+          minColorRange: 50
+          maxColorRange: 90
+          valColorRange: ${{ env.total }}

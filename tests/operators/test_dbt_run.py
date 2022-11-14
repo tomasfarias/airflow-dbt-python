@@ -3,9 +3,9 @@ import json
 from pathlib import Path
 
 import pytest
+from airflow import AirflowException
 from dbt.contracts.results import RunStatus
 
-from airflow import AirflowException
 from airflow_dbt_python.hooks.dbt import RunTaskConfig
 from airflow_dbt_python.operators.dbt import DbtRunOperator
 
@@ -104,7 +104,10 @@ def test_dbt_run_models(profiles_file, dbt_project_file, model_files, logs_dir):
     with open(log_file) as f:
         logs = f.read()
 
-    assert "OK created view model public.model_4" in logs
+    assert (
+        "OK created view model public.model_4" in logs
+        or "OK created sql view model public.model_4" in logs
+    )
 
 
 def test_dbt_run_models_full_refresh(profiles_file, dbt_project_file, model_files):

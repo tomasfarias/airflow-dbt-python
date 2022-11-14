@@ -6,20 +6,13 @@ from dbt.task.build import BuildTask
 from dbt.task.compile import CompileTask
 from dbt.task.debug import DebugTask
 from dbt.task.deps import DepsTask
-from dbt.task.list import ListTask
-from dbt.task.parse import ParseTask
 from dbt.task.run import RunTask
-from dbt.task.run_operation import RunOperationTask
-from dbt.task.seed import SeedTask
-from dbt.task.snapshot import SnapshotTask
-from dbt.task.test import TestTask
 
 from airflow_dbt_python.hooks.dbt import (
     BaseConfig,
     BuildTaskConfig,
     CompileTaskConfig,
     ConfigFactory,
-    DbtHook,
     DebugTaskConfig,
     DepsTaskConfig,
     ListTaskConfig,
@@ -98,13 +91,11 @@ def test_base_config():
     )
 
     assert config.parsed_vars == {"a_var": 2, "another_var": "abc"}
-    assert config.dbt_task == BaseTask
     assert config.defer is False
     assert config.version_check is False
     assert config.static_parser is False
     assert config.send_anonymous_usage_stats is True
 
-    config.cls = None
     with pytest.raises(NotImplementedError):
         config.dbt_task
 

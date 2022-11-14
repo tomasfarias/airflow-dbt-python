@@ -34,7 +34,7 @@ Some features require Airflow providers. For example, any S3 backend operations 
 
 .. code-block:: shell
 
-   poetry install -E airflow-providers
+   poetry install -E airflow-providers -E airflow
 
 Building from source
 --------------------
@@ -45,9 +45,16 @@ Clone the main repo and install it:
 
    git clone https://github.com/tomasfarias/airflow-dbt-python.git
    cd airflow-dbt-python
-   poetry install --with dev
+   poetry install --with dev -E airflow-providers -E postgres -E airflow
 
-The dev dependency group includes development tools for code formatting, type checking, and testing.
+The dev dependency group includes development tools for code formatting, type checking, and testing. The added extras are required for testing, although if Airflow is being installed separately it should be omitted.
+
+Modifying dependencies
+----------------------
+
+Apache Airflow is a package of significant size that requires a lot of dependencies. Together with ``dbt-core``, it's common to find dependency conflicts all over the place. Ultimately, we allow users to figure these issues out themselves, as most of the dependency conflicts are harmless: We do not interact with the dbt CLI, so any conflicts with CLI-specific packages can be safely ignored, but these requirements are not optional for ``dbt-core``.
+
+All being said, this presents a problem when we try to add dependencies or modify existing ones, as ``poetry`` will take a long time to check all possible conflicts. Grabbing a constraints file from `Airflow <https://github.com/apache/airflow>`_ and adding it as an optional group in ``pyproject.toml`` can be a useful strategy to speed up the process, as we are limiting the search domain for ``poetry``. However, this does require relaxing dependencies one by one in between running ``poetry lock --no-update``.
 
 Pre-commit hooks
 ----------------
@@ -88,7 +95,7 @@ Some unit tests require the `Amazon provider package for Airflow <https://pypi.o
 
 .. code-block:: shell
 
-   poetry install -E airflow-providers
+   poetry install --with dev -E airflow-providers -E postgres -E airflow
 
 Running unit tests with pytest
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
