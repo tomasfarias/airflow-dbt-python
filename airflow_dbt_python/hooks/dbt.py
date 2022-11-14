@@ -8,11 +8,13 @@ import pickle
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
-from typing import Any, Optional, Union
+from typing import Any, Optional, Type, Union
 from urllib.parse import urlparse
 
 import dbt.flags as flags
 import yaml
+from airflow.exceptions import AirflowException
+from airflow.version import version as airflow_version
 from dbt.adapters.factory import register_adapter
 from dbt.clients import yaml_helper
 from dbt.config.profile import Profile, read_profile
@@ -43,13 +45,10 @@ from dbt.task.snapshot import SnapshotTask
 from dbt.task.test import TestTask
 from dbt.tracking import initialize_from_flags
 
-from airflow.exceptions import AirflowException
-from airflow.version import version as airflow_version
-
 try:
     from airflow.hooks.base import BaseHook
 except ImportError:
-    from airflow.hooks.base_hook import BaseHook
+    from airflow.hooks.base_hook import BaseHook  # type: ignore
 
 from .backends import DbtBackend, StrPath, build_backend
 
@@ -106,7 +105,7 @@ def parse_yaml_args(args: Optional[Union[str, dict[str, Any]]]) -> dict[str, Any
 class BaseConfig:
     """BaseConfig dbt arguments for all tasks."""
 
-    cls: BaseTask = dataclasses.field(default=BaseTask, init=False, repr=False)
+    cls: Type[BaseTask] = dataclasses.field(init=False, repr=False)
 
     # dbt project configuration
     project_dir: Optional[str] = None
@@ -199,7 +198,7 @@ class BaseConfig:
         self.send_anonymous_usage_stats = self.anonymous_usage_stats
 
     @property
-    def dbt_task(self) -> BaseTask:
+    def dbt_task(self) -> Type[BaseTask]:
         """Access to the underlying dbt task class."""
         if getattr(self, "cls", None) is None:
             raise NotImplementedError(
@@ -207,7 +206,7 @@ class BaseConfig:
             )
         return getattr(self, "cls")
 
-    def patch_manifest_task(self, task: BaseTask):
+    def patch_manifest_task(self, task: ManifestTask):
         """Patch a dbt task to use a pre-compiled graph and manifest.
 
         Parsing and compilation of a dbt project starts with the invocation of
@@ -260,11 +259,11 @@ class BaseConfig:
                 [n for n in task._flattened_nodes if not n.is_ephemeral_model]
             )
 
-        task._runtime_initialize = _runtime_initialize
+        task._runtime_initialize = _runtime_initialize  # type: ignore
 
     def create_dbt_task(
         self, extra_targets: Optional[dict[str, Any]] = None
-    ) -> tuple[BaseTask, RuntimeConfig]:
+    ) -> tuple[BaseTask, Optional[RuntimeConfig]]:
         """Create a dbt task given with this configuration.
 
         Extra targets may be specified to be appended to this task's dbt project's
@@ -280,13 +279,10 @@ class BaseConfig:
         runtime_config = self.create_runtime_config(extra_targets)
         task = self.dbt_task(args=self, config=runtime_config)
 
-        if (
-            self.compiled_target is not None
-            and issubclass(self.dbt_task, ManifestTask) is True
-        ):
+        if self.compiled_target is not None and isinstance(task, ManifestTask) is True:
             # Only supported by subclasses of dbt's ManifestTask.
             # Represented here by the presence of the compiled_target attribute.
-            self.patch_manifest_task(task)
+            self.patch_manifest_task(task)  # type: ignore
 
         return (task, runtime_config)
 
@@ -331,7 +327,9 @@ class BaseConfig:
 
         project_renderer = DbtProjectYamlRenderer(profile, self.parsed_vars)
         project = Project.from_project_root(
-            self.project_dir, project_renderer, verify_version=bool(flags.VERSION_CHECK)
+            self.project_dir or ".",
+            project_renderer,
+            verify_version=bool(flags.VERSION_CHECK),
         )
         project.project_env_vars = project_renderer.ctx_obj.env_vars
 
@@ -453,7 +451,7 @@ class TableMutabilityConfig(SelectionConfig):
 class BuildTaskConfig(TableMutabilityConfig):
     """Dbt build task arguments."""
 
-    cls: BaseTask = dataclasses.field(default=BuildTask, init=False)
+    cls: Type[BaseTask] = dataclasses.field(default=BuildTask, init=False)
     singular: Optional[bool] = None
     indirect_selection: Optional[str] = None
     resource_types: Optional[list[str]] = None
@@ -482,7 +480,7 @@ class BuildTaskConfig(TableMutabilityConfig):
 class CleanTaskConfig(BaseConfig):
     """Dbt clean task arguments."""
 
-    cls: BaseTask = dataclasses.field(default=CleanTask, init=False)
+    cls: Type[BaseTask] = dataclasses.field(default=CleanTask, init=False)
     parse_only: Optional[bool] = None
     which: str = dataclasses.field(default="clean", init=False)
 
@@ -491,7 +489,7 @@ class CleanTaskConfig(BaseConfig):
 class CompileTaskConfig(TableMutabilityConfig):
     """Dbt compile task arguments."""
 
-    cls: BaseTask = dataclasses.field(default=CompileTask, init=False)
+    cls: Type[BaseTask] = dataclasses.field(default=CompileTask, init=False)
     parse_only: Optional[bool] = None
     which: str = dataclasses.field(default="compile", init=False)
 
@@ -500,7 +498,7 @@ class CompileTaskConfig(TableMutabilityConfig):
 class DebugTaskConfig(BaseConfig):
     """Dbt debug task arguments."""
 
-    cls: BaseTask = dataclasses.field(default=DebugTask, init=False)
+    cls: Type[BaseTask] = dataclasses.field(default=DebugTask, init=False)
     config_dir: Optional[bool] = None
     which: str = dataclasses.field(default="debug", init=False)
 
@@ -509,7 +507,7 @@ class DebugTaskConfig(BaseConfig):
 class DepsTaskConfig(BaseConfig):
     """Compile task arguments."""
 
-    cls: BaseTask = dataclasses.field(default=DepsTask, init=False)
+    cls: Type[BaseTask] = dataclasses.field(default=DepsTask, init=False)
     which: str = dataclasses.field(default="deps", init=False)
 
 
@@ -517,7 +515,7 @@ class DepsTaskConfig(BaseConfig):
 class GenerateTaskConfig(SelectionConfig):
     """Generate task arguments."""
 
-    cls: BaseTask = dataclasses.field(default=GenerateTask, init=False)
+    cls: Type[BaseTask] = dataclasses.field(default=GenerateTask, init=False)
     compile: bool = True
     which: str = dataclasses.field(default="generate", init=False)
 
@@ -526,7 +524,7 @@ class GenerateTaskConfig(SelectionConfig):
 class ListTaskConfig(SelectionConfig):
     """Dbt list task arguments."""
 
-    cls: BaseTask = dataclasses.field(default=ListTask, init=False)
+    cls: Type[BaseTask] = dataclasses.field(default=ListTask, init=False)
     indirect_selection: Optional[str] = None
     output: Output = Output.SELECTOR
     output_keys: Optional[list[str]] = None
@@ -538,7 +536,7 @@ class ListTaskConfig(SelectionConfig):
 class ParseTaskConfig(BaseConfig):
     """Dbt parse task arguments."""
 
-    cls: BaseTask = dataclasses.field(default=ParseTask, init=False)
+    cls: Type[BaseTask] = dataclasses.field(default=ParseTask, init=False)
     compile: Optional[bool] = None
     which: str = dataclasses.field(default="parse", init=False)
     write_manifest: Optional[bool] = None
@@ -548,7 +546,7 @@ class ParseTaskConfig(BaseConfig):
 class RunTaskConfig(TableMutabilityConfig):
     """Dbt run task arguments."""
 
-    cls: BaseTask = dataclasses.field(default=RunTask, init=False)
+    cls: Type[BaseTask] = dataclasses.field(default=RunTask, init=False)
     which: str = dataclasses.field(default="run", init=False)
 
 
@@ -557,7 +555,7 @@ class RunOperationTaskConfig(BaseConfig):
     """Dbt run-operation task arguments."""
 
     args: str = "{}"
-    cls: BaseTask = dataclasses.field(default=RunOperationTask, init=False)
+    cls: Type[BaseTask] = dataclasses.field(default=RunOperationTask, init=False)
     macro: Optional[str] = None
     which: str = dataclasses.field(default="run-operation", init=False)
 
@@ -571,7 +569,7 @@ class RunOperationTaskConfig(BaseConfig):
 class SeedTaskConfig(TableMutabilityConfig):
     """Dbt seed task arguments."""
 
-    cls: BaseTask = dataclasses.field(default=SeedTask, init=False)
+    cls: Type[BaseTask] = dataclasses.field(default=SeedTask, init=False)
     show: Optional[bool] = None
     which: str = dataclasses.field(default="seed", init=False)
 
@@ -580,7 +578,7 @@ class SeedTaskConfig(TableMutabilityConfig):
 class SnapshotTaskConfig(SelectionConfig):
     """Dbt snapshot task arguments."""
 
-    cls: BaseTask = dataclasses.field(default=SnapshotTask, init=False)
+    cls: Type[BaseTask] = dataclasses.field(default=SnapshotTask, init=False)
     which: str = dataclasses.field(default="snapshot", init=False)
 
 
@@ -588,7 +586,7 @@ class SnapshotTaskConfig(SelectionConfig):
 class SourceFreshnessTaskConfig(SelectionConfig):
     """Dbt source freshness task arguments."""
 
-    cls: BaseTask = dataclasses.field(default=FreshnessTask, init=False)
+    cls: Type[BaseTask] = dataclasses.field(default=FreshnessTask, init=False)
     output: Optional[StrPath] = None
     which: str = dataclasses.field(default="source-freshness", init=False)
 
@@ -597,7 +595,7 @@ class SourceFreshnessTaskConfig(SelectionConfig):
 class TestTaskConfig(SelectionConfig):
     """Dbt test task arguments."""
 
-    cls: BaseTask = dataclasses.field(default=TestTask, init=False)
+    cls: Type[BaseTask] = dataclasses.field(default=TestTask, init=False)
     generic: Optional[bool] = None
     indirect_selection: Optional[str] = None
     singular: Optional[bool] = None
@@ -751,15 +749,18 @@ class DbtHook(BaseHook):
 
         self.setup_dbt_logging(task, level_override)
 
-        if not isinstance(runtime_config, (UnsetProfileConfig, type(None))):
-            # The deps command installs the dependencies, which means they may not
-            # exist before deps runs and the following would raise a CompilationError.
-            runtime_config.load_dependencies()
+        if not isinstance(runtime_config, UnsetProfileConfig):
+            if runtime_config is not None:
+                # The deps command installs the dependencies, which means they may not
+                # exist before deps runs and the following would raise a
+                # CompilationError.
+                runtime_config.load_dependencies()
 
         results = None
         with adapter_management():
-            if not isinstance(runtime_config, (UnsetProfileConfig, type(None))):
-                register_adapter(runtime_config)
+            if not isinstance(runtime_config, UnsetProfileConfig):
+                if runtime_config is not None:
+                    register_adapter(runtime_config)
 
             with track_run(task):
                 results = task.run()

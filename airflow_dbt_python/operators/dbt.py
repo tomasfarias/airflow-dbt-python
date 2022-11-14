@@ -10,12 +10,12 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import Any, Callable, Iterator, Optional, TypeVar, Union
 
-from dbt.contracts.results import RunExecutionResult, agate
-
 from airflow import AirflowException
 from airflow.models.baseoperator import BaseOperator
 from airflow.models.xcom import XCOM_RETURN_KEY
 from airflow.version import version
+from dbt.contracts.results import RunExecutionResult, agate
+
 from airflow_dbt_python.hooks.dbt import BaseConfig, DbtHook, LogFormat, Output
 
 # apply_defaults is deprecated in version 2 and beyond. This allows us to
@@ -159,7 +159,7 @@ class DbtBaseOperator(BaseOperator):
 
         self._dbt_hook = None
 
-    def execute(self, context: dict):
+    def execute(self, context):
         """Execute dbt command with prepared arguments.
 
         Execution requires setting up a directory with the dbt project files and
@@ -222,7 +222,7 @@ class DbtBaseOperator(BaseOperator):
             config_kwargs[field.name] = kwarg
         return factory.create_config(**config_kwargs)
 
-    def xcom_push_artifacts(self, context: dict, dbt_directory: str):
+    def xcom_push_artifacts(self, context, dbt_directory: str):
         """Read dbt artifacts and push them to XCom.
 
         Artifacts are read from the target/ directory in dbt_directory. This method will
@@ -327,8 +327,10 @@ class DbtBaseOperator(BaseOperator):
         JSON-serializable types, the default XCom backend. If implementing
         custom XCom backends, this method may be overriden.
         """
-        if result is None or is_dataclass(result) is False:
+        if result is None:
             return result
+        if is_dataclass(result) is False:
+            return result  # type: ignore
         return asdict(result, dict_factory=run_result_factory)
 
 

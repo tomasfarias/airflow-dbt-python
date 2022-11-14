@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
-from typing import TYPE_CHECKING, Optional
+from typing import Optional
 from zipfile import ZipFile
 
 from .base import DbtBackend, StrPath, zip_all_paths
@@ -11,11 +11,7 @@ from .base import DbtBackend, StrPath, zip_all_paths
 try:
     from airflow.providers.amazon.aws.hooks.s3 import S3Hook
 except ImportError:
-    from airflow.hooks.S3_hook import S3Hook
-
-if TYPE_CHECKING:  # pragma: no cover
-    # Safe to exclude as this only runs during static type checking.
-    from mypy_boto3_s3.service_resource import Object as S3Object
+    from airflow.hooks.S3_hook import S3Hook  # type: ignore
 
 
 class DbtS3Backend(DbtBackend):
@@ -56,7 +52,14 @@ class DbtS3Backend(DbtBackend):
         bucket_name, key = self.hook.parse_s3_url(str(source))
         s3_object = self.hook.get_key(key=key, bucket_name=bucket_name)
 
-        self.download_one_s3_object(s3_object, destination)
+        # It's clear from the body of the method that S3Hook.get_key returns
+        # a boto3.s3.Object. For some reason, the type hint has been set to
+        # boto3.s3.transfer.S3Transfer, even though the body of the method
+        # and its docstring indicate otherwise. I have no other idea besides
+        # ignoring this check.
+        # See discussion:
+        # https://github.com/apache/airflow/pull/10164#discussion_r653685526
+        self.download_one_s3_object(s3_object, destination)  # type: ignore
         return Path(destination)
 
     def pull_many(self, source: StrPath, destination: StrPath) -> Path:
@@ -150,9 +153,7 @@ class DbtS3Backend(DbtBackend):
                     replace=replace,
                 )
 
-    def download_zip_s3_object(
-        self, s3_object: "S3Object", destination: StrPath
-    ) -> None:
+    def download_zip_s3_object(self, s3_object, destination: StrPath) -> None:
         """Download an S3Object and extract its contents."""
         destination_path = Path(destination)
 
@@ -182,7 +183,7 @@ class DbtS3Backend(DbtBackend):
             s3_object = self.hook.get_key(key=s3_object_key, bucket_name=bucket_name)
             path_file = Path(s3_object_key).relative_to(key_prefix)
 
-            if path_file.suffix == "" and s3_object.key.endswith("/"):
+            if path_file.suffix == "" and s3_object.key.endswith("/"):  # type: ignore
                 # Empty S3 files may also be confused with unwanted directories.
                 # See comment in line 60.
                 self.log.warning("A file with no name was found in S3 at %s", s3_object)
@@ -195,7 +196,7 @@ class DbtS3Backend(DbtBackend):
 
     def download_one_s3_object(
         self,
-        s3_object: "S3Object",
+        s3_object,
         destination: StrPath,
     ) -> None:
         """Download an S3 object into a local destination."""
@@ -220,7 +221,7 @@ class DbtS3Backend(DbtBackend):
         replace: bool = False,
         encrypt: bool = False,
         gzip: bool = False,
-        acl_policy: Optional[bool] = None,
+        acl_policy: Optional[str] = None,
     ) -> bool:
         """Calls S3Hook.load_file but handles ValueError when replacing existing keys.
 
