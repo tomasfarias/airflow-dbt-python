@@ -71,6 +71,7 @@ jobs:
           wget https://raw.githubusercontent.com/apache/airflow/constraints-${{ matrix.airflow-version }}/${{ matrix.constraints }} -O constraints.txt
           poetry run pip install ${{ matrix.install }} -c constraints.txt
           poetry run airflow db init
+          poetry run pip install typing-extensions==4.4.0
 
       - name: Install Airflow with constraints
         if: matrix.constraints == ''
