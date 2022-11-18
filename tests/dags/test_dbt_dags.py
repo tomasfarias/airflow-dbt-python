@@ -14,7 +14,6 @@ from airflow import DAG, settings
 from airflow.models import DagBag, DagRun
 from airflow.utils.state import DagRunState, TaskInstanceState
 from airflow.utils.types import DagRunType
-
 from airflow_dbt_python.operators.dbt import (
     DbtBaseOperator,
     DbtRunOperator,
@@ -42,6 +41,14 @@ def test_dags_loaded(dagbag):
         dag = dagbag.get_dag(dag_id=dag_id)
 
         assert dag is not None
+
+
+def delete_dagruns():
+    """Clean up any DagRuns to ensure tests can be repeated."""
+    session = settings.Session()
+    session.query(DagRun).delete()
+    session.commit()
+    session.close()
 
 
 @pytest.fixture
@@ -90,8 +97,7 @@ def basic_dag(
 
     yield dag
 
-    session = settings.Session()
-    session.query(DagRun).delete()
+    delete_dagruns()
 
 
 def test_dbt_operators_in_dag(basic_dag, dbt_project_file, profiles_file):
@@ -192,8 +198,7 @@ def taskflow_dag(
 
     yield generate_dag()
 
-    session = settings.Session()
-    session.query(DagRun).delete()
+    delete_dagruns()
 
 
 def test_dbt_operators_in_taskflow_dag(taskflow_dag, dbt_project_file, profiles_file):
@@ -271,10 +276,9 @@ def connection(database):
 
     session.add(integration_test_conn)
     session.commit()
+    session.close()
 
     yield conn_id
-
-    session.close()
 
 
 @pytest.fixture
@@ -324,8 +328,7 @@ def target_connection_dag(
 
     yield dag
 
-    session = settings.Session()
-    session.query(DagRun).delete()
+    delete_dagruns()
 
 
 def test_dbt_operators_in_connection_dag(target_connection_dag, dbt_project_file):

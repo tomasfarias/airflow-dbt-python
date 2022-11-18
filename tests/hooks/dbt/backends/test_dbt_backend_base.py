@@ -1,9 +1,13 @@
+"""Unit test the base DbtBackend interface."""
+import io
 from pathlib import Path
+from typing import Iterable
 from unittest.mock import MagicMock
 
 import pytest
 
 from airflow_dbt_python.hooks.backends import (
+    URL,
     DbtBackend,
     DbtLocalFsBackend,
     build_backend,
@@ -34,22 +38,19 @@ def test_build_backend():
 def test_build_backend_raises_not_supported_error():
     """Test the build_backend raises an error on not supported backends."""
     with pytest.raises(NotImplementedError):
-        backend = build_backend("not a backend", None)
-
-
-class MyHook:
-    def __init__(self, connection_id="default"):
-        self.connection_id = connection_id
+        build_backend("not a backend", None)
 
 
 class MyBackend(DbtBackend):
-    def pull_one(self, source, destination) -> Path:
-        """Pull a single dbt file from source and store it in destination."""
-        return super().pull_one(source, destination)
+    """A dummy implementation of the DbtBackend interface."""
 
-    def pull_many(self, source, destination) -> Path:
+    def write_url_to_buffer(self, source, buf):
+        """Pull a single dbt file from source and store it in destination."""
+        return super().write_url_to_buffer(source, buf)
+
+    def iter_url(self, source):
         """Pull all dbt files under source and store them under destination."""
-        return super().pull_many(source, destination)
+        return super().iter_url(source)
 
     def push_one(self, source, destination, replace: bool = False) -> None:
         """Push a single dbt file from source and store it in destination."""
@@ -66,47 +67,54 @@ class MyBackend(DbtBackend):
         return super().push_many(source, destination)
 
 
-def test_dbt_backend_pull_dbt_profiles():
+@pytest.fixture
+def temp_target_path(tmp_path):
+    """Create a temporary test path to store downloads."""
+    d = tmp_path / "target"
+    d.mkdir()
+    return d
+
+
+def test_dbt_backend_pull_dbt_profiles(temp_target_path):
     """Test the hook property of the base backend class."""
     backend = MyBackend("my_conn_id")
-    backend.pull_one = MagicMock()
+    backend.write_url_to_buffer = MagicMock()
 
-    destination = backend.pull_dbt_profiles(
-        "/path/to/my/profiles", "/target/to/my/profiles"
-    )
+    destination = backend.pull_dbt_profiles("/path/to/my/profiles", temp_target_path)
 
-    backend.pull_one.assert_called_with(
-        "/path/to/my/profiles/profiles.yml", Path("/target/to/my/profiles/profiles.yml")
-    )
-    assert destination == Path("/target/to/my/profiles/profiles.yml")
+    call_args = backend.write_url_to_buffer.call_args.args
+
+    assert len(call_args) == 2
+    assert call_args[0] == URL("/path/to/my/profiles/profiles.yml")
+    assert call_args[1].name == str(temp_target_path / "profiles.yml")
+    assert destination == (temp_target_path / "profiles.yml")
 
 
-def test_dbt_backend_pull_dbt_profiles_with_slash():
+def test_dbt_backend_pull_dbt_profiles_with_slash(temp_target_path):
     """Test the backend class properly pulls dbt profiles."""
     backend = MyBackend("my_conn_id")
-    backend.pull_one = MagicMock()
+    backend.write_url_to_buffer = MagicMock()
 
-    destination = backend.pull_dbt_profiles(
-        "/path/to/my/profiles/", "/target/to/my/profiles/"
-    )
+    destination = backend.pull_dbt_profiles("/path/to/my/profiles/", temp_target_path)
 
-    backend.pull_one.assert_called_with(
-        "/path/to/my/profiles/profiles.yml", Path("/target/to/my/profiles/profiles.yml")
-    )
-    assert destination == Path("/target/to/my/profiles/profiles.yml")
+    call_args = backend.write_url_to_buffer.call_args.args
+
+    assert len(call_args) == 2
+    assert call_args[0] == URL("/path/to/my/profiles/profiles.yml")
+    assert call_args[1].name == str(temp_target_path / "profiles.yml")
+    assert destination == (temp_target_path / "profiles.yml")
 
 
-def test_dbt_backend_pull_dbt_project():
+def test_dbt_backend_pull_dbt_project(temp_target_path):
     """Test the backend class properly pulls dbt project."""
     backend = MyBackend("my_conn_id")
-    backend.pull_many = MagicMock()
+    backend.write_url_to_buffer = MagicMock()
+    backend.iter_url = MagicMock()
 
-    destination = backend.pull_dbt_project(
-        "/path/to/my/project", "/target/to/my/project"
-    )
+    destination = backend.pull_dbt_project("/path/to/my/project", temp_target_path)
 
-    backend.pull_many.assert_called_with("/path/to/my/project", "/target/to/my/project")
-    assert destination == Path("/target/to/my/project")
+    backend.iter_url.assert_called_with(URL("/path/to/my/project"))
+    assert destination == temp_target_path
 
 
 def test_dbt_backend_push_dbt_project():
@@ -129,7 +137,6 @@ def test_dbt_backend_interface():
         backend = DbtBackend()
 
     backend = MyBackend()
-    assert backend.pull_one("", "") is NotImplemented
-    assert backend.push_one("", "") is NotImplemented
-    assert backend.pull_many("", "") is NotImplemented
+    assert backend.write_url_to_buffer(URL(""), io.BytesIO()) is NotImplemented
+    assert backend.iter_url(URL("")) is NotImplemented
     assert backend.push_many("", "") is NotImplemented

@@ -7,7 +7,7 @@ Currently, only AWS S3 and the local filesystem are supported as backends.
 """
 from typing import Optional, Type
 
-from .base import DbtBackend, StrPath
+from .base import URL, DbtBackend, StrPath
 from .localfs import DbtLocalFsBackend
 
 try:

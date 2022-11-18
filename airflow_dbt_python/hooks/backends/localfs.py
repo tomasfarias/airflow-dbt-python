@@ -8,9 +8,9 @@ import shutil
 import sys
 from functools import partial
 from pathlib import Path
-from zipfile import ZipFile
+from typing import IO, Iterable
 
-from .base import DbtBackend, StrPath, zip_all_paths
+from .base import URL, DbtBackend, StrPath, zip_all_paths
 
 
 class DbtLocalFsBackend(DbtBackend):
@@ -23,42 +23,28 @@ class DbtLocalFsBackend(DbtBackend):
     """
 
     def __init__(self, *args, **kwargs):
+        """Initialize a dbt backend for local filesystem."""
         super().__init__(*args, **kwargs)
 
-    def pull_one(self, source: StrPath, destination: StrPath) -> Path:
-        """Pull a file from local path.
+    def write_url_to_buffer(self, source: URL, buf: IO[bytes]):
+        """Write the contents of a local file in source into given buffer.
 
         Args:
-            source: A local path to a directory containing the file to pull.
-            destination: A destination path where to pull the file to.
+            source: A local URL to a directory containing the file to pull.
+            buf: A buffer to store the file contents.
         """
-        destination_path = Path(destination)
-        destination_path.parent.mkdir(exist_ok=True, parents=True)
+        with open(source.path, "rb") as f:
+            shutil.copyfileobj(f, buf)
 
-        return shutil.copy(source, destination)
+    def iter_url(self, source: URL) -> Iterable[URL]:
+        """Iterate over a local path given by a URL."""
+        source_path = Path(source.path)
 
-    def pull_many(self, source: StrPath, destination: StrPath) -> Path:
-        """Pull many files from local path.
+        for p in source_path.glob("**/*"):
+            if not p.is_file():
+                continue
 
-        Args:
-            source: A local path to a directory containing the files to pull.
-            destination: A destination path where to pull the file to.
-        """
-        if Path(source).suffix == ".zip":
-            zip_destination = Path(destination) / "dbt_project.zip"
-            shutil.copy(source, zip_destination)
-
-            with ZipFile(zip_destination, "r") as zf:
-                zf.extractall(zip_destination.parent)
-
-            zip_destination.unlink()
-        else:
-            if sys.version_info.major == 3 and sys.version_info.minor < 8:
-                py37_copytree(source, destination)
-            else:
-                shutil.copytree(source, destination, dirs_exist_ok=True)  # type: ignore
-
-        return Path(destination)
+            yield URL(str(p))
 
     def push_one(
         self, source: StrPath, destination: StrPath, replace: bool = False

@@ -1,12 +1,12 @@
 """An implementation for an S3 backend for dbt."""
 from __future__ import annotations
 
+import io
 import os
 from pathlib import Path
-from typing import Optional
-from zipfile import ZipFile
+from typing import IO, Iterable, Optional
 
-from .base import DbtBackend, StrPath, zip_all_paths
+from .base import URL, DbtBackend, StrPath, zip_all_paths
 
 try:
     from airflow.providers.amazon.aws.hooks.s3 import S3Hook
@@ -28,6 +28,7 @@ class DbtS3Backend(DbtBackend):
     """
 
     def __init__(self, connection_id: Optional[str] = None, *args, **kwargs):
+        """Initialize a dbt backend for AWS S3."""
         self.connection_id = connection_id
         self._hook: Optional[S3Hook] = None
         super().__init__(*args, **kwargs)
@@ -42,12 +43,12 @@ class DbtS3Backend(DbtBackend):
                 self._hook = S3Hook()
         return self._hook
 
-    def pull_one(self, source: StrPath, destination: StrPath) -> Path:
-        """Pull a file from S3.
+    def write_url_to_buffer(self, source: URL, buf: IO[bytes]):
+        """Write the contents of a file in the S3 key given by source into buf.
 
         Args:
             source: An S3 URL to a directory containing the file to pull.
-            destination: A destination path where to pull the file to.
+            buf: A destination buffer where to write the file contents.
         """
         bucket_name, key = self.hook.parse_s3_url(str(source))
         s3_object = self.hook.get_key(key=key, bucket_name=bucket_name)
@@ -59,31 +60,7 @@ class DbtS3Backend(DbtBackend):
         # ignoring this check.
         # See discussion:
         # https://github.com/apache/airflow/pull/10164#discussion_r653685526
-        self.download_one_s3_object(s3_object, destination)  # type: ignore
-        return Path(destination)
-
-    def pull_many(self, source: StrPath, destination: StrPath) -> Path:
-        """Pull many files from S3.
-
-        Lists all S3 keys that have source as a prefix to find what to pull.
-
-        Args:
-            source: An S3 URL to a directory containing the file to pull.
-            destination: A destination path where to pull the file to.
-        """
-        bucket_name, key_prefix = self.hook.parse_s3_url(str(source))
-
-        if key_prefix.endswith(".zip"):
-            s3_object = self.hook.get_key(key=key_prefix, bucket_name=bucket_name)
-            target = Path(destination) / "dbt_project.zip"
-            self.download_zip_s3_object(s3_object, target)
-
-        else:
-            if not key_prefix.endswith("/"):
-                key_prefix += "/"
-            self.download_many_from_key_prefix(key_prefix, bucket_name, destination)
-
-        return Path(destination)
+        self.download_one_s3_object(s3_object, buf)  # type: ignore
 
     def push_one(
         self, source: StrPath, destination: StrPath, replace: bool = False
@@ -153,58 +130,29 @@ class DbtS3Backend(DbtBackend):
                     replace=replace,
                 )
 
-    def download_zip_s3_object(self, s3_object, destination: StrPath) -> None:
-        """Download an S3Object and extract its contents."""
-        destination_path = Path(destination)
+    def iter_url(self, source: URL) -> Iterable[URL]:
+        """Iterate over an S3 key given by a URL."""
+        bucket_name, key_prefix = self.hook.parse_s3_url(str(source))
+        if not key_prefix.endswith("/"):
+            key_prefix += "/"
 
-        self.download_one_s3_object(s3_object, destination_path)
-
-        with ZipFile(destination_path, "r") as zf:
-            zf.extractall(destination_path.parent)
-
-        destination_path.unlink()
-
-    def download_many_from_key_prefix(
-        self,
-        key_prefix: str,
-        bucket_name: str,
-        destination: StrPath,
-    ) -> None:
-        """Download all available S3 objects from a S3 key prefix.
-
-        Args:
-            key_prefix: The key prefix where the keys to download are found.
-            bucket_name: The bucket containing the key prefix.
-            destination: Directory where to download all the files.
-        """
-        s3_object_keys = self.hook.list_keys(bucket_name=bucket_name, prefix=key_prefix)
-
-        for s3_object_key in s3_object_keys:
-            s3_object = self.hook.get_key(key=s3_object_key, bucket_name=bucket_name)
-            path_file = Path(s3_object_key).relative_to(key_prefix)
-
-            if path_file.suffix == "" and s3_object.key.endswith("/"):  # type: ignore
-                # Empty S3 files may also be confused with unwanted directories.
-                # See comment in line 60.
-                self.log.warning("A file with no name was found in S3 at %s", s3_object)
+        for key in self.hook.list_keys(bucket_name=bucket_name, prefix=key_prefix):
+            if key.endswith("//"):
+                # Sometimes, S3 files with empty names can appear, usually when using
+                # the UI. These empty S3 files may also be confused with directories.
                 continue
-
-            destination_file = Path(destination) / path_file
-            destination_file.parent.mkdir(parents=True, exist_ok=True)
-
-            self.download_one_s3_object(s3_object, destination_file)
+            yield URL.from_parts(scheme="s3", netloc=bucket_name, path=key)
 
     def download_one_s3_object(
         self,
         s3_object,
-        destination: StrPath,
+        file_obj: io.BytesIO,
     ) -> None:
         """Download an S3 object into a local destination."""
-        self.log.info("Downloading S3Object %s to: %s", s3_object, destination)
+        self.log.info("Downloading S3Object %s", s3_object)
 
         try:
-            with open(destination, "wb+") as f:
-                s3_object.download_fileobj(f)
+            s3_object.download_fileobj(file_obj)
 
         except IsADirectoryError:
             # Uploading files manually via the AWS UI to S3 can cause files

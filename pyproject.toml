@@ -108,10 +108,9 @@ source = [
 ]
 
 [tool.pytest.ini_options]
-postgresql_user = "test"
-postgresql_password = "test" # pragma: allowlist secret
-postgresql_dbname = "test"
-python_classes = "!TestStatus !TestTaskConfig"
+addopts = [
+    "--doctest-modules"
+]
 filterwarnings = [
     # Warnings raised by dbt dependencies
     'ignore: write_gpickle is deprecated:DeprecationWarning',
@@ -120,7 +119,10 @@ filterwarnings = [
 markers = [
     "integration: mark test as an integration test"
 ]
-
+postgresql_user = "test"
+postgresql_password = "test" # pragma: allowlist secret
+postgresql_dbname = "test"
+python_classes = "!TestStatus !TestTaskConfig"
 
 [tool.mypy]
 ignore_missing_imports = true

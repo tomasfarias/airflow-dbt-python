@@ -178,6 +178,7 @@ def test_dbt_deps_doesnt_affect_non_package_files(
         # logs are expected to change
         and "logs" not in str(_file)
     ]
+
     dbt_packages_and_times = [
         (_file, os.stat(_file).st_mtime) for _file in dbt_packages_dir.glob("**/*")
     ]
@@ -196,6 +197,9 @@ def test_dbt_deps_doesnt_affect_non_package_files(
     assert len([m for m in modules]) == 1
 
     for _file, last_modified in files_and_times:
+        if _file.is_dir():
+            continue
+
         assert (
             last_modified == os.stat(_file).st_mtime
         ), f"DbtDepsOperator changed an unexpected file: {_file}"
