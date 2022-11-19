@@ -7,7 +7,10 @@ Currently, only AWS S3 and the local filesystem are supported as backends.
 """
 from typing import Optional, Type
 
-from .base import URL, DbtBackend, StrPath
+from airflow.exceptions import AirflowException
+from airflow.models.connection import Connection
+
+from .base import Address, DbtBackend, StrPath
 from .localfs import DbtLocalFsBackend
 
 try:
@@ -19,11 +22,20 @@ except ImportError:
 
 def build_backend(scheme: str, conn_id: Optional[str] = None) -> DbtBackend:
     """Build a DbtBackend as long as the scheme is supported."""
-    if scheme == "s3":
+    if conn_id:
+        conn = Connection.get_connection_from_secrets(conn_id)
+        conn_type = conn.conn_type
+    else:
+        conn_type = ""
+
+    if scheme == "s3" or conn_type == "s3":
         backend_cls: Type[DbtBackend] = DbtS3Backend
-    elif scheme == "":
+    elif scheme == "" or conn_type == "filesystem":
         backend_cls = DbtLocalFsBackend
     else:
         raise NotImplementedError(f"Backend {scheme} is not supported")
-    backend = backend_cls(conn_id)
-    return backend
+
+    if conn_id:
+        return backend_cls(conn_id)
+    else:
+        return backend_cls()

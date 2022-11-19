@@ -6,7 +6,7 @@ import os
 from pathlib import Path
 from typing import IO, Iterable, Optional
 
-from .base import URL, DbtBackend, StrPath, zip_all_paths
+from .base import Address, DbtBackend, StrPath, zip_all_paths
 
 try:
     from airflow.providers.amazon.aws.hooks.s3 import S3Hook
@@ -14,44 +14,31 @@ except ImportError:
     from airflow.hooks.S3_hook import S3Hook  # type: ignore
 
 
-class DbtS3Backend(DbtBackend):
+class DbtS3Backend(S3Hook, DbtBackend):
     """A dbt backend implementation for S3.
 
     This concrete backend class implements the DbtBackend interface by using S3 as a
     storage for pushing and pulling dbt files to and from.
     The backend relies on Airflow's S3Hook to interact with S3. A connection id
     may be passed to instantiate the S3Hook.
-
-    Attributes:
-        connection_id: An optional string of an Airflow connection id to use for the
-            S3Hook.
     """
 
-    def __init__(self, connection_id: Optional[str] = None, *args, **kwargs):
+    conn_type = "s3"
+    hook_name = "dbt S3 Backend"
+
+    def __init__(self, *args, **kwargs):
         """Initialize a dbt backend for AWS S3."""
-        self.connection_id = connection_id
-        self._hook: Optional[S3Hook] = None
         super().__init__(*args, **kwargs)
 
-    @property
-    def hook(self) -> S3Hook:
-        """Return the Airflow hook associated with this backend."""
-        if self._hook is None:
-            if self.connection_id is not None:
-                self._hook = S3Hook(self.connection_id)
-            else:
-                self._hook = S3Hook()
-        return self._hook
-
-    def write_url_to_buffer(self, source: URL, buf: IO[bytes]):
+    def write_address_to_buffer(self, source: Address, buf: IO[bytes]):
         """Write the contents of a file in the S3 key given by source into buf.
 
         Args:
-            source: An S3 URL to a directory containing the file to pull.
+            source: An S3 Address to a directory containing the file to pull.
             buf: A destination buffer where to write the file contents.
         """
-        bucket_name, key = self.hook.parse_s3_url(str(source))
-        s3_object = self.hook.get_key(key=key, bucket_name=bucket_name)
+        bucket_name, key = self.parse_s3_url(str(source))
+        s3_object = self.get_key(key=key, bucket_name=bucket_name)
 
         # It's clear from the body of the method that S3Hook.get_key returns
         # a boto3.s3.Object. For some reason, the type hint has been set to
@@ -69,7 +56,7 @@ class DbtS3Backend(DbtBackend):
 
         Args:
             source: A local file path where to fetch the files to push.
-            destination: An S3 URL where the file should be uploaded. The bucket
+            destination: An S3 Address where the file should be uploaded. The bucket
                 name and key prefix will be extracted by calling S3Hook.parse_s3_url.
             replace (bool): Whether to replace existing files or not.
         """
@@ -93,17 +80,17 @@ class DbtS3Backend(DbtBackend):
 
         Args:
             source: A local file path where to fetch the file to push.
-            destination: An S3 URL where the file should be uploaded. The bucket
+            destination: An S3 Address where the file should be uploaded. The bucket
                 name and key prefix will be extracted by calling S3Hook.parse_s3_url.
             replace: Whether to replace existing files or not.
             delete_before: Whether to delete the contents of destination before pushing.
         """
-        bucket_name, key = self.hook.parse_s3_url(str(destination))
+        bucket_name, key = self.parse_s3_url(str(destination))
         all_files = Path(source).glob("**/*")
 
         if delete_before:
-            keys = self.hook.list_keys(bucket_name, prefix=key)
-            self.hook.delete_objects(bucket_name, keys)
+            keys = self.list_keys(bucket_name, prefix=key)
+            self.delete_objects(bucket_name, keys)
 
         if key.endswith(".zip"):
             zip_path = Path(source) / ".temp.zip"
@@ -130,18 +117,18 @@ class DbtS3Backend(DbtBackend):
                     replace=replace,
                 )
 
-    def iter_url(self, source: URL) -> Iterable[URL]:
-        """Iterate over an S3 key given by a URL."""
-        bucket_name, key_prefix = self.hook.parse_s3_url(str(source))
+    def iter_address(self, source: Address) -> Iterable[Address]:
+        """Iterate over an S3 key given by a Address."""
+        bucket_name, key_prefix = self.parse_s3_url(str(source))
         if not key_prefix.endswith("/"):
             key_prefix += "/"
 
-        for key in self.hook.list_keys(bucket_name=bucket_name, prefix=key_prefix):
+        for key in self.list_keys(bucket_name=bucket_name, prefix=key_prefix):
             if key.endswith("//"):
                 # Sometimes, S3 files with empty names can appear, usually when using
                 # the UI. These empty S3 files may also be confused with directories.
                 continue
-            yield URL.from_parts(scheme="s3", netloc=bucket_name, path=key)
+            yield Address.from_parts(scheme="s3", netloc=bucket_name, path=key)
 
     def download_one_s3_object(
         self,
@@ -186,11 +173,11 @@ class DbtS3Backend(DbtBackend):
             # presence of the parameter to decide whether setting a bucket_name is
             # required. By passing bucket_name=None, the parameter is set, and
             # 'None' will be used as the bucket name.
-            bucket_name, key = self.hook.parse_s3_url(key)
+            bucket_name, key = self.parse_s3_url(key)
 
         self.log.info("Loading file %s to S3: %s", file_path, key)
         try:
-            self.hook.load_file(
+            self.load_file(
                 str(file_path),
                 key,
                 bucket_name=bucket_name,

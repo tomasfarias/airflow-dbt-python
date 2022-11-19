@@ -8,12 +8,14 @@ import shutil
 import sys
 from functools import partial
 from pathlib import Path
-from typing import IO, Iterable
+from typing import IO, Iterable, Optional
 
-from .base import URL, DbtBackend, StrPath, zip_all_paths
+from airflow.hooks.filesystem import FSHook
+
+from .base import Address, DbtBackend, StrPath, zip_all_paths
 
 
-class DbtLocalFsBackend(DbtBackend):
+class DbtLocalFsBackend(FSHook, DbtBackend):
     """A concrete dbt backend for a local filesystem.
 
     This backend is intended to be used when running Airflow with a LocalExecutor, and
@@ -22,29 +24,54 @@ class DbtLocalFsBackend(DbtBackend):
     conditions if attempting to push files to the backend.
     """
 
-    def __init__(self, *args, **kwargs):
-        """Initialize a dbt backend for local filesystem."""
-        super().__init__(*args, **kwargs)
+    conn_name_attr = "fs_conn_id"
+    default_conn_name = "fs_default"
+    conn_type = "filesystem"
+    hook_name = "dbt Local Filesystem Backend"
 
-    def write_url_to_buffer(self, source: URL, buf: IO[bytes]):
+    def __init__(
+        self,
+        fs_conn_id: str = default_conn_name,
+    ):
+        super().__init__(fs_conn_id)
+        self.fs_conn_id = fs_conn_id
+
+    def write_address_to_buffer(self, source: Address, buf: IO[bytes]):
         """Write the contents of a local file in source into given buffer.
 
         Args:
-            source: A local URL to a directory containing the file to pull.
+            source: A local Address to a directory containing the file to pull.
             buf: A buffer to store the file contents.
         """
-        with open(source.path, "rb") as f:
+        address = self.get_address(source)
+
+        with open(address.path, "rb") as f:
             shutil.copyfileobj(f, buf)
 
-    def iter_url(self, source: URL) -> Iterable[URL]:
-        """Iterate over a local path given by a URL."""
-        source_path = Path(source.path)
+    def iter_address(self, source: Address) -> Iterable[Address]:
+        """Iterate over a local path given by a Address."""
+        address = self.get_address(source)
+        source_path = Path(address.path)
 
         for p in source_path.glob("**/*"):
             if not p.is_file():
                 continue
 
-            yield URL(str(p))
+            yield Address(str(p))
+
+    def get_address(self, address: Optional[Address]) -> Address:
+        """Return an address relative to this hook's basepath.
+
+        If the given address is absolute, simply return the address. If it's none,
+        then return an address made from basepath.
+        """
+        if address is None:
+            return Address(self.basepath)
+
+        if address.is_absolute():
+            return address
+
+        return Address(self.basepath) / address
 
     def push_one(
         self, source: StrPath, destination: StrPath, replace: bool = False

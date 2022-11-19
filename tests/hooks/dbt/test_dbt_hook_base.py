@@ -24,11 +24,11 @@ def test_dbt_hook_get_s3_backend():
 
     hook = DbtHook()
 
-    backend = hook.get_backend("s3", "not_aws_default")
+    backend = hook.get_backend("s3", "aws_default")
 
     assert isinstance(backend, DbtS3Backend)
-    assert isinstance(backend.hook, S3Hook)
-    assert backend.hook.aws_conn_id == "not_aws_default"
+    assert isinstance(backend, S3Hook)
+    assert backend.aws_conn_id == "aws_default"
 
 
 def test_dbt_hook_get_local_fs_backend():
@@ -45,10 +45,12 @@ def test_dbt_hook_get_backend_raises_not_implemented():
     hook = DbtHook()
 
     with pytest.raises(NotImplementedError):
-        backend = hook.get_backend("does not exist", None)
+        hook.get_backend("does not exist", None)
 
 
 class FakeBackend:
+    """A fake dbt backend for testing."""
+
     def pull_dbt_profiles(self, *args, **kwargs):
         return (args, kwargs)
 

@@ -17,32 +17,32 @@ from airflow.utils.log.logging_mixin import LoggingMixin
 StrPath = Union[str, "PathLike[str]"]
 
 
-class URL:
-    """A URL where dbt files are located.
+class Address:
+    """An address in a backend that points to one or more dbt files.
 
     This class applies some of the functionality of pathlib.Path on the path component
-    of a URL, ensuring it stays valid. We require this as different backends work with
+    of a Address, ensuring it stays valid. We require this as different backends work with
     different representations of where a resource is located, and we need to harmonize
     things between them and the ultimate destination of the files.
 
-    For example, S3 backend relies on URLs with the 's3' scheme. But any keys are
+    For example, S3 backend relies on Addresss with the 's3' scheme. But any keys are
     downloaded to a regular local path, which is going to depend on the OS. This class
-    helps us determine the destination local path ensuring the URL remains a valid S3
-    URL.
+    helps us determine the destination local path ensuring the Address remains a valid S3
+    Address.
 
     We utilize urlparse as it supports multiple schemes, including no scheme at all.
 
     Attributes:
-        _parsed: Contains the parsed string as returned by urllib.parse.urlparse.
+        _parsed: Contains the parsed string as returned by addresslib.parse.urlparse.
     """
 
     def __init__(self, s: str):
-        """Initialize a URL by parsing a str.
+        """Initialize a Address by parsing a str.
 
-        >>> URL("/local/path/to/project.zip")._parsed
+        >>> Address("/local/path/to/project.zip")._parsed
         ParseResult(scheme='', netloc='', path='/local/path/to/project.zip', params='',\
         query='', fragment='')
-        >>> URL("s3://s3-bucket/path/to/project.zip")._parsed
+        >>> Address("s3://s3-bucket/path/to/project.zip")._parsed
         ParseResult(scheme='s3', netloc='s3-bucket', path='/path/to/project.zip',\
         params='', query='', fragment='')
         """
@@ -57,26 +57,26 @@ class URL:
         params: str = "",
         query: str = "",
         fragment: str = "",
-    ) -> URL:
-        """Construct a new URL by unparsing the parts returned by urlparse."""
+    ) -> Address:
+        """Construct a new Address by unparsing the parts returned by urlparse."""
         return cls(urlunparse((scheme, netloc, path, params, query, fragment)))
 
-    def relative_to(self, base: Union[str, "URL"]) -> "URL":
-        """Return a new URL with a path relative to base.
+    def relative_to(self, base: Union[str, "Address"]) -> "Address":
+        """Return a new Address with a path relative to base.
 
-        >>> URL("/local/path/to/project.zip").relative_to("/local/path")
-        URL("to/project.zip")
-        >>> URL("s3://airflow-dbt-test-s3-bucket/project/data").relative_to("/project")
-        URL("s3://airflow-dbt-test-s3-bucket/data")
+        >>> Address("/local/path/to/project.zip").relative_to("/local/path")
+        Address("to/project.zip")
+        >>> Address("s3://airflow-dbt-test-s3-bucket/project/data").relative_to("/project")
+        Address("s3://airflow-dbt-test-s3-bucket/data")
         """
-        if isinstance(base, URL):
+        if isinstance(base, Address):
             new_path = Path(self._parsed.path).relative_to(base.path)
         else:
             new_path = Path(self._parsed.path).relative_to(base)
 
         new_parsed = self._parsed._replace(path=str(new_path))
 
-        return URL.from_parts(
+        return Address.from_parts(
             scheme=new_parsed.scheme,
             netloc=new_parsed.netloc,
             path=new_parsed.path,
@@ -85,54 +85,58 @@ class URL:
             fragment=new_parsed.fragment,
         )
 
-    def join(self, relative: str) -> "URL":
-        """Return a new URL by joining this with relative."""
-        new_url = urljoin(self._parsed.geturl(), relative)
-        return URL(new_url)
+    def join(self, relative: str) -> "Address":
+        """Return a new Address by joining this with relative."""
+        new_address = urljoin(self._parsed.geturl(), relative)
+        return Address(new_address)
+
+    def is_absolute(self) -> bool:
+        """Return a new Address by joining this with relative."""
+        return Path(self._parsed.path).is_absolute()
 
     @property
     def suffix(self):
-        """Returns this URL path's suffix."""
+        """Returns this Address path's suffix."""
         return Path(self._parsed.path).suffix
 
     @property
     def name(self):
-        """Return this URL path's name.
+        """Return this Address path's name.
 
-        >>> URL("/local/path/to/project.zip").name
+        >>> Address("/local/path/to/project.zip").name
         'project.zip'
-        >>> URL("s3://s3-bucket/path/to/profiles.yml").name
+        >>> Address("s3://s3-bucket/path/to/profiles.yml").name
         'profiles.yml'
         """
         return Path(self._parsed.path).name
 
-    def __truediv__(self, other) -> "URL":
-        """Allows concatenating a path to this URL's path."""
+    def __truediv__(self, other) -> "Address":
+        """Allows concatenating a path to this Address's path."""
         new_path = Path(self._parsed.path) / other
-        return URL(self._parsed._replace(path=str(new_path)).geturl())
+        return Address(self._parsed._replace(path=str(new_path)).geturl())
 
-    def __rtruediv__(self, other) -> "URL":
-        """Allows concatenating this URL to a pathlib.Path."""
+    def __rtruediv__(self, other) -> "Address":
+        """Allows concatenating this Address to a pathlib.Path."""
         new_path = other / Path(self._parsed.path)
-        return URL(self._parsed._replace(path=str(new_path)).geturl())
+        return Address(self._parsed._replace(path=str(new_path)).geturl())
 
     def __str__(self) -> str:
-        """Return full URL as a string."""
+        """Return full Address as a string."""
         return self._parsed.geturl()
 
     def __repr__(self) -> str:
-        """Return a representation of this URL."""
-        return f'URL("{self._parsed.geturl()}")'
+        """Return a representation of this Address."""
+        return f'Address("{self._parsed.geturl()}")'
 
     def __getattr__(self, name):
         """Try to find attributes in ParsedResult."""
         return getattr(self._parsed, name)
 
     def __eq__(self, other) -> bool:
-        """Compare against another URL or a Path."""
+        """Compare against another Address or a Path."""
         if isinstance(other, Path):
             return Path(self.path) == other
-        elif isinstance(other, URL):
+        elif isinstance(other, Address):
             return self._parsed == other._parsed
         return NotImplemented
 
@@ -162,12 +166,12 @@ class DbtBackend(ABC, LoggingMixin):
         Returns:
             The destination Path.
         """
-        source_url = URL(str(source_prefix))
+        source_address = Address(str(source_prefix))
 
-        self.log.info("Pulling dbt profiles file from: %s", source_url)
+        self.log.info("Pulling dbt profiles file from: %s", source_address)
 
-        if source_url.name != "profiles.yml":
-            source_url /= "profiles.yml"
+        if source_address.name != "profiles.yml":
+            source_address /= "profiles.yml"
 
         destination_path = Path(destination)
 
@@ -177,7 +181,7 @@ class DbtBackend(ABC, LoggingMixin):
         destination_path.parent.mkdir(parents=True, exist_ok=True)
 
         with open(destination_path, "wb+") as f:
-            self.write_url_to_buffer(source_url, f)
+            self.write_address_to_buffer(source_address, f)
 
         return destination_path
 
@@ -191,16 +195,16 @@ class DbtBackend(ABC, LoggingMixin):
         Returns:
             The destination Path.
         """
-        source_url = URL(source_prefix)
+        source_address = Address(source_prefix)
 
         self.log.info("Reading dbt profiles file from: %s", source_prefix)
 
-        if source_url.name != "profiles.yml":
-            source_url /= "profiles.yml"
+        if source_address.name != "profiles.yml":
+            source_address /= "profiles.yml"
 
         profiles_buffer = io.BytesIO()
 
-        self.write_url_to_buffer(source_url, profiles_buffer)
+        self.write_address_to_buffer(source_address, profiles_buffer)
         return profiles_buffer.read().decode("utf-8")
 
     def pull_dbt_project(self, source_prefix: StrPath, destination: StrPath) -> Path:
@@ -213,22 +217,22 @@ class DbtBackend(ABC, LoggingMixin):
         Returns:
             The destination Path.
         """
-        source_url = URL(str(source_prefix))
+        source_address = Address(str(source_prefix))
         dest_path = Path(destination)
 
-        self.log.info("Pulling dbt project files from: %s", source_url)
+        self.log.info("Pulling dbt project files from: %s", source_address)
 
-        if source_url.suffix == ".zip":
+        if source_address.suffix == ".zip":
             zip_buf = io.BytesIO()
-            self.write_url_to_buffer(source_url, zip_buf)
+            self.write_address_to_buffer(source_address, zip_buf)
 
             with ZipFile(zip_buf, "r") as zf:
                 zf.extractall(dest_path)
 
             return dest_path
 
-        for u in self.iter_url(source_url):
-            relative_path = Path(u.relative_to(source_url).path)
+        for u in self.iter_address(source_address):
+            relative_path = Path(u.relative_to(source_address).path)
 
             if relative_path.is_absolute():
                 relative_path = relative_path.relative_to("/")
@@ -238,7 +242,7 @@ class DbtBackend(ABC, LoggingMixin):
             file_destination_path.parent.mkdir(parents=True, exist_ok=True)
 
             with open(file_destination_path, "wb") as f:
-                self.write_url_to_buffer(u, f)
+                self.write_address_to_buffer(u, f)
 
         return dest_path
 
@@ -253,7 +257,7 @@ class DbtBackend(ABC, LoggingMixin):
 
         Args:
             source: Path to a directory containing a dbt project.
-            destination: Path or URL to a directory where the  will be stored.
+            destination: Path or Address to a directory where the  will be stored.
             replace: Flag to indicate whether to replace existing files.
             delete_before: Flag to indicate wheter to clear any existing files before
                 pushing the dbt project.
@@ -264,23 +268,23 @@ class DbtBackend(ABC, LoggingMixin):
         )
 
     @abstractmethod
-    def write_url_to_buffer(self, source: URL, buf: IO[bytes]):
+    def write_address_to_buffer(self, source: Address, buf: IO[bytes]):
         """Write the contents of the file in source into a buffer.
 
         Args:
             source: The string representation of a path or a path object pointing to
-                the file to pull. This could be a URL.
+                the file to pull. This could be a Address.
             buf: A buffer to store the file contents.
         """
         return NotImplemented
 
     @abstractmethod
-    def iter_url(self, source: URL) -> Iterable[URL]:
+    def iter_address(self, source: Address) -> Iterable[Address]:
         """Write the contents of the file in source into a buffer.
 
         Args:
             source: The string representation of a path or a path object pointing to
-                the file to pull. This could be a URL.
+                the file to pull. This could be a Address.
             buf: A buffer to store the file contents.
         """
         return NotImplemented

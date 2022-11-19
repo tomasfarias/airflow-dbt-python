@@ -1,7 +1,5 @@
 """Unit test module for DbtS3Backend."""
 import io
-import shutil
-from pathlib import Path
 from zipfile import ZipFile
 
 import freezegun
@@ -259,7 +257,7 @@ def test_pull_dbt_project_with_empty_file(s3_bucket, s3_hook, tmpdir, dbt_projec
     assert result == "SELECT 1"
 
 
-def test_push_dbt_project_to_zip_file(s3_bucket, s3_hook, tmpdir, test_files):
+def test_push_dbt_project_to_zip_file(s3_bucket, s3_hook, test_files):
     """Test pushing a dbt project to a ZipFile in S3 path."""
     zip_s3_key = f"s3://{s3_bucket}/project/project.zip"
 
@@ -284,7 +282,7 @@ def test_push_dbt_project_to_zip_file(s3_bucket, s3_hook, tmpdir, test_files):
     assert "project/project.zip" in keys
 
 
-def test_push_dbt_project_to_files(s3_bucket, s3_hook, tmpdir, test_files):
+def test_push_dbt_project_to_files(s3_bucket, s3_hook, test_files):
     """Test pushing a dbt project to a S3 path."""
     keys = s3_hook.list_keys(bucket_name=s3_bucket)
     if keys is not None:
@@ -300,13 +298,12 @@ def test_push_dbt_project_to_files(s3_bucket, s3_hook, tmpdir, test_files):
     assert len(keys) == 4
 
 
-def test_push_dbt_project_with_no_replace(s3_bucket, s3_hook, tmpdir, test_files):
+def test_push_dbt_project_with_no_replace(s3_bucket, s3_hook, test_files):
     """Test pushing a dbt project to a S3 path with replace = False.
-    We store the s3.Object last_modified attribute before pushing a project and compare it to the
-    new values after pushing (should be the same as we are not replacing).
-    """
 
-    prefix = f"s3://{s3_bucket}/project/"
+    We store the s3.Object last_modified attribute before pushing a project and compare
+    it to the new values after pushing (should be the same as we are not replacing).
+    """
     bucket = s3_hook.get_bucket(s3_bucket)
 
     last_modified_expected = {}
@@ -352,12 +349,12 @@ def test_push_dbt_project_with_no_replace(s3_bucket, s3_hook, tmpdir, test_files
     assert last_modified_expected == last_modified_result
 
 
-def test_push_dbt_project_with_partial_replace(s3_bucket, s3_hook, tmpdir, test_files):
+def test_push_dbt_project_with_partial_replace(s3_bucket, s3_hook, test_files):
     """Test pushing a dbt project to a S3 path with replace = False.
-    For this test we are looking for one file to be pushed while the rest are to be ignored
-    as they already exist and we are running with replace = False.
+
+    For this test we are looking for one file to be pushed while the rest are to be
+    ignored as they already exist and we are running with replace = False.
     """
-    prefix = f"s3://{s3_bucket}/project/"
     bucket = s3_hook.get_bucket(s3_bucket)
 
     last_modified_expected = {}
@@ -414,9 +411,8 @@ def test_push_dbt_project_with_partial_replace(s3_bucket, s3_hook, tmpdir, test_
             assert value == last_modified_expected[key]
 
 
-def test_push_dbt_project_with_delete_before(s3_bucket, s3_hook, tmpdir, test_files):
+def test_push_dbt_project_with_delete_before(s3_bucket, s3_hook, test_files):
     """Test pushing a dbt project to a S3 path with delete_before."""
-
     prefix = f"s3://{s3_bucket}/project/"
     bucket = s3_hook.get_bucket(s3_bucket)
 
@@ -426,7 +422,7 @@ def test_push_dbt_project_with_delete_before(s3_bucket, s3_hook, tmpdir, test_fi
 
     with freezegun.freeze_time("2022-01-01"):
         # delete_before = True should delete this random file not part of the project
-        bucket.put_object(Key=f"project/file_to_be_deleted", Body="content".encode())
+        bucket.put_object(Key="project/file_to_be_deleted", Body="content".encode())
 
         for _file in project_dir.glob("**/*"):
             if _file.is_dir():
@@ -467,28 +463,19 @@ def test_push_dbt_project_with_delete_before(s3_bucket, s3_hook, tmpdir, test_fi
         assert value > last_modified_expected[key]
 
 
-class FakeHook:
-    def load_file(*args, **kwargs):
-        raise ValueError()
-
-    def parse_s3_url(self, key):
-        try:
-            from airflow.providers.amazon.aws.hooks.s3 import S3Hook
-        except ImportError:
-            from airflow.hooks.S3_hook import S3Hook
-
-        hook = S3Hook()
-        return hook.parse_s3_url(key)
+def fake_load_file(*args, **kwargs):
+    """A fake load_file function from S3Hook."""
+    raise ValueError()
 
 
 def test_load_file_handle_replace_error_returns_false_on_valueerror():
-    """Test function returns False when underlying hook raises ValueError.
+    """Test function returns False when hook raises ValueError.
 
-    Underlying S3Hook raises ValueError if attempting to replace an existing file with
-    replace = False.
+    Inherited S3Hook.load_file raises ValueError if attempting to replace an existing
+    file with replace = False.
     """
     backend = DbtS3Backend()
-    backend._hook = FakeHook()
+    backend.load_file = fake_load_file
 
     result = backend.load_file_handle_replace_error("/path/to/file", "s3://path/to/key")
 
