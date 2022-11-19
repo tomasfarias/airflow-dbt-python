@@ -6,7 +6,7 @@ import freezegun
 import pytest
 
 try:
-    from airflow_dbt_python.hooks.backends import DbtS3Backend
+    from airflow_dbt_python.hooks.s3 import DbtS3Backend
 except ImportError:
     pytest.skip(
         "S3 Backend not available, consider installing amazon extras",

@@ -1,6 +1,12 @@
-"""Base dbt backend interface.
+"""This module defines the base dbt backend interface.
 
-Ensures methods for pulling and pushing files are defined.
+Backends are locations for storage of dbt projects and profiles.
+
+The backend interface includes methods for pulling and pushing one or many files.
+Internally, backends are Airflow hooks extended to execute the actual pushing and
+pulling.
+
+Currently, only AWS S3 and the local filesystem are supported as backends.
 """
 from __future__ import annotations
 

@@ -10,12 +10,12 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import Any, Callable, Iterator, Optional, TypeVar, Union
 
+from dbt.contracts.results import RunExecutionResult, agate
+
 from airflow import AirflowException
 from airflow.models.baseoperator import BaseOperator
 from airflow.models.xcom import XCOM_RETURN_KEY
 from airflow.version import version
-from dbt.contracts.results import RunExecutionResult, agate
-
 from airflow_dbt_python.hooks.dbt import BaseConfig, DbtHook, LogFormat, Output
 
 # apply_defaults is deprecated in version 2 and beyond. This allows us to
@@ -262,7 +262,7 @@ class DbtBaseOperator(BaseOperator):
         store_profiles_dir = self.profiles_dir
         store_project_dir = self.project_dir
 
-        with TemporaryDirectory(prefix="airflowtmp") as tmp_dir:
+        with TemporaryDirectory(prefix="tmp-airflowdbt-") as tmp_dir:
             self.log.info("Initializing temporary directory: %s", tmp_dir)
             try:
                 self.prepare_directory(tmp_dir)

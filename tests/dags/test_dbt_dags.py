@@ -2,11 +2,14 @@
 from __future__ import annotations
 
 import datetime as dt
+import json
 import typing
 
 import pendulum
 import pytest
 from dbt.contracts.results import RunStatus, TestStatus
+
+from airflow.models.connection import Connection
 
 airflow = pytest.importorskip("airflow", minversion="2.2")
 
@@ -246,39 +249,40 @@ def test_dbt_operators_in_taskflow_dag(taskflow_dag, dbt_project_file, profiles_
                 )
 
 
+def delete_connection_if_exists(conn_id):
+    """Clean up lingering connection to ensure tests can be repeated."""
+    session = settings.Session()
+    session.query(Connection).filter_by(conn_id=conn_id).delete()
+    session.commit()
+    session.close()
+
+
 @pytest.fixture(scope="session")
 def connection(database):
     """Create a PostgreSQL database connection in Airflow."""
-    import json
-
-    from airflow.models.connection import Connection
-
     conn_id = "integration_test_conn"
-    session = settings.Session()
-    existing = session.query(Connection).filter_by(conn_id=conn_id).first()
-
-    if existing:
-        # Let's clean up any existing connection.
-        session.delete(existing)
-        session.commit()
-
-    integration_test_conn = Connection(
-        conn_id="integration_test_conn",
+    conn = Connection(
+        conn_id=conn_id,
         conn_type="postgres",
-        description="A test postgres connection",
+        description="An integration test PostgreSQL connection",
         host=database.host,
         login=database.user,
-        port=database.port,
         password=database.password,
         schema="test",
+        port=database.port,
         extra=json.dumps({"dbname": database.dbname, "threads": 2}),
     )
 
-    session.add(integration_test_conn)
+    delete_connection_if_exists(conn_id)
+
+    session = settings.Session()
+    session.add(conn)
     session.commit()
     session.close()
 
     yield conn_id
+
+    delete_connection_if_exists(conn_id)
 
 
 @pytest.fixture
@@ -448,6 +452,7 @@ def test_example_complete_dbt_workflow_dag(
 ):
     """Test the example complete dbt workflow DAG."""
     dag = dagbag.get_dag(dag_id="example_complete_dbt_workflow")
+    delete_dagruns()
 
     assert dag is not None
     assert len(dag.tasks) == 5

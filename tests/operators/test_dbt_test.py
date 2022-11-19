@@ -9,7 +9,7 @@ from airflow_dbt_python.operators.dbt import DbtTestOperator
 
 condition = False
 try:
-    from airflow_dbt_python.hooks.backends import DbtS3Backend
+    from airflow_dbt_python.hooks.s3 import DbtS3Backend
 except ImportError:
     condition = True
 no_s3_backend = pytest.mark.skipif(

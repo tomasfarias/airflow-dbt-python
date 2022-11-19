@@ -3,15 +3,15 @@ import json
 from pathlib import Path
 
 import pytest
-from airflow import AirflowException
 from dbt.contracts.results import RunStatus
 
+from airflow import AirflowException
 from airflow_dbt_python.hooks.dbt import RunTaskConfig
 from airflow_dbt_python.operators.dbt import DbtRunOperator
 
 condition = False
 try:
-    from airflow_dbt_python.hooks.backends import DbtS3Backend
+    from airflow_dbt_python.hooks.s3 import DbtS3Backend
 except ImportError:
     condition = True
 no_s3_backend = pytest.mark.skipif(

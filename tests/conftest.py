@@ -7,11 +7,12 @@ import shutil
 
 import boto3
 import pytest
-from airflow import settings
-from airflow.models.connection import Connection
 from moto import mock_s3
+from psycopg2.errors import InvalidCatalogName
 from pytest_postgresql.janitor import DatabaseJanitor
 
+from airflow import settings
+from airflow.models.connection import Connection
 from airflow_dbt_python.hooks.dbt import DbtHook
 
 PROFILES = """
@@ -155,6 +156,13 @@ def database(postgresql_proc):
         postgresql_proc.version,
         postgresql_proc.password,
     )
+    # Attempt to drop db in case it's existing from previously aborted run.
+    try:
+        janitor.drop()
+    except InvalidCatalogName:
+        # No existing database
+        pass
+
     janitor.init()
 
     with janitor.cursor() as cur:
@@ -184,6 +192,17 @@ def profiles_file(tmp_path_factory, database):
     return p
 
 
+def delete_connections_if_exists(*conn_ids):
+    """Clean up lingering connection to ensure tests can be repeated."""
+    session = settings.Session()
+
+    for conn_id in conn_ids:
+        session.query(Connection).filter_by(conn_id=conn_id).delete()
+        session.commit()
+
+    session.close()
+
+
 @pytest.fixture(scope="session")
 def airflow_conns(database):
     """Create Airflow connections for testing.
@@ -195,28 +214,22 @@ def airflow_conns(database):
         f"postgres://{database.user}:{database.password}@{database.host}:{database.port}/public?dbname={database.dbname}",
         f"postgres://{database.user}:{database.password}@{database.host}:{database.port}/public",
     )
-    ids = (
-        "dbt_test_postgres_1",
-        database.dbname,
-    )
+    ids = ("dbt_test_postgres_1", database.dbname)
+    delete_connections_if_exists(*ids)
+
     session = settings.Session()
 
-    connections = []
-    for conn_id, uri in zip(ids, uris):
-        existing = session.query(Connection).filter_by(conn_id=conn_id).first()
-        if existing is not None:
-            # Connections may exist from previous test run.
-            session.delete(existing)
-            session.commit()
-        connections.append(Connection(conn_id=conn_id, uri=uri))
-
+    connections = [
+        Connection(conn_id=conn_id, uri=uri) for conn_id, uri in zip(ids, uris)
+    ]
     session.add_all(connections)
 
     session.commit()
+    session.close()
 
     yield ids
 
-    session.close()
+    delete_connections_if_exists(*ids)
 
 
 @pytest.fixture(scope="session")

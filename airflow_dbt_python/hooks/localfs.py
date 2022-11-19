@@ -12,7 +12,7 @@ from typing import IO, Iterable, Optional
 
 from airflow.hooks.filesystem import FSHook
 
-from .base import Address, DbtBackend, StrPath, zip_all_paths
+from .backend import Address, DbtBackend, StrPath, zip_all_paths
 
 
 class DbtLocalFsBackend(FSHook, DbtBackend):

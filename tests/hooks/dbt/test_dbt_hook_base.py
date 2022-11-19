@@ -1,12 +1,13 @@
 import pytest
 
-from airflow.exceptions import AirflowException
-from airflow_dbt_python.hooks.backends import DbtLocalFsBackend
+from airflow import settings
+from airflow.models.connection import Connection
 from airflow_dbt_python.hooks.dbt import DbtHook
+from airflow_dbt_python.hooks.localfs import DbtLocalFsBackend
 
 condition = False
 try:
-    from airflow_dbt_python.hooks.backends import DbtS3Backend
+    from airflow_dbt_python.hooks.s3 import DbtS3Backend
 except ImportError:
     condition = True
 no_s3_backend = pytest.mark.skipif(
@@ -119,30 +120,35 @@ def test_dbt_hook_get_target_from_connection_non_existent(conn_id):
     assert hook.get_target_from_connection(conn_id) is None
 
 
-@pytest.fixture
-def no_user_airflow_conn(database):
-    """Create an Airflow connection without a user."""
-    from airflow import settings
-    from airflow.models.connection import Connection
-
-    uri = f"postgres://{database.host}:{database.port}/public?dbname={database.dbname}"
-    conn_id = "dbt_test"
-
+def delete_connection_if_exists(conn_id):
+    """Clean up lingering connection to ensure tests can be repeated."""
     session = settings.Session()
     existing = session.query(Connection).filter_by(conn_id=conn_id).first()
-    if existing is not None:
-        # Connections may exist from previous test run.
+
+    if existing:
         session.delete(existing)
         session.commit()
 
+    session.close()
+
+
+@pytest.fixture
+def no_user_airflow_conn(database):
+    """Create an Airflow connection without a user."""
+    uri = f"postgres://{database.host}:{database.port}/public?dbname={database.dbname}"
+    conn_id = "dbt_test"
+
+    delete_connection_if_exists(conn_id)
+
+    session = settings.Session()
     connection = Connection(conn_id=conn_id, uri=uri)
     session.add(connection)
-
     session.commit()
+    session.close()
 
     yield conn_id
 
-    session.close()
+    delete_connection_if_exists(conn_id)
 
 
 def test_dbt_hook_get_target_from_empty_connection(no_user_airflow_conn, database):

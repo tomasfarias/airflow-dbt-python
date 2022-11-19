@@ -1,15 +1,9 @@
 """Unit test module for DbtLocalFsBackend."""
-import io
 import shutil
 from pathlib import Path
-from unittest.mock import MagicMock
 from zipfile import ZipFile
 
-import freezegun
-import pytest
-
-from airflow_dbt_python.hooks.backends import DbtLocalFsBackend
-from airflow_dbt_python.hooks.backends.localfs import py37_copytree
+from airflow_dbt_python.hooks.localfs import DbtLocalFsBackend, py37_copytree
 
 
 def test_pull_dbt_profiles(tmpdir, profiles_file):

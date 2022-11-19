@@ -6,7 +6,7 @@ import os
 from pathlib import Path
 from typing import IO, Iterable, Optional
 
-from .base import Address, DbtBackend, StrPath, zip_all_paths
+from .backend import Address, DbtBackend, StrPath, zip_all_paths
 
 try:
     from airflow.providers.amazon.aws.hooks.s3 import S3Hook

@@ -1,6 +1,4 @@
 """Unit test module for DbtCleanOperator."""
-from unittest.mock import patch
-
 import pytest
 
 from airflow_dbt_python.hooks.dbt import CleanTaskConfig
@@ -8,7 +6,7 @@ from airflow_dbt_python.operators.dbt import DbtCleanOperator, DbtCompileOperato
 
 condition = False
 try:
-    from airflow_dbt_python.hooks.backends import DbtS3Backend
+    from airflow_dbt_python.hooks.s3 import DbtS3Backend
 except ImportError:
     condition = True
 no_s3_backend = pytest.mark.skipif(

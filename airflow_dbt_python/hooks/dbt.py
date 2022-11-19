@@ -13,8 +13,6 @@ from urllib.parse import urlparse
 
 import dbt.flags as flags
 import yaml
-from airflow.exceptions import AirflowException
-from airflow.version import version as airflow_version
 from dbt.adapters.factory import register_adapter
 from dbt.clients import yaml_helper
 from dbt.config.profile import Profile, read_profile
@@ -45,12 +43,44 @@ from dbt.task.snapshot import SnapshotTask
 from dbt.task.test import TestTask
 from dbt.tracking import initialize_from_flags
 
+from airflow.exceptions import AirflowException
+from airflow.models.connection import Connection
+from airflow.version import version as airflow_version
+
 try:
     from airflow.hooks.base import BaseHook
 except ImportError:
     from airflow.hooks.base_hook import BaseHook  # type: ignore
 
-from .backends import DbtBackend, StrPath, build_backend
+from .backend import DbtBackend, StrPath
+from .localfs import DbtLocalFsBackend
+
+try:
+    from .s3 import DbtS3Backend
+except ImportError:
+    # S3 backend requires optional dependency
+    pass
+
+
+def build_backend(scheme: str, conn_id: Optional[str] = None) -> DbtBackend:
+    """Build a DbtBackend as long as the scheme is supported."""
+    if conn_id:
+        conn = Connection.get_connection_from_secrets(conn_id)
+        conn_type = conn.conn_type
+    else:
+        conn_type = ""
+
+    if scheme == "s3" or conn_type == "s3":
+        backend_cls: Type[DbtBackend] = DbtS3Backend
+    elif scheme == "" or conn_type == "filesystem":
+        backend_cls = DbtLocalFsBackend
+    else:
+        raise NotImplementedError(f"Backend {scheme} is not supported")
+
+    if conn_id:
+        return backend_cls(conn_id)
+    else:
+        return backend_cls()
 
 
 class FromStrEnum(Enum):

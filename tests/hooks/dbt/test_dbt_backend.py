@@ -6,16 +6,13 @@ import pytest
 
 from airflow import settings
 from airflow.models.connection import Connection
-from airflow_dbt_python.hooks.backends import (
-    Address,
-    DbtBackend,
-    DbtLocalFsBackend,
-    build_backend,
-)
+from airflow_dbt_python.hooks.backend import Address, DbtBackend
+from airflow_dbt_python.hooks.dbt import build_backend
+from airflow_dbt_python.hooks.localfs import DbtLocalFsBackend
 
 condition = False
 try:
-    from airflow_dbt_python.hooks.backends import DbtS3Backend
+    from airflow_dbt_python.hooks.s3 import DbtS3Backend
 except ImportError:
     condition = True
 no_s3_backend = pytest.mark.skipif(
