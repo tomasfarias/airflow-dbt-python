@@ -1,14 +1,15 @@
 """Sample basic DAG which dbt runs a project."""
 import datetime as dt
 
+import pendulum
 from airflow import DAG
-from airflow.utils.dates import days_ago
+
 from airflow_dbt_python.operators.dbt import DbtRunOperator
 
 with DAG(
     dag_id="example_basic_dbt",
     schedule_interval=None,
-    start_date=days_ago(1),
+    start_date=pendulum.today("UTC").add(days=-1),
     catchup=False,
     dagrun_timeout=dt.timedelta(minutes=60),
     default_args={"retries": 2},
