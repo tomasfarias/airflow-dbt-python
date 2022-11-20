@@ -4,8 +4,8 @@ The complete workflow includes a sequence of source, seed, and several run comma
 """
 import datetime as dt
 
+import pendulum
 from airflow import DAG
-from airflow.utils.dates import days_ago
 
 from airflow_dbt_python.operators.dbt import (
     DbtRunOperator,
@@ -17,7 +17,7 @@ from airflow_dbt_python.operators.dbt import (
 with DAG(
     dag_id="example_complete_dbt_workflow",
     schedule_interval=None,
-    start_date=days_ago(1),
+    start_date=pendulum.today("UTC").add(days=-1),
     catchup=False,
     dagrun_timeout=dt.timedelta(minutes=60),
 ) as dag:
@@ -64,6 +64,7 @@ with DAG(
         task_id="dbt_test",
         project_dir="/path/to/my/dbt/project/",
         profiles_dir="~/.dbt/",
+        exclude=["tag:deprecated"],
         target="production",
         profile="my-project",
     )
