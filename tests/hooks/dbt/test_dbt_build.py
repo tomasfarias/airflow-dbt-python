@@ -20,7 +20,7 @@ def test_dbt_build_task(
     success, results = hook.run_dbt_task(config)
 
     assert success is True
-    assert len(results.results) == 12
+    assert len(results.results) == 15
 
     for result in results.results:
         assert result.status == RunStatus.Success or result.status == TestStatus.Pass

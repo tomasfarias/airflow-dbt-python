@@ -10,12 +10,12 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import Any, Callable, Iterator, Optional, TypeVar, Union
 
-from dbt.contracts.results import RunExecutionResult, agate
-
 from airflow import AirflowException
 from airflow.models.baseoperator import BaseOperator
 from airflow.models.xcom import XCOM_RETURN_KEY
 from airflow.version import version
+from dbt.contracts.results import RunExecutionResult, agate
+
 from airflow_dbt_python.hooks.dbt import BaseConfig, DbtHook, LogFormat, Output
 
 # apply_defaults is deprecated in version 2 and beyond. This allows us to
@@ -168,31 +168,55 @@ class DbtBaseOperator(BaseOperator):
         Args:
             context: The Airflow's task context
         """
-        with self.dbt_directory() as dbt_dir:  # type: str
-            os.chdir(dbt_dir)
+        store_project_dir = self.project_dir
+        store_profiles_dir = self.profiles_dir
+        dbt_dir = self.dbt_hook.tmp_dir.name
 
-            config = self.get_dbt_config()
-            self.log.info("Running dbt configuration: %s", config)
+        os.chdir(dbt_dir)
 
-            try:
-                success, results = self.dbt_hook.run_dbt_task(config)
-            except Exception as e:
-                self.log.exception("There was an error executing dbt", exc_info=e)
-                success, results = False, {}
-                raise AirflowException(
-                    f"An error has occurred while executing dbt: {config.dbt_task}"
-                ) from e
+        try:
+            self.prepare_directory(dbt_dir)
+        except Exception as e:
+            raise AirflowException(
+                "Failed to prepare temporary directory for dbt execution"
+            ) from e
 
-            finally:
-                res = self.serializable_result(results)
+        config = self.get_dbt_config()
+        self.log.info("Running dbt configuration: %s", config)
 
-                if self.do_xcom_push is True and context.get("ti", None) is not None:
-                    # Some dbt operations use dataclasses for its results,
-                    # found in dbt.contracts.results. Each DbtBaseOperator
-                    # subclass should implement prepare_results to return a
-                    # serializable object
-                    self.xcom_push_artifacts(context, dbt_dir)
-                    self.xcom_push(context, key=XCOM_RETURN_KEY, value=res)
+        success, results = False, None
+
+        try:
+            success, results = self.dbt_hook.run_dbt_task(config)
+        except Exception as e:
+            self.log.exception("There was an error executing dbt", exc_info=e)
+            raise AirflowException(
+                f"An error has occurred while executing dbt: {config.dbt_task}"
+            ) from e
+
+        finally:
+            res = self.serializable_result(results)
+
+            if self.do_xcom_push is True and context.get("ti", None) is not None:
+                # Some dbt operations use dataclasses for its results,
+                # found in dbt.contracts.results. Each DbtBaseOperator
+                # subclass should implement prepare_results to return a
+                # serializable object
+                self.xcom_push_artifacts(context, dbt_dir)
+                self.xcom_push(context, key=XCOM_RETURN_KEY, value=res)
+
+        if self.push_dbt_project is True:
+            self.log.info("Pushing dbt project to: %s", store_project_dir)
+            self.dbt_hook.push_dbt_project(
+                dbt_dir,
+                store_project_dir,
+                conn_id=self.project_conn_id,
+                replace=self.replace_on_push,
+                delete_before=self.delete_before_push,
+            )
+
+        self.project_dir = store_project_dir
+        self.profiles_dir = store_profiles_dir
 
         if success is not True:
             raise AirflowException(
@@ -246,53 +270,6 @@ class DbtBaseOperator(BaseOperator):
                 json_dict = json.load(f)
             self.xcom_push(context, key=artifact, value=json_dict)
 
-    @contextmanager
-    def dbt_directory(self) -> Iterator[str]:
-        """Provides a temporary directory to execute dbt.
-
-        Creates a temporary directory for dbt to run in and prepares the dbt files
-        if they need to be pulled from S3. If a S3 backend is being used, and
-        self.push_dbt_project is True, before leaving the temporary directory, we push
-        back the project to S3. Pushing back a project enables commands like deps or
-        docs generate.
-
-        Yields:
-            The temporary directory's name.
-        """
-        store_profiles_dir = self.profiles_dir
-        store_project_dir = self.project_dir
-
-        with TemporaryDirectory(prefix="tmp-airflowdbt-") as tmp_dir:
-            self.log.info("Initializing temporary directory: %s", tmp_dir)
-            try:
-                self.prepare_directory(tmp_dir)
-            except Exception as e:
-                raise AirflowException(
-                    "Failed to prepare temporary directory for dbt execution"
-                ) from e
-
-            if getattr(self, "state", None) is not None:
-                state = Path(getattr(self, "state", ""))
-                # Since we are running in a temporary directory, we need to make
-                # state paths relative to this temporary directory.
-                if not state.is_absolute():
-                    setattr(self, "state", str(Path(tmp_dir) / state))
-
-            yield tmp_dir
-
-            if self.push_dbt_project is True:
-                self.log.info("Pushing dbt project to: %s", store_project_dir)
-                self.dbt_hook.push_dbt_project(
-                    tmp_dir,
-                    store_project_dir,
-                    conn_id=self.project_conn_id,
-                    replace=self.replace_on_push,
-                    delete_before=self.delete_before_push,
-                )
-
-        self.profiles_dir = store_profiles_dir
-        self.project_dir = store_project_dir
-
     def prepare_directory(self, tmp_dir: str):
         """Prepares a dbt directory by pulling files from S3."""
         if self.profiles_dir is not None:
@@ -309,6 +286,13 @@ class DbtBaseOperator(BaseOperator):
             conn_id=self.project_conn_id,
         )
         self.project_dir = str(project_dir_path) + "/"
+
+        if getattr(self, "state", None) is not None:
+            state = Path(getattr(self, "state", ""))
+            # Since we are running in a temporary directory, we need to make
+            # state paths relative to this temporary directory.
+            if not state.is_absolute():
+                setattr(self, "state", str(Path(tmp_dir) / state))
 
     @property
     def dbt_hook(self):

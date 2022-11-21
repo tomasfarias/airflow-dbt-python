@@ -7,12 +7,12 @@ import shutil
 
 import boto3
 import pytest
+from airflow import settings
+from airflow.models.connection import Connection
 from moto import mock_s3
 from psycopg2.errors import InvalidCatalogName
 from pytest_postgresql.janitor import DatabaseJanitor
 
-from airflow import settings
-from airflow.models.connection import Connection
 from airflow_dbt_python.hooks.dbt import DbtHook
 
 PROFILES = """
@@ -145,7 +145,7 @@ id,name
 """
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="module")
 def database(postgresql_proc):
     """Initialize a test postgres database."""
     janitor = DatabaseJanitor(
@@ -168,16 +168,27 @@ def database(postgresql_proc):
     with janitor.cursor() as cur:
         cur.execute(
             """\
-        CREATE TABLE my_source_1 (id serial PRIMARY KEY, num integer);
-        CREATE TABLE my_source_2 (id serial PRIMARY KEY, num integer);
-        """
+            CREATE TABLE my_source_1 (id serial PRIMARY KEY, num integer);
+            CREATE TABLE my_source_2 (id serial PRIMARY KEY, num integer);
+            """
         )
 
     yield postgresql_proc
+
+    with janitor.cursor() as cur:
+        # It seems that dropping the database doesn't drop tables too.
+        # So when a new one is created the tables are still there.
+        cur.execute(
+            """\
+            DROP SCHEMA public CASCADE;
+            CREATE SCHEMA public;
+            """
+        )
+
     janitor.drop()
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="module")
 def profiles_file(tmp_path_factory, database):
     """Create a profiles.yml file for testing."""
     p = tmp_path_factory.mktemp(".dbt") / "profiles.yml"
@@ -203,7 +214,7 @@ def delete_connections_if_exists(*conn_ids):
     session.close()
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="module")
 def airflow_conns(database):
     """Create Airflow connections for testing.
 
@@ -232,14 +243,14 @@ def airflow_conns(database):
     delete_connections_if_exists(*ids)
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="module")
 def dbt_project_dir(tmp_path_factory):
     """A temporary directory to store dbt test files."""
     d = tmp_path_factory.mktemp("project")
     return d
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="module")
 def logs_dir(dbt_project_dir):
     """Create a directory to persist dbt logs."""
     d = dbt_project_dir / "logs"
@@ -261,7 +272,7 @@ def dbt_project_file(dbt_project_dir, logs_dir, request):
         (logs_dir / "dbt.log").unlink()
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="module")
 def model_files(dbt_project_dir):
     """Create test model files."""
     d = dbt_project_dir / "models"
@@ -275,7 +286,7 @@ def model_files(dbt_project_dir):
     return paths
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="module")
 def sources_file(model_files, database):
     """Create test source file."""
     m = model_files[0].parent / "my_sources.yml"
@@ -283,7 +294,7 @@ def sources_file(model_files, database):
     return m
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="module")
 def seed_files(dbt_project_dir):
     """Create test seed files."""
     d = dbt_project_dir / "seeds"
@@ -428,10 +439,18 @@ models:
         tests:
           - unique
           - not_null
+  - name: model_3
+    columns:
+      - name: field1
+        tests:
+          - unique
+          - not_null
+          - accepted_values:
+              values: ['123', '456']
 """
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="module")
 def generic_tests_files(dbt_project_dir):
     """Create a dbt generic test YAML file."""
     d = dbt_project_dir / "models"
@@ -456,7 +475,7 @@ WHERE field1 != 123
 """
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="module")
 def singular_tests_files(dbt_project_dir):
     """Create singular test files."""
     d = dbt_project_dir / "tests"
@@ -494,7 +513,7 @@ SELECT
 """
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="module")
 def snapshot_files(dbt_project_dir):
     """Create dbt snapshot files."""
     d = dbt_project_dir / "snapshots"

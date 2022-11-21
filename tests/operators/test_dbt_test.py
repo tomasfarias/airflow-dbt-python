@@ -70,6 +70,7 @@ def run_models(hook, dbt_project_file, profiles_file, model_files):
     config = factory.create_config(
         project_dir=dbt_project_file.parent,
         profiles_dir=profiles_file.parent,
+        full_refresh=True,
     )
     hook.run_dbt_task(config)
     yield
@@ -89,7 +90,7 @@ def test_dbt_test_generic_tests(
     results = op.execute({})
 
     assert results["args"]["generic"] is True
-    assert len(results["results"]) == 5
+    assert len(results["results"]) == 8
     for test_result in results["results"]:
         assert test_result["status"] == TestStatus.Pass
 
@@ -129,7 +130,7 @@ def test_dbt_test_singular_and_generic_tests(
     )
     results = op.execute({})
 
-    assert len(results["results"]) == 7
+    assert len(results["results"]) == 10
     for test_result in results["results"]:
         assert test_result["status"] == TestStatus.Pass
 

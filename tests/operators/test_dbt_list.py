@@ -78,12 +78,15 @@ def test_dbt_ls_all(
         "test.seed_2",
         "test.snapshot_1.test_snapshot",
         "test.accepted_values_model_2_field1__123__456",
+        "test.accepted_values_model_3_field1__123__456",
         "test.not_null_model_2_field1",
         "test.not_null_model_2_field2",
+        "test.not_null_model_3_field1",
         "test.singular_test_1",
         "test.singular_test_2",
         "test.unique_model_2_field1",
         "test.unique_model_2_field2",
+        "test.unique_model_3_field1",
     ]
 
     assert all_files == expected

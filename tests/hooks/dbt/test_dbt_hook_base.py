@@ -1,7 +1,10 @@
-import pytest
+"""Test the base dbt hook class."""
+from pathlib import Path
 
+import pytest
 from airflow import settings
 from airflow.models.connection import Connection
+
 from airflow_dbt_python.hooks.dbt import DbtHook
 from airflow_dbt_python.hooks.localfs import DbtLocalFsBackend
 
@@ -13,6 +16,18 @@ except ImportError:
 no_s3_backend = pytest.mark.skipif(
     condition, reason="S3 Backend not available, consider installing amazon extras"
 )
+
+
+def test_dbt_hook_tmp_directory():
+    """Test dbt directory is created and destroyed."""
+    hook = DbtHook()
+    dbt_dir = hook.tmp_dir.name
+
+    assert Path(dbt_dir).exists()
+
+    hook.delete_tmp_dir()
+
+    assert not Path(dbt_dir).exists()
 
 
 @no_s3_backend

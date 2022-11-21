@@ -257,7 +257,7 @@ def delete_connection_if_exists(conn_id):
     session.close()
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="module")
 def connection(database):
     """Create a PostgreSQL database connection in Airflow."""
     conn_id = "integration_test_conn"
@@ -479,26 +479,26 @@ def test_example_complete_dbt_workflow_dag(
 
         assert ti.state == TaskInstanceState.SUCCESS
 
+        task_expected_results = {
+            "dbt_run_incremental_hourly": {
+                RunStatus.Success: 1,
+            },
+            "dbt_seed": {
+                RunStatus.Success: 2,
+            },
+            "dbt_run_hourly": {
+                RunStatus.Success: 2,
+            },
+            "dbt_test": {
+                TestStatus.Pass: 4,
+            },
+        }
+
         if not isinstance(task, DbtSourceFreshnessOperator):
             results = ti.xcom_pull(
                 task_ids=task.task_id,
                 key="return_value",
             )
+            expected = task_expected_results[task.task_id]
 
-            if task.task_id == "dbt_run_incremental_hourly":
-                expected = {
-                    RunStatus.Success: 1,
-                }
-            elif task.task_id == "dbt_seed":
-                expected = {
-                    RunStatus.Success: 2,
-                }
-            elif task.task_id == "dbt_run_hourly":
-                expected = {
-                    RunStatus.Success: 2,
-                }
-            elif task.task_id == "dbt_test":
-                expected = {
-                    TestStatus.Pass: 7,
-                }
             assert_dbt_results(results, expected)

@@ -16,6 +16,7 @@ def seed_and_run(hook, dbt_project_file, profiles_file, model_files, seed_files)
     config_run = factory_run.create_config(
         project_dir=dbt_project_file.parent,
         profiles_dir=profiles_file.parent,
+        full_refresh=True,
     )
     hook.run_dbt_task(config_seed)
     hook.run_dbt_task(config_run)
@@ -40,7 +41,7 @@ def test_dbt_test_generic_tests_task(
     success, results = hook.run_dbt_task(config)
     assert success is True
     assert results.args["generic"] is True
-    assert len(results.results) == 5
+    assert len(results.results) == 8
     for test_result in results.results:
         assert test_result.status == TestStatus.Pass
 
@@ -119,6 +120,6 @@ def test_dbt_test_all_tests_task(
     success, results = hook.run_dbt_task(config)
 
     assert success is True
-    assert len(results.results) == 7
+    assert len(results.results) == 10
     for test_result in results.results:
         assert test_result.status == TestStatus.Pass

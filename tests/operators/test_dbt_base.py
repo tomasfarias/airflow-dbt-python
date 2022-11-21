@@ -22,58 +22,61 @@ def test_dbt_base_does_not_implement_command():
         op.command
 
 
-def test_dbt_base_dbt_directory(profiles_file, dbt_project_file, model_files):
-    """Test dbt_directory yields a temporary directory."""
+def test_dbt_base_prepare_directory(profiles_file, dbt_project_file, model_files):
+    """Test prepare_directory sets relative paths."""
     op = DbtBaseOperator(
         task_id="dbt_task",
         project_dir=dbt_project_file.parent,
         profiles_dir=profiles_file.parent,
     )
     op.state = "target/"
+    tmp_dir = op.dbt_hook.tmp_dir.name
+    op.prepare_directory(tmp_dir)
 
-    with op.dbt_directory() as tmp_dir:
-        assert Path(tmp_dir).exists()
-        assert Path(op.project_dir) == Path(tmp_dir)
-        assert Path(op.profiles_dir) == Path(tmp_dir)
-        assert op.state == f"{tmp_dir}/target"
+    assert Path(tmp_dir).exists()
+    assert Path(op.project_dir) == Path(tmp_dir)
+    assert Path(op.profiles_dir) == Path(tmp_dir)
+    assert op.state == f"{tmp_dir}/target"
 
 
-def test_dbt_base_dbt_directory_with_absolute_state(
+def test_dbt_base_prepare_directory_with_absolute_state(
     profiles_file, dbt_project_file, model_files
 ):
-    """Test dbt_directory does not alter state when not needed."""
+    """Test prepare_directory does not alter state when not needed."""
     op = DbtBaseOperator(
         task_id="dbt_task",
         project_dir=dbt_project_file.parent,
         profiles_dir=profiles_file.parent,
     )
     op.state = "/absolute/path/to/target/"
+    tmp_dir = op.dbt_hook.tmp_dir.name
+    op.prepare_directory(tmp_dir)
 
-    with op.dbt_directory() as tmp_dir:
-        assert Path(tmp_dir).exists()
-        assert op.state == "/absolute/path/to/target/"
+    assert Path(tmp_dir).exists()
+    assert op.state == "/absolute/path/to/target/"
 
 
 def test_dbt_base_dbt_directory_with_no_state(
     profiles_file, dbt_project_file, model_files
 ):
-    """Test dbt_directory does not alter state when not needed."""
+    """Test prepare_directory does not alter state when not needed."""
     op = DbtBaseOperator(
         task_id="dbt_task",
         project_dir=dbt_project_file.parent,
         profiles_dir=profiles_file.parent,
     )
+    tmp_dir = op.dbt_hook.tmp_dir.name
+    op.prepare_directory(tmp_dir)
 
-    with op.dbt_directory() as tmp_dir:
-        assert Path(tmp_dir).exists()
-        assert getattr(op, "state", None) is None
+    assert Path(tmp_dir).exists()
+    assert getattr(op, "state", None) is None
 
 
 @no_s3_backend
 def test_dbt_base_dbt_directory_changed_to_s3(
     dbt_project_file, profiles_file, s3_bucket, s3_hook
 ):
-    """Test dbt_directory yields a temporary directory and updates attributes.
+    """Test prepare_directory and updates attributes.
 
     Certain attributes, like project_dir, profiles_dir, and state, need to be updated to
     work once a temporary directory has been created, in particular, when pulling from
@@ -95,16 +98,18 @@ def test_dbt_base_dbt_directory_changed_to_s3(
         profiles_dir=f"s3://{s3_bucket}/dbt/profiles/",
     )
     op.state = "target/"
+    tmp_dir = op.dbt_hook.tmp_dir.name
 
-    with op.dbt_directory() as tmp_dir:
-        assert Path(tmp_dir).exists()
-        assert Path(tmp_dir).is_dir()
+    op.prepare_directory(tmp_dir)
 
-        assert op.project_dir == f"{tmp_dir}/"
-        assert op.profiles_dir == f"{tmp_dir}/"
-        assert op.state == f"{tmp_dir}/target"
+    assert Path(tmp_dir).exists()
+    assert Path(tmp_dir).is_dir()
 
-        assert Path(f"{tmp_dir}/profiles.yml").exists()
-        assert Path(f"{tmp_dir}/profiles.yml").is_file()
-        assert Path(f"{tmp_dir}/dbt_project.yml").exists()
-        assert Path(f"{tmp_dir}/dbt_project.yml").is_file()
+    assert op.project_dir == f"{tmp_dir}/"
+    assert op.profiles_dir == f"{tmp_dir}/"
+    assert op.state == f"{tmp_dir}/target"
+
+    assert Path(f"{tmp_dir}/profiles.yml").exists()
+    assert Path(f"{tmp_dir}/profiles.yml").is_file()
+    assert Path(f"{tmp_dir}/dbt_project.yml").exists()
+    assert Path(f"{tmp_dir}/dbt_project.yml").is_file()

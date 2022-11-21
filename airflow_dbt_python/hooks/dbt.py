@@ -8,11 +8,15 @@ import pickle
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
+from tempfile import TemporaryDirectory
 from typing import Any, Optional, Type, Union
 from urllib.parse import urlparse
 
 import dbt.flags as flags
 import yaml
+from airflow.exceptions import AirflowException
+from airflow.models.connection import Connection
+from airflow.version import version as airflow_version
 from dbt.adapters.factory import register_adapter
 from dbt.clients import yaml_helper
 from dbt.config.profile import Profile, read_profile
@@ -42,10 +46,6 @@ from dbt.task.seed import SeedTask
 from dbt.task.snapshot import SnapshotTask
 from dbt.task.test import TestTask
 from dbt.tracking import initialize_from_flags
-
-from airflow.exceptions import AirflowException
-from airflow.models.connection import Connection
-from airflow.version import version as airflow_version
 
 try:
     from airflow.hooks.base import BaseHook
@@ -683,11 +683,28 @@ class DbtHook(BaseHook):
     Allows for running dbt tasks and provides required configurations for each task.
     """
 
-    def __init__(self, *args, **kwargs):
+    conn_name_attr = "dbt_conn_id"
+    default_conn_name = "dbt_default"
+
+    def __init__(self, *args, tmp_dir_prefix: str = "tmp-airflow-dbt-", **kwargs):
         self.backends: dict[tuple[str, Optional[str]], DbtBackend] = {}
         if airflow_version.split(".")[0] == "1":
             kwargs["source"] = None
+        self.tmp_dir_prefix = tmp_dir_prefix
+        self._tmp_dir = None
         super().__init__(*args, **kwargs)
+
+    @property
+    def tmp_dir(self) -> TemporaryDirectory:
+        """Provides a temporary directory to execute dbt."""
+        if self._tmp_dir is None:
+            self._tmp_dir = TemporaryDirectory(prefix=self.tmp_dir_prefix)
+            self.log.info("Initialized temporary directory: %s", self._tmp_dir.name)
+        return self._tmp_dir
+
+    def delete_tmp_dir(self):
+        """Delete any existing TemporaryDirectory."""
+        self._tmp_dir = None
 
     def get_backend(self, scheme: str, conn_id: Optional[str]) -> DbtBackend:
         """Get a backend to interact with dbt files.
@@ -705,7 +722,7 @@ class DbtHook(BaseHook):
     def pull_dbt_profiles(
         self,
         profiles_dir: StrPath,
-        destination: StrPath,
+        destination: Optional[StrPath] = None,
         conn_id: Optional[str] = None,
     ) -> Path:
         """Pull a dbt profiles.yml file from a given profiles_dir.
@@ -716,12 +733,15 @@ class DbtHook(BaseHook):
         scheme = urlparse(str(profiles_dir)).scheme
         backend = self.get_backend(scheme, conn_id)
 
-        return backend.pull_dbt_profiles(profiles_dir, destination)
+        if destination is not None:
+            return backend.pull_dbt_profiles(profiles_dir, destination)
+
+        return backend.pull_dbt_profiles(profiles_dir, self.tmp_dir.name)
 
     def pull_dbt_project(
         self,
         project_dir: StrPath,
-        destination: StrPath,
+        destination: Optional[StrPath] = None,
         conn_id: Optional[str] = None,
     ) -> Path:
         """Pull a dbt project from a given project_dir.
@@ -732,7 +752,10 @@ class DbtHook(BaseHook):
         scheme = urlparse(str(project_dir)).scheme
         backend = self.get_backend(scheme, conn_id)
 
-        return backend.pull_dbt_project(project_dir, destination)
+        if destination is not None:
+            return backend.pull_dbt_project(project_dir, destination)
+
+        return backend.pull_dbt_project(project_dir, self.tmp_dir.name)
 
     def push_dbt_project(
         self,
