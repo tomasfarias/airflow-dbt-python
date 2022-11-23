@@ -14,7 +14,7 @@ jobs:
         id: wait-for-test
         with:
           token: ${{ secrets.PA_TOKEN }}
-          checkName: test
+          checkName: CI
           ref: ${{ github.sha }}
       - uses: actions/checkout@v2.3.4
       - name: Set up Python 3.9
@@ -24,7 +24,7 @@ jobs:
       - name: Install Poetry
         uses: abatilo/actions-poetry@v2.1.4
         with:
-          poetry-version: 1.2.0b1
+          poetry-version: 1.2.2
       - name: Install airflow-dbt-python with Poetry
         run: poetry install
       - name: Build airflow-dbt-python with Poetry
