@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>airflow_dbt_python.hooks.dbt &mdash; airflow-dbt-python 0.15.0 documentation</title>
+  <title>airflow_dbt_python.hooks.dbt &mdash; airflow-dbt-python 0.15.1 documentation</title>
       <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="../../../_static/copybutton.css" type="text/css" />
@@ -15,7 +15,9 @@
         <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
         <script src="../../../_static/jquery.js"></script>
         <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../../../_static/doctools.js"></script>
+        <script src="../../../_static/sphinx_highlight.js"></script>
         <script src="../../../_static/clipboard.min.js"></script>
         <script src="../../../_static/copybutton.js"></script>
     <script src="../../../_static/js/theme.js"></script>
@@ -31,7 +33,7 @@
             <a href="../../../index.html" class="icon icon-home"> airflow-dbt-python
           </a>
               <div class="version">
-                0.15.0
+                0.15.1
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
@@ -63,9 +65,9 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
-          <li><a href="../../index.html">Module code</a> &raquo;</li>
-      <li>airflow_dbt_python.hooks.dbt</li>
+      <li><a href="../../../index.html" class="icon icon-home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">airflow_dbt_python.hooks.dbt</li>
       <li class="wy-breadcrumbs-aside">
       </li>
   </ul>
@@ -85,11 +87,13 @@
 <span class="kn">from</span> <span class="nn">dataclasses</span> <span class="kn">import</span> <span class="n">dataclass</span>
 <span class="kn">from</span> <span class="nn">enum</span> <span class="kn">import</span> <span class="n">Enum</span>
 <span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Union</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Type</span><span class="p">,</span> <span class="n">Union</span>
 <span class="kn">from</span> <span class="nn">urllib.parse</span> <span class="kn">import</span> <span class="n">urlparse</span>
 
 <span class="kn">import</span> <span class="nn">dbt.flags</span> <span class="k">as</span> <span class="nn">flags</span>
 <span class="kn">import</span> <span class="nn">yaml</span>
+<span class="kn">from</span> <span class="nn">airflow.exceptions</span> <span class="kn">import</span> <span class="n">AirflowException</span>
+<span class="kn">from</span> <span class="nn">airflow.version</span> <span class="kn">import</span> <span class="n">version</span> <span class="k">as</span> <span class="n">airflow_version</span>
 <span class="kn">from</span> <span class="nn">dbt.adapters.factory</span> <span class="kn">import</span> <span class="n">register_adapter</span>
 <span class="kn">from</span> <span class="nn">dbt.clients</span> <span class="kn">import</span> <span class="n">yaml_helper</span>
 <span class="kn">from</span> <span class="nn">dbt.config.profile</span> <span class="kn">import</span> <span class="n">Profile</span><span class="p">,</span> <span class="n">read_profile</span>
@@ -120,13 +124,10 @@
 <span class="kn">from</span> <span class="nn">dbt.task.test</span> <span class="kn">import</span> <span class="n">TestTask</span>
 <span class="kn">from</span> <span class="nn">dbt.tracking</span> <span class="kn">import</span> <span class="n">initialize_from_flags</span>
 
-<span class="kn">from</span> <span class="nn">airflow.exceptions</span> <span class="kn">import</span> <span class="n">AirflowException</span>
-<span class="kn">from</span> <span class="nn">airflow.version</span> <span class="kn">import</span> <span class="n">version</span> <span class="k">as</span> <span class="n">airflow_version</span>
-
 <span class="k">try</span><span class="p">:</span>
     <span class="kn">from</span> <span class="nn">airflow.hooks.base</span> <span class="kn">import</span> <span class="n">BaseHook</span>
 <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
-    <span class="kn">from</span> <span class="nn">airflow.hooks.base_hook</span> <span class="kn">import</span> <span class="n">BaseHook</span>
+    <span class="kn">from</span> <span class="nn">airflow.hooks.base_hook</span> <span class="kn">import</span> <span class="n">BaseHook</span>  <span class="c1"># type: ignore</span>
 
 <span class="kn">from</span> <span class="nn">.backends</span> <span class="kn">import</span> <span class="n">DbtBackend</span><span class="p">,</span> <span class="n">StrPath</span><span class="p">,</span> <span class="n">build_backend</span>
 
@@ -183,7 +184,7 @@
 <span class="k">class</span> <span class="nc">BaseConfig</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;BaseConfig dbt arguments for all tasks.&quot;&quot;&quot;</span>
 
-    <span class="bp">cls</span><span class="p">:</span> <span class="n">BaseTask</span> <span class="o">=</span> <span class="n">dataclasses</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="n">BaseTask</span><span class="p">,</span> <span class="n">init</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="nb">repr</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="bp">cls</span><span class="p">:</span> <span class="n">Type</span><span class="p">[</span><span class="n">BaseTask</span><span class="p">]</span> <span class="o">=</span> <span class="n">dataclasses</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="n">init</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="nb">repr</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 
     <span class="c1"># dbt project configuration</span>
     <span class="n">project_dir</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
@@ -276,7 +277,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">send_anonymous_usage_stats</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">anonymous_usage_stats</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">dbt_task</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">BaseTask</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">dbt_task</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Type</span><span class="p">[</span><span class="n">BaseTask</span><span class="p">]:</span>
         <span class="sd">&quot;&quot;&quot;Access to the underlying dbt task class.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;cls&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
@@ -284,7 +285,7 @@
             <span class="p">)</span>
         <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;cls&quot;</span><span class="p">)</span>
 
-<div class="viewcode-block" id="BaseConfig.patch_manifest_task"><a class="viewcode-back" href="../../../reference/hooks.html#airflow_dbt_python.hooks.dbt.BaseConfig.patch_manifest_task">[docs]</a>    <span class="k">def</span> <span class="nf">patch_manifest_task</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">task</span><span class="p">:</span> <span class="n">BaseTask</span><span class="p">):</span>
+<div class="viewcode-block" id="BaseConfig.patch_manifest_task"><a class="viewcode-back" href="../../../reference/hooks.html#airflow_dbt_python.hooks.dbt.BaseConfig.patch_manifest_task">[docs]</a>    <span class="k">def</span> <span class="nf">patch_manifest_task</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">task</span><span class="p">:</span> <span class="n">ManifestTask</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Patch a dbt task to use a pre-compiled graph and manifest.</span>
 
 <span class="sd">        Parsing and compilation of a dbt project starts with the invocation of</span>
@@ -337,11 +338,11 @@
                 <span class="p">[</span><span class="n">n</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">task</span><span class="o">.</span><span class="n">_flattened_nodes</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">n</span><span class="o">.</span><span class="n">is_ephemeral_model</span><span class="p">]</span>
             <span class="p">)</span>
 
-        <span class="n">task</span><span class="o">.</span><span class="n">_runtime_initialize</span> <span class="o">=</span> <span class="n">_runtime_initialize</span></div>
+        <span class="n">task</span><span class="o">.</span><span class="n">_runtime_initialize</span> <span class="o">=</span> <span class="n">_runtime_initialize</span>  <span class="c1"># type: ignore</span></div>
 
 <div class="viewcode-block" id="BaseConfig.create_dbt_task"><a class="viewcode-back" href="../../../reference/hooks.html#airflow_dbt_python.hooks.dbt.BaseConfig.create_dbt_task">[docs]</a>    <span class="k">def</span> <span class="nf">create_dbt_task</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">extra_targets</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">BaseTask</span><span class="p">,</span> <span class="n">RuntimeConfig</span><span class="p">]:</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">BaseTask</span><span class="p">,</span> <span class="n">Optional</span><span class="p">[</span><span class="n">RuntimeConfig</span><span class="p">]]:</span>
         <span class="sd">&quot;&quot;&quot;Create a dbt task given with this configuration.</span>
 
 <span class="sd">        Extra targets may be specified to be appended to this task&#39;s dbt project&#39;s</span>
@@ -357,13 +358,10 @@
         <span class="n">runtime_config</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">create_runtime_config</span><span class="p">(</span><span class="n">extra_targets</span><span class="p">)</span>
         <span class="n">task</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dbt_task</span><span class="p">(</span><span class="n">args</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">runtime_config</span><span class="p">)</span>
 
-        <span class="k">if</span> <span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">compiled_target</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
-            <span class="ow">and</span> <span class="nb">issubclass</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dbt_task</span><span class="p">,</span> <span class="n">ManifestTask</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">True</span>
-        <span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">compiled_target</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">task</span><span class="p">,</span> <span class="n">ManifestTask</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">:</span>
             <span class="c1"># Only supported by subclasses of dbt&#39;s ManifestTask.</span>
             <span class="c1"># Represented here by the presence of the compiled_target attribute.</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">patch_manifest_task</span><span class="p">(</span><span class="n">task</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">patch_manifest_task</span><span class="p">(</span><span class="n">task</span><span class="p">)</span>  <span class="c1"># type: ignore</span>
 
         <span class="k">return</span> <span class="p">(</span><span class="n">task</span><span class="p">,</span> <span class="n">runtime_config</span><span class="p">)</span></div>
 
@@ -408,7 +406,9 @@
 
         <span class="n">project_renderer</span> <span class="o">=</span> <span class="n">DbtProjectYamlRenderer</span><span class="p">(</span><span class="n">profile</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">parsed_vars</span><span class="p">)</span>
         <span class="n">project</span> <span class="o">=</span> <span class="n">Project</span><span class="o">.</span><span class="n">from_project_root</span><span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">project_dir</span><span class="p">,</span> <span class="n">project_renderer</span><span class="p">,</span> <span class="n">verify_version</span><span class="o">=</span><span class="nb">bool</span><span class="p">(</span><span class="n">flags</span><span class="o">.</span><span class="n">VERSION_CHECK</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">project_dir</span> <span class="ow">or</span> <span class="s2">&quot;.&quot;</span><span class="p">,</span>
+            <span class="n">project_renderer</span><span class="p">,</span>
+            <span class="n">verify_version</span><span class="o">=</span><span class="nb">bool</span><span class="p">(</span><span class="n">flags</span><span class="o">.</span><span class="n">VERSION_CHECK</span><span class="p">),</span>
         <span class="p">)</span>
         <span class="n">project</span><span class="o">.</span><span class="n">project_env_vars</span> <span class="o">=</span> <span class="n">project_renderer</span><span class="o">.</span><span class="n">ctx_obj</span><span class="o">.</span><span class="n">env_vars</span>
 
@@ -530,7 +530,7 @@
 <span class="k">class</span> <span class="nc">BuildTaskConfig</span><span class="p">(</span><span class="n">TableMutabilityConfig</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Dbt build task arguments.&quot;&quot;&quot;</span>
 
-    <span class="bp">cls</span><span class="p">:</span> <span class="n">BaseTask</span> <span class="o">=</span> <span class="n">dataclasses</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="n">BuildTask</span><span class="p">,</span> <span class="n">init</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="bp">cls</span><span class="p">:</span> <span class="n">Type</span><span class="p">[</span><span class="n">BaseTask</span><span class="p">]</span> <span class="o">=</span> <span class="n">dataclasses</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="n">BuildTask</span><span class="p">,</span> <span class="n">init</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
     <span class="n">singular</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">indirect_selection</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">resource_types</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
@@ -559,7 +559,7 @@
 <span class="k">class</span> <span class="nc">CleanTaskConfig</span><span class="p">(</span><span class="n">BaseConfig</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Dbt clean task arguments.&quot;&quot;&quot;</span>
 
-    <span class="bp">cls</span><span class="p">:</span> <span class="n">BaseTask</span> <span class="o">=</span> <span class="n">dataclasses</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="n">CleanTask</span><span class="p">,</span> <span class="n">init</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="bp">cls</span><span class="p">:</span> <span class="n">Type</span><span class="p">[</span><span class="n">BaseTask</span><span class="p">]</span> <span class="o">=</span> <span class="n">dataclasses</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="n">CleanTask</span><span class="p">,</span> <span class="n">init</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
     <span class="n">parse_only</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">which</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">dataclasses</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s2">&quot;clean&quot;</span><span class="p">,</span> <span class="n">init</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></div>
 
@@ -568,7 +568,7 @@
 <span class="k">class</span> <span class="nc">CompileTaskConfig</span><span class="p">(</span><span class="n">TableMutabilityConfig</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Dbt compile task arguments.&quot;&quot;&quot;</span>
 
-    <span class="bp">cls</span><span class="p">:</span> <span class="n">BaseTask</span> <span class="o">=</span> <span class="n">dataclasses</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="n">CompileTask</span><span class="p">,</span> <span class="n">init</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="bp">cls</span><span class="p">:</span> <span class="n">Type</span><span class="p">[</span><span class="n">BaseTask</span><span class="p">]</span> <span class="o">=</span> <span class="n">dataclasses</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="n">CompileTask</span><span class="p">,</span> <span class="n">init</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
     <span class="n">parse_only</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">which</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">dataclasses</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s2">&quot;compile&quot;</span><span class="p">,</span> <span class="n">init</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></div>
 
@@ -577,7 +577,7 @@
 <span class="k">class</span> <span class="nc">DebugTaskConfig</span><span class="p">(</span><span class="n">BaseConfig</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Dbt debug task arguments.&quot;&quot;&quot;</span>
 
-    <span class="bp">cls</span><span class="p">:</span> <span class="n">BaseTask</span> <span class="o">=</span> <span class="n">dataclasses</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="n">DebugTask</span><span class="p">,</span> <span class="n">init</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="bp">cls</span><span class="p">:</span> <span class="n">Type</span><span class="p">[</span><span class="n">BaseTask</span><span class="p">]</span> <span class="o">=</span> <span class="n">dataclasses</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="n">DebugTask</span><span class="p">,</span> <span class="n">init</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
     <span class="n">config_dir</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">which</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">dataclasses</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s2">&quot;debug&quot;</span><span class="p">,</span> <span class="n">init</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></div>
 
@@ -586,7 +586,7 @@
 <span class="k">class</span> <span class="nc">DepsTaskConfig</span><span class="p">(</span><span class="n">BaseConfig</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Compile task arguments.&quot;&quot;&quot;</span>
 
-    <span class="bp">cls</span><span class="p">:</span> <span class="n">BaseTask</span> <span class="o">=</span> <span class="n">dataclasses</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="n">DepsTask</span><span class="p">,</span> <span class="n">init</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="bp">cls</span><span class="p">:</span> <span class="n">Type</span><span class="p">[</span><span class="n">BaseTask</span><span class="p">]</span> <span class="o">=</span> <span class="n">dataclasses</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="n">DepsTask</span><span class="p">,</span> <span class="n">init</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
     <span class="n">which</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">dataclasses</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s2">&quot;deps&quot;</span><span class="p">,</span> <span class="n">init</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></div>
 
 
@@ -594,7 +594,7 @@
 <span class="k">class</span> <span class="nc">GenerateTaskConfig</span><span class="p">(</span><span class="n">SelectionConfig</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Generate task arguments.&quot;&quot;&quot;</span>
 
-    <span class="bp">cls</span><span class="p">:</span> <span class="n">BaseTask</span> <span class="o">=</span> <span class="n">dataclasses</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="n">GenerateTask</span><span class="p">,</span> <span class="n">init</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="bp">cls</span><span class="p">:</span> <span class="n">Type</span><span class="p">[</span><span class="n">BaseTask</span><span class="p">]</span> <span class="o">=</span> <span class="n">dataclasses</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="n">GenerateTask</span><span class="p">,</span> <span class="n">init</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
     <span class="nb">compile</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
     <span class="n">which</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">dataclasses</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s2">&quot;generate&quot;</span><span class="p">,</span> <span class="n">init</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></div>
 
@@ -603,7 +603,7 @@
 <span class="k">class</span> <span class="nc">ListTaskConfig</span><span class="p">(</span><span class="n">SelectionConfig</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Dbt list task arguments.&quot;&quot;&quot;</span>
 
-    <span class="bp">cls</span><span class="p">:</span> <span class="n">BaseTask</span> <span class="o">=</span> <span class="n">dataclasses</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="n">ListTask</span><span class="p">,</span> <span class="n">init</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="bp">cls</span><span class="p">:</span> <span class="n">Type</span><span class="p">[</span><span class="n">BaseTask</span><span class="p">]</span> <span class="o">=</span> <span class="n">dataclasses</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="n">ListTask</span><span class="p">,</span> <span class="n">init</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
     <span class="n">indirect_selection</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">output</span><span class="p">:</span> <span class="n">Output</span> <span class="o">=</span> <span class="n">Output</span><span class="o">.</span><span class="n">SELECTOR</span>
     <span class="n">output_keys</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
@@ -615,7 +615,7 @@
 <span class="k">class</span> <span class="nc">ParseTaskConfig</span><span class="p">(</span><span class="n">BaseConfig</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Dbt parse task arguments.&quot;&quot;&quot;</span>
 
-    <span class="bp">cls</span><span class="p">:</span> <span class="n">BaseTask</span> <span class="o">=</span> <span class="n">dataclasses</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="n">ParseTask</span><span class="p">,</span> <span class="n">init</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="bp">cls</span><span class="p">:</span> <span class="n">Type</span><span class="p">[</span><span class="n">BaseTask</span><span class="p">]</span> <span class="o">=</span> <span class="n">dataclasses</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="n">ParseTask</span><span class="p">,</span> <span class="n">init</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
     <span class="nb">compile</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">which</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">dataclasses</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s2">&quot;parse&quot;</span><span class="p">,</span> <span class="n">init</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
     <span class="n">write_manifest</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span></div>
@@ -625,7 +625,7 @@
 <span class="k">class</span> <span class="nc">RunTaskConfig</span><span class="p">(</span><span class="n">TableMutabilityConfig</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Dbt run task arguments.&quot;&quot;&quot;</span>
 
-    <span class="bp">cls</span><span class="p">:</span> <span class="n">BaseTask</span> <span class="o">=</span> <span class="n">dataclasses</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="n">RunTask</span><span class="p">,</span> <span class="n">init</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="bp">cls</span><span class="p">:</span> <span class="n">Type</span><span class="p">[</span><span class="n">BaseTask</span><span class="p">]</span> <span class="o">=</span> <span class="n">dataclasses</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="n">RunTask</span><span class="p">,</span> <span class="n">init</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
     <span class="n">which</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">dataclasses</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s2">&quot;run&quot;</span><span class="p">,</span> <span class="n">init</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></div>
 
 
@@ -634,7 +634,7 @@
     <span class="sd">&quot;&quot;&quot;Dbt run-operation task arguments.&quot;&quot;&quot;</span>
 
     <span class="n">args</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">{}</span><span class="s2">&quot;</span>
-    <span class="bp">cls</span><span class="p">:</span> <span class="n">BaseTask</span> <span class="o">=</span> <span class="n">dataclasses</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="n">RunOperationTask</span><span class="p">,</span> <span class="n">init</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="bp">cls</span><span class="p">:</span> <span class="n">Type</span><span class="p">[</span><span class="n">BaseTask</span><span class="p">]</span> <span class="o">=</span> <span class="n">dataclasses</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="n">RunOperationTask</span><span class="p">,</span> <span class="n">init</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
     <span class="n">macro</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">which</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">dataclasses</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s2">&quot;run-operation&quot;</span><span class="p">,</span> <span class="n">init</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 
@@ -648,7 +648,7 @@
 <span class="k">class</span> <span class="nc">SeedTaskConfig</span><span class="p">(</span><span class="n">TableMutabilityConfig</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Dbt seed task arguments.&quot;&quot;&quot;</span>
 
-    <span class="bp">cls</span><span class="p">:</span> <span class="n">BaseTask</span> <span class="o">=</span> <span class="n">dataclasses</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="n">SeedTask</span><span class="p">,</span> <span class="n">init</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="bp">cls</span><span class="p">:</span> <span class="n">Type</span><span class="p">[</span><span class="n">BaseTask</span><span class="p">]</span> <span class="o">=</span> <span class="n">dataclasses</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="n">SeedTask</span><span class="p">,</span> <span class="n">init</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
     <span class="n">show</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">which</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">dataclasses</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s2">&quot;seed&quot;</span><span class="p">,</span> <span class="n">init</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></div>
 
@@ -657,7 +657,7 @@
 <span class="k">class</span> <span class="nc">SnapshotTaskConfig</span><span class="p">(</span><span class="n">SelectionConfig</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Dbt snapshot task arguments.&quot;&quot;&quot;</span>
 
-    <span class="bp">cls</span><span class="p">:</span> <span class="n">BaseTask</span> <span class="o">=</span> <span class="n">dataclasses</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="n">SnapshotTask</span><span class="p">,</span> <span class="n">init</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="bp">cls</span><span class="p">:</span> <span class="n">Type</span><span class="p">[</span><span class="n">BaseTask</span><span class="p">]</span> <span class="o">=</span> <span class="n">dataclasses</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="n">SnapshotTask</span><span class="p">,</span> <span class="n">init</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
     <span class="n">which</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">dataclasses</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s2">&quot;snapshot&quot;</span><span class="p">,</span> <span class="n">init</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></div>
 
 
@@ -665,7 +665,7 @@
 <span class="k">class</span> <span class="nc">SourceFreshnessTaskConfig</span><span class="p">(</span><span class="n">SelectionConfig</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Dbt source freshness task arguments.&quot;&quot;&quot;</span>
 
-    <span class="bp">cls</span><span class="p">:</span> <span class="n">BaseTask</span> <span class="o">=</span> <span class="n">dataclasses</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="n">FreshnessTask</span><span class="p">,</span> <span class="n">init</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="bp">cls</span><span class="p">:</span> <span class="n">Type</span><span class="p">[</span><span class="n">BaseTask</span><span class="p">]</span> <span class="o">=</span> <span class="n">dataclasses</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="n">FreshnessTask</span><span class="p">,</span> <span class="n">init</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
     <span class="n">output</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">StrPath</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">which</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">dataclasses</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s2">&quot;source-freshness&quot;</span><span class="p">,</span> <span class="n">init</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></div>
 
@@ -674,7 +674,7 @@
 <span class="k">class</span> <span class="nc">TestTaskConfig</span><span class="p">(</span><span class="n">SelectionConfig</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Dbt test task arguments.&quot;&quot;&quot;</span>
 
-    <span class="bp">cls</span><span class="p">:</span> <span class="n">BaseTask</span> <span class="o">=</span> <span class="n">dataclasses</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="n">TestTask</span><span class="p">,</span> <span class="n">init</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="bp">cls</span><span class="p">:</span> <span class="n">Type</span><span class="p">[</span><span class="n">BaseTask</span><span class="p">]</span> <span class="o">=</span> <span class="n">dataclasses</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="n">TestTask</span><span class="p">,</span> <span class="n">init</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
     <span class="n">generic</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">indirect_selection</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">singular</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
@@ -828,15 +828,18 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">setup_dbt_logging</span><span class="p">(</span><span class="n">task</span><span class="p">,</span> <span class="n">level_override</span><span class="p">)</span>
 
-        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">runtime_config</span><span class="p">,</span> <span class="p">(</span><span class="n">UnsetProfileConfig</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="kc">None</span><span class="p">))):</span>
-            <span class="c1"># The deps command installs the dependencies, which means they may not</span>
-            <span class="c1"># exist before deps runs and the following would raise a CompilationError.</span>
-            <span class="n">runtime_config</span><span class="o">.</span><span class="n">load_dependencies</span><span class="p">()</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">runtime_config</span><span class="p">,</span> <span class="n">UnsetProfileConfig</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">runtime_config</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="c1"># The deps command installs the dependencies, which means they may not</span>
+                <span class="c1"># exist before deps runs and the following would raise a</span>
+                <span class="c1"># CompilationError.</span>
+                <span class="n">runtime_config</span><span class="o">.</span><span class="n">load_dependencies</span><span class="p">()</span>
 
         <span class="n">results</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="k">with</span> <span class="n">adapter_management</span><span class="p">():</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">runtime_config</span><span class="p">,</span> <span class="p">(</span><span class="n">UnsetProfileConfig</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="kc">None</span><span class="p">))):</span>
-                <span class="n">register_adapter</span><span class="p">(</span><span class="n">runtime_config</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">runtime_config</span><span class="p">,</span> <span class="n">UnsetProfileConfig</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">runtime_config</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">register_adapter</span><span class="p">(</span><span class="n">runtime_config</span><span class="p">)</span>
 
             <span class="k">with</span> <span class="n">track_run</span><span class="p">(</span><span class="n">task</span><span class="p">):</span>
                 <span class="n">results</span> <span class="o">=</span> <span class="n">task</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>

@@ -1,9 +1,10 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Introduction &mdash; airflow-dbt-python 0.15.0 documentation</title>
+  <title>Introduction &mdash; airflow-dbt-python 0.15.1 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="_static/copybutton.css" type="text/css" />
@@ -15,7 +16,9 @@
         <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
         <script src="_static/jquery.js"></script>
         <script src="_static/underscore.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="_static/doctools.js"></script>
+        <script src="_static/sphinx_highlight.js"></script>
         <script src="_static/clipboard.min.js"></script>
         <script src="_static/copybutton.js"></script>
     <script src="_static/js/theme.js"></script>
@@ -33,7 +36,7 @@
             <a href="index.html" class="icon icon-home"> airflow-dbt-python
           </a>
               <div class="version">
-                0.15.0
+                0.15.1
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
@@ -74,8 +77,8 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
-      <li>Introduction</li>
+      <li><a href="index.html" class="icon icon-home"></a></li>
+      <li class="breadcrumb-item active">Introduction</li>
       <li class="wy-breadcrumbs-aside">
             <a href="_sources/introduction.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -85,21 +88,21 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <div class="section" id="introduction">
-<h1>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline"></a></h1>
+  <section id="introduction">
+<h1>Introduction<a class="headerlink" href="#introduction" title="Permalink to this heading"></a></h1>
 <p>Airflow-dbt-python is a Python library that contains a collection of <a class="reference external" href="https://airflow.apache.org/">Airflow</a> operators and hooks to operate with <a class="reference external" href="https://www.getdbt.com/">dbt</a>.</p>
 <p>Use airflow-dbt-python to run your <a class="reference external" href="https://www.getdbt.com/">dbt</a> transformation pipelines end-to-end, with coverage for most dbt commands. Each airflow-dbt-python operator exposes the same parameters you would use with the dbt CLI, which makes it easy to migrate into.</p>
-<div class="section" id="features">
-<h2>Features<a class="headerlink" href="#features" title="Permalink to this headline"></a></h2>
+<section id="features">
+<h2>Features<a class="headerlink" href="#features" title="Permalink to this heading"></a></h2>
 <p>Airflow-dbt-python aims to make dbt a <strong>first-class citizen</strong> of Airflow by supporting additional features that integrate both tools. As you would expect, airflow-dbt-python can run all your dbt workflows in Airflow with the same interface you are used to from the CLI, but without being a mere wrapper: airflow-dbt-python directly interfaces with internal <a class="reference external" href="https://pypi.org/project/dbt-core/">dbt-core</a> classes, bridging the gap between them and Airflow’s operator interface.</p>
 <p>As this integration was completed, several features were developed to <strong>extend the capabilities of dbt</strong> to leverage Airflow as much as possible. Can you think of a way dbt could leverage Airflow that is not currently supported? Let us know in a <a class="reference external" href="https://github.com/tomasfarias/airflow-dbt-python/issues/new/choose">GitHub issue</a>! The current list of supported features is as follows:</p>
-<div class="section" id="independent-task-execution">
-<span id="id2"></span><h3>Independent task execution<a class="headerlink" href="#independent-task-execution" title="Permalink to this headline"></a></h3>
+<section id="independent-task-execution">
+<span id="id2"></span><h3>Independent task execution<a class="headerlink" href="#independent-task-execution" title="Permalink to this heading"></a></h3>
 <p>Airflow executes <a class="reference external" href="https://airflow.apache.org/docs/apache-airflow/stable/concepts/tasks.html">Tasks</a> independent of one another: even though downstream and upstream dependencies between tasks exist, the execution of an individual task happens entirely independently of any other task execution (see: <a class="reference external" href="https://airflow.apache.org/docs/apache-airflow/stable/concepts/tasks.html#relationships">Tasks Relationships</a>).</p>
 <p>In order to work with this constraint, airflow-dbt-python runs each dbt command in a temporary and isolated directory. Before execution, all the relevant dbt files are copied from supported backends, and after executing the command any artifacts are exported. This ensures dbt can work with any Airflow deployment, including most production deployments as they are usually running <a class="reference external" href="https://airflow.apache.org/docs/apache-airflow/stable/executor/index.html#executor-types">Remote Executors</a> and do not guarantee any files will be shared by default between tasks, since each task may run in a completely different environment.</p>
-</div>
-<div class="section" id="download-dbt-files-from-s3">
-<span id="id3"></span><h3>Download dbt files from S3<a class="headerlink" href="#download-dbt-files-from-s3" title="Permalink to this headline"></a></h3>
+</section>
+<section id="download-dbt-files-from-s3">
+<span id="id3"></span><h3>Download dbt files from S3<a class="headerlink" href="#download-dbt-files-from-s3" title="Permalink to this heading"></a></h3>
 <p>The dbt parameters <code class="docutils literal notranslate"><span class="pre">profiles_dir</span></code> and <code class="docutils literal notranslate"><span class="pre">project_dir</span></code> would normally point to a directory containing a <code class="docutils literal notranslate"><span class="pre">profiles.yml</span></code> file and a dbt project in the local environment respectively (defined by the presence of a <code class="docutils literal notranslate"><span class="pre">dbt_project.yml</span></code> file). airflow-dbt-python extends these parameters to also accept an <a class="reference external" href="https://aws.amazon.com/s3/">AWS S3</a> URL (identified by a <code class="docutils literal notranslate"><span class="pre">s3://</span></code> scheme):</p>
 <ul class="simple">
 <li><p>If an S3 URL is used for <code class="docutils literal notranslate"><span class="pre">profiles_dir</span></code>, then this URL must point to a directory in S3 that contains a <code class="docutils literal notranslate"><span class="pre">profiles.yml</span></code> file. The <code class="docutils literal notranslate"><span class="pre">profiles.yml</span></code> file will be downloaded and made available for the operator to use when running.</p></li>
@@ -111,9 +114,9 @@
 </div>
 <p>In our world, that means task should be responsible of fetching all the dbt related files it needs in order to run independently, as already described in <a class="reference internal" href="#independent-task-execution"><span class="std std-ref">Independent task execution</span></a>.</p>
 <p>As of the time of writing S3 is the only supported backend for dbt projects, but we have plans to extend this to support more backends, initially targeting other file storages that are commonly used in Airflow connections.</p>
-</div>
-<div class="section" id="push-dbt-artifacts-to-xcom">
-<h3>Push dbt artifacts to XCom<a class="headerlink" href="#push-dbt-artifacts-to-xcom" title="Permalink to this headline"></a></h3>
+</section>
+<section id="push-dbt-artifacts-to-xcom">
+<h3>Push dbt artifacts to XCom<a class="headerlink" href="#push-dbt-artifacts-to-xcom" title="Permalink to this heading"></a></h3>
 <p>Each dbt execution produces one or more JSON <a class="reference external" href="https://docs.getdbt.com/reference/artifacts/dbt-artifacts/">artifacts</a> that are valuable to produce meta-metrics, build conditional workflows, for reporting purposes, and other uses. airflow-dbt-python can push these artifacts to <a class="reference external" href="https://airflow.apache.org/docs/apache-airflow/stable/concepts/xcoms.html">XCom</a> as requested via the <code class="docutils literal notranslate"><span class="pre">do_xcom_push_artifacts</span></code> parameter, which takes a list of artifacts to push.</p>
 <p>This way, artifacts may be pulled and operated on by downstream tasks. For example:</p>
 <div class="literal-block-wrapper docutils container" id="id4">
@@ -157,9 +160,9 @@
 </pre></div>
 </div>
 </div>
-</div>
-<div class="section" id="use-airflow-connections-as-dbt-targets-without-a-profiles-yml">
-<h3>Use Airflow connections as dbt targets (without a profiles.yml)<a class="headerlink" href="#use-airflow-connections-as-dbt-targets-without-a-profiles-yml" title="Permalink to this headline"></a></h3>
+</section>
+<section id="use-airflow-connections-as-dbt-targets-without-a-profiles-yml">
+<h3>Use Airflow connections as dbt targets (without a profiles.yml)<a class="headerlink" href="#use-airflow-connections-as-dbt-targets-without-a-profiles-yml" title="Permalink to this heading"></a></h3>
 <p><a class="reference external" href="https://airflow.apache.org/docs/apache-airflow/stable/howto/connection.html">Airflow connections</a> allow users to manage and store connection information, such as hostname, port, user name, and password, for operators to use when accessing certain applications, like databases. Similarly, a dbt <code class="docutils literal notranslate"><span class="pre">profiles.yml</span></code> file stores connection information under each target key.</p>
 <p><code class="docutils literal notranslate"><span class="pre">airflow-dbt-python</span></code> bridges the gap between the two and allows you to use connection information stored as an Airflow connection by specifying the connection id as the <code class="docutils literal notranslate"><span class="pre">target</span></code> parameter of any of the dbt operators it provides. What’s more, if using an Airflow connection, the <code class="docutils literal notranslate"><span class="pre">profiles.yml</span></code> file may be entirely omitted (although keep in mind a <code class="docutils literal notranslate"><span class="pre">profiles.yml</span></code> file contains a configuration block besides target connection information).</p>
 <div class="literal-block-wrapper docutils container" id="id5">
@@ -213,9 +216,9 @@
 </pre></div>
 </div>
 </div>
-</div>
-</div>
-</div>
+</section>
+</section>
+</section>
 
 
            </div>

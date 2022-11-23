@@ -1,9 +1,10 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Getting started &mdash; airflow-dbt-python 0.15.0 documentation</title>
+  <title>Getting started &mdash; airflow-dbt-python 0.15.1 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="_static/copybutton.css" type="text/css" />
@@ -15,7 +16,9 @@
         <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
         <script src="_static/jquery.js"></script>
         <script src="_static/underscore.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="_static/doctools.js"></script>
+        <script src="_static/sphinx_highlight.js"></script>
         <script src="_static/clipboard.min.js"></script>
         <script src="_static/copybutton.js"></script>
     <script src="_static/js/theme.js"></script>
@@ -33,7 +36,7 @@
             <a href="index.html" class="icon icon-home"> airflow-dbt-python
           </a>
               <div class="version">
-                0.15.0
+                0.15.1
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
@@ -79,8 +82,8 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
-      <li>Getting started</li>
+      <li><a href="index.html" class="icon icon-home"></a></li>
+      <li class="breadcrumb-item active">Getting started</li>
       <li class="wy-breadcrumbs-aside">
             <a href="_sources/getting_started.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -90,11 +93,11 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <div class="section" id="getting-started">
-<h1>Getting started<a class="headerlink" href="#getting-started" title="Permalink to this headline"></a></h1>
+  <section id="getting-started">
+<h1>Getting started<a class="headerlink" href="#getting-started" title="Permalink to this heading"></a></h1>
 <p>This section gives a quick run-down on installing airflow-dbt-python and getting your first DAG running.</p>
-<div class="section" id="requirements">
-<span id="id1"></span><h2>Requirements<a class="headerlink" href="#requirements" title="Permalink to this headline"></a></h2>
+<section id="requirements">
+<span id="id1"></span><h2>Requirements<a class="headerlink" href="#requirements" title="Permalink to this heading"></a></h2>
 <p>airflow-dbt-python requires the latest major version of <a class="reference external" href="https://pypi.org/project/dbt-core/">dbt-core</a> which at the time of writing is version 1.</p>
 <p>To line up with <code class="docutils literal notranslate"><span class="pre">dbt-core</span></code>, airflow-dbt-python supports Python 3.7, 3.8, 3.9, and 3.10.</p>
 <div class="admonition note">
@@ -111,12 +114,12 @@
 <p class="admonition-title">Warning</p>
 <p>Due to the dependency conflict just now described, airflow-dbt-python does not include Airflow as a dependency. We expect it to be installed into an environment with Airflow already in it. For instructions on setting up a development environment, see <a class="reference internal" href="development.html#development"><span class="std std-ref">Development</span></a>.</p>
 </div>
-</div>
-<div class="section" id="installation">
-<h2>Installation<a class="headerlink" href="#installation" title="Permalink to this headline"></a></h2>
+</section>
+<section id="installation">
+<h2>Installation<a class="headerlink" href="#installation" title="Permalink to this heading"></a></h2>
 <p>airflow-dbt-python can be installed in any environment that has a supported version of Airflow already installed. See <a class="reference internal" href="#requirements"><span class="std std-ref">Requirements</span></a> for details, and refer to the <a class="reference external" href="https://airflow.apache.org/docs/apache-airflow/stable/installation/index.html">Airflow documentation</a> for instructions on how to install it.</p>
-<div class="section" id="from-pypi">
-<h3>From PyPI<a class="headerlink" href="#from-pypi" title="Permalink to this headline"></a></h3>
+<section id="from-pypi">
+<h3>From PyPI<a class="headerlink" href="#from-pypi" title="Permalink to this heading"></a></h3>
 <p>airflow-dbt-python is available in <a class="reference external" href="https://pypi.org/project/airflow-dbt-python/">PyPI</a> and can be installed with <code class="docutils literal notranslate"><span class="pre">pip</span></code>:</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>pip install airflow-dbt-python
 </pre></div>
@@ -126,9 +129,9 @@
 pip install airflow-dbt-python<span class="o">[</span>all<span class="o">]</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="building-from-source">
-<h3>Building from source<a class="headerlink" href="#building-from-source" title="Permalink to this headline"></a></h3>
+</section>
+<section id="building-from-source">
+<h3>Building from source<a class="headerlink" href="#building-from-source" title="Permalink to this heading"></a></h3>
 <p>airflow-dbt-python can also be built from source by cloning the main repo:</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>git clone https://github.com/tomasfarias/airflow-dbt-python.git
 <span class="nb">cd</span> airflow-dbt-python
@@ -143,28 +146,28 @@ pip install airflow-dbt-python<span class="o">[</span>all<span class="o">]</span
 poetry install -E all
 </pre></div>
 </div>
-</div>
-<div class="section" id="installing-in-mwaa">
-<h3>Installing in MWAA<a class="headerlink" href="#installing-in-mwaa" title="Permalink to this headline"></a></h3>
+</section>
+<section id="installing-in-mwaa">
+<h3>Installing in MWAA<a class="headerlink" href="#installing-in-mwaa" title="Permalink to this heading"></a></h3>
 <p>airflow-dbt-python can be installed in an Airflow environment managed by AWS via their <a class="reference external" href="https://aws.amazon.com/managed-workflows-for-apache-airflow/">Managed Workflows for Apache Airflow</a> service. To do so, include airflow-dbt-python in MWAA’s <code class="docutils literal notranslate"><span class="pre">requirements.txt</span></code> file, for example:</p>
 <div class="literal-block-wrapper docutils container" id="id2">
 <div class="code-block-caption"><span class="caption-text">requirements.txt</span><a class="headerlink" href="#id2" title="Permalink to this code"></a></div>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>airflow-dbt-python<span class="o">[</span>redshift,amazon<span class="o">]</span>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>airflow-dbt-python<span class="o">[</span>redshift,airflow-providers<span class="o">]</span>
 </pre></div>
 </div>
 </div>
 <p>Installs airflow-dbt-python, dbt’s Redshift adapter, and Airflow’s Amazon providers library.</p>
-</div>
-</div>
-<div class="section" id="setting-up-a-dbt-project">
-<h2>Setting up a dbt project<a class="headerlink" href="#setting-up-a-dbt-project" title="Permalink to this headline"></a></h2>
+</section>
+</section>
+<section id="setting-up-a-dbt-project">
+<h2>Setting up a dbt project<a class="headerlink" href="#setting-up-a-dbt-project" title="Permalink to this heading"></a></h2>
 <p>Setting up a dbt project for airflow-dbt-python to run depends on the type of executor running in your production Airflow environment:</p>
 <ol class="arabic simple">
 <li><p>Using a <a class="reference external" href="https://airflow.apache.org/docs/apache-airflow/stable/executor/local.html">LocalExecutor</a> with a single-machine deployment means we can rely on the local machine’s filesystem to store our project. This also applies to DebugExecutor and SequentialExecutor, but these executors are generally only used for debugging/development so we will ignore them.</p></li>
 <li><p>However, once your setup has evolved to a multi-machine/cloud installation, we must rely on an external backend to store any dbt files. The only currently supported backend is S3 although more are in plans to be added (see <a class="reference internal" href="introduction.html#download-dbt-files-from-s3"><span class="std std-ref">Download dbt files from S3</span></a>).</p></li>
 </ol>
-<div class="section" id="single-machine-setup">
-<h3>Single-machine setup<a class="headerlink" href="#single-machine-setup" title="Permalink to this headline"></a></h3>
+<section id="single-machine-setup">
+<h3>Single-machine setup<a class="headerlink" href="#single-machine-setup" title="Permalink to this heading"></a></h3>
 <p>As we can rely on the local machine’s filesystem, simply copy your dbt project files and dbt <code class="docutils literal notranslate"><span class="pre">profiles.yml</span></code> to a path in your local machine. Files may be laid out as:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>.
 |-- ~/.dbt/
@@ -257,9 +260,9 @@ poetry install -E all
 <p class="admonition-title">Note</p>
 <p>dbt supports configuration via environment variables, which may also be used. Additionally, <code class="docutils literal notranslate"><span class="pre">profile</span></code> and <code class="docutils literal notranslate"><span class="pre">target</span></code> may be omitted if already specified in <code class="docutils literal notranslate"><span class="pre">dbt_project.yml</span></code> and <code class="docutils literal notranslate"><span class="pre">profiles.yml</span></code> respectively.</p>
 </div>
-</div>
-<div class="section" id="multi-machine-cloud-installation">
-<h3>Multi-machine/cloud installation<a class="headerlink" href="#multi-machine-cloud-installation" title="Permalink to this headline"></a></h3>
+</section>
+<section id="multi-machine-cloud-installation">
+<h3>Multi-machine/cloud installation<a class="headerlink" href="#multi-machine-cloud-installation" title="Permalink to this heading"></a></h3>
 <p>A multi-machine or cloud installation does not have access to a common filesystem that we can reliably use to store dbt project files, at least assuming any deployment with more than one executor. This includes both self-hosted deployments as well as managed Airflow deployments like MWAA or Astronomer.</p>
 <p>For these deployments we must rely on a DbtBackend to pull and, eventually, push all required dbt project files. The remote DbtBackend address may be used in place of a local <code class="docutils literal notranslate"><span class="pre">project_dir</span></code> or <code class="docutils literal notranslate"><span class="pre">profiles_dir</span></code> to have airflow-dbt-python setup a directory for dbt with the files available in the remote backend.</p>
 <p>At the time of writing, only S3 is supported as a non-local backend.</p>
@@ -313,9 +316,9 @@ poetry install -E all
 </div>
 <p>airflow-dbt-python uses the URL scheme (in this example, <code class="docutils literal notranslate"><span class="pre">s3</span></code>) to figure out the type of backend, and the corresponding <code class="docutils literal notranslate"><span class="pre">DbtBackend</span></code> implementation to pull all required files. An exception would be raised if the scheme does not point to a supported backend.</p>
 <p>The <code class="docutils literal notranslate"><span class="pre">DbtBackend</span></code> abstraction means that no other changes are needed and the DAG works as the local one. airflow-dbt-python also takes care of adjusting any parameters that depend on absolute paths so that they are moved to the directory where all the files are pulled from the remote <code class="docutils literal notranslate"><span class="pre">DbtBackend</span></code>.</p>
-</div>
-</div>
-</div>
+</section>
+</section>
+</section>
 
 
            </div>

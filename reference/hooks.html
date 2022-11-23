@@ -1,9 +1,10 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>airflow_dbt_python.hooks &mdash; airflow-dbt-python 0.15.0 documentation</title>
+  <title>airflow_dbt_python.hooks &mdash; airflow-dbt-python 0.15.1 documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="../_static/copybutton.css" type="text/css" />
@@ -15,7 +16,9 @@
         <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
         <script src="../_static/jquery.js"></script>
         <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
         <script src="../_static/clipboard.min.js"></script>
         <script src="../_static/copybutton.js"></script>
     <script src="../_static/js/theme.js"></script>
@@ -33,7 +36,7 @@
             <a href="../index.html" class="icon icon-home"> airflow-dbt-python
           </a>
               <div class="version">
-                0.15.0
+                0.15.1
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -50,7 +53,67 @@
 <li class="toctree-l1"><a class="reference internal" href="../example_dags.html">Example DAGs</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../development.html">Development</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="../reference.html">Reference</a><ul class="current">
-<li class="toctree-l2 current"><a class="current reference internal" href="#">airflow_dbt_python.hooks</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">airflow_dbt_python.hooks</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#airflow_dbt_python.hooks.dbt.BaseConfig"><code class="docutils literal notranslate"><span class="pre">BaseConfig</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#airflow_dbt_python.hooks.dbt.BaseConfig.create_dbt_profile"><code class="docutils literal notranslate"><span class="pre">BaseConfig.create_dbt_profile()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#airflow_dbt_python.hooks.dbt.BaseConfig.create_dbt_project_and_profile"><code class="docutils literal notranslate"><span class="pre">BaseConfig.create_dbt_project_and_profile()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#airflow_dbt_python.hooks.dbt.BaseConfig.create_dbt_task"><code class="docutils literal notranslate"><span class="pre">BaseConfig.create_dbt_task()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#airflow_dbt_python.hooks.dbt.BaseConfig.create_runtime_config"><code class="docutils literal notranslate"><span class="pre">BaseConfig.create_runtime_config()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#airflow_dbt_python.hooks.dbt.BaseConfig.dbt_task"><code class="docutils literal notranslate"><span class="pre">BaseConfig.dbt_task</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#airflow_dbt_python.hooks.dbt.BaseConfig.partial_project"><code class="docutils literal notranslate"><span class="pre">BaseConfig.partial_project</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#airflow_dbt_python.hooks.dbt.BaseConfig.patch_manifest_task"><code class="docutils literal notranslate"><span class="pre">BaseConfig.patch_manifest_task()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#airflow_dbt_python.hooks.dbt.BaseConfig.profile_name"><code class="docutils literal notranslate"><span class="pre">BaseConfig.profile_name</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#airflow_dbt_python.hooks.dbt.BaseConfig.profile_renderer"><code class="docutils literal notranslate"><span class="pre">BaseConfig.profile_renderer</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#airflow_dbt_python.hooks.dbt.BuildTaskConfig"><code class="docutils literal notranslate"><span class="pre">BuildTaskConfig</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#airflow_dbt_python.hooks.dbt.BuildTaskConfig.cls"><code class="docutils literal notranslate"><span class="pre">BuildTaskConfig.cls</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#airflow_dbt_python.hooks.dbt.CleanTaskConfig"><code class="docutils literal notranslate"><span class="pre">CleanTaskConfig</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#airflow_dbt_python.hooks.dbt.CompileTaskConfig"><code class="docutils literal notranslate"><span class="pre">CompileTaskConfig</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#airflow_dbt_python.hooks.dbt.ConfigFactory"><code class="docutils literal notranslate"><span class="pre">ConfigFactory</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#airflow_dbt_python.hooks.dbt.ConfigFactory.create_config"><code class="docutils literal notranslate"><span class="pre">ConfigFactory.create_config()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#airflow_dbt_python.hooks.dbt.ConfigFactory.fields"><code class="docutils literal notranslate"><span class="pre">ConfigFactory.fields</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#airflow_dbt_python.hooks.dbt.DbtHook"><code class="docutils literal notranslate"><span class="pre">DbtHook</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#airflow_dbt_python.hooks.dbt.DbtHook.ensure_profiles"><code class="docutils literal notranslate"><span class="pre">DbtHook.ensure_profiles()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#airflow_dbt_python.hooks.dbt.DbtHook.get_backend"><code class="docutils literal notranslate"><span class="pre">DbtHook.get_backend()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#airflow_dbt_python.hooks.dbt.DbtHook.get_config_factory"><code class="docutils literal notranslate"><span class="pre">DbtHook.get_config_factory()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#airflow_dbt_python.hooks.dbt.DbtHook.get_target_from_connection"><code class="docutils literal notranslate"><span class="pre">DbtHook.get_target_from_connection()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#airflow_dbt_python.hooks.dbt.DbtHook.pull_dbt_profiles"><code class="docutils literal notranslate"><span class="pre">DbtHook.pull_dbt_profiles()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#airflow_dbt_python.hooks.dbt.DbtHook.pull_dbt_project"><code class="docutils literal notranslate"><span class="pre">DbtHook.pull_dbt_project()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#airflow_dbt_python.hooks.dbt.DbtHook.push_dbt_project"><code class="docutils literal notranslate"><span class="pre">DbtHook.push_dbt_project()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#airflow_dbt_python.hooks.dbt.DbtHook.run_dbt_task"><code class="docutils literal notranslate"><span class="pre">DbtHook.run_dbt_task()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#airflow_dbt_python.hooks.dbt.DbtHook.setup_dbt_logging"><code class="docutils literal notranslate"><span class="pre">DbtHook.setup_dbt_logging()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#airflow_dbt_python.hooks.dbt.DebugTaskConfig"><code class="docutils literal notranslate"><span class="pre">DebugTaskConfig</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#airflow_dbt_python.hooks.dbt.DepsTaskConfig"><code class="docutils literal notranslate"><span class="pre">DepsTaskConfig</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#airflow_dbt_python.hooks.dbt.FromStrEnum"><code class="docutils literal notranslate"><span class="pre">FromStrEnum</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#airflow_dbt_python.hooks.dbt.FromStrEnum.from_str"><code class="docutils literal notranslate"><span class="pre">FromStrEnum.from_str()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#airflow_dbt_python.hooks.dbt.GenerateTaskConfig"><code class="docutils literal notranslate"><span class="pre">GenerateTaskConfig</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#airflow_dbt_python.hooks.dbt.ListTaskConfig"><code class="docutils literal notranslate"><span class="pre">ListTaskConfig</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#airflow_dbt_python.hooks.dbt.LogFormat"><code class="docutils literal notranslate"><span class="pre">LogFormat</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#airflow_dbt_python.hooks.dbt.Output"><code class="docutils literal notranslate"><span class="pre">Output</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#airflow_dbt_python.hooks.dbt.ParseTaskConfig"><code class="docutils literal notranslate"><span class="pre">ParseTaskConfig</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#airflow_dbt_python.hooks.dbt.RunOperationTaskConfig"><code class="docutils literal notranslate"><span class="pre">RunOperationTaskConfig</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#airflow_dbt_python.hooks.dbt.RunTaskConfig"><code class="docutils literal notranslate"><span class="pre">RunTaskConfig</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#airflow_dbt_python.hooks.dbt.SeedTaskConfig"><code class="docutils literal notranslate"><span class="pre">SeedTaskConfig</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#airflow_dbt_python.hooks.dbt.SelectionConfig"><code class="docutils literal notranslate"><span class="pre">SelectionConfig</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#airflow_dbt_python.hooks.dbt.SnapshotTaskConfig"><code class="docutils literal notranslate"><span class="pre">SnapshotTaskConfig</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#airflow_dbt_python.hooks.dbt.SourceFreshnessTaskConfig"><code class="docutils literal notranslate"><span class="pre">SourceFreshnessTaskConfig</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#airflow_dbt_python.hooks.dbt.TableMutabilityConfig"><code class="docutils literal notranslate"><span class="pre">TableMutabilityConfig</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#airflow_dbt_python.hooks.dbt.TestTaskConfig"><code class="docutils literal notranslate"><span class="pre">TestTaskConfig</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#airflow_dbt_python.hooks.dbt.TestTaskConfig.cls"><code class="docutils literal notranslate"><span class="pre">TestTaskConfig.cls</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#airflow_dbt_python.hooks.dbt.parse_yaml_args"><code class="docutils literal notranslate"><span class="pre">parse_yaml_args()</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="operators.html">airflow_dbt_python.operators</a></li>
 <li class="toctree-l2"><a class="reference internal" href="backends.html">airflow_dbt_python.hooks.backends</a></li>
 </ul>
@@ -70,9 +133,9 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
-          <li><a href="../reference.html">Reference</a> &raquo;</li>
-      <li>airflow_dbt_python.hooks</li>
+      <li><a href="../index.html" class="icon icon-home"></a></li>
+          <li class="breadcrumb-item"><a href="../reference.html">Reference</a></li>
+      <li class="breadcrumb-item active">airflow_dbt_python.hooks</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../_sources/reference/hooks.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -82,8 +145,8 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <div class="section" id="module-airflow_dbt_python.hooks.dbt">
-<span id="airflow-dbt-python-hooks"></span><h1>airflow_dbt_python.hooks<a class="headerlink" href="#module-airflow_dbt_python.hooks.dbt" title="Permalink to this headline"></a></h1>
+  <section id="module-airflow_dbt_python.hooks.dbt">
+<span id="airflow-dbt-python-hooks"></span><h1>airflow_dbt_python.hooks<a class="headerlink" href="#module-airflow_dbt_python.hooks.dbt" title="Permalink to this heading"></a></h1>
 <p>Provides a hook to interact with a dbt project.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="airflow_dbt_python.hooks.dbt.BaseConfig">
@@ -127,9 +190,6 @@
 <li><p><strong>no_write_json</strong> (<em>Optional</em><em>[</em><em>bool</em><em>]</em>) – </p></li>
 </ul>
 </dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p>None</p>
-</dd>
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="airflow_dbt_python.hooks.dbt.BaseConfig.create_dbt_profile">
@@ -145,7 +205,7 @@ with the given profile_name it is created with any extra_targets.</p>
 <dd class="field-even"><p><strong>extra_targets</strong> (<em>Optional</em><em>[</em><em>dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em><em>]</em>) – </p>
 </dd>
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>dbt.config.profile.Profile</p>
+<dd class="field-odd"><p><em>Profile</em></p>
 </dd>
 </dl>
 </dd></dl>
@@ -182,7 +242,7 @@ profile.</p>
 RuntimeConfig for the task.</p>
 </dd>
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>tuple[dbt.task.base.BaseTask, dbt.config.runtime.RuntimeConfig]</p>
+<dd class="field-odd"><p>tuple[dbt.task.base.BaseTask, <em>Optional</em>[dbt.config.runtime.RuntimeConfig]]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -202,20 +262,20 @@ Flags are also initialized as configuration is created.</p>
 <dd class="field-even"><p>A RuntimeConfig instance.</p>
 </dd>
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><em>Optional</em>[dbt.config.runtime.RuntimeConfig]</p>
+<dd class="field-odd"><p><em>Optional</em>[<em>RuntimeConfig</em>]</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="airflow_dbt_python.hooks.dbt.BaseConfig.dbt_task">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">dbt_task</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">dbt.task.base.BaseTask</span></em><a class="headerlink" href="#airflow_dbt_python.hooks.dbt.BaseConfig.dbt_task" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">dbt_task</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Type</span><span class="p"><span class="pre">[</span></span><span class="pre">BaseTask</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#airflow_dbt_python.hooks.dbt.BaseConfig.dbt_task" title="Permalink to this definition"></a></dt>
 <dd><p>Access to the underlying dbt task class.</p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="airflow_dbt_python.hooks.dbt.BaseConfig.partial_project">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">partial_project</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">dbt.config.project.PartialProject</span></em><a class="headerlink" href="#airflow_dbt_python.hooks.dbt.BaseConfig.partial_project" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">partial_project</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">PartialProject</span></em><a class="headerlink" href="#airflow_dbt_python.hooks.dbt.BaseConfig.partial_project" title="Permalink to this definition"></a></dt>
 <dd><p>Return a PartialProject for the dbt project given by this configuration.</p>
 <p>A PartialProject loads a dbt project configuration and handles access to
 configuration values. It is used by us to determine the profile name to use.</p>
@@ -239,7 +299,7 @@ call.</p>
 <dd class="field-odd"><p><strong>TypeError</strong> – If the dbt task is not a subclass of ManifestTask.</p>
 </dd>
 <dt class="field-even">Parameters</dt>
-<dd class="field-even"><p><strong>task</strong> (<em>dbt.task.base.BaseTask</em>) – </p>
+<dd class="field-even"><p><strong>task</strong> (<em>ManifestTask</em>) – </p>
 </dd>
 </dl>
 </dd></dl>
@@ -260,7 +320,7 @@ Profile.pick_profile_name to pick between the two.</p>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="airflow_dbt_python.hooks.dbt.BaseConfig.profile_renderer">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">profile_renderer</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">dbt.config.renderer.ProfileRenderer</span></em><a class="headerlink" href="#airflow_dbt_python.hooks.dbt.BaseConfig.profile_renderer" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">profile_renderer</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ProfileRenderer</span></em><a class="headerlink" href="#airflow_dbt_python.hooks.dbt.BaseConfig.profile_renderer" title="Permalink to this definition"></a></dt>
 <dd><p>Return a ProfileRenderer with this config’s parsed vars.</p>
 </dd></dl>
 
@@ -320,14 +380,11 @@ Profile.pick_profile_name to pick between the two.</p>
 <li><p><strong>store_failures</strong> (<em>Optional</em><em>[</em><em>bool</em><em>]</em>) – </p></li>
 </ul>
 </dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p>None</p>
-</dd>
 </dl>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="airflow_dbt_python.hooks.dbt.BuildTaskConfig.cls">
 <span class="sig-name descname"><span class="pre">cls</span></span><a class="headerlink" href="#airflow_dbt_python.hooks.dbt.BuildTaskConfig.cls" title="Permalink to this definition"></a></dt>
-<dd><p>alias of <code class="xref py py-class docutils literal notranslate"><span class="pre">dbt.task.build.BuildTask</span></code></p>
+<dd><p>alias of <code class="xref py py-class docutils literal notranslate"><span class="pre">BuildTask</span></code></p>
 </dd></dl>
 
 </dd></dl>
@@ -374,9 +431,6 @@ Profile.pick_profile_name to pick between the two.</p>
 <li><p><strong>no_write_json</strong> (<em>Optional</em><em>[</em><em>bool</em><em>]</em>) – </p></li>
 <li><p><strong>parse_only</strong> (<em>Optional</em><em>[</em><em>bool</em><em>]</em>) – </p></li>
 </ul>
-</dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p>None</p>
 </dd>
 </dl>
 </dd></dl>
@@ -430,9 +484,6 @@ Profile.pick_profile_name to pick between the two.</p>
 <li><p><strong>parse_only</strong> (<em>Optional</em><em>[</em><em>bool</em><em>]</em>) – </p></li>
 </ul>
 </dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p>None</p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -446,7 +497,7 @@ Profile.pick_profile_name to pick between the two.</p>
 <dd><p>Instantiate a dbt task config with the given args and kwargs.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><a class="reference internal" href="#airflow_dbt_python.hooks.dbt.BaseConfig" title="airflow_dbt_python.hooks.dbt.BaseConfig">airflow_dbt_python.hooks.dbt.BaseConfig</a></p>
+<dd class="field-odd"><p><a class="reference internal" href="#airflow_dbt_python.hooks.dbt.BaseConfig" title="airflow_dbt_python.hooks.dbt.BaseConfig"><em>BaseConfig</em></a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -489,7 +540,7 @@ id if we are looking to interface with any Airflow hook that uses a connection.<
 </ul>
 </dd>
 <dt class="field-even">Return type</dt>
-<dd class="field-even"><p>airflow_dbt_python.hooks.backends.base.DbtBackend</p>
+<dd class="field-even"><p><em>DbtBackend</em></p>
 </dd>
 </dl>
 </dd></dl>
@@ -503,7 +554,7 @@ id if we are looking to interface with any Airflow hook that uses a connection.<
 <dd class="field-odd"><p><strong>command</strong> (<em>str</em>) – </p>
 </dd>
 <dt class="field-even">Return type</dt>
-<dd class="field-even"><p><a class="reference internal" href="#airflow_dbt_python.hooks.dbt.ConfigFactory" title="airflow_dbt_python.hooks.dbt.ConfigFactory">airflow_dbt_python.hooks.dbt.ConfigFactory</a></p>
+<dd class="field-even"><p><a class="reference internal" href="#airflow_dbt_python.hooks.dbt.ConfigFactory" title="airflow_dbt_python.hooks.dbt.ConfigFactory"><em>ConfigFactory</em></a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -610,7 +661,7 @@ supported for backends that require it.</p>
 </p>
 </dd>
 <dt class="field-even">Parameters</dt>
-<dd class="field-even"><p><strong>config</strong> (<a class="reference internal" href="#airflow_dbt_python.hooks.dbt.BaseConfig" title="airflow_dbt_python.hooks.dbt.BaseConfig"><em>airflow_dbt_python.hooks.dbt.BaseConfig</em></a>) – </p>
+<dd class="field-even"><p><strong>config</strong> (<a class="reference internal" href="#airflow_dbt_python.hooks.dbt.BaseConfig" title="airflow_dbt_python.hooks.dbt.BaseConfig"><em>BaseConfig</em></a>) – </p>
 </dd>
 <dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p>tuple[bool, <em>Optional</em>[dbt.contracts.results.RunResult]]</p>
@@ -627,7 +678,7 @@ default_stdout. As these are initialized by the CLI app, we need to
 initialize them here.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>task</strong> (<em>dbt.task.base.BaseTask</em>) – </p>
+<dd class="field-odd"><p><strong>task</strong> (<em>BaseTask</em>) – </p>
 </dd>
 </dl>
 </dd></dl>
@@ -677,9 +728,6 @@ initialize them here.</p>
 <li><p><strong>config_dir</strong> (<em>Optional</em><em>[</em><em>bool</em><em>]</em>) – </p></li>
 </ul>
 </dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p>None</p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -724,9 +772,6 @@ initialize them here.</p>
 <li><p><strong>write_json</strong> (<em>Optional</em><em>[</em><em>bool</em><em>]</em>) – </p></li>
 <li><p><strong>no_write_json</strong> (<em>Optional</em><em>[</em><em>bool</em><em>]</em>) – </p></li>
 </ul>
-</dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p>None</p>
 </dd>
 </dl>
 </dd></dl>
@@ -796,9 +841,6 @@ initialize them here.</p>
 <li><p><strong>compile</strong> (<em>bool</em>) – </p></li>
 </ul>
 </dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p>None</p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -852,9 +894,6 @@ initialize them here.</p>
 <li><p><strong>output_keys</strong> (<em>Optional</em><em>[</em><em>list</em><em>[</em><em>str</em><em>]</em><em>]</em>) – </p></li>
 <li><p><strong>resource_types</strong> (<em>Optional</em><em>[</em><em>list</em><em>[</em><em>str</em><em>]</em><em>]</em>) – </p></li>
 </ul>
-</dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p>None</p>
 </dd>
 </dl>
 </dd></dl>
@@ -915,9 +954,6 @@ initialize them here.</p>
 <li><p><strong>write_manifest</strong> (<em>Optional</em><em>[</em><em>bool</em><em>]</em>) – </p></li>
 </ul>
 </dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p>None</p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -964,9 +1000,6 @@ initialize them here.</p>
 <li><p><strong>args</strong> (<em>str</em>) – </p></li>
 <li><p><strong>macro</strong> (<em>Optional</em><em>[</em><em>str</em><em>]</em>) – </p></li>
 </ul>
-</dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p>None</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1018,9 +1051,6 @@ initialize them here.</p>
 <li><p><strong>models</strong> (<em>Optional</em><em>[</em><em>list</em><em>[</em><em>str</em><em>]</em><em>]</em>) – </p></li>
 <li><p><strong>full_refresh</strong> (<em>Optional</em><em>[</em><em>bool</em><em>]</em>) – </p></li>
 </ul>
-</dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p>None</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1074,9 +1104,6 @@ initialize them here.</p>
 <li><p><strong>show</strong> (<em>Optional</em><em>[</em><em>bool</em><em>]</em>) – </p></li>
 </ul>
 </dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p>None</p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -1127,9 +1154,6 @@ initialize them here.</p>
 <li><p><strong>models</strong> (<em>Optional</em><em>[</em><em>list</em><em>[</em><em>str</em><em>]</em><em>]</em>) – </p></li>
 </ul>
 </dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p>None</p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -1179,9 +1203,6 @@ initialize them here.</p>
 <li><p><strong>state</strong> (<em>Optional</em><em>[</em><em>Path</em><em>]</em>) – </p></li>
 <li><p><strong>models</strong> (<em>Optional</em><em>[</em><em>list</em><em>[</em><em>str</em><em>]</em><em>]</em>) – </p></li>
 </ul>
-</dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p>None</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1234,9 +1255,6 @@ initialize them here.</p>
 <li><p><strong>output</strong> (<em>Optional</em><em>[</em><em>StrPath</em><em>]</em>) – </p></li>
 </ul>
 </dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p>None</p>
-</dd>
 </dl>
 </dd></dl>
 
@@ -1287,9 +1305,6 @@ initialize them here.</p>
 <li><p><strong>models</strong> (<em>Optional</em><em>[</em><em>list</em><em>[</em><em>str</em><em>]</em><em>]</em>) – </p></li>
 <li><p><strong>full_refresh</strong> (<em>Optional</em><em>[</em><em>bool</em><em>]</em>) – </p></li>
 </ul>
-</dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p>None</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1345,14 +1360,11 @@ initialize them here.</p>
 <li><p><strong>store_failures</strong> (<em>Optional</em><em>[</em><em>bool</em><em>]</em>) – </p></li>
 </ul>
 </dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p>None</p>
-</dd>
 </dl>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="airflow_dbt_python.hooks.dbt.TestTaskConfig.cls">
 <span class="sig-name descname"><span class="pre">cls</span></span><a class="headerlink" href="#airflow_dbt_python.hooks.dbt.TestTaskConfig.cls" title="Permalink to this definition"></a></dt>
-<dd><p>alias of <code class="xref py py-class docutils literal notranslate"><span class="pre">dbt.task.test.TestTask</span></code></p>
+<dd><p>alias of <code class="xref py py-class docutils literal notranslate"><span class="pre">TestTask</span></code></p>
 </dd></dl>
 
 </dd></dl>
@@ -1379,7 +1391,7 @@ initialize them here.</p>
 </dl>
 </dd></dl>
 
-</div>
+</section>
 
 
            </div>

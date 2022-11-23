@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>airflow_dbt_python.operators.dbt &mdash; airflow-dbt-python 0.15.0 documentation</title>
+  <title>airflow_dbt_python.operators.dbt &mdash; airflow-dbt-python 0.15.1 documentation</title>
       <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="../../../_static/copybutton.css" type="text/css" />
@@ -15,7 +15,9 @@
         <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
         <script src="../../../_static/jquery.js"></script>
         <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../../../_static/doctools.js"></script>
+        <script src="../../../_static/sphinx_highlight.js"></script>
         <script src="../../../_static/clipboard.min.js"></script>
         <script src="../../../_static/copybutton.js"></script>
     <script src="../../../_static/js/theme.js"></script>
@@ -31,7 +33,7 @@
             <a href="../../../index.html" class="icon icon-home"> airflow-dbt-python
           </a>
               <div class="version">
-                0.15.0
+                0.15.1
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
@@ -63,9 +65,9 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
-          <li><a href="../../index.html">Module code</a> &raquo;</li>
-      <li>airflow_dbt_python.operators.dbt</li>
+      <li><a href="../../../index.html" class="icon icon-home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">airflow_dbt_python.operators.dbt</li>
       <li class="wy-breadcrumbs-aside">
       </li>
   </ul>
@@ -85,15 +87,12 @@
 <span class="kn">from</span> <span class="nn">dataclasses</span> <span class="kn">import</span> <span class="n">asdict</span><span class="p">,</span> <span class="n">is_dataclass</span>
 <span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
 <span class="kn">from</span> <span class="nn">tempfile</span> <span class="kn">import</span> <span class="n">TemporaryDirectory</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Iterator</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">TypeVar</span><span class="p">,</span> <span class="n">Union</span>
-
-<span class="kn">from</span> <span class="nn">dbt.contracts.results</span> <span class="kn">import</span> <span class="n">RunExecutionResult</span><span class="p">,</span> <span class="n">agate</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Iterator</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">TypeVar</span><span class="p">,</span> <span class="n">Union</span>
 
 <span class="kn">from</span> <span class="nn">airflow</span> <span class="kn">import</span> <span class="n">AirflowException</span>
 <span class="kn">from</span> <span class="nn">airflow.models.baseoperator</span> <span class="kn">import</span> <span class="n">BaseOperator</span>
 <span class="kn">from</span> <span class="nn">airflow.models.xcom</span> <span class="kn">import</span> <span class="n">XCOM_RETURN_KEY</span>
 <span class="kn">from</span> <span class="nn">airflow.version</span> <span class="kn">import</span> <span class="n">version</span>
-<span class="kn">from</span> <span class="nn">airflow_dbt_python.hooks.dbt</span> <span class="kn">import</span> <span class="n">BaseConfig</span><span class="p">,</span> <span class="n">DbtHook</span><span class="p">,</span> <span class="n">LogFormat</span><span class="p">,</span> <span class="n">Output</span>
 
 <span class="c1"># apply_defaults is deprecated in version 2 and beyond. This allows us to</span>
 <span class="c1"># support version 1 and deal with the deprecation warning.</span>
@@ -105,6 +104,12 @@
 <div class="viewcode-block" id="apply_defaults"><a class="viewcode-back" href="../../../reference/operators.html#airflow_dbt_python.operators.dbt.apply_defaults">[docs]</a>    <span class="k">def</span> <span class="nf">apply_defaults</span><span class="p">(</span><span class="n">func</span><span class="p">:</span> <span class="n">T</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">T</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Empty function to support apply defaults in post 2.0 Airflow versions.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">func</span></div>
+
+
+<span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">dbt.contracts.results</span> <span class="kn">import</span> <span class="n">RunExecutionResult</span>
+
+    <span class="kn">from</span> <span class="nn">airflow_dbt_python.hooks.dbt</span> <span class="kn">import</span> <span class="n">BaseConfig</span>
 
 
 <div class="viewcode-block" id="DbtBaseOperator"><a class="viewcode-back" href="../../../reference/operators.html#airflow_dbt_python.operators.dbt.DbtBaseOperator">[docs]</a><span class="k">class</span> <span class="nc">DbtBaseOperator</span><span class="p">(</span><span class="n">BaseOperator</span><span class="p">):</span>
@@ -184,6 +189,8 @@
         <span class="n">replace_on_push</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="kn">from</span> <span class="nn">airflow_dbt_python.hooks.dbt</span> <span class="kn">import</span> <span class="n">LogFormat</span>
+
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">project_dir</span> <span class="o">=</span> <span class="n">project_dir</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">profiles_dir</span> <span class="o">=</span> <span class="n">profiles_dir</span>
@@ -236,7 +243,7 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_dbt_hook</span> <span class="o">=</span> <span class="kc">None</span>
 
-<div class="viewcode-block" id="DbtBaseOperator.execute"><a class="viewcode-back" href="../../../reference/operators.html#airflow_dbt_python.operators.dbt.DbtBaseOperator.execute">[docs]</a>    <span class="k">def</span> <span class="nf">execute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">context</span><span class="p">:</span> <span class="nb">dict</span><span class="p">):</span>
+<div class="viewcode-block" id="DbtBaseOperator.execute"><a class="viewcode-back" href="../../../reference/operators.html#airflow_dbt_python.operators.dbt.DbtBaseOperator.execute">[docs]</a>    <span class="k">def</span> <span class="nf">execute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Execute dbt command with prepared arguments.</span>
 
 <span class="sd">        Execution requires setting up a directory with the dbt project files and</span>
@@ -299,7 +306,7 @@
             <span class="n">config_kwargs</span><span class="p">[</span><span class="n">field</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">kwarg</span>
         <span class="k">return</span> <span class="n">factory</span><span class="o">.</span><span class="n">create_config</span><span class="p">(</span><span class="o">**</span><span class="n">config_kwargs</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="DbtBaseOperator.xcom_push_artifacts"><a class="viewcode-back" href="../../../reference/operators.html#airflow_dbt_python.operators.dbt.DbtBaseOperator.xcom_push_artifacts">[docs]</a>    <span class="k">def</span> <span class="nf">xcom_push_artifacts</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">context</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">dbt_directory</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+<div class="viewcode-block" id="DbtBaseOperator.xcom_push_artifacts"><a class="viewcode-back" href="../../../reference/operators.html#airflow_dbt_python.operators.dbt.DbtBaseOperator.xcom_push_artifacts">[docs]</a>    <span class="k">def</span> <span class="nf">xcom_push_artifacts</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">context</span><span class="p">,</span> <span class="n">dbt_directory</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Read dbt artifacts and push them to XCom.</span>
 
 <span class="sd">        Artifacts are read from the target/ directory in dbt_directory. This method will</span>
@@ -391,6 +398,8 @@
     <span class="k">def</span> <span class="nf">dbt_hook</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Provides an existing DbtHook or creates one.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dbt_hook</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="kn">from</span> <span class="nn">airflow_dbt_python.hooks.dbt</span> <span class="kn">import</span> <span class="n">DbtHook</span>
+
             <span class="bp">self</span><span class="o">.</span><span class="n">_dbt_hook</span> <span class="o">=</span> <span class="n">DbtHook</span><span class="p">()</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dbt_hook</span>
 
@@ -404,8 +413,10 @@
 <span class="sd">        JSON-serializable types, the default XCom backend. If implementing</span>
 <span class="sd">        custom XCom backends, this method may be overriden.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="n">result</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">is_dataclass</span><span class="p">(</span><span class="n">result</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">result</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">result</span>
+        <span class="k">if</span> <span class="n">is_dataclass</span><span class="p">(</span><span class="n">result</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">result</span>  <span class="c1"># type: ignore</span>
         <span class="k">return</span> <span class="n">asdict</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">dict_factory</span><span class="o">=</span><span class="n">run_result_factory</span><span class="p">)</span></div></div>
 
 
@@ -686,6 +697,8 @@
         <span class="n">indirect_selection</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="kn">from</span> <span class="nn">airflow_dbt_python.hooks.dbt</span> <span class="kn">import</span> <span class="n">Output</span>
+
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">resource_types</span> <span class="o">=</span> <span class="n">resource_types</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">select</span> <span class="o">=</span> <span class="n">select</span>
@@ -832,6 +845,8 @@
 <span class="sd">    We need to handle dt.datetime and agate.table.Table.</span>
 <span class="sd">    The rest of the types should already be JSON-serializable.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">dbt.contracts.results</span> <span class="kn">import</span> <span class="n">agate</span>
+
     <span class="n">d</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="n">dt</span><span class="o">.</span><span class="n">datetime</span><span class="p">):</span>

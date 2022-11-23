@@ -1,9 +1,10 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Development &mdash; airflow-dbt-python 0.15.0 documentation</title>
+  <title>Development &mdash; airflow-dbt-python 0.15.1 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="_static/copybutton.css" type="text/css" />
@@ -15,7 +16,9 @@
         <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
         <script src="_static/jquery.js"></script>
         <script src="_static/underscore.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="_static/doctools.js"></script>
+        <script src="_static/sphinx_highlight.js"></script>
         <script src="_static/clipboard.min.js"></script>
         <script src="_static/copybutton.js"></script>
     <script src="_static/js/theme.js"></script>
@@ -33,7 +36,7 @@
             <a href="index.html" class="icon icon-home"> airflow-dbt-python
           </a>
               <div class="version">
-                0.15.0
+                0.15.1
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
@@ -52,6 +55,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#poetry">Poetry</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#installing-airflow">Installing Airflow</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#building-from-source">Building from source</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#modifying-dependencies">Modifying dependencies</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#pre-commit-hooks">Pre-commit hooks</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#testing">Testing</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#requirements">Requirements</a></li>
@@ -76,8 +80,8 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
-      <li>Development</li>
+      <li><a href="index.html" class="icon icon-home"></a></li>
+      <li class="breadcrumb-item active">Development</li>
       <li class="wy-breadcrumbs-aside">
             <a href="_sources/development.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -87,16 +91,16 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <div class="section" id="development">
-<span id="id1"></span><h1>Development<a class="headerlink" href="#development" title="Permalink to this headline"></a></h1>
+  <section id="development">
+<span id="id1"></span><h1>Development<a class="headerlink" href="#development" title="Permalink to this heading"></a></h1>
 <p>This section describes how to setup a development environment. If you are looking to dig into the internals of airflow-dbt-python and make a (very appreciated) contribution to the project, read along.</p>
-<div class="section" id="poetry">
-<h2>Poetry<a class="headerlink" href="#poetry" title="Permalink to this headline"></a></h2>
+<section id="poetry">
+<h2>Poetry<a class="headerlink" href="#poetry" title="Permalink to this heading"></a></h2>
 <p>airflow-dbt-python uses <a class="reference external" href="https://python-poetry.org/">Poetry</a> for project management. Ensure it’s installed before running: see <a class="reference external" href="https://python-poetry.org/docs/#installation">Poetry’s installation documentation</a>.</p>
 <p>As of <cite>airflow-dbt-python</cite> version 0.14, we have moved the project to Poetry version &gt;= 1.2.0 to allow us to use dependency groups.</p>
-</div>
-<div class="section" id="installing-airflow">
-<h2>Installing Airflow<a class="headerlink" href="#installing-airflow" title="Permalink to this headline"></a></h2>
+</section>
+<section id="installing-airflow">
+<h2>Installing Airflow<a class="headerlink" href="#installing-airflow" title="Permalink to this heading"></a></h2>
 <p>Development requires a local installation of Airflow, as airflow-dbt-python doesn’t come bundled with one. We can install a specific version using <code class="docutils literal notranslate"><span class="pre">pip</span></code>:</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>pip install apache-airflow<span class="o">==</span><span class="m">2</span>.2
 </pre></div>
@@ -110,22 +114,27 @@
 </pre></div>
 </div>
 <p>Some features require Airflow providers. For example, any S3 backend operations require <code class="docutils literal notranslate"><span class="pre">apache-airflow-providers-amazon</span></code>. These providers may be installed individually or with the <code class="docutils literal notranslate"><span class="pre">airflow-providers</span></code> extra:</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>poetry install -E airflow-providers
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>poetry install -E airflow-providers -E airflow
 </pre></div>
 </div>
-</div>
-<div class="section" id="building-from-source">
-<h2>Building from source<a class="headerlink" href="#building-from-source" title="Permalink to this headline"></a></h2>
+</section>
+<section id="building-from-source">
+<h2>Building from source<a class="headerlink" href="#building-from-source" title="Permalink to this heading"></a></h2>
 <p>Clone the main repo and install it:</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>git clone https://github.com/tomasfarias/airflow-dbt-python.git
 <span class="nb">cd</span> airflow-dbt-python
-poetry install --with dev
+poetry install --with dev -E airflow-providers -E postgres -E airflow
 </pre></div>
 </div>
-<p>The dev dependency group includes development tools for code formatting, type checking, and testing.</p>
-</div>
-<div class="section" id="pre-commit-hooks">
-<h2>Pre-commit hooks<a class="headerlink" href="#pre-commit-hooks" title="Permalink to this headline"></a></h2>
+<p>The dev dependency group includes development tools for code formatting, type checking, and testing. The added extras are required for testing, although if Airflow is being installed separately it should be omitted.</p>
+</section>
+<section id="modifying-dependencies">
+<h2>Modifying dependencies<a class="headerlink" href="#modifying-dependencies" title="Permalink to this heading"></a></h2>
+<p>Apache Airflow is a package of significant size that requires a lot of dependencies. Together with <code class="docutils literal notranslate"><span class="pre">dbt-core</span></code>, it’s common to find dependency conflicts all over the place. Ultimately, we allow users to figure these issues out themselves, as most of the dependency conflicts are harmless: We do not interact with the dbt CLI, so any conflicts with CLI-specific packages can be safely ignored, but these requirements are not optional for <code class="docutils literal notranslate"><span class="pre">dbt-core</span></code>.</p>
+<p>All being said, this presents a problem when we try to add dependencies or modify existing ones, as <code class="docutils literal notranslate"><span class="pre">poetry</span></code> will take a long time to check all possible conflicts. Grabbing a constraints file from <a class="reference external" href="https://github.com/apache/airflow">Airflow</a> and adding it as an optional group in <code class="docutils literal notranslate"><span class="pre">pyproject.toml</span></code> can be a useful strategy to speed up the process, as we are limiting the search domain for <code class="docutils literal notranslate"><span class="pre">poetry</span></code>. However, this does require relaxing dependencies one by one in between running <code class="docutils literal notranslate"><span class="pre">poetry</span> <span class="pre">lock</span> <span class="pre">--no-update</span></code>.</p>
+</section>
+<section id="pre-commit-hooks">
+<h2>Pre-commit hooks<a class="headerlink" href="#pre-commit-hooks" title="Permalink to this heading"></a></h2>
 <p>A handful of <a class="reference external" href="https://pre-commit.com/">pre-commit</a> hooks are provided, including:</p>
 <ul class="simple">
 <li><p>Trailing whitespace trimming.</p></li>
@@ -141,24 +150,24 @@ poetry install --with dev
 </pre></div>
 </div>
 <p>Ensuring hooks pass is highly recommended as hooks are mapped to CI/CD checks that will block PRs.</p>
-</div>
-<div class="section" id="testing">
-<h2>Testing<a class="headerlink" href="#testing" title="Permalink to this headline"></a></h2>
+</section>
+<section id="testing">
+<h2>Testing<a class="headerlink" href="#testing" title="Permalink to this heading"></a></h2>
 <p>Unit tests are available for all operators and hooks. That being said, only a fraction of the large amount of possible inputs that the operators and hooks can take is currently covered, so the unit tests do not offer perfect coverage (a single peek at the <code class="docutils literal notranslate"><span class="pre">DbtBaseOperator</span></code> should give you an idea of the level of state explosion we manage).</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>Unit tests (and airflow-dbt-python) assume dbt works correctly and do not assert the behavior of the dbt commands themselves.</p>
 </div>
-<div class="section" id="requirements">
-<h3>Requirements<a class="headerlink" href="#requirements" title="Permalink to this headline"></a></h3>
+<section id="requirements">
+<h3>Requirements<a class="headerlink" href="#requirements" title="Permalink to this heading"></a></h3>
 <p>Unit tests interact with a <a class="reference external" href="https://www.postgresql.org/">PostgreSQL</a> database as a target to run dbt commands. This requires PostgreSQL to be installed in your local environment. Installation instructions for all major platforms can be found here: <a class="reference external" href="https://www.postgresql.org/download/">https://www.postgresql.org/download/</a>.</p>
 <p>Some unit tests require the <a class="reference external" href="https://pypi.org/project/apache-airflow-providers-amazon/">Amazon provider package for Airflow</a>. Ensure it’s installed via the <code class="docutils literal notranslate"><span class="pre">airflow-providers</span></code> extra:</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>poetry install -E airflow-providers
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>poetry install --with dev -E airflow-providers -E postgres -E airflow
 </pre></div>
 </div>
-</div>
-<div class="section" id="running-unit-tests-with-pytest">
-<h3>Running unit tests with pytest<a class="headerlink" href="#running-unit-tests-with-pytest" title="Permalink to this headline"></a></h3>
+</section>
+<section id="running-unit-tests-with-pytest">
+<h3>Running unit tests with pytest<a class="headerlink" href="#running-unit-tests-with-pytest" title="Permalink to this heading"></a></h3>
 <p>airflow-dbt-python uses <a class="reference external" href="https://docs.pytest.org/">pytest</a> as its testing framework. After you have saved your changes, all unit tests can be run with:</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>poetry run pytest tests/ -vv
 </pre></div>
@@ -167,9 +176,9 @@ poetry install --with dev
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>poetry run pytest -vv --cov<span class="o">=</span>./airflow_dbt_python --cov-report<span class="o">=</span>xml:./coverage.xml --cov-report term-missing tests/
 </pre></div>
 </div>
-</div>
-</div>
-</div>
+</section>
+</section>
+</section>
 
 
            </div>

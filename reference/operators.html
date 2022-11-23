@@ -1,9 +1,10 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>airflow_dbt_python.operators &mdash; airflow-dbt-python 0.15.0 documentation</title>
+  <title>airflow_dbt_python.operators &mdash; airflow-dbt-python 0.15.1 documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="../_static/copybutton.css" type="text/css" />
@@ -15,7 +16,9 @@
         <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
         <script src="../_static/jquery.js"></script>
         <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
         <script src="../_static/clipboard.min.js"></script>
         <script src="../_static/copybutton.js"></script>
     <script src="../_static/js/theme.js"></script>
@@ -33,7 +36,7 @@
             <a href="../index.html" class="icon icon-home"> airflow-dbt-python
           </a>
               <div class="version">
-                0.15.0
+                0.15.1
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -51,7 +54,88 @@
 <li class="toctree-l1"><a class="reference internal" href="../development.html">Development</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="../reference.html">Reference</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="hooks.html">airflow_dbt_python.hooks</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">airflow_dbt_python.operators</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">airflow_dbt_python.operators</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#airflow_dbt_python.operators.dbt.DbtBaseOperator"><code class="docutils literal notranslate"><span class="pre">DbtBaseOperator</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#airflow_dbt_python.operators.dbt.DbtBaseOperator.command"><code class="docutils literal notranslate"><span class="pre">DbtBaseOperator.command</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#airflow_dbt_python.operators.dbt.DbtBaseOperator.project_dir"><code class="docutils literal notranslate"><span class="pre">DbtBaseOperator.project_dir</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#airflow_dbt_python.operators.dbt.DbtBaseOperator.profiles_dir"><code class="docutils literal notranslate"><span class="pre">DbtBaseOperator.profiles_dir</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#airflow_dbt_python.operators.dbt.DbtBaseOperator.profile"><code class="docutils literal notranslate"><span class="pre">DbtBaseOperator.profile</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#airflow_dbt_python.operators.dbt.DbtBaseOperator.target"><code class="docutils literal notranslate"><span class="pre">DbtBaseOperator.target</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#airflow_dbt_python.operators.dbt.DbtBaseOperator.vars"><code class="docutils literal notranslate"><span class="pre">DbtBaseOperator.vars</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#airflow_dbt_python.operators.dbt.DbtBaseOperator.log_cache_events"><code class="docutils literal notranslate"><span class="pre">DbtBaseOperator.log_cache_events</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#airflow_dbt_python.operators.dbt.DbtBaseOperator.s3_conn_id"><code class="docutils literal notranslate"><span class="pre">DbtBaseOperator.s3_conn_id</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#airflow_dbt_python.operators.dbt.DbtBaseOperator.do_xcom_push_artifacts"><code class="docutils literal notranslate"><span class="pre">DbtBaseOperator.do_xcom_push_artifacts</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#id0"><code class="docutils literal notranslate"><span class="pre">DbtBaseOperator.command</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#airflow_dbt_python.operators.dbt.DbtBaseOperator.dbt_directory"><code class="docutils literal notranslate"><span class="pre">DbtBaseOperator.dbt_directory()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#airflow_dbt_python.operators.dbt.DbtBaseOperator.dbt_hook"><code class="docutils literal notranslate"><span class="pre">DbtBaseOperator.dbt_hook</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#airflow_dbt_python.operators.dbt.DbtBaseOperator.execute"><code class="docutils literal notranslate"><span class="pre">DbtBaseOperator.execute()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#airflow_dbt_python.operators.dbt.DbtBaseOperator.get_dbt_config"><code class="docutils literal notranslate"><span class="pre">DbtBaseOperator.get_dbt_config()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#airflow_dbt_python.operators.dbt.DbtBaseOperator.prepare_directory"><code class="docutils literal notranslate"><span class="pre">DbtBaseOperator.prepare_directory()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#airflow_dbt_python.operators.dbt.DbtBaseOperator.serializable_result"><code class="docutils literal notranslate"><span class="pre">DbtBaseOperator.serializable_result()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#airflow_dbt_python.operators.dbt.DbtBaseOperator.xcom_push_artifacts"><code class="docutils literal notranslate"><span class="pre">DbtBaseOperator.xcom_push_artifacts()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#airflow_dbt_python.operators.dbt.DbtBuildOperator"><code class="docutils literal notranslate"><span class="pre">DbtBuildOperator</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#airflow_dbt_python.operators.dbt.DbtBuildOperator.command"><code class="docutils literal notranslate"><span class="pre">DbtBuildOperator.command</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#airflow_dbt_python.operators.dbt.DbtCleanOperator"><code class="docutils literal notranslate"><span class="pre">DbtCleanOperator</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#airflow_dbt_python.operators.dbt.DbtCleanOperator.command"><code class="docutils literal notranslate"><span class="pre">DbtCleanOperator.command</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#airflow_dbt_python.operators.dbt.DbtCompileOperator"><code class="docutils literal notranslate"><span class="pre">DbtCompileOperator</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#airflow_dbt_python.operators.dbt.DbtCompileOperator.command"><code class="docutils literal notranslate"><span class="pre">DbtCompileOperator.command</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#airflow_dbt_python.operators.dbt.DbtDebugOperator"><code class="docutils literal notranslate"><span class="pre">DbtDebugOperator</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#airflow_dbt_python.operators.dbt.DbtDebugOperator.command"><code class="docutils literal notranslate"><span class="pre">DbtDebugOperator.command</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#airflow_dbt_python.operators.dbt.DbtDepsOperator"><code class="docutils literal notranslate"><span class="pre">DbtDepsOperator</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#airflow_dbt_python.operators.dbt.DbtDepsOperator.command"><code class="docutils literal notranslate"><span class="pre">DbtDepsOperator.command</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#airflow_dbt_python.operators.dbt.DbtDocsGenerateOperator"><code class="docutils literal notranslate"><span class="pre">DbtDocsGenerateOperator</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#airflow_dbt_python.operators.dbt.DbtDocsGenerateOperator.command"><code class="docutils literal notranslate"><span class="pre">DbtDocsGenerateOperator.command</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#airflow_dbt_python.operators.dbt.DbtListOperator"><code class="docutils literal notranslate"><span class="pre">DbtListOperator</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#airflow_dbt_python.operators.dbt.DbtLsOperator"><code class="docutils literal notranslate"><span class="pre">DbtLsOperator</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#airflow_dbt_python.operators.dbt.DbtLsOperator.command"><code class="docutils literal notranslate"><span class="pre">DbtLsOperator.command</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#airflow_dbt_python.operators.dbt.DbtParseOperator"><code class="docutils literal notranslate"><span class="pre">DbtParseOperator</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#airflow_dbt_python.operators.dbt.DbtParseOperator.command"><code class="docutils literal notranslate"><span class="pre">DbtParseOperator.command</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#airflow_dbt_python.operators.dbt.DbtRunOperationOperator"><code class="docutils literal notranslate"><span class="pre">DbtRunOperationOperator</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#airflow_dbt_python.operators.dbt.DbtRunOperationOperator.command"><code class="docutils literal notranslate"><span class="pre">DbtRunOperationOperator.command</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#airflow_dbt_python.operators.dbt.DbtRunOperator"><code class="docutils literal notranslate"><span class="pre">DbtRunOperator</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#airflow_dbt_python.operators.dbt.DbtRunOperator.command"><code class="docutils literal notranslate"><span class="pre">DbtRunOperator.command</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#airflow_dbt_python.operators.dbt.DbtSeedOperator"><code class="docutils literal notranslate"><span class="pre">DbtSeedOperator</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#airflow_dbt_python.operators.dbt.DbtSeedOperator.command"><code class="docutils literal notranslate"><span class="pre">DbtSeedOperator.command</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#airflow_dbt_python.operators.dbt.DbtSnapshotOperator"><code class="docutils literal notranslate"><span class="pre">DbtSnapshotOperator</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#airflow_dbt_python.operators.dbt.DbtSnapshotOperator.command"><code class="docutils literal notranslate"><span class="pre">DbtSnapshotOperator.command</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#airflow_dbt_python.operators.dbt.DbtSourceFreshnessOperator"><code class="docutils literal notranslate"><span class="pre">DbtSourceFreshnessOperator</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#airflow_dbt_python.operators.dbt.DbtSourceFreshnessOperator.command"><code class="docutils literal notranslate"><span class="pre">DbtSourceFreshnessOperator.command</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#airflow_dbt_python.operators.dbt.DbtTestOperator"><code class="docutils literal notranslate"><span class="pre">DbtTestOperator</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#airflow_dbt_python.operators.dbt.DbtTestOperator.command"><code class="docutils literal notranslate"><span class="pre">DbtTestOperator.command</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#airflow_dbt_python.operators.dbt.apply_defaults"><code class="docutils literal notranslate"><span class="pre">apply_defaults()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#airflow_dbt_python.operators.dbt.run_result_factory"><code class="docutils literal notranslate"><span class="pre">run_result_factory()</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="backends.html">airflow_dbt_python.hooks.backends</a></li>
 </ul>
 </li>
@@ -70,9 +154,9 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
-          <li><a href="../reference.html">Reference</a> &raquo;</li>
-      <li>airflow_dbt_python.operators</li>
+      <li><a href="../index.html" class="icon icon-home"></a></li>
+          <li class="breadcrumb-item"><a href="../reference.html">Reference</a></li>
+      <li class="breadcrumb-item active">airflow_dbt_python.operators</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../_sources/reference/operators.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -82,8 +166,8 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <div class="section" id="module-airflow_dbt_python.operators.dbt">
-<span id="airflow-dbt-python-operators"></span><h1>airflow_dbt_python.operators<a class="headerlink" href="#module-airflow_dbt_python.operators.dbt" title="Permalink to this headline"></a></h1>
+  <section id="module-airflow_dbt_python.operators.dbt">
+<span id="airflow-dbt-python-operators"></span><h1>airflow_dbt_python.operators<a class="headerlink" href="#module-airflow_dbt_python.operators.dbt" title="Permalink to this heading"></a></h1>
 <p>Airflow operators for all dbt commands.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="airflow_dbt_python.operators.dbt.DbtBaseOperator">
@@ -132,9 +216,6 @@ command itself, subclasses should set it.</p>
 <li><p><strong>delete_before_push</strong> (<em>bool</em>) – </p></li>
 <li><p><strong>replace_on_push</strong> (<em>bool</em>) – </p></li>
 </ul>
-</dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p>None</p>
 </dd>
 </dl>
 <dl class="py attribute">
@@ -234,7 +315,7 @@ docs generate.</p>
 overriding the logging.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>context</strong> (<em>dict</em>) – The Airflow’s task context</p>
+<dd class="field-odd"><p><strong>context</strong> – The Airflow’s task context</p>
 </dd>
 </dl>
 </dd></dl>
@@ -245,7 +326,7 @@ overriding the logging.</p>
 <dd><p>Return a dbt task configuration.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><a class="reference internal" href="hooks.html#airflow_dbt_python.hooks.dbt.BaseConfig" title="airflow_dbt_python.hooks.dbt.BaseConfig">airflow_dbt_python.hooks.dbt.BaseConfig</a></p>
+<dd class="field-odd"><p><a class="reference internal" href="hooks.html#airflow_dbt_python.hooks.dbt.BaseConfig" title="airflow_dbt_python.hooks.dbt.BaseConfig">BaseConfig</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -271,10 +352,10 @@ JSON-serializable types, the default XCom backend. If implementing
 custom XCom backends, this method may be overriden.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>result</strong> (<em>Optional</em><em>[</em><em>dbt.contracts.results.RunExecutionResult</em><em>]</em>) – </p>
+<dd class="field-odd"><p><strong>result</strong> (<em>Optional</em><em>[</em><em>RunExecutionResult</em><em>]</em>) – </p>
 </dd>
 <dt class="field-even">Return type</dt>
-<dd class="field-even"><p><em>Optional</em>[dict[<em>Any</em>, <em>Any</em>]]</p>
+<dd class="field-even"><p>Optional[dict[Any, Any]]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -288,7 +369,7 @@ fail if the required artifact is not found.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>context</strong> (<em>dict</em>) – The Airflow task’s context.</p></li>
+<li><p><strong>context</strong> – The Airflow task’s context.</p></li>
 <li><p><strong>dbt_directory</strong> (<em>str</em>) – A directory containing a dbt project. Artifacts will be
 assumed to be in dbt_directory/target/.</p></li>
 </ul>
@@ -318,9 +399,6 @@ full Documentation for the dbt build command can be found here:
 <li><p><strong>indirect_selection</strong> (<em>Optional</em><em>[</em><em>str</em><em>]</em>) – </p></li>
 </ul>
 </dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p>None</p>
-</dd>
 </dl>
 <dl class="py property">
 <dt class="sig sig-object py" id="airflow_dbt_python.operators.dbt.DbtBuildOperator.command">
@@ -342,9 +420,6 @@ full Documentation for the dbt build command can be found here:
 <li><p><strong>push_dbt_project</strong> (<em>bool</em>) – </p></li>
 <li><p><strong>delete_before_push</strong> (<em>bool</em>) – </p></li>
 </ul>
-</dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p>None</p>
 </dd>
 </dl>
 <dl class="py property">
@@ -374,9 +449,6 @@ documentation for the dbt command can be found here:
 <li><p><strong>push_dbt_project</strong> (<em>bool</em>) – </p></li>
 </ul>
 </dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p>None</p>
-</dd>
 </dl>
 <dl class="py property">
 <dt class="sig sig-object py" id="airflow_dbt_python.operators.dbt.DbtCompileOperator.command">
@@ -399,9 +471,6 @@ documentation for the dbt command can be found here:
 <li><p><strong>no_version_check</strong> (<em>Optional</em><em>[</em><em>bool</em><em>]</em>) – </p></li>
 </ul>
 </dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p>None</p>
-</dd>
 </dl>
 <dl class="py property">
 <dt class="sig sig-object py" id="airflow_dbt_python.operators.dbt.DbtDebugOperator.command">
@@ -420,9 +489,6 @@ documentation for the dbt command can be found here:
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>push_dbt_project</strong> (<em>bool</em>) – </p>
-</dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p>None</p>
 </dd>
 </dl>
 <dl class="py property">
@@ -443,9 +509,6 @@ documentation for the dbt command can be found here:
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>push_dbt_project</strong> (<em>bool</em>) – </p>
 </dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p>None</p>
-</dd>
 </dl>
 <dl class="py property">
 <dt class="sig sig-object py" id="airflow_dbt_python.operators.dbt.DbtDocsGenerateOperator.command">
@@ -458,7 +521,7 @@ documentation for the dbt command can be found here:
 <dl class="py attribute">
 <dt class="sig sig-object py" id="airflow_dbt_python.operators.dbt.DbtListOperator">
 <span class="sig-prename descclassname"><span class="pre">airflow_dbt_python.operators.dbt.</span></span><span class="sig-name descname"><span class="pre">DbtListOperator</span></span><a class="headerlink" href="#airflow_dbt_python.operators.dbt.DbtListOperator" title="Permalink to this definition"></a></dt>
-<dd><p>alias of <a class="reference internal" href="#airflow_dbt_python.operators.dbt.DbtLsOperator" title="airflow_dbt_python.operators.dbt.DbtLsOperator"><code class="xref py py-class docutils literal notranslate"><span class="pre">airflow_dbt_python.operators.dbt.DbtLsOperator</span></code></a></p>
+<dd><p>alias of <a class="reference internal" href="#airflow_dbt_python.operators.dbt.DbtLsOperator" title="airflow_dbt_python.operators.dbt.DbtLsOperator"><code class="xref py py-class docutils literal notranslate"><span class="pre">DbtLsOperator</span></code></a></p>
 </dd></dl>
 
 <dl class="py class">
@@ -479,9 +542,6 @@ documentation for the dbt command can be found here:
 <li><p><strong>indirect_selection</strong> (<em>Optional</em><em>[</em><em>str</em><em>]</em>) – </p></li>
 </ul>
 </dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p>None</p>
-</dd>
 </dl>
 <dl class="py property">
 <dt class="sig sig-object py" id="airflow_dbt_python.operators.dbt.DbtLsOperator.command">
@@ -500,9 +560,6 @@ documentation for the dbt command can be found here:
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>push_dbt_project</strong> (<em>bool</em>) – </p>
-</dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p>None</p>
 </dd>
 </dl>
 <dl class="py property">
@@ -525,9 +582,6 @@ documentation for the dbt command can be found here:
 <li><p><strong>macro</strong> (<em>str</em>) – </p></li>
 <li><p><strong>args</strong> (<em>Optional</em><em>[</em><em>dict</em><em>[</em><em>str</em><em>, </em><em>str</em><em>]</em><em>]</em>) – </p></li>
 </ul>
-</dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p>None</p>
 </dd>
 </dl>
 <dl class="py property">
@@ -555,9 +609,6 @@ documentation for the dbt command can be found here:
 <li><p><strong>exclude</strong> (<em>Optional</em><em>[</em><em>list</em><em>[</em><em>str</em><em>]</em><em>]</em>) – </p></li>
 </ul>
 </dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p>None</p>
-</dd>
 </dl>
 <dl class="py property">
 <dt class="sig sig-object py" id="airflow_dbt_python.operators.dbt.DbtRunOperator.command">
@@ -584,9 +635,6 @@ documentation for the dbt command can be found here:
 <li><p><strong>selector_name</strong> (<em>Optional</em><em>[</em><em>str</em><em>]</em>) – </p></li>
 </ul>
 </dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p>None</p>
-</dd>
 </dl>
 <dl class="py property">
 <dt class="sig sig-object py" id="airflow_dbt_python.operators.dbt.DbtSeedOperator.command">
@@ -609,9 +657,6 @@ documentation for the dbt command can be found here:
 <li><p><strong>exclude</strong> (<em>Optional</em><em>[</em><em>list</em><em>[</em><em>str</em><em>]</em><em>]</em>) – </p></li>
 <li><p><strong>selector_name</strong> (<em>Optional</em><em>[</em><em>str</em><em>]</em>) – </p></li>
 </ul>
-</dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p>None</p>
 </dd>
 </dl>
 <dl class="py property">
@@ -637,9 +682,6 @@ documentation for the dbt command can be found here:
 <li><p><strong>selector_name</strong> (<em>Optional</em><em>[</em><em>str</em><em>]</em>) – </p></li>
 <li><p><strong>push_dbt_project</strong> (<em>bool</em>) – </p></li>
 </ul>
-</dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p>None</p>
 </dd>
 </dl>
 <dl class="py property">
@@ -669,9 +711,6 @@ documentation for the dbt command can be found here:
 <li><p><strong>indirect_selection</strong> (<em>Optional</em><em>[</em><em>str</em><em>]</em>) – </p></li>
 </ul>
 </dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p>None</p>
-</dd>
 </dl>
 <dl class="py property">
 <dt class="sig sig-object py" id="airflow_dbt_python.operators.dbt.DbtTestOperator.command">
@@ -687,10 +726,10 @@ documentation for the dbt command can be found here:
 <dd><p>Empty function to support apply defaults in post 2.0 Airflow versions.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>func</strong> (<em>airflow_dbt_python.operators.dbt.T</em>) – </p>
+<dd class="field-odd"><p><strong>func</strong> (<em>T</em>) – </p>
 </dd>
 <dt class="field-even">Return type</dt>
-<dd class="field-even"><p>airflow_dbt_python.operators.dbt.T</p>
+<dd class="field-even"><p><em>T</em></p>
 </dd>
 </dl>
 </dd></dl>
@@ -708,7 +747,7 @@ The rest of the types should already be JSON-serializable.</p>
 </dl>
 </dd></dl>
 
-</div>
+</section>
 
 
            </div>

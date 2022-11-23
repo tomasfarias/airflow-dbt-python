@@ -1,9 +1,10 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>airflow_dbt_python.hooks.backends &mdash; airflow-dbt-python 0.15.0 documentation</title>
+  <title>airflow_dbt_python.hooks.backends &mdash; airflow-dbt-python 0.15.1 documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="../_static/copybutton.css" type="text/css" />
@@ -15,7 +16,9 @@
         <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
         <script src="../_static/jquery.js"></script>
         <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
         <script src="../_static/clipboard.min.js"></script>
         <script src="../_static/copybutton.js"></script>
     <script src="../_static/js/theme.js"></script>
@@ -32,7 +35,7 @@
             <a href="../index.html" class="icon icon-home"> airflow-dbt-python
           </a>
               <div class="version">
-                0.15.0
+                0.15.1
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -51,7 +54,31 @@
 <li class="toctree-l1 current"><a class="reference internal" href="../reference.html">Reference</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="hooks.html">airflow_dbt_python.hooks</a></li>
 <li class="toctree-l2"><a class="reference internal" href="operators.html">airflow_dbt_python.operators</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">airflow_dbt_python.hooks.backends</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">airflow_dbt_python.hooks.backends</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#airflow_dbt_python.hooks.backends.build_backend"><code class="docutils literal notranslate"><span class="pre">build_backend()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#airflow_dbt_python.hooks.backends.localfs.DbtLocalFsBackend"><code class="docutils literal notranslate"><span class="pre">DbtLocalFsBackend</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#airflow_dbt_python.hooks.backends.localfs.DbtLocalFsBackend.pull_many"><code class="docutils literal notranslate"><span class="pre">DbtLocalFsBackend.pull_many()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#airflow_dbt_python.hooks.backends.localfs.DbtLocalFsBackend.pull_one"><code class="docutils literal notranslate"><span class="pre">DbtLocalFsBackend.pull_one()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#airflow_dbt_python.hooks.backends.localfs.DbtLocalFsBackend.push_many"><code class="docutils literal notranslate"><span class="pre">DbtLocalFsBackend.push_many()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#airflow_dbt_python.hooks.backends.localfs.DbtLocalFsBackend.push_one"><code class="docutils literal notranslate"><span class="pre">DbtLocalFsBackend.push_one()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#airflow_dbt_python.hooks.backends.localfs.py37_copytree"><code class="docutils literal notranslate"><span class="pre">py37_copytree()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#airflow_dbt_python.hooks.backends.s3.DbtS3Backend"><code class="docutils literal notranslate"><span class="pre">DbtS3Backend</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#airflow_dbt_python.hooks.backends.s3.DbtS3Backend.connection_id"><code class="docutils literal notranslate"><span class="pre">DbtS3Backend.connection_id</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#airflow_dbt_python.hooks.backends.s3.DbtS3Backend.download_many_from_key_prefix"><code class="docutils literal notranslate"><span class="pre">DbtS3Backend.download_many_from_key_prefix()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#airflow_dbt_python.hooks.backends.s3.DbtS3Backend.download_one_s3_object"><code class="docutils literal notranslate"><span class="pre">DbtS3Backend.download_one_s3_object()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#airflow_dbt_python.hooks.backends.s3.DbtS3Backend.download_zip_s3_object"><code class="docutils literal notranslate"><span class="pre">DbtS3Backend.download_zip_s3_object()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#airflow_dbt_python.hooks.backends.s3.DbtS3Backend.hook"><code class="docutils literal notranslate"><span class="pre">DbtS3Backend.hook</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#airflow_dbt_python.hooks.backends.s3.DbtS3Backend.load_file_handle_replace_error"><code class="docutils literal notranslate"><span class="pre">DbtS3Backend.load_file_handle_replace_error()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#airflow_dbt_python.hooks.backends.s3.DbtS3Backend.pull_many"><code class="docutils literal notranslate"><span class="pre">DbtS3Backend.pull_many()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#airflow_dbt_python.hooks.backends.s3.DbtS3Backend.pull_one"><code class="docutils literal notranslate"><span class="pre">DbtS3Backend.pull_one()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#airflow_dbt_python.hooks.backends.s3.DbtS3Backend.push_many"><code class="docutils literal notranslate"><span class="pre">DbtS3Backend.push_many()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#airflow_dbt_python.hooks.backends.s3.DbtS3Backend.push_one"><code class="docutils literal notranslate"><span class="pre">DbtS3Backend.push_one()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -69,9 +96,9 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
-          <li><a href="../reference.html">Reference</a> &raquo;</li>
-      <li>airflow_dbt_python.hooks.backends</li>
+      <li><a href="../index.html" class="icon icon-home"></a></li>
+          <li class="breadcrumb-item"><a href="../reference.html">Reference</a></li>
+      <li class="breadcrumb-item active">airflow_dbt_python.hooks.backends</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../_sources/reference/backends.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -81,8 +108,8 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <div class="section" id="module-airflow_dbt_python.hooks.backends">
-<span id="airflow-dbt-python-hooks-backends"></span><h1>airflow_dbt_python.hooks.backends<a class="headerlink" href="#module-airflow_dbt_python.hooks.backends" title="Permalink to this headline"></a></h1>
+  <section id="module-airflow_dbt_python.hooks.backends">
+<span id="airflow-dbt-python-hooks-backends"></span><h1>airflow_dbt_python.hooks.backends<a class="headerlink" href="#module-airflow_dbt_python.hooks.backends" title="Permalink to this heading"></a></h1>
 <p>Backends for storing dbt projects and profiles.</p>
 <p>The backend interface includes methods for pulling and pushing one or many files.
 Internally, backends use Airflow hooks to execute the actual pushing and pulling.</p>
@@ -99,7 +126,7 @@ Internally, backends use Airflow hooks to execute the actual pushing and pulling
 </ul>
 </dd>
 <dt class="field-even">Return type</dt>
-<dd class="field-even"><p>airflow_dbt_python.hooks.backends.base.DbtBackend</p>
+<dd class="field-even"><p><em>DbtBackend</em></p>
 </dd>
 </dl>
 </dd></dl>
@@ -255,10 +282,7 @@ S3Hook.</p>
 <dd><p>Download an S3 object into a local destination.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>s3_object</strong> (<em>S3Object</em>) – </p></li>
-<li><p><strong>destination</strong> (<em>StrPath</em>) – </p></li>
-</ul>
+<dd class="field-odd"><p><strong>destination</strong> (<em>StrPath</em>) – </p>
 </dd>
 <dt class="field-even">Return type</dt>
 <dd class="field-even"><p>None</p>
@@ -272,10 +296,7 @@ S3Hook.</p>
 <dd><p>Download an S3Object and extract its contents.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>s3_object</strong> (<em>S3Object</em>) – </p></li>
-<li><p><strong>destination</strong> (<em>StrPath</em>) – </p></li>
-</ul>
+<dd class="field-odd"><p><strong>destination</strong> (<em>StrPath</em>) – </p>
 </dd>
 <dt class="field-even">Return type</dt>
 <dd class="field-even"><p>None</p>
@@ -285,7 +306,7 @@ S3Hook.</p>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="airflow_dbt_python.hooks.backends.s3.DbtS3Backend.hook">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">hook</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">airflow.providers.amazon.aws.hooks.s3.S3Hook</span></em><a class="headerlink" href="#airflow_dbt_python.hooks.backends.s3.DbtS3Backend.hook" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">hook</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">S3Hook</span></em><a class="headerlink" href="#airflow_dbt_python.hooks.backends.s3.DbtS3Backend.hook" title="Permalink to this definition"></a></dt>
 <dd><p>Return the Airflow hook associated with this backend.</p>
 </dd></dl>
 
@@ -307,7 +328,7 @@ replace = False.</p>
 <li><p><strong>replace</strong> (<em>bool</em>) – </p></li>
 <li><p><strong>encrypt</strong> (<em>bool</em>) – </p></li>
 <li><p><strong>gzip</strong> (<em>bool</em>) – </p></li>
-<li><p><strong>acl_policy</strong> (<em>Optional</em><em>[</em><em>bool</em><em>]</em>) – </p></li>
+<li><p><strong>acl_policy</strong> (<em>Optional</em><em>[</em><em>str</em><em>]</em>) – </p></li>
 </ul>
 </dd>
 <dt class="field-odd">Return type</dt>
@@ -394,7 +415,7 @@ name and key prefix will be extracted by calling S3Hook.parse_s3_url.</p></li>
 
 </dd></dl>
 
-</div>
+</section>
 
 
            </div>

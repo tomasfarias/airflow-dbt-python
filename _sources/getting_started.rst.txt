@@ -78,7 +78,7 @@ airflow-dbt-python can be installed in an Airflow environment managed by AWS via
 .. code-block:: shell
    :caption: requirements.txt
 
-   airflow-dbt-python[redshift,amazon]
+   airflow-dbt-python[redshift,airflow-providers]
 
 Installs airflow-dbt-python, dbt's Redshift adapter, and Airflow's Amazon providers library.
 

@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>airflow_dbt_python.hooks.backends.s3 &mdash; airflow-dbt-python 0.15.0 documentation</title>
+  <title>airflow_dbt_python.hooks.backends.s3 &mdash; airflow-dbt-python 0.15.1 documentation</title>
       <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="../../../../_static/copybutton.css" type="text/css" />
@@ -15,7 +15,9 @@
         <script data-url_root="../../../../" id="documentation_options" src="../../../../_static/documentation_options.js"></script>
         <script src="../../../../_static/jquery.js"></script>
         <script src="../../../../_static/underscore.js"></script>
+        <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../../../../_static/doctools.js"></script>
+        <script src="../../../../_static/sphinx_highlight.js"></script>
         <script src="../../../../_static/clipboard.min.js"></script>
         <script src="../../../../_static/copybutton.js"></script>
     <script src="../../../../_static/js/theme.js"></script>
@@ -31,7 +33,7 @@
             <a href="../../../../index.html" class="icon icon-home"> airflow-dbt-python
           </a>
               <div class="version">
-                0.15.0
+                0.15.1
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
@@ -63,10 +65,10 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../../../index.html" class="icon icon-home"></a> &raquo;</li>
-          <li><a href="../../../index.html">Module code</a> &raquo;</li>
-          <li><a href="../backends.html">airflow_dbt_python.hooks.backends</a> &raquo;</li>
-      <li>airflow_dbt_python.hooks.backends.s3</li>
+      <li><a href="../../../../index.html" class="icon icon-home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html">Module code</a></li>
+          <li class="breadcrumb-item"><a href="../backends.html">airflow_dbt_python.hooks.backends</a></li>
+      <li class="breadcrumb-item active">airflow_dbt_python.hooks.backends.s3</li>
       <li class="wy-breadcrumbs-aside">
       </li>
   </ul>
@@ -81,7 +83,7 @@
 
 <span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Optional</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Optional</span>
 <span class="kn">from</span> <span class="nn">zipfile</span> <span class="kn">import</span> <span class="n">ZipFile</span>
 
 <span class="kn">from</span> <span class="nn">.base</span> <span class="kn">import</span> <span class="n">DbtBackend</span><span class="p">,</span> <span class="n">StrPath</span><span class="p">,</span> <span class="n">zip_all_paths</span>
@@ -89,11 +91,7 @@
 <span class="k">try</span><span class="p">:</span>
     <span class="kn">from</span> <span class="nn">airflow.providers.amazon.aws.hooks.s3</span> <span class="kn">import</span> <span class="n">S3Hook</span>
 <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
-    <span class="kn">from</span> <span class="nn">airflow.hooks.S3_hook</span> <span class="kn">import</span> <span class="n">S3Hook</span>
-
-<span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
-    <span class="c1"># Safe to exclude as this only runs during static type checking.</span>
-    <span class="kn">from</span> <span class="nn">mypy_boto3_s3.service_resource</span> <span class="kn">import</span> <span class="n">Object</span> <span class="k">as</span> <span class="n">S3Object</span>
+    <span class="kn">from</span> <span class="nn">airflow.hooks.S3_hook</span> <span class="kn">import</span> <span class="n">S3Hook</span>  <span class="c1"># type: ignore</span>
 
 
 <div class="viewcode-block" id="DbtS3Backend"><a class="viewcode-back" href="../../../../reference/backends.html#airflow_dbt_python.hooks.backends.s3.DbtS3Backend">[docs]</a><span class="k">class</span> <span class="nc">DbtS3Backend</span><span class="p">(</span><span class="n">DbtBackend</span><span class="p">):</span>
@@ -134,7 +132,14 @@
         <span class="n">bucket_name</span><span class="p">,</span> <span class="n">key</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">hook</span><span class="o">.</span><span class="n">parse_s3_url</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">source</span><span class="p">))</span>
         <span class="n">s3_object</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">hook</span><span class="o">.</span><span class="n">get_key</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="n">key</span><span class="p">,</span> <span class="n">bucket_name</span><span class="o">=</span><span class="n">bucket_name</span><span class="p">)</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">download_one_s3_object</span><span class="p">(</span><span class="n">s3_object</span><span class="p">,</span> <span class="n">destination</span><span class="p">)</span>
+        <span class="c1"># It&#39;s clear from the body of the method that S3Hook.get_key returns</span>
+        <span class="c1"># a boto3.s3.Object. For some reason, the type hint has been set to</span>
+        <span class="c1"># boto3.s3.transfer.S3Transfer, even though the body of the method</span>
+        <span class="c1"># and its docstring indicate otherwise. I have no other idea besides</span>
+        <span class="c1"># ignoring this check.</span>
+        <span class="c1"># See discussion:</span>
+        <span class="c1"># https://github.com/apache/airflow/pull/10164#discussion_r653685526</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">download_one_s3_object</span><span class="p">(</span><span class="n">s3_object</span><span class="p">,</span> <span class="n">destination</span><span class="p">)</span>  <span class="c1"># type: ignore</span>
         <span class="k">return</span> <span class="n">Path</span><span class="p">(</span><span class="n">destination</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="DbtS3Backend.pull_many"><a class="viewcode-back" href="../../../../reference/backends.html#airflow_dbt_python.hooks.backends.s3.DbtS3Backend.pull_many">[docs]</a>    <span class="k">def</span> <span class="nf">pull_many</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source</span><span class="p">:</span> <span class="n">StrPath</span><span class="p">,</span> <span class="n">destination</span><span class="p">:</span> <span class="n">StrPath</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
@@ -228,9 +233,7 @@
                     <span class="n">replace</span><span class="o">=</span><span class="n">replace</span><span class="p">,</span>
                 <span class="p">)</span></div>
 
-<div class="viewcode-block" id="DbtS3Backend.download_zip_s3_object"><a class="viewcode-back" href="../../../../reference/backends.html#airflow_dbt_python.hooks.backends.s3.DbtS3Backend.download_zip_s3_object">[docs]</a>    <span class="k">def</span> <span class="nf">download_zip_s3_object</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">s3_object</span><span class="p">:</span> <span class="s2">&quot;S3Object&quot;</span><span class="p">,</span> <span class="n">destination</span><span class="p">:</span> <span class="n">StrPath</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<div class="viewcode-block" id="DbtS3Backend.download_zip_s3_object"><a class="viewcode-back" href="../../../../reference/backends.html#airflow_dbt_python.hooks.backends.s3.DbtS3Backend.download_zip_s3_object">[docs]</a>    <span class="k">def</span> <span class="nf">download_zip_s3_object</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">s3_object</span><span class="p">,</span> <span class="n">destination</span><span class="p">:</span> <span class="n">StrPath</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Download an S3Object and extract its contents.&quot;&quot;&quot;</span>
         <span class="n">destination_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">destination</span><span class="p">)</span>
 
@@ -260,7 +263,7 @@
             <span class="n">s3_object</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">hook</span><span class="o">.</span><span class="n">get_key</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="n">s3_object_key</span><span class="p">,</span> <span class="n">bucket_name</span><span class="o">=</span><span class="n">bucket_name</span><span class="p">)</span>
             <span class="n">path_file</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">s3_object_key</span><span class="p">)</span><span class="o">.</span><span class="n">relative_to</span><span class="p">(</span><span class="n">key_prefix</span><span class="p">)</span>
 
-            <span class="k">if</span> <span class="n">path_file</span><span class="o">.</span><span class="n">suffix</span> <span class="o">==</span> <span class="s2">&quot;&quot;</span> <span class="ow">and</span> <span class="n">s3_object</span><span class="o">.</span><span class="n">key</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">path_file</span><span class="o">.</span><span class="n">suffix</span> <span class="o">==</span> <span class="s2">&quot;&quot;</span> <span class="ow">and</span> <span class="n">s3_object</span><span class="o">.</span><span class="n">key</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">):</span>  <span class="c1"># type: ignore</span>
                 <span class="c1"># Empty S3 files may also be confused with unwanted directories.</span>
                 <span class="c1"># See comment in line 60.</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;A file with no name was found in S3 at </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">s3_object</span><span class="p">)</span>
@@ -273,7 +276,7 @@
 
 <div class="viewcode-block" id="DbtS3Backend.download_one_s3_object"><a class="viewcode-back" href="../../../../reference/backends.html#airflow_dbt_python.hooks.backends.s3.DbtS3Backend.download_one_s3_object">[docs]</a>    <span class="k">def</span> <span class="nf">download_one_s3_object</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="n">s3_object</span><span class="p">:</span> <span class="s2">&quot;S3Object&quot;</span><span class="p">,</span>
+        <span class="n">s3_object</span><span class="p">,</span>
         <span class="n">destination</span><span class="p">:</span> <span class="n">StrPath</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Download an S3 object into a local destination.&quot;&quot;&quot;</span>
@@ -298,7 +301,7 @@
         <span class="n">replace</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="n">encrypt</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="n">gzip</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-        <span class="n">acl_policy</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">acl_policy</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Calls S3Hook.load_file but handles ValueError when replacing existing keys.</span>
 
