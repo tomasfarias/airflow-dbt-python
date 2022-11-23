@@ -6,7 +6,6 @@ import json
 import os
 import pickle
 from dataclasses import dataclass
-from enum import Enum
 from pathlib import Path
 from typing import Any, Optional, Type, Union
 from urllib.parse import urlparse
@@ -50,39 +49,9 @@ try:
 except ImportError:
     from airflow.hooks.base_hook import BaseHook  # type: ignore
 
+from airflow_dbt_python.utils.enums import FromStrEnum, LogFormat, Output
+
 from .backends import DbtBackend, StrPath, build_backend
-
-
-class FromStrEnum(Enum):
-    """Access enum variants with strings ensuring uppercase."""
-
-    @classmethod
-    def from_str(cls, s: str):
-        """Instantiate an Enum from a string."""
-        return cls[s.replace("-", "_").upper()]
-
-
-class LogFormat(FromStrEnum):
-    """Allowed dbt log formats."""
-
-    DEFAULT = "default"
-    JSON = "json"
-    TEXT = "text"
-
-
-class Output(FromStrEnum):
-    """Allowed output arguments."""
-
-    JSON = "json"
-    NAME = "name"
-    PATH = "path"
-    SELECTOR = "selector"
-
-    def __eq__(self, other):
-        """Override equality for string comparison."""
-        if isinstance(other, str):
-            return other.upper() == self.name
-        return Enum.__eq__(self, other)
 
 
 def parse_yaml_args(args: Optional[Union[str, dict[str, Any]]]) -> dict[str, Any]:

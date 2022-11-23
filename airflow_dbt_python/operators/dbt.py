@@ -15,6 +15,8 @@ from airflow.models.baseoperator import BaseOperator
 from airflow.models.xcom import XCOM_RETURN_KEY
 from airflow.version import version
 
+from airflow_dbt_python.utils.enums import LogFormat, Output
+
 # apply_defaults is deprecated in version 2 and beyond. This allows us to
 # support version 1 and deal with the deprecation warning.
 if int(version[0]) == 1:
@@ -110,8 +112,6 @@ class DbtBaseOperator(BaseOperator):
         replace_on_push: bool = False,
         **kwargs,
     ) -> None:
-        from airflow_dbt_python.hooks.dbt import LogFormat
-
         super().__init__(**kwargs)
         self.project_dir = project_dir
         self.profiles_dir = profiles_dir
@@ -618,8 +618,6 @@ class DbtLsOperator(DbtBaseOperator):
         indirect_selection: Optional[str] = None,
         **kwargs,
     ) -> None:
-        from airflow_dbt_python.hooks.dbt import Output
-
         super().__init__(**kwargs)
         self.resource_types = resource_types
         self.select = select
