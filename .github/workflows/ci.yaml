@@ -127,7 +127,7 @@ jobs:
         with:
           name: coverage-data
 
-      - name: Combine coverage & fail if it's <100%.
+      - name: Combine coverage & fail if it's <95%.
         run: |
           poetry run coverage combine
           poetry run coverage html --skip-covered --skip-empty
@@ -149,6 +149,7 @@ jobs:
 
       - name: "Make coverage badge"
         uses: schneegans/dynamic-badges-action@v1.6.0
+        if: github.event_name != 'pull_request'
         with:
           auth: ${{ secrets.GIST_TOKEN }}
           gistID: 81ef37701aa088d18db8a58ce07c79c7
