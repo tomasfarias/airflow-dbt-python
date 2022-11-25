@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>airflow_dbt_python.operators.dbt &mdash; airflow-dbt-python 0.15.1 documentation</title>
+  <title>airflow_dbt_python.operators.dbt &mdash; airflow-dbt-python 0.15.2 documentation</title>
       <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="../../../_static/copybutton.css" type="text/css" />
@@ -33,7 +33,7 @@
             <a href="../../../index.html" class="icon icon-home"> airflow-dbt-python
           </a>
               <div class="version">
-                0.15.1
+                0.15.2
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
@@ -93,6 +93,8 @@
 <span class="kn">from</span> <span class="nn">airflow.models.baseoperator</span> <span class="kn">import</span> <span class="n">BaseOperator</span>
 <span class="kn">from</span> <span class="nn">airflow.models.xcom</span> <span class="kn">import</span> <span class="n">XCOM_RETURN_KEY</span>
 <span class="kn">from</span> <span class="nn">airflow.version</span> <span class="kn">import</span> <span class="n">version</span>
+
+<span class="kn">from</span> <span class="nn">airflow_dbt_python.utils.enums</span> <span class="kn">import</span> <span class="n">LogFormat</span><span class="p">,</span> <span class="n">Output</span>
 
 <span class="c1"># apply_defaults is deprecated in version 2 and beyond. This allows us to</span>
 <span class="c1"># support version 1 and deal with the deprecation warning.</span>
@@ -189,8 +191,6 @@
         <span class="n">replace_on_push</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="kn">from</span> <span class="nn">airflow_dbt_python.hooks.dbt</span> <span class="kn">import</span> <span class="n">LogFormat</span>
-
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">project_dir</span> <span class="o">=</span> <span class="n">project_dir</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">profiles_dir</span> <span class="o">=</span> <span class="n">profiles_dir</span>
@@ -697,8 +697,6 @@
         <span class="n">indirect_selection</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="kn">from</span> <span class="nn">airflow_dbt_python.hooks.dbt</span> <span class="kn">import</span> <span class="n">Output</span>
-
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">resource_types</span> <span class="o">=</span> <span class="n">resource_types</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">select</span> <span class="o">=</span> <span class="n">select</span>
