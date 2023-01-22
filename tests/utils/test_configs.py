@@ -1,14 +1,13 @@
-"""Unit test module for dbt task configurations found as part of the DbtHook."""
+"""Unit test module for dbt task configuration utilities."""
 import pytest
 from dbt.exceptions import DbtProfileError
-from dbt.task.base import BaseTask
 from dbt.task.build import BuildTask
 from dbt.task.compile import CompileTask
 from dbt.task.debug import DebugTask
 from dbt.task.deps import DepsTask
 from dbt.task.run import RunTask
 
-from airflow_dbt_python.hooks.dbt import (
+from airflow_dbt_python.utils.configs import (
     BaseConfig,
     BuildTaskConfig,
     CompileTaskConfig,
