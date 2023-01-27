@@ -13,7 +13,7 @@ class FromStrEnum(Enum):
         """Instantiate an Enum from a string."""
         return cls[name.replace("-", "_").upper()]
 
-    def __eq__(self, other):
+    def __eq__(self, other) -> bool:
         """Override equality for string comparison."""
         if isinstance(other, str):
             return other.upper() == self.name

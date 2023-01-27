@@ -10,11 +10,10 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import TYPE_CHECKING, Any, Callable, Iterator, Optional, TypeVar, Union
 
-from airflow import AirflowException
+from airflow.exceptions import AirflowException
 from airflow.models.baseoperator import BaseOperator
 from airflow.models.xcom import XCOM_RETURN_KEY
 from airflow.version import version
-
 from airflow_dbt_python.utils.enums import LogFormat, Output
 
 # apply_defaults is deprecated in version 2 and beyond. This allows us to
@@ -107,9 +106,9 @@ class DbtBaseOperator(BaseOperator):
         profiles_conn_id: Optional[str] = None,
         project_conn_id: Optional[str] = None,
         do_xcom_push_artifacts: Optional[list[str]] = None,
-        push_dbt_project: bool = False,
-        delete_before_push: bool = False,
-        replace_on_push: bool = False,
+        upload_dbt_project: bool = False,
+        delete_before_upload: bool = False,
+        replace_on_upload: bool = False,
         **kwargs,
     ) -> None:
         super().__init__(**kwargs)
@@ -158,9 +157,9 @@ class DbtBaseOperator(BaseOperator):
         self.profiles_conn_id = profiles_conn_id
         self.project_conn_id = project_conn_id
         self.do_xcom_push_artifacts = do_xcom_push_artifacts
-        self.push_dbt_project = push_dbt_project
-        self.delete_before_push = delete_before_push
-        self.replace_on_push = replace_on_push
+        self.upload_dbt_project = upload_dbt_project
+        self.delete_before_upload = delete_before_upload
+        self.replace_on_upload = replace_on_upload
 
         self._dbt_hook = None
 
@@ -196,7 +195,7 @@ class DbtBaseOperator(BaseOperator):
                     # found in dbt.contracts.results. Each DbtBaseOperator
                     # subclass should implement prepare_results to return a
                     # serializable object
-                    self.xcom_push_artifacts(context, dbt_dir)
+                    self.xcom_upload_artifacts(context, dbt_dir)
                     self.xcom_push(context, key=XCOM_RETURN_KEY, value=res)
 
         if success is not True:
@@ -227,7 +226,7 @@ class DbtBaseOperator(BaseOperator):
             config_kwargs[field.name] = kwarg
         return factory.create_config(**config_kwargs)
 
-    def xcom_push_artifacts(self, context, dbt_directory: str):
+    def xcom_upload_artifacts(self, context, dbt_directory: str):
         """Read dbt artifacts and push them to XCom.
 
         Artifacts are read from the target/ directory in dbt_directory. This method will
@@ -257,7 +256,7 @@ class DbtBaseOperator(BaseOperator):
 
         Creates a temporary directory for dbt to run in and prepares the dbt files
         if they need to be pulled from S3. If a S3 backend is being used, and
-        self.push_dbt_project is True, before leaving the temporary directory, we push
+        self.upload_dbt_project is True, before leaving the temporary directory, we push
         back the project to S3. Pushing back a project enables commands like deps or
         docs generate.
 
@@ -285,14 +284,14 @@ class DbtBaseOperator(BaseOperator):
 
             yield tmp_dir
 
-            if self.push_dbt_project is True:
-                self.log.info("Pushing dbt project to: %s", store_project_dir)
-                self.dbt_hook.push_dbt_project(
+            if self.upload_dbt_project is True:
+                self.log.info("Uploading dbt project to: %s", store_project_dir)
+                self.dbt_hook.upload_dbt_project(
                     tmp_dir,
                     store_project_dir,
                     conn_id=self.project_conn_id,
-                    replace=self.replace_on_push,
-                    delete_before=self.delete_before_push,
+                    replace=self.replace_on_upload,
+                    delete_before=self.delete_before_upload,
                 )
 
         self.profiles_dir = store_profiles_dir
@@ -301,14 +300,14 @@ class DbtBaseOperator(BaseOperator):
     def prepare_directory(self, tmp_dir: str):
         """Prepares a dbt directory by pulling files from S3."""
         if self.profiles_dir is not None:
-            profiles_file_path = self.dbt_hook.pull_dbt_profiles(
+            profiles_file_path = self.dbt_hook.download_dbt_profiles(
                 self.profiles_dir,
                 tmp_dir,
                 conn_id=self.profiles_conn_id,
             )
             self.profiles_dir = str(profiles_file_path.parent) + "/"
 
-        project_dir_path = self.dbt_hook.pull_dbt_project(
+        project_dir_path = self.dbt_hook.download_dbt_project(
             self.project_dir,
             tmp_dir,
             conn_id=self.project_conn_id,
@@ -469,7 +468,7 @@ class DbtCompileOperator(DbtBaseOperator):
         select: Optional[list[str]] = None,
         exclude: Optional[list[str]] = None,
         selector_name: Optional[str] = None,
-        push_dbt_project: bool = True,
+        upload_dbt_project: bool = True,
         **kwargs,
     ) -> None:
         super().__init__(**kwargs)
@@ -478,7 +477,7 @@ class DbtCompileOperator(DbtBaseOperator):
         self.exclude = exclude
         self.selector_name = selector_name
         self.select = select or models
-        self.push_dbt_project = push_dbt_project
+        self.upload_dbt_project = upload_dbt_project
 
     @property
     def command(self) -> str:
@@ -493,9 +492,9 @@ class DbtDepsOperator(DbtBaseOperator):
     https://docs.getdbt.com/reference/commands/deps.
     """
 
-    def __init__(self, push_dbt_project: bool = True, **kwargs) -> None:
+    def __init__(self, upload_dbt_project: bool = True, **kwargs) -> None:
         super().__init__(**kwargs)
-        self.push_dbt_project = push_dbt_project
+        self.upload_dbt_project = upload_dbt_project
 
     @property
     def command(self) -> str:
@@ -510,10 +509,10 @@ class DbtDocsGenerateOperator(DbtBaseOperator):
     https://docs.getdbt.com/reference/commands/cmd-docs.
     """
 
-    def __init__(self, compile=True, push_dbt_project: bool = True, **kwargs) -> None:
+    def __init__(self, compile=True, upload_dbt_project: bool = True, **kwargs) -> None:
         super().__init__(**kwargs)
         self.compile = compile
-        self.push_dbt_project = push_dbt_project
+        self.upload_dbt_project = upload_dbt_project
 
     @property
     def command(self) -> str:
@@ -529,11 +528,14 @@ class DbtCleanOperator(DbtBaseOperator):
     """
 
     def __init__(
-        self, push_dbt_project: bool = True, delete_before_push: bool = True, **kwargs
+        self,
+        upload_dbt_project: bool = True,
+        delete_before_upload: bool = True,
+        **kwargs,
     ) -> None:
         super().__init__(**kwargs)
-        self.push_dbt_project = push_dbt_project
-        self.delete_before_push = delete_before_push
+        self.upload_dbt_project = upload_dbt_project
+        self.delete_before_upload = delete_before_upload
 
     @property
     def command(self) -> str:
@@ -676,11 +678,11 @@ class DbtParseOperator(DbtBaseOperator):
 
     def __init__(
         self,
-        push_dbt_project: bool = True,
+        upload_dbt_project: bool = True,
         **kwargs,
     ) -> None:
         super().__init__(**kwargs)
-        self.push_dbt_project = push_dbt_project
+        self.upload_dbt_project = upload_dbt_project
 
     @property
     def command(self) -> str:
@@ -701,7 +703,7 @@ class DbtSourceFreshnessOperator(DbtBaseOperator):
         dbt_output: Optional[Union[str, Path]] = None,
         exclude: Optional[list[str]] = None,
         selector_name: Optional[str] = None,
-        push_dbt_project: bool = True,
+        upload_dbt_project: bool = True,
         **kwargs,
     ) -> None:
         super().__init__(**kwargs)
@@ -709,7 +711,7 @@ class DbtSourceFreshnessOperator(DbtBaseOperator):
         self.exclude = exclude
         self.selector_name = selector_name
         self.dbt_output = dbt_output
-        self.push_dbt_project = push_dbt_project
+        self.upload_dbt_project = upload_dbt_project
 
     @property
     def command(self) -> str:

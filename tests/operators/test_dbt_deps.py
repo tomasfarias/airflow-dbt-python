@@ -1,23 +1,21 @@
 """Unit test module for DbtDepsOperator."""
 import datetime as dt
-import glob
 import os
 from pathlib import Path
-from unittest.mock import patch
 
 import freezegun
 import pytest
 
-from airflow_dbt_python.hooks.dbt import DepsTaskConfig
 from airflow_dbt_python.operators.dbt import DbtDepsOperator
+from airflow_dbt_python.utils.configs import DepsTaskConfig
 
 condition = False
 try:
-    from airflow_dbt_python.hooks.backends import DbtS3Backend
+    from airflow_dbt_python.hooks.s3 import DbtS3RemoteHook
 except ImportError:
     condition = True
 no_s3_backend = pytest.mark.skipif(
-    condition, reason="S3 Backend not available, consider installing amazon extras"
+    condition, reason="S3 RemoteHook not available, consider installing amazon extras"
 )
 
 
@@ -83,7 +81,7 @@ def test_dbt_deps_downloads_dbt_utils(
 
 
 @no_s3_backend
-def test_dbt_deps_push_to_s3(
+def test_dbt_deps_upload_to_s3(
     s3_bucket,
     s3_hook,
     profiles_file,
@@ -132,7 +130,7 @@ def test_dbt_deps_push_to_s3(
         task_id="dbt_task",
         project_dir=f"s3://{s3_bucket}/project/",
         profiles_dir=f"s3://{s3_bucket}/project/",
-        push_dbt_project=True,
+        upload_dbt_project=True,
     )
     results = op.execute({})
     assert results is None
@@ -207,7 +205,7 @@ def test_dbt_deps_doesnt_affect_non_package_files(
 
 
 @no_s3_backend
-def test_dbt_deps_push_to_s3_with_no_replace(
+def test_dbt_deps_upload_to_s3_with_no_replace(
     s3_bucket,
     s3_hook,
     profiles_file,
@@ -249,8 +247,8 @@ def test_dbt_deps_push_to_s3_with_no_replace(
             task_id="dbt_task",
             project_dir=f"s3://{s3_bucket}/project/",
             profiles_dir=f"s3://{s3_bucket}/project/",
-            push_dbt_project=True,
-            replace_on_push=False,
+            upload_dbt_project=True,
+            replace_on_upload=False,
         )
 
         results = op.execute({})

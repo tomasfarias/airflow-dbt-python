@@ -4,16 +4,16 @@ from pathlib import Path
 import pytest
 from dbt.contracts.results import TestStatus
 
-from airflow_dbt_python.hooks.dbt import TestTaskConfig
 from airflow_dbt_python.operators.dbt import DbtTestOperator
+from airflow_dbt_python.utils.configs import TestTaskConfig
 
 condition = False
 try:
-    from airflow_dbt_python.hooks.backends import DbtS3Backend
+    from airflow_dbt_python.hooks.s3 import DbtS3RemoteHook
 except ImportError:
     condition = True
 no_s3_backend = pytest.mark.skipif(
-    condition, reason="S3 Backend not available, consider installing amazon extras"
+    condition, reason="S3 RemoteHook not available, consider installing amazon extras"
 )
 
 

@@ -1,8 +1,6 @@
 """Unit test module for DbtDebugOperator."""
-from unittest.mock import patch
-
-from airflow_dbt_python.hooks.dbt import DebugTaskConfig
 from airflow_dbt_python.operators.dbt import DbtDebugOperator
+from airflow_dbt_python.utils.configs import DebugTaskConfig
 
 
 def test_dbt_debug_mocked_all_args():

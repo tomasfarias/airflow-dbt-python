@@ -1,8 +1,9 @@
 """Unit test module for DbtSourceFreshnessOperator."""
 from pathlib import Path
 
-from airflow_dbt_python.hooks.dbt import Output, SourceFreshnessTaskConfig
 from airflow_dbt_python.operators.dbt import DbtSourceFreshnessOperator
+from airflow_dbt_python.utils.configs import SourceFreshnessTaskConfig
+from airflow_dbt_python.utils.enums import Output
 
 
 def test_dbt_source_mocked_all_args():

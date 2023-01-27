@@ -1,9 +1,8 @@
 """Unit test module for DbtParseOperator."""
 from pathlib import Path
-from unittest.mock import patch
 
-from airflow_dbt_python.hooks.dbt import ParseTaskConfig
 from airflow_dbt_python.operators.dbt import DbtParseOperator
+from airflow_dbt_python.utils.configs import ParseTaskConfig
 
 
 def test_dbt_parse_mocked_all_args():

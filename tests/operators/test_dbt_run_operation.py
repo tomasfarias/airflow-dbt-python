@@ -1,11 +1,9 @@
 """Unit test module for DbtRunOperationOperator."""
-from unittest.mock import patch
-
 import pytest
 
 from airflow import AirflowException
-from airflow_dbt_python.hooks.dbt import RunOperationTaskConfig
 from airflow_dbt_python.operators.dbt import DbtRunOperationOperator
+from airflow_dbt_python.utils.configs import RunOperationTaskConfig
 
 
 def test_dbt_run_operation_mocked_all_args():

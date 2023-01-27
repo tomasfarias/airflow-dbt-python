@@ -1,6 +1,7 @@
 """Provides a hook to interact with a dbt project."""
 from __future__ import annotations
 
+import logging
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Optional
 from urllib.parse import urlparse
@@ -13,13 +14,17 @@ try:
 except ImportError:
     from airflow.hooks.base_hook import BaseHook  # type: ignore
 
-from .backends import DbtBackend, StrPath, build_backend
 
 if TYPE_CHECKING:
     from dbt.contracts.results import RunResult
     from dbt.task.base import BaseTask
 
     from airflow_dbt_python.utils.configs import BaseConfig, ConfigFactory
+    from airflow_dbt_python.utils.url import URLLike
+
+    from .remote import DbtRemoteHook
+
+    DbtRemoteHooksDict = dict[tuple[str, Optional[str]], DbtRemoteHook]
 
 
 class DbtHook(BaseHook):
@@ -29,73 +34,75 @@ class DbtHook(BaseHook):
     """
 
     def __init__(self, *args, **kwargs):
-        self.backends: dict[tuple[str, Optional[str]], DbtBackend] = {}
+        self.remotes: DbtRemoteHooksDict = {}
         if airflow_version.split(".")[0] == "1":
             kwargs["source"] = None
         super().__init__(*args, **kwargs)
 
-    def get_backend(self, scheme: str, conn_id: Optional[str]) -> DbtBackend:
-        """Get a backend to interact with dbt files.
+    def get_remote(self, scheme: str, conn_id: Optional[str]) -> DbtRemoteHook:
+        """Get a remote to interact with dbt files.
 
-        Backends are defined by the scheme we are looking for and an optional connection
+        RemoteHooks are defined by the scheme we are looking for and an optional connection
         id if we are looking to interface with any Airflow hook that uses a connection.
         """
-        try:
-            return self.backends[(scheme, conn_id)]
-        except KeyError:
-            backend = build_backend(scheme, conn_id)
-        self.backends[(scheme, conn_id)] = backend
-        return backend
+        from .remote import get_remote
 
-    def pull_dbt_profiles(
+        try:
+            return self.remotes[(scheme, conn_id)]
+        except KeyError:
+            remote = get_remote(scheme, conn_id)
+        self.remotes[(scheme, conn_id)] = remote
+        return remote
+
+    def download_dbt_profiles(
         self,
-        profiles_dir: StrPath,
-        destination: StrPath,
+        profiles_dir: URLLike,
+        destination: URLLike,
         conn_id: Optional[str] = None,
     ) -> Path:
         """Pull a dbt profiles.yml file from a given profiles_dir.
 
-        This operation is delegated to a DbtBackend. An optional connection id is
-        supported for backends that require it.
+        This operation is delegated to a DbtRemoteHook. An optional connection id is
+        supported for remotes that require it.
         """
         scheme = urlparse(str(profiles_dir)).scheme
-        backend = self.get_backend(scheme, conn_id)
+        remote = self.get_remote(scheme, conn_id)
 
-        return backend.pull_dbt_profiles(profiles_dir, destination)
+        return remote.download_dbt_profiles(profiles_dir, destination)
 
-    def pull_dbt_project(
+    def download_dbt_project(
         self,
-        project_dir: StrPath,
-        destination: StrPath,
+        project_dir: URLLike,
+        destination: URLLike,
         conn_id: Optional[str] = None,
     ) -> Path:
         """Pull a dbt project from a given project_dir.
 
-        This operation is delegated to a DbtBackend. An optional connection id is
-        supported for backends that require it.
+        This operation is delegated to a DbtRemoteHook. An optional connection id is
+        supported for remotes that require it.
         """
         scheme = urlparse(str(project_dir)).scheme
-        backend = self.get_backend(scheme, conn_id)
+        remote = self.get_remote(scheme, conn_id)
 
-        return backend.pull_dbt_project(project_dir, destination)
+        return remote.download_dbt_project(project_dir, destination)
 
-    def push_dbt_project(
+    def upload_dbt_project(
         self,
-        project_dir: StrPath,
-        destination: StrPath,
+        project_dir: URLLike,
+        destination: URLLike,
         conn_id: Optional[str] = None,
         replace: bool = False,
         delete_before: bool = False,
     ) -> None:
         """Push a dbt project from a given project_dir.
 
-        This operation is delegated to a DbtBackend. An optional connection id is
-        supported for backends that require it.
+        This operation is delegated to a DbtRemoteHook. An optional connection id is
+        supported for remotes that require it.
         """
         scheme = urlparse(str(destination)).scheme
-        backend = self.get_backend(scheme, conn_id)
+        remote = self.get_remote(scheme, conn_id)
 
-        return backend.push_dbt_project(
+        return remote.upload_dbt_project(
             project_dir, destination, replace=replace, delete_before=delete_before
         )
 
@@ -164,6 +171,10 @@ class DbtHook(BaseHook):
             log_path = getattr(task.config, "log_path", None)
 
         setup_event_logger(log_path or "logs", level_override)
+
+        file_log = logging.getLogger("configured_file")
+        file_log.handlers.clear()
+        file_log.propagate = False
 
     def ensure_profiles(self, profiles_dir: Optional[str]):
         """Ensure a profiles file exists."""

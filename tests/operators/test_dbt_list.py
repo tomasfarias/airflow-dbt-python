@@ -1,9 +1,7 @@
 """Unit test module for DbtListOperator."""
-from itertools import chain
-from unittest.mock import patch
 
-from airflow_dbt_python.hooks.dbt import ListTaskConfig
 from airflow_dbt_python.operators.dbt import DbtLsOperator
+from airflow_dbt_python.utils.configs import ListTaskConfig
 
 
 def test_dbt_ls_command_configuration(profiles_file, dbt_project_file):

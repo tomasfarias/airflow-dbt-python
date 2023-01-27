@@ -1,22 +1,22 @@
+"""Unit test module for the dbt hook base class."""
 import pytest
 
-from airflow.exceptions import AirflowException
-from airflow_dbt_python.hooks.backends import DbtLocalFsBackend
 from airflow_dbt_python.hooks.dbt import DbtHook
+from airflow_dbt_python.hooks.localfs import DbtLocalFsRemote
 
 condition = False
 try:
-    from airflow_dbt_python.hooks.backends import DbtS3Backend
+    from airflow_dbt_python.hooks.s3 import DbtS3Remote
 except ImportError:
     condition = True
-no_s3_backend = pytest.mark.skipif(
-    condition, reason="S3 Backend not available, consider installing amazon extras"
+no_s3_remote = pytest.mark.skipif(
+    condition, reason="S3 Remote not available, consider installing amazon extras"
 )
 
 
-@no_s3_backend
-def test_dbt_hook_get_s3_backend():
-    """Test the correct backend is procured."""
+@no_s3_remote
+def test_dbt_hook_get_s3_remote():
+    """Test the correct remote is procured."""
     try:
         from airflow.providers.amazon.aws.hooks.s3 import S3Hook
     except ImportError:
@@ -24,58 +24,61 @@ def test_dbt_hook_get_s3_backend():
 
     hook = DbtHook()
 
-    backend = hook.get_backend("s3", "not_aws_default")
+    remote = hook.get_remote("s3", "not_aws_default")
 
-    assert isinstance(backend, DbtS3Backend)
-    assert isinstance(backend.hook, S3Hook)
-    assert backend.hook.aws_conn_id == "not_aws_default"
+    assert isinstance(remote, DbtS3Remote)
+    assert isinstance(remote, S3Hook)
+    assert remote.aws_conn_id == "not_aws_default"
 
 
-def test_dbt_hook_get_local_fs_backend():
-    """Test the correct backend is procured."""
+def test_dbt_hook_get_local_fs_remote():
+    """Test the correct remote is procured."""
+    from airflow.hooks.filesystem import FSHook
+
     hook = DbtHook()
 
-    backend = hook.get_backend("", None)
+    remote = hook.get_remote("", None)
 
-    assert isinstance(backend, DbtLocalFsBackend)
+    assert isinstance(remote, DbtLocalFsRemote)
+    assert isinstance(remote, FSHook)
 
 
-def test_dbt_hook_get_backend_raises_not_implemented():
-    """Test an error is raised on unsupported backends."""
+def test_dbt_hook_get_remote_raises_not_implemented():
+    """Test an error is raised on unsupported remote."""
     hook = DbtHook()
 
     with pytest.raises(NotImplementedError):
-        backend = hook.get_backend("does not exist", None)
+        remote = hook.get_remote("does not exist", None)
 
 
-class FakeBackend:
-    def pull_dbt_profiles(self, *args, **kwargs):
+class FakeRemote:
+    def download_dbt_profiles(self, *args, **kwargs):
         return (args, kwargs)
 
-    def push_dbt_project(self, *args, **kwargs):
+    def upload_dbt_project(self, *args, **kwargs):
         return (args, kwargs)
 
-    def pull_dbt_project(self, *args, **kwargs):
+    def download_dbt_project(self, *args, **kwargs):
         return (args, kwargs)
 
 
-def test_dbt_hook_pull_dbt_profiles():
-    """Test dbt hook calls backend correctly."""
+def test_dbt_hook_download_dbt_profiles():
+    """Test dbt hook calls remote correctly."""
     hook = DbtHook()
-    hook.backends[("", None)] = FakeBackend()
+    hook.remotes[("", None)] = FakeRemote()
 
-    args, kwargs = hook.pull_dbt_profiles("/path/to/profiles", "/path/to/store")
+    args, kwargs = hook.download_dbt_profiles("/path/to/profiles", "/path/to/store")
 
     assert args == ("/path/to/profiles", "/path/to/store")
     assert kwargs == {}
 
 
-def test_dbt_hook_push_dbt_project():
-    """Test dbt hook calls backend correctly."""
+def test_dbt_hook_upload_dbt_project():
+    """Test dbt hook calls remote correctly."""
     hook = DbtHook()
-    hook.backends[("", None)] = FakeBackend()
+    hook.remotes[("", None)] = FakeRemote()
 
-    args, kwargs = hook.push_dbt_project(
+    args, kwargs = hook.upload_dbt_project(
         "/path/to/profiles", "/path/to/store", replace=True, delete_before=True
     )
 
@@ -83,12 +86,12 @@ def test_dbt_hook_push_dbt_project():
     assert kwargs == {"replace": True, "delete_before": True}
 
 
-def test_dbt_hook_pull_dbt_project():
-    """Test dbt hook calls backend correctly."""
+def test_dbt_hook_download_dbt_project():
+    """Test dbt hook calls remote correctly."""
     hook = DbtHook()
-    hook.backends[("", "conn_id")] = FakeBackend()
+    hook.remotes[("", "conn_id")] = FakeRemote()
 
-    args, kwargs = hook.pull_dbt_project(
+    args, kwargs = hook.download_dbt_project(
         "/path/to/profiles", "/path/to/store", conn_id="conn_id"
     )
 

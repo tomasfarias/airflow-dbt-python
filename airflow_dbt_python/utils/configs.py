@@ -2,7 +2,9 @@
 from __future__ import annotations
 
 import dataclasses
+import json
 import os
+import pickle
 from pathlib import Path
 from typing import Any, Optional, Type, Union
 
@@ -13,6 +15,7 @@ from dbt.config.profile import Profile, read_profile
 from dbt.config.project import PartialProject, Project
 from dbt.config.renderer import DbtProjectYamlRenderer, ProfileRenderer
 from dbt.config.runtime import RuntimeConfig
+from dbt.contracts.graph.manifest import Manifest
 from dbt.graph.graph import Graph
 from dbt.task.base import BaseTask
 from dbt.task.build import BuildTask

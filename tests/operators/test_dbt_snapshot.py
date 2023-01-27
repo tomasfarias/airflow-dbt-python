@@ -5,8 +5,8 @@ import pytest
 from dbt.contracts.results import RunStatus
 
 from airflow import AirflowException
-from airflow_dbt_python.hooks.dbt import SnapshotTaskConfig
 from airflow_dbt_python.operators.dbt import DbtSnapshotOperator
+from airflow_dbt_python.utils.configs import SnapshotTaskConfig
 
 
 def test_dbt_snapshot_mocked_all_args():

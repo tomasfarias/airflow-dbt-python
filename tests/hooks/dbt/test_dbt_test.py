@@ -93,10 +93,11 @@ def test_dbt_test_singular_tests_task(
         profiles_dir=profiles_file.parent,
         singular=True,
     )
+
     success, results = hook.run_dbt_task(config)
+
     assert success is True
     assert results.args["singular"] is True
-    print(results)
     assert len(results.results) == 2
     for test_result in results.results:
         assert test_result.status == TestStatus.Pass
@@ -116,6 +117,7 @@ def test_dbt_test_all_tests_task(
         project_dir=dbt_project_file.parent,
         profiles_dir=profiles_file.parent,
     )
+
     success, results = hook.run_dbt_task(config)
 
     assert success is True

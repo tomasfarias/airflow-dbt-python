@@ -1,21 +1,16 @@
-"""Unit test module for DbtLocalFsBackend."""
-import io
+"""Unit test module for DbtLocalFsRemote."""
 import shutil
 from pathlib import Path
-from unittest.mock import MagicMock
 from zipfile import ZipFile
 
-import freezegun
-import pytest
-
-from airflow_dbt_python.hooks.backends import DbtLocalFsBackend
-from airflow_dbt_python.hooks.backends.localfs import py37_copytree
+from airflow_dbt_python.hooks.localfs import DbtLocalFsRemote, py37_copytree
+from airflow_dbt_python.utils.url import URL
 
 
-def test_pull_dbt_profiles(tmpdir, profiles_file):
-    """Test pulling dbt profile from local path."""
-    backend = DbtLocalFsBackend()
-    profiles_path = backend.pull_dbt_profiles(
+def test_download_dbt_profiles(tmpdir, profiles_file):
+    """Test downloading dbt profile from local path."""
+    remote = DbtLocalFsRemote()
+    profiles_path = remote.download_dbt_profiles(
         profiles_file,
         tmpdir,
     )
@@ -29,8 +24,8 @@ def test_pull_dbt_profiles(tmpdir, profiles_file):
     assert result == expected
 
 
-def test_pull_dbt_profiles_sub_dir(tmpdir, profiles_file):
-    """Test pulling dbt profile from local path sub-directory."""
+def test_download_dbt_profiles_sub_dir(tmpdir, profiles_file):
+    """Test downloading dbt profile from local path sub-directory."""
     new_profiles_dir = profiles_file.parent / "v0.0.1"
     new_profiles_dir.mkdir(exist_ok=True, parents=True)
     new_profiles_file = shutil.copy(
@@ -41,8 +36,8 @@ def test_pull_dbt_profiles_sub_dir(tmpdir, profiles_file):
     assert new_profiles_file.exists()
     assert new_profiles_file.is_file()
 
-    backend = DbtLocalFsBackend()
-    profiles_path = backend.pull_dbt_profiles(
+    remote = DbtLocalFsRemote()
+    profiles_path = remote.download_dbt_profiles(
         new_profiles_file,
         tmpdir / "v0.0.1",
     )
@@ -56,23 +51,23 @@ def test_pull_dbt_profiles_sub_dir(tmpdir, profiles_file):
     assert result == expected
 
 
-def test_push_dbt_project_to_files(tmpdir, test_files):
-    """Test pushing a dbt project to a local path."""
+def test_upload_dbt_project_to_files(tmpdir, test_files):
+    """Test uploading a dbt project to a local path."""
     local_path = Path(tmpdir) / "my_project"
     local_path.mkdir()
 
     files = list(local_path.glob("**/*"))
     assert len(files) == 0
 
-    backend = DbtLocalFsBackend()
-    backend.push_dbt_project(test_files[0].parent.parent, local_path)
+    remote = DbtLocalFsRemote()
+    remote.upload_dbt_project(test_files[0].parent.parent, local_path)
 
     files = list(local_path.glob("**/*.*"))
     assert len(files) == 4
 
 
-def test_pull_dbt_project(tmpdir, dbt_project_file):
-    """Test pulling dbt project from local path."""
+def test_download_dbt_project(tmpdir, dbt_project_file):
+    """Test downloading dbt project from local path."""
     source_path = tmpdir / "source"
     source_path.mkdir()
     models_path = source_path / "models"
@@ -94,8 +89,8 @@ def test_pull_dbt_project(tmpdir, dbt_project_file):
     dest_path = tmpdir / "dest"
     dest_path.mkdir()
 
-    backend = DbtLocalFsBackend()
-    project_path = backend.pull_dbt_project(
+    remote = DbtLocalFsRemote()
+    project_path = remote.download_dbt_project(
         source_path,
         dest_path,
     )
@@ -126,8 +121,8 @@ def test_pull_dbt_project(tmpdir, dbt_project_file):
     assert result == "col1,col2\n1,2"
 
 
-def test_pull_dbt_project_from_zip_file(tmpdir, dbt_project_file, test_files):
-    """Test pulling dbt project from ZipFile in local path."""
+def test_download_dbt_project_from_zip_file(tmpdir, dbt_project_file, test_files):
+    """Test downloading dbt project from ZipFile in local path."""
     with open(dbt_project_file) as pf:
         project_content = pf.read()
 
@@ -144,8 +139,8 @@ def test_pull_dbt_project_from_zip_file(tmpdir, dbt_project_file, test_files):
     dest_path = tmpdir / "dest_zip"
     dest_path.mkdir()
 
-    backend = DbtLocalFsBackend()
-    project_path = backend.pull_dbt_project(
+    remote = DbtLocalFsRemote()
+    project_path = remote.download_dbt_project(
         zip_path / "project.zip",
         dest_path,
     )
@@ -176,16 +171,16 @@ def test_pull_dbt_project_from_zip_file(tmpdir, dbt_project_file, test_files):
     assert result == "col1,col2\n1,2"
 
 
-def test_push_dbt_project_to_zip_file(tmpdir, test_files):
-    """Test pushing a dbt project to a ZipFile in local path."""
+def test_upload_dbt_project_to_zip_file(tmpdir, test_files):
+    """Test uploading a dbt project to a ZipFile in local path."""
     zip_dir = tmpdir / "push_dbt_zip"
     zip_dir.mkdir()
     zip_path = zip_dir / "project.zip"
 
     assert not zip_path.exists()
 
-    backend = DbtLocalFsBackend()
-    backend.push_dbt_project(test_files[0].parent.parent, zip_path)
+    remote = DbtLocalFsRemote()
+    remote.upload_dbt_project(test_files[0].parent.parent, zip_path)
 
     assert zip_path.exists()
 
@@ -197,8 +192,8 @@ def test_py37_copytree(test_files, tmpdir):
     copytree_dir = tmpdir / "copytree_target"
     assert not copytree_dir.exists()
 
-    shutil.copytree(test_files[0].parent.parent, copytree_dir)
-    py37_copytree(test_files[0].parent.parent, py37_dir)
+    shutil.copytree(URL(test_files[0].parent.parent), URL(copytree_dir))
+    py37_copytree(URL(test_files[0].parent.parent), URL(py37_dir))
 
     for path in Path(copytree_dir).glob("**/*"):
         if path.is_dir():
@@ -211,7 +206,7 @@ def test_py37_copytree(test_files, tmpdir):
 def test_py37_copytree_no_replace(test_files, tmpdir):
     """The Python 3.7 workaround should produce the same results as copytree."""
     source = test_files[0].parent.parent
-    py37_copytree(source, source, replace=False)
+    py37_copytree(URL(source), URL(source), replace=False)
 
     all_paths = [p for p in source.glob("**/*") if not p.is_dir()]
     assert len(all_paths) == 4
@@ -225,7 +220,7 @@ def test_py37_copytree_if_exists(test_files, tmpdir):
     assert py37_dir.exists()
 
     source = test_files[0].parent.parent
-    py37_copytree(source, py37_dir)
+    py37_copytree(URL(source), URL(py37_dir))
 
     for path in source.glob("**/*"):
         if path.is_dir():

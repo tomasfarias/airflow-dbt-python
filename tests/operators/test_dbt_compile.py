@@ -3,8 +3,8 @@ from pathlib import Path
 
 from dbt.contracts.results import RunStatus
 
-from airflow_dbt_python.hooks.dbt import CompileTaskConfig
 from airflow_dbt_python.operators.dbt import DbtCompileOperator
+from airflow_dbt_python.utils.configs import CompileTaskConfig
 
 
 def test_dbt_compile_mocked_all_args():

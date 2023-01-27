@@ -1,22 +1,21 @@
 """Unit test module for DbtBuildOperator."""
 import json
 from pathlib import Path
-from unittest.mock import patch
 
 import pytest
 from dbt.contracts.results import RunStatus
 
 from airflow import AirflowException
-from airflow_dbt_python.hooks.dbt import BuildTaskConfig
 from airflow_dbt_python.operators.dbt import DbtBuildOperator
+from airflow_dbt_python.utils.configs import BuildTaskConfig
 
 condition = False
 try:
-    from airflow_dbt_python.hooks.backends import DbtS3Backend
+    from airflow_dbt_python.hooks.s3 import DbtS3RemoteHook
 except ImportError:
     condition = True
 no_s3_backend = pytest.mark.skipif(
-    condition, reason="S3 Backend not available, consider installing amazon extras"
+    condition, reason="S3 RemoteHook not available, consider installing amazon extras"
 )
 
 
