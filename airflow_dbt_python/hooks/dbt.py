@@ -128,7 +128,7 @@ class DbtHook(BaseHook):
 
         extra_target = self.get_target_from_connection(config.target)
 
-        level_override = config.dbt_task.pre_init_hook(config)
+        config.dbt_task.pre_init_hook(config)
         task, runtime_config = config.create_dbt_task(extra_target)
         self.ensure_profiles(config.profiles_dir)
 
@@ -136,7 +136,7 @@ class DbtHook(BaseHook):
         # We have to do that here as we are not using from_args.
         move_to_nearest_project_dir(config)
 
-        self.setup_dbt_logging(task, level_override)
+        self.setup_dbt_logging(task, config.debug)
 
         if not isinstance(runtime_config, UnsetProfileConfig):
             if runtime_config is not None:
@@ -157,7 +157,7 @@ class DbtHook(BaseHook):
 
         return success, results
 
-    def setup_dbt_logging(self, task: BaseTask, level_override):
+    def setup_dbt_logging(self, task: BaseTask, debug: Optional[bool]):
         """Setup dbt logging.
 
         Starting with dbt v1, dbt initializes two loggers: default_file and
@@ -170,11 +170,16 @@ class DbtHook(BaseHook):
         if task.config is not None:
             log_path = getattr(task.config, "log_path", None)
 
-        setup_event_logger(log_path or "logs", level_override)
+        setup_event_logger(log_path or "logs")
 
         file_log = logging.getLogger("configured_file")
-        file_log.handlers.clear()
-        file_log.propagate = False
+
+        if debug is None or debug is False:
+            # Disable dbt debug logs when level is higher.
+            # We have to do this after setting logs up as dbt hasn't
+            # configured the loggers before the call to setup_event_logger.
+            file_log.handlers.clear()
+            file_log.propagate = False
 
     def ensure_profiles(self, profiles_dir: Optional[str]):
         """Ensure a profiles file exists."""
