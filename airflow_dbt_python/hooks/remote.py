@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Optional, Type
 
 from airflow.utils.log.logging_mixin import LoggingMixin
+
 from airflow_dbt_python.utils.url import URL, URLLike
 
 StrPath = str
@@ -64,7 +65,7 @@ class DbtRemoteHook(ABC, LoggingMixin):
         if destination_url.exists() and destination_url.is_archive():
             destination_url.extract()
             destination_url.unlink()
-            destination_path = destination_url.parent
+            destination_path = destination_url.parent.path
         else:
             destination_path = destination_url.path
 
