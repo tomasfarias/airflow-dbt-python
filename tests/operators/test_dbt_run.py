@@ -3,9 +3,9 @@ import json
 from pathlib import Path
 
 import pytest
+from airflow import AirflowException
 from dbt.contracts.results import RunStatus
 
-from airflow import AirflowException
 from airflow_dbt_python.operators.dbt import DbtRunOperator
 from airflow_dbt_python.utils.configs import RunTaskConfig
 
@@ -91,6 +91,7 @@ def test_dbt_run_models(profiles_file, dbt_project_file, model_files, logs_dir):
         profiles_dir=profiles_file.parent,
         models=[str(m.stem) for m in model_files],
         do_xcom_push=True,
+        debug=True,
     )
 
     execution_results = op.execute({})

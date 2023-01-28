@@ -58,7 +58,7 @@ def basic_dag(
         dag_id="dbt_dag",
         start_date=DATA_INTERVAL_START,
         catchup=False,
-        schedule_interval=None,
+        schedule=None,
         tags=["context-manager", "dbt"],
     ) as dag:
         dbt_seed = DbtSeedOperator(
@@ -144,7 +144,7 @@ def taskflow_dag(
         dag_id="taskflow_dbt_dag",
         start_date=DATA_INTERVAL_START,
         catchup=False,
-        schedule_interval=None,
+        schedule=None,
         tags=["taskflow", "dbt"],
         default_args={
             "retries": 3,
@@ -289,10 +289,10 @@ def target_connection_dag(
     """Create a testing DAG that utilizes Airflow connections."""
 
     with DAG(
-        dag_id="dbt_dag",
+        dag_id="target_conn_dbt_dag",
         start_date=DATA_INTERVAL_START,
         catchup=False,
-        schedule_interval=None,
+        schedule=None,
         tags=["context-manager", "dbt"],
     ) as dag:
         dbt_seed = DbtSeedOperator(

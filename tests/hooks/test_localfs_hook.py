@@ -1,15 +1,15 @@
-"""Unit test module for DbtLocalFsRemote."""
+"""Unit test module for DbtLocalFsRemoteHook."""
 import shutil
 from pathlib import Path
 from zipfile import ZipFile
 
-from airflow_dbt_python.hooks.localfs import DbtLocalFsRemote, py37_copytree
+from airflow_dbt_python.hooks.localfs import DbtLocalFsRemoteHook, py37_copytree
 from airflow_dbt_python.utils.url import URL
 
 
 def test_download_dbt_profiles(tmpdir, profiles_file):
     """Test downloading dbt profile from local path."""
-    remote = DbtLocalFsRemote()
+    remote = DbtLocalFsRemoteHook()
     profiles_path = remote.download_dbt_profiles(
         profiles_file,
         tmpdir,
@@ -36,7 +36,7 @@ def test_download_dbt_profiles_sub_dir(tmpdir, profiles_file):
     assert new_profiles_file.exists()
     assert new_profiles_file.is_file()
 
-    remote = DbtLocalFsRemote()
+    remote = DbtLocalFsRemoteHook()
     profiles_path = remote.download_dbt_profiles(
         new_profiles_file,
         tmpdir / "v0.0.1",
@@ -59,7 +59,7 @@ def test_upload_dbt_project_to_files(tmpdir, test_files):
     files = list(local_path.glob("**/*"))
     assert len(files) == 0
 
-    remote = DbtLocalFsRemote()
+    remote = DbtLocalFsRemoteHook()
     remote.upload_dbt_project(test_files[0].parent.parent, local_path)
 
     files = list(local_path.glob("**/*.*"))
@@ -89,7 +89,7 @@ def test_download_dbt_project(tmpdir, dbt_project_file):
     dest_path = tmpdir / "dest"
     dest_path.mkdir()
 
-    remote = DbtLocalFsRemote()
+    remote = DbtLocalFsRemoteHook()
     project_path = remote.download_dbt_project(
         source_path,
         dest_path,
@@ -139,7 +139,7 @@ def test_download_dbt_project_from_zip_file(tmpdir, dbt_project_file, test_files
     dest_path = tmpdir / "dest_zip"
     dest_path.mkdir()
 
-    remote = DbtLocalFsRemote()
+    remote = DbtLocalFsRemoteHook()
     project_path = remote.download_dbt_project(
         zip_path / "project.zip",
         dest_path,
@@ -179,7 +179,7 @@ def test_upload_dbt_project_to_zip_file(tmpdir, test_files):
 
     assert not zip_path.exists()
 
-    remote = DbtLocalFsRemote()
+    remote = DbtLocalFsRemoteHook()
     remote.upload_dbt_project(test_files[0].parent.parent, zip_path)
 
     assert zip_path.exists()

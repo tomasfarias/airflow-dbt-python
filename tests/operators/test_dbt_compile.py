@@ -147,7 +147,7 @@ def test_dbt_compile_models_full_refresh(
         models=[str(m.stem) for m in model_files],
         full_refresh=True,
         do_xcom_push=True,
-        replace_on_push=True,
+        replace_on_upload=True,
     )
     execution_results = op.execute({})
     run_result = execution_results["results"][0]

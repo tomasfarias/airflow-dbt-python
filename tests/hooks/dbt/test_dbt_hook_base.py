@@ -2,11 +2,11 @@
 import pytest
 
 from airflow_dbt_python.hooks.dbt import DbtHook
-from airflow_dbt_python.hooks.localfs import DbtLocalFsRemote
+from airflow_dbt_python.hooks.localfs import DbtLocalFsRemoteHook
 
 condition = False
 try:
-    from airflow_dbt_python.hooks.s3 import DbtS3Remote
+    from airflow_dbt_python.hooks.s3 import DbtS3RemoteHook
 except ImportError:
     condition = True
 no_s3_remote = pytest.mark.skipif(
@@ -17,16 +17,13 @@ no_s3_remote = pytest.mark.skipif(
 @no_s3_remote
 def test_dbt_hook_get_s3_remote():
     """Test the correct remote is procured."""
-    try:
-        from airflow.providers.amazon.aws.hooks.s3 import S3Hook
-    except ImportError:
-        from airflow.hooks.S3_hook import S3Hook
+    from airflow.providers.amazon.aws.hooks.s3 import S3Hook
 
     hook = DbtHook()
 
     remote = hook.get_remote("s3", "not_aws_default")
 
-    assert isinstance(remote, DbtS3Remote)
+    assert isinstance(remote, DbtS3RemoteHook)
     assert isinstance(remote, S3Hook)
     assert remote.aws_conn_id == "not_aws_default"
 
@@ -39,7 +36,7 @@ def test_dbt_hook_get_local_fs_remote():
 
     remote = hook.get_remote("", None)
 
-    assert isinstance(remote, DbtLocalFsRemote)
+    assert isinstance(remote, DbtLocalFsRemoteHook)
     assert isinstance(remote, FSHook)
 
 
@@ -48,7 +45,7 @@ def test_dbt_hook_get_remote_raises_not_implemented():
     hook = DbtHook()
 
     with pytest.raises(NotImplementedError):
-        remote = hook.get_remote("does not exist", None)
+        hook.get_remote("does not exist", None)
 
 
 class FakeRemote:

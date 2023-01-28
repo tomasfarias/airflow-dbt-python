@@ -7,11 +7,11 @@ import shutil
 
 import boto3
 import pytest
+from airflow import settings
+from airflow.models.connection import Connection
 from moto import mock_s3
 from pytest_postgresql.janitor import DatabaseJanitor
 
-from airflow import settings
-from airflow.models.connection import Connection
 from airflow_dbt_python.hooks.dbt import DbtHook
 
 PROFILES = """
@@ -386,7 +386,6 @@ def hook():
 @pytest.fixture
 def pre_compile(hook, dbt_project_file, profiles_file):
     """Fixture to run a dbt compile task."""
-    import dataclasses
     import shutil
 
     factory = hook.get_config_factory("run")
@@ -600,6 +599,9 @@ def assert_dir_contents():
                 expected, key=lambda u: u.name
             )
         else:
-            assert all(exp in dir_contents for exp in expected)
+            missing_contents = [exp for exp in expected if exp not in dir_contents]
+            assert (
+                len(missing_contents) == 0
+            ), f"Missing dir contents: {missing_contents}"
 
     return wrapper
