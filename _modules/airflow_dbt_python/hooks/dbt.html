@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>airflow_dbt_python.hooks.dbt &mdash; airflow-dbt-python 0.15.2 documentation</title>
+  <title>airflow_dbt_python.hooks.dbt &mdash; airflow-dbt-python 0.15.3 documentation</title>
       <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="../../../_static/copybutton.css" type="text/css" />
@@ -33,7 +33,7 @@
             <a href="../../../index.html" class="icon icon-home"> airflow-dbt-python
           </a>
               <div class="version">
-                0.15.2
+                0.15.3
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
@@ -102,7 +102,6 @@
 <span class="kn">from</span> <span class="nn">dbt.contracts.graph.manifest</span> <span class="kn">import</span> <span class="n">Manifest</span>
 <span class="kn">from</span> <span class="nn">dbt.contracts.results</span> <span class="kn">import</span> <span class="n">RunResult</span>
 <span class="kn">from</span> <span class="nn">dbt.events.functions</span> <span class="kn">import</span> <span class="n">setup_event_logger</span>
-<span class="kn">from</span> <span class="nn">dbt.exceptions</span> <span class="kn">import</span> <span class="n">InternalException</span>
 <span class="kn">from</span> <span class="nn">dbt.graph</span> <span class="kn">import</span> <span class="n">Graph</span>
 <span class="kn">from</span> <span class="nn">dbt.main</span> <span class="kn">import</span> <span class="n">adapter_management</span><span class="p">,</span> <span class="n">track_run</span>
 <span class="kn">from</span> <span class="nn">dbt.task.base</span> <span class="kn">import</span> <span class="n">BaseTask</span><span class="p">,</span> <span class="n">move_to_nearest_project_dir</span>
@@ -265,6 +264,11 @@
 <span class="sd">        Raises:</span>
 <span class="sd">            TypeError: If the dbt task is not a subclass of ManifestTask.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="kn">from</span> <span class="nn">dbt.exceptions</span> <span class="kn">import</span> <span class="n">InternalException</span> <span class="k">as</span> <span class="n">DbtException</span>  <span class="c1"># type: ignore</span>
+        <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+            <span class="kn">from</span> <span class="nn">dbt.exceptions</span> <span class="kn">import</span> <span class="n">DbtRuntimeError</span> <span class="k">as</span> <span class="n">DbtException</span>  <span class="c1"># type: ignore</span>
+
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">task</span><span class="p">,</span> <span class="n">ManifestTask</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
                 <span class="sa">f</span><span class="s2">&quot;Patching requires an instance of ManifestTask, not </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">task</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
@@ -299,7 +303,7 @@
                 <span class="k">elif</span> <span class="n">uid</span> <span class="ow">in</span> <span class="n">task</span><span class="o">.</span><span class="n">manifest</span><span class="o">.</span><span class="n">sources</span><span class="p">:</span>
                     <span class="n">task</span><span class="o">.</span><span class="n">_flattened_nodes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">task</span><span class="o">.</span><span class="n">manifest</span><span class="o">.</span><span class="n">sources</span><span class="p">[</span><span class="n">uid</span><span class="p">])</span>
                 <span class="k">else</span><span class="p">:</span>
-                    <span class="k">raise</span> <span class="n">InternalException</span><span class="p">(</span>
+                    <span class="k">raise</span> <span class="n">DbtException</span><span class="p">(</span>
                         <span class="sa">f</span><span class="s2">&quot;Node selection returned </span><span class="si">{</span><span class="n">uid</span><span class="si">}</span><span class="s2">, expected a node or a &quot;</span>
                         <span class="sa">f</span><span class="s2">&quot;source&quot;</span>
                     <span class="p">)</span>
