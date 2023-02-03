@@ -120,6 +120,7 @@ source = [
 ]
 
 [tool.pytest.ini_options]
+addopts = "--doctest-modules"
 postgresql_user = "test"
 postgresql_password = "test" # pragma: allowlist secret
 postgresql_dbname = "test"

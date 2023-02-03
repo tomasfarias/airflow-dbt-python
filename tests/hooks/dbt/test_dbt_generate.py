@@ -10,12 +10,11 @@ def test_dbt_docs_generate_task(hook, profiles_file, dbt_project_file, model_fil
         shutil.rmtree(target_dir)
     assert target_dir.exists() is False
 
-    factory = hook.get_config_factory("generate")
-    config = factory.create_config(
+    success, results = hook.run_dbt_task(
+        "generate",
         project_dir=dbt_project_file.parent,
         profiles_dir=profiles_file.parent,
     )
-    success, results = hook.run_dbt_task(config)
 
     assert success is True
     assert results is not None
@@ -42,13 +41,12 @@ def test_dbt_docs_generate_task_no_compile(
         shutil.rmtree(target_dir)
     assert target_dir.exists() is False
 
-    factory = hook.get_config_factory("generate")
-    config = factory.create_config(
+    success, results = hook.run_dbt_task(
+        "generate",
         project_dir=dbt_project_file.parent,
         profiles_dir=profiles_file.parent,
         compile=False,
     )
-    success, results = hook.run_dbt_task(config)
 
     assert success is True
     assert results is not None

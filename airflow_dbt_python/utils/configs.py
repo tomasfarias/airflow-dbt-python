@@ -593,9 +593,16 @@ class ConfigFactory(FromStrEnum):
     SOURCE = SourceFreshnessTaskConfig
     TEST = TestTaskConfig
 
-    def create_config(self, *args, **kwargs) -> BaseConfig:
+    def create_config(self, **kwargs) -> BaseConfig:
         """Instantiate a dbt task config with the given args and kwargs."""
-        config = self.value(**kwargs)
+        config_fields = [field.name for field in self.fields]
+        config = self.value(
+            **{
+                k.removeprefix("dbt_"): v
+                for k, v in kwargs.items()
+                if k in config_fields
+            }
+        )
         return config
 
     @property

@@ -8,14 +8,13 @@ def test_dbt_source_task(hook, profiles_file, dbt_project_file):
     if sources.exists():
         sources.unlink()
 
-    factory = hook.get_config_factory("source")
-    config = factory.create_config(
+    result = hook.run_dbt_task(
+        "source",
         project_dir=dbt_project_file.parent,
         profiles_dir=profiles_file.parent,
     )
-    success, results = hook.run_dbt_task(config)
 
-    assert success is True
+    assert result.success is True
     assert sources.exists()
 
 
@@ -25,13 +24,12 @@ def test_dbt_source_different_output(hook, profiles_file, dbt_project_file):
     if new_sources.exists():
         new_sources.unlink()
 
-    factory = hook.get_config_factory("source")
-    config = factory.create_config(
+    result = hook.run_dbt_task(
+        "source",
         project_dir=dbt_project_file.parent,
         profiles_dir=profiles_file.parent,
         output=new_sources,
     )
-    success, results = hook.run_dbt_task(config)
 
-    assert success is True
+    assert result.success is True
     assert new_sources.exists()

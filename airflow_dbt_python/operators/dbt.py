@@ -2,36 +2,22 @@
 from __future__ import annotations
 
 import datetime as dt
-import json
 import os
-from contextlib import contextmanager
 from dataclasses import asdict, is_dataclass
+from itertools import chain
 from pathlib import Path
-from tempfile import TemporaryDirectory
-from typing import TYPE_CHECKING, Any, Callable, Iterator, Optional, TypeVar, Union
+from typing import TYPE_CHECKING, Any, Optional, Union
 
 from airflow.exceptions import AirflowException
 from airflow.models.baseoperator import BaseOperator
 from airflow.models.xcom import XCOM_RETURN_KEY
-from airflow.version import version
+
 from airflow_dbt_python.utils.enums import LogFormat, Output
 
-# apply_defaults is deprecated in version 2 and beyond. This allows us to
-# support version 1 and deal with the deprecation warning.
-if int(version[0]) == 1:
-    from airflow.utils.decorators import apply_defaults
-else:
-    T = TypeVar("T", bound=Callable)
-
-    def apply_defaults(func: T) -> T:
-        """Empty function to support apply defaults in post 2.0 Airflow versions."""
-        return func
-
-
 if TYPE_CHECKING:
-    from dbt.contracts.results import RunExecutionResult
+    from dbt.contracts.results import RunResult
 
-    from airflow_dbt_python.hooks.dbt import BaseConfig
+    from airflow_dbt_python.hooks.dbt import DbtHook, DbtTaskResult
 
 
 class DbtBaseOperator(BaseOperator):
@@ -55,16 +41,15 @@ class DbtBaseOperator(BaseOperator):
         do_xcom_push_artifacts: A list of dbt artifacts to XCom push.
     """
 
-    template_fields = [
+    template_fields = (
         "project_dir",
         "profiles_dir",
         "profile",
         "target",
         "state",
         "vars",
-    ]
+    )
 
-    @apply_defaults
     def __init__(
         self,
         # dbt project configuration
@@ -172,38 +157,37 @@ class DbtBaseOperator(BaseOperator):
         Args:
             context: The Airflow's task context
         """
-        with self.dbt_directory() as dbt_dir:  # type: str
-            os.chdir(dbt_dir)
+        from airflow_dbt_python.hooks.dbt import DbtTaskResult
 
-            config = self.get_dbt_config()
-            self.log.info("Running dbt configuration: %s", config)
+        self.log.info("Running dbt task: %s", self.command)
 
-            try:
-                success, results = self.dbt_hook.run_dbt_task(config)
-            except Exception as e:
-                self.log.exception("There was an error executing dbt", exc_info=e)
-                success, results = False, {}
-                raise AirflowException(
-                    f"An error has occurred while executing dbt: {config.dbt_task}"
-                ) from e
+        result = DbtTaskResult(False, None, {})
 
-            finally:
-                res = self.serializable_result(results)
-
-                if self.do_xcom_push is True and context.get("ti", None) is not None:
-                    # Some dbt operations use dataclasses for its results,
-                    # found in dbt.contracts.results. Each DbtBaseOperator
-                    # subclass should implement prepare_results to return a
-                    # serializable object
-                    self.xcom_upload_artifacts(context, dbt_dir)
-                    self.xcom_push(context, key=XCOM_RETURN_KEY, value=res)
-
-        if success is not True:
+        try:
+            result = self.dbt_hook.run_dbt_task(
+                self.command,
+                artifacts=self.do_xcom_push_artifacts,
+                **vars(self),
+            )
+        except Exception as e:
+            self.log.exception(
+                f"An error has ocurred while executing dbt {self.command}", exc_info=e
+            )
             raise AirflowException(
-                f"Dbt has failed to execute the following task: {config.dbt_task}"
+                f"An error has occurred while executing dbt {self.command}"
+            ) from e
+
+        finally:
+            if self.do_xcom_push is True and context.get("ti", None) is not None:
+                self.xcom_push_dbt_results(context, result)
+
+        if result.success is not True:
+            raise AirflowException(
+                f"Dbt {self.command} task finished with an error status"
             )
 
-        return res
+        serializable_result = self.make_run_results_serializable(result.run_results)
+        return serializable_result
 
     @property
     def command(self) -> str:
@@ -213,109 +197,8 @@ class DbtBaseOperator(BaseOperator):
         """
         raise NotImplementedError()
 
-    def get_dbt_config(self) -> BaseConfig:
-        """Return a dbt task configuration."""
-        factory = self.dbt_hook.get_config_factory(self.command)
-        config_kwargs = {}
-        for field in factory.fields:
-            # Some arguments conflict with Airflow's BaseOperator, so we append dbt_
-            # to them.
-            kwarg = getattr(self, f"dbt_{field.name}", getattr(self, field.name, None))
-            if kwarg is None:
-                continue
-            config_kwargs[field.name] = kwarg
-        return factory.create_config(**config_kwargs)
-
-    def xcom_upload_artifacts(self, context, dbt_directory: str):
-        """Read dbt artifacts and push them to XCom.
-
-        Artifacts are read from the target/ directory in dbt_directory. This method will
-        fail if the required artifact is not found.
-
-        Args:
-            context: The Airflow task's context.
-            dbt_directory: A directory containing a dbt project. Artifacts will be
-                assumed to be in dbt_directory/target/.
-        """
-        if self.do_xcom_push_artifacts is None:
-            # Nothing to xcom_push. Need this for mypy.
-            return
-
-        target_dir = Path(dbt_directory) / "target"
-
-        for artifact in self.do_xcom_push_artifacts:
-            artifact_path = target_dir / artifact
-
-            with open(artifact_path) as f:
-                json_dict = json.load(f)
-            self.xcom_push(context, key=artifact, value=json_dict)
-
-    @contextmanager
-    def dbt_directory(self) -> Iterator[str]:
-        """Provides a temporary directory to execute dbt.
-
-        Creates a temporary directory for dbt to run in and prepares the dbt files
-        if they need to be pulled from S3. If a S3 backend is being used, and
-        self.upload_dbt_project is True, before leaving the temporary directory, we push
-        back the project to S3. Pushing back a project enables commands like deps or
-        docs generate.
-
-        Yields:
-            The temporary directory's name.
-        """
-        store_profiles_dir = self.profiles_dir
-        store_project_dir = self.project_dir
-
-        with TemporaryDirectory(prefix="airflowtmp") as tmp_dir:
-            self.log.info("Initializing temporary directory: %s", tmp_dir)
-            try:
-                self.prepare_directory(tmp_dir)
-            except Exception as e:
-                raise AirflowException(
-                    "Failed to prepare temporary directory for dbt execution"
-                ) from e
-
-            if getattr(self, "state", None) is not None:
-                state = Path(getattr(self, "state", ""))
-                # Since we are running in a temporary directory, we need to make
-                # state paths relative to this temporary directory.
-                if not state.is_absolute():
-                    setattr(self, "state", str(Path(tmp_dir) / state))
-
-            yield tmp_dir
-
-            if self.upload_dbt_project is True:
-                self.log.info("Uploading dbt project to: %s", store_project_dir)
-                self.dbt_hook.upload_dbt_project(
-                    tmp_dir,
-                    store_project_dir,
-                    conn_id=self.project_conn_id,
-                    replace=self.replace_on_upload,
-                    delete_before=self.delete_before_upload,
-                )
-
-        self.profiles_dir = store_profiles_dir
-        self.project_dir = store_project_dir
-
-    def prepare_directory(self, tmp_dir: str):
-        """Prepares a dbt directory by pulling files from S3."""
-        if self.profiles_dir is not None:
-            profiles_file_path = self.dbt_hook.download_dbt_profiles(
-                self.profiles_dir,
-                tmp_dir,
-                conn_id=self.profiles_conn_id,
-            )
-            self.profiles_dir = str(profiles_file_path.parent) + "/"
-
-        project_dir_path = self.dbt_hook.download_dbt_project(
-            self.project_dir,
-            tmp_dir,
-            conn_id=self.project_conn_id,
-        )
-        self.project_dir = str(project_dir_path) + "/"
-
     @property
-    def dbt_hook(self):
+    def dbt_hook(self) -> DbtHook:
         """Provides an existing DbtHook or creates one."""
         if self._dbt_hook is None:
             from airflow_dbt_python.hooks.dbt import DbtHook
@@ -323,12 +206,28 @@ class DbtBaseOperator(BaseOperator):
             self._dbt_hook = DbtHook()
         return self._dbt_hook
 
-    def serializable_result(
-        self, result: Optional[RunExecutionResult]
+    def xcom_push_dbt_results(self, context, dbt_results: DbtTaskResult) -> None:
+        """Push any dbt results to XCom.
+
+        Args:
+            context: The Airflow task's context.
+            dbt_results: A namedtuple the results of executing a dbt task, as returned
+                by DbtHook.
+        """
+        serializable_result = self.make_run_results_serializable(
+            dbt_results.run_results
+        )
+        self.xcom_push(context, key=XCOM_RETURN_KEY, value=serializable_result)
+
+        for key, artifact in dbt_results.artifacts.items():
+            self.xcom_push(context, key=key, value=artifact)
+
+    def make_run_results_serializable(
+        self, result: Optional[RunResult]
     ) -> Optional[dict[Any, Any]]:
         """Makes dbt's run result JSON-serializable.
 
-        Turn dbt's RunExecutionResult into a dict of only JSON-serializable types
+        Turn dbt's RunResult into a dict of only JSON-serializable types
         Each subclas may implement this method to return a dictionary of
         JSON-serializable types, the default XCom backend. If implementing
         custom XCom backends, this method may be overriden.
@@ -348,10 +247,13 @@ class DbtRunOperator(DbtBaseOperator):
     https://docs.getdbt.com/reference/commands/run.
     """
 
-    template_fields = DbtBaseOperator.template_fields + [
-        "select",
-        "exclude",
-    ]
+    template_fields = chain(
+        DbtBaseOperator.template_fields,
+        (
+            "select",
+            "exclude",
+        ),
+    )
 
     def __init__(
         self,
@@ -382,10 +284,13 @@ class DbtSeedOperator(DbtBaseOperator):
     https://docs.getdbt.com/reference/commands/seed.
     """
 
-    template_fields = DbtBaseOperator.template_fields + [
-        "select",
-        "exclude",
-    ]
+    template_fields = chain(
+        DbtBaseOperator.template_fields,
+        (
+            "select",
+            "exclude",
+        ),
+    )
 
     def __init__(
         self,
@@ -417,10 +322,13 @@ class DbtTestOperator(DbtBaseOperator):
     https://docs.getdbt.com/reference/commands/test.
     """
 
-    template_fields = DbtBaseOperator.template_fields + [
-        "select",
-        "exclude",
-    ]
+    template_fields = chain(
+        DbtBaseOperator.template_fields,
+        (
+            "select",
+            "exclude",
+        ),
+    )
 
     def __init__(
         self,
@@ -455,10 +363,13 @@ class DbtCompileOperator(DbtBaseOperator):
     https://docs.getdbt.com/reference/commands/compile.
     """
 
-    template_fields = DbtBaseOperator.template_fields + [
-        "select",
-        "exclude",
-    ]
+    template_fields = chain(
+        DbtBaseOperator.template_fields,
+        (
+            "select",
+            "exclude",
+        ),
+    )
 
     def __init__(
         self,
@@ -573,10 +484,13 @@ class DbtSnapshotOperator(DbtBaseOperator):
     https://docs.getdbt.com/reference/commands/snapshot.
     """
 
-    template_fields = DbtBaseOperator.template_fields + [
-        "select",
-        "exclude",
-    ]
+    template_fields = chain(
+        DbtBaseOperator.template_fields,
+        (
+            "select",
+            "exclude",
+        ),
+    )
 
     def __init__(
         self,
@@ -603,11 +517,14 @@ class DbtLsOperator(DbtBaseOperator):
     https://docs.getdbt.com/reference/commands/list.
     """
 
-    template_fields = DbtBaseOperator.template_fields + [
-        "select",
-        "exclude",
-        "resource_types",
-    ]
+    template_fields = chain(
+        DbtBaseOperator.template_fields,
+        (
+            "select",
+            "exclude",
+            "resource_types",
+        ),
+    )
 
     def __init__(
         self,
@@ -648,10 +565,13 @@ class DbtRunOperationOperator(DbtBaseOperator):
     https://docs.getdbt.com/reference/commands/run-operation.
     """
 
-    template_fields = DbtBaseOperator.template_fields + [
-        "macro",
-        "args",
-    ]
+    template_fields = chain(
+        DbtBaseOperator.template_fields,
+        (
+            "macro",
+            "args",
+        ),
+    )
 
     def __init__(
         self,
@@ -727,10 +647,13 @@ class DbtBuildOperator(DbtBaseOperator):
     https://docs.getdbt.com/reference/commands/build.
     """
 
-    template_fields = DbtBaseOperator.template_fields + [
-        "select",
-        "exclude",
-    ]
+    template_fields = chain(
+        DbtBaseOperator.template_fields,
+        (
+            "select",
+            "exclude",
+        ),
+    )
 
     def __init__(
         self,

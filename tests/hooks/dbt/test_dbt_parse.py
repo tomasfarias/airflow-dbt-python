@@ -8,12 +8,11 @@ def test_dbt_parse_task(hook, profiles_file, dbt_project_file):
     if perf_info.exists():
         perf_info.unlink()
 
-    factory = hook.get_config_factory("parse")
-    config = factory.create_config(
+    result = hook.run_dbt_task(
+        "parse",
         project_dir=dbt_project_file.parent,
         profiles_dir=profiles_file.parent,
     )
-    success, results = hook.run_dbt_task(config)
 
-    assert success is True
+    assert result.success is True
     assert perf_info.exists()

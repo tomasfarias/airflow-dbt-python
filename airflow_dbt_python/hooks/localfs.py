@@ -11,9 +11,9 @@ from pathlib import Path
 from typing import Optional
 
 from airflow.hooks.filesystem import FSHook
-from airflow_dbt_python.utils.url import URL
 
-from .remote import DbtRemoteHook
+from airflow_dbt_python.hooks.remote import DbtRemoteHook
+from airflow_dbt_python.utils.url import URL
 
 
 class DbtLocalFsRemoteHook(FSHook, DbtRemoteHook):

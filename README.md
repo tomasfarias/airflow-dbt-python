@@ -34,7 +34,6 @@ pip install airflow-dbt-python[snowflake,postgres]
 
 ## From this repo:
 
-
 Clone the repo:
 ``` shell
 git clone https://github.com/tomasfarias/airflow-dbt-python.git

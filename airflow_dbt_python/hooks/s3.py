@@ -3,14 +3,10 @@ from __future__ import annotations
 
 from typing import Iterable, Optional
 
-from airflow_dbt_python.utils.url import URL
+from airflow.providers.amazon.aws.hooks.s3 import S3Hook
 
-from .remote import DbtRemoteHook
-
-try:
-    from airflow.providers.amazon.aws.hooks.s3 import S3Hook
-except ImportError:
-    from airflow.hooks.S3_hook import S3Hook  # type: ignore
+from airflow_dbt_python.hooks.remote import DbtRemoteHook
+from airflow_dbt_python.utils.url import URL, URLLike
 
 
 class DbtS3RemoteHook(S3Hook, DbtRemoteHook):
@@ -18,7 +14,7 @@ class DbtS3RemoteHook(S3Hook, DbtRemoteHook):
 
     This concrete remote class implements the DbtRemote interface by using S3 as a
     storage for uploading and downloading dbt files to and from.
-    The DbtS3Remote subclasses Airflow's S3Hook to interact with S3. A connection id
+    The DbtS3RemoteHook subclasses Airflow's S3Hook to interact with S3. A connection id
     may be passed to set the connection to use with S3.
     """
 
@@ -71,7 +67,7 @@ class DbtS3RemoteHook(S3Hook, DbtRemoteHook):
 
     def load_file_handle_replace_error(
         self,
-        file_url: URL,
+        file_url: URLLike,
         key: str,
         bucket_name: Optional[str] = None,
         replace: bool = False,

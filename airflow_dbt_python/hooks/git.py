@@ -10,9 +10,8 @@ from dulwich.porcelain import Error, active_branch, check_diverged
 from dulwich.protocol import ZERO_SHA
 from dulwich.repo import Repo
 
+from airflow_dbt_python.hooks.remote import DbtRemoteHook
 from airflow_dbt_python.utils.url import URL
-
-from .remote import DbtRemoteHook
 
 GitClients = Union[HttpGitClient, SSHGitClient, TCPGitClient]
 

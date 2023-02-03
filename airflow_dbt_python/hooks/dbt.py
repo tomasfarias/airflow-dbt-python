@@ -1,30 +1,40 @@
 """Provides a hook to interact with a dbt project."""
 from __future__ import annotations
 
+import json
 import logging
+from contextlib import contextmanager
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Optional
+from tempfile import TemporaryDirectory
+from typing import TYPE_CHECKING, Any, Iterable, Iterator, NamedTuple, Optional
 from urllib.parse import urlparse
 
 from airflow.exceptions import AirflowException
-from airflow.version import version as airflow_version
-
-try:
-    from airflow.hooks.base import BaseHook
-except ImportError:
-    from airflow.hooks.base_hook import BaseHook  # type: ignore
-
+from airflow.hooks.base import BaseHook
 
 if TYPE_CHECKING:
     from dbt.contracts.results import RunResult
     from dbt.task.base import BaseTask
 
+    from airflow_dbt_python.hooks.remote import DbtRemoteHook
     from airflow_dbt_python.utils.configs import BaseConfig, ConfigFactory
     from airflow_dbt_python.utils.url import URLLike
 
-    from .remote import DbtRemoteHook
-
     DbtRemoteHooksDict = dict[tuple[str, Optional[str]], DbtRemoteHook]
+
+
+class DbtTaskResult(NamedTuple):
+    """A tuple returned after a dbt task executes.
+
+    Attributes:
+        success: Whether the task succeeded or not.
+        run_results: Results from the dbt task, if available.
+        artifacts: A dictionary of saved dbt artifacts. It may be empty.
+    """
+
+    success: bool
+    run_results: Optional[RunResult]
+    artifacts: dict[str, Any]
 
 
 class DbtHook(BaseHook):
@@ -35,15 +45,14 @@ class DbtHook(BaseHook):
 
     def __init__(self, *args, **kwargs):
         self.remotes: DbtRemoteHooksDict = {}
-        if airflow_version.split(".")[0] == "1":
-            kwargs["source"] = None
         super().__init__(*args, **kwargs)
 
     def get_remote(self, scheme: str, conn_id: Optional[str]) -> DbtRemoteHook:
         """Get a remote to interact with dbt files.
 
-        RemoteHooks are defined by the scheme we are looking for and an optional connection
-        id if we are looking to interface with any Airflow hook that uses a connection.
+        RemoteHooks are defined by the scheme we are looking for and an optional
+        connection id if we are looking to interface with any Airflow hook that
+        uses a connection.
         """
         from .remote import get_remote
 
@@ -106,13 +115,17 @@ class DbtHook(BaseHook):
             project_dir, destination, replace=replace, delete_before=delete_before
         )
 
-    def get_config_factory(self, command: str) -> ConfigFactory:
-        """Get a ConfigFactory given a dbt command string."""
-        from airflow_dbt_python.utils.configs import ConfigFactory
-
-        return ConfigFactory.from_str(command)
-
-    def run_dbt_task(self, config: BaseConfig) -> tuple[bool, Optional[RunResult]]:
+    def run_dbt_task(
+        self,
+        command: str,
+        upload_dbt_project: bool = False,
+        delete_before_upload: bool = False,
+        replace_on_upload: bool = False,
+        project_conn_id: Optional[str] = None,
+        profiles_conn_id: Optional[str] = None,
+        artifacts: Optional[Iterable[str]] = None,
+        **kwargs,
+    ) -> DbtTaskResult:
         """Run a dbt task with a given configuration and return the results.
 
         The configuration used determines the task that will be ran.
@@ -126,36 +139,162 @@ class DbtHook(BaseHook):
         from dbt.main import adapter_management, track_run
         from dbt.task.base import move_to_nearest_project_dir
 
+        config = self.get_dbt_task_config(command, **kwargs)
         extra_target = self.get_target_from_connection(config.target)
 
-        config.dbt_task.pre_init_hook(config)
-        task, runtime_config = config.create_dbt_task(extra_target)
-        self.ensure_profiles(config.profiles_dir)
+        with self.dbt_directory(
+            config,
+            upload_dbt_project=upload_dbt_project,
+            delete_before_upload=delete_before_upload,
+            replace_on_upload=replace_on_upload,
+            project_conn_id=project_conn_id,
+            profiles_conn_id=profiles_conn_id,
+        ) as dbt_dir:
+            config.dbt_task.pre_init_hook(config)
+            self.ensure_profiles(config.profiles_dir)
 
-        # When creating tasks via from_args, dbt switches to the project directory.
-        # We have to do that here as we are not using from_args.
-        move_to_nearest_project_dir(config)
+            task, runtime_config = config.create_dbt_task(extra_target)
 
-        self.setup_dbt_logging(task, config.debug)
+            # When creating tasks via from_args, dbt switches to the project directory.
+            # We have to do that here as we are not using from_args.
+            move_to_nearest_project_dir(config)
 
-        if not isinstance(runtime_config, UnsetProfileConfig):
-            if runtime_config is not None:
-                # The deps command installs the dependencies, which means they may not
-                # exist before deps runs and the following would raise a
-                # CompilationError.
-                runtime_config.load_dependencies()
+            self.setup_dbt_logging(task, config.debug)
 
-        results = None
-        with adapter_management():
             if not isinstance(runtime_config, UnsetProfileConfig):
                 if runtime_config is not None:
-                    register_adapter(runtime_config)
+                    # The deps command installs the dependencies, which means they may
+                    # not exist before deps runs and the following would raise a
+                    # CompilationError.
+                    runtime_config.load_dependencies()
 
-            with track_run(task):
-                results = task.run()
-            success = task.interpret_results(results)
+            results = None
+            with adapter_management():
+                if not isinstance(runtime_config, UnsetProfileConfig):
+                    if runtime_config is not None:
+                        register_adapter(runtime_config)
 
-        return success, results
+                with track_run(task):
+                    results = task.run()
+                success = task.interpret_results(results)
+
+            if artifacts is None:
+                return DbtTaskResult(success, results, {})
+
+            saved_artifacts = {}
+            for artifact in artifacts:
+                with open(Path(dbt_dir) / "target" / artifact) as artifact_file:
+                    json_artifact = json.load(artifact_file)
+
+                saved_artifacts[artifact] = json_artifact
+
+        return DbtTaskResult(success, results, saved_artifacts)
+
+    def get_dbt_task_config(self, command: str, **config_kwargs) -> BaseConfig:
+        """Initialize a configuration for given dbt command with given kwargs."""
+        from airflow_dbt_python.utils.configs import ConfigFactory
+
+        return ConfigFactory.from_str(command).create_config(**config_kwargs)
+
+    @contextmanager
+    def dbt_directory(
+        self,
+        config,
+        upload_dbt_project: bool = False,
+        delete_before_upload: bool = False,
+        replace_on_upload: bool = False,
+        project_conn_id: Optional[str] = None,
+        profiles_conn_id: Optional[str] = None,
+    ) -> Iterator[str]:
+        """Provides a temporary directory to execute dbt.
+
+        Creates a temporary directory for dbt to run in and prepares the dbt files
+        if they need to be pulled from S3. If a S3 backend is being used, and
+        self.upload_dbt_project is True, before leaving the temporary directory, we push
+        back the project to S3. Pushing back a project enables commands like deps or
+        docs generate.
+
+        Yields:
+            The temporary directory's name.
+        """
+        store_profiles_dir = config.profiles_dir
+        store_project_dir = config.project_dir
+
+        with TemporaryDirectory(prefix="airflow_tmp") as tmp_dir:
+            self.log.info("Initializing temporary directory: %s", tmp_dir)
+
+            try:
+                project_dir, profiles_dir = self.prepare_directory(
+                    tmp_dir,
+                    store_project_dir,
+                    store_profiles_dir,
+                    project_conn_id,
+                    profiles_conn_id,
+                )
+            except Exception as e:
+                raise AirflowException(
+                    "Failed to prepare temporary directory for dbt execution"
+                ) from e
+
+            config.project_dir = project_dir
+            config.profiles_dir = profiles_dir
+
+            if getattr(config, "state", None) is not None:
+                state = Path(getattr(config, "state", ""))
+                # Since we are running in a temporary directory, we need to make
+                # state paths relative to this temporary directory.
+                if not state.is_absolute():
+                    setattr(config, "state", str(Path(tmp_dir) / state))
+
+            yield tmp_dir
+
+            if upload_dbt_project is True:
+                self.log.info("Uploading dbt project to: %s", store_project_dir)
+                self.upload_dbt_project(
+                    tmp_dir,
+                    store_project_dir,
+                    conn_id=project_conn_id,
+                    replace=replace_on_upload,
+                    delete_before=delete_before_upload,
+                )
+
+        config.profiles_dir = store_profiles_dir
+        config.project_dir = store_project_dir
+
+    def prepare_directory(
+        self,
+        tmp_dir: str,
+        project_dir: URLLike,
+        profiles_dir: Optional[URLLike] = None,
+        project_conn_id: Optional[str] = None,
+        profiles_conn_id: Optional[str] = None,
+    ):
+        """Prepares a dbt directory for execution of a dbt task.
+
+        Preparation involves downloading the required dbt project files and
+        profiles.yml.
+        """
+        project_dir_path = self.download_dbt_project(
+            project_dir,
+            tmp_dir,
+            conn_id=project_conn_id,
+        )
+        new_project_dir = str(project_dir_path) + "/"
+
+        if (project_dir_path / "profiles.yml").exists():
+            # We may have downloaded the profiles.yml file together
+            # with the project.
+            return (new_project_dir, new_project_dir)
+
+        if profiles_dir is not None:
+            profiles_file_path = self.download_dbt_profiles(
+                profiles_dir,
+                tmp_dir,
+                conn_id=profiles_conn_id,
+            )
+            profiles_dir = str(profiles_file_path.parent) + "/"
+
+        return (new_project_dir, new_project_dir)
 
     def setup_dbt_logging(self, task: BaseTask, debug: Optional[bool]):
         """Setup dbt logging.

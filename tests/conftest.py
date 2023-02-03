@@ -388,17 +388,18 @@ def pre_compile(hook, dbt_project_file, profiles_file):
     """Fixture to run a dbt compile task."""
     import shutil
 
-    factory = hook.get_config_factory("run")
-    config = factory.create_config(
+    target_dir = dbt_project_file.parent / "target"
+
+    hook.run_dbt_task(
+        "compile",
         project_dir=dbt_project_file.parent,
         profiles_dir=profiles_file.parent,
+        upload_dbt_project=True,
+        delete_before_upload=True,
     )
-
-    hook.run_dbt_task(config)
 
     yield
 
-    target_dir = dbt_project_file.parent / "target"
     shutil.rmtree(target_dir, ignore_errors=True)
 
 

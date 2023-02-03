@@ -11,37 +11,37 @@ from airflow_dbt_python.hooks.dbt import DbtHook
 def test_dbt_seed_task(profiles_file, dbt_project_file, seed_files):
     """Test a dbt seed task."""
     hook = DbtHook()
-    factory = hook.get_config_factory("seed")
-    config = factory.create_config(
+    result = hook.run_dbt_task(
+        "seed",
         project_dir=dbt_project_file.parent,
         profiles_dir=profiles_file.parent,
         select=[str(s.stem) for s in seed_files],
     )
-    success, results = hook.run_dbt_task(config)
-    assert success is True
 
-    assert len(results.results) == 2
-    for index, result in enumerate(results.results, start=1):
-        assert result.status == RunStatus.Success
-        assert result.node.unique_id == f"seed.test.seed_{index}"
+    assert result.success is True
+
+    assert len(result.run_results) == 2
+    for index, run_result in enumerate(result.run_results, start=1):
+        assert run_result.status == RunStatus.Success
+        assert run_result.node.unique_id == f"seed.test.seed_{index}"
 
 
 def test_dbt_seed_task_one_file(profiles_file, dbt_project_file, seed_files):
     """Test a dbt seed task for only one file."""
     hook = DbtHook()
-    factory = hook.get_config_factory("seed")
-    config = factory.create_config(
+    result = hook.run_dbt_task(
+        "seed",
         project_dir=dbt_project_file.parent,
         profiles_dir=profiles_file.parent,
         select=[str(seed_files[0].stem)],
     )
-    success, results = hook.run_dbt_task(config)
-    assert success is True
 
-    assert len(results.results) == 1
-    for index, result in enumerate(results.results, start=1):
-        assert result.status == RunStatus.Success
-        assert result.node.unique_id == f"seed.test.seed_{index}"
+    assert result.success is True
+
+    assert len(result.run_results) == 1
+    for index, run_result in enumerate(result.run_results, start=1):
+        assert run_result.status == RunStatus.Success
+        assert run_result.node.unique_id == f"seed.test.seed_{index}"
 
 
 SEED_1_REVISED = """\
@@ -60,7 +60,9 @@ def new_seed_file(dbt_project_dir):
     target = Path("seed_temp.csv")
     s1.rename(target)
     s1.write_text(SEED_1_REVISED)
+
     yield s1
+
     s1.unlink()
     target.rename(s1)
 
@@ -73,20 +75,20 @@ def test_dbt_seed_task_new_file_without_full_refresh(
     This should error as new columns have been added.
     """
     hook = DbtHook()
-    factory = hook.get_config_factory("seed")
-    config = factory.create_config(
+    result = hook.run_dbt_task(
+        "seed",
         project_dir=dbt_project_file.parent,
         profiles_dir=profiles_file.parent,
         select=[str(new_seed_file.stem)],
     )
-    success, results = hook.run_dbt_task(config)
-    assert success is False
-    assert results.args.get("full_refresh", None) is None
 
-    assert len(results.results) == 1
-    for index, result in enumerate(results.results, start=1):
-        assert result.status == RunStatus.Error
-        assert result.node.unique_id == f"seed.test.seed_{index}"
+    assert result.success is False
+    assert result.run_results.args.get("full_refresh", None) is None
+
+    assert len(result.run_results) == 1
+    for index, run_result in enumerate(result.run_results, start=1):
+        assert run_result.status == RunStatus.Success
+        assert run_result.node.unique_id == f"seed.test.seed_{index}"
 
 
 def test_dbt_seed_task_new_file_with_full_refresh(
@@ -97,41 +99,40 @@ def test_dbt_seed_task_new_file_with_full_refresh(
     This should succeed as new columns have been added but we are full-refreshing.
     """
     hook = DbtHook()
-    factory = hook.get_config_factory("seed")
-    config = factory.create_config(
+    result = hook.run_dbt_task(
+        "seed",
         project_dir=dbt_project_file.parent,
         profiles_dir=profiles_file.parent,
         select=[str(new_seed_file.stem)],
         full_refresh=True,
     )
-    success, results = hook.run_dbt_task(config)
-    assert success is True
-    assert results.args.get("full_refresh", None) is True
 
-    assert len(results.results) == 1
-    for index, result in enumerate(results.results, start=1):
-        assert result.status == RunStatus.Success
-        assert result.node.unique_id == f"seed.test.seed_{index}"
+    assert result.success is True
+    assert result.run_results.args.get("full_refresh", None) is True
+
+    assert len(result.run_results) == 1
+    for index, run_result in enumerate(result.run_results, start=1):
+        assert run_result.status == RunStatus.Success
+        assert run_result.node.unique_id == f"seed.test.seed_{index}"
 
 
 def test_dbt_seed_task_compiled(
     hook, profiles_file, dbt_project_file, pre_compile, seed_files
 ):
     """Test a dbt seed task with a compiled target."""
-    factory = hook.get_config_factory("seed")
-    config = factory.create_config(
+    result = hook.run_dbt_task(
+        "seed",
         project_dir=dbt_project_file.parent,
         profiles_dir=profiles_file.parent,
         compiled_target=dbt_project_file.parent / "target",
     )
-    success, results = hook.run_dbt_task(config)
 
-    assert success is True
+    assert result.success is True
 
-    assert len(results.results) == 2
-    for index, result in enumerate(results.results, start=1):
-        assert result.status == RunStatus.Success
-        assert result.node.unique_id == f"seed.test.seed_{index}"
+    assert len(result.run_results) == 2
+    for index, run_result in enumerate(result.run_results, start=1):
+        assert run_result.status == RunStatus.Success
+        assert run_result.node.unique_id == f"seed.test.seed_{index}"
 
 
 def test_dbt_seed_with_airflow_connection(
@@ -140,22 +141,21 @@ def test_dbt_seed_with_airflow_connection(
     """Pulling a target from an Airflow connection."""
     for conn_id in airflow_conns:
         hook = DbtHook()
-        factory = hook.get_config_factory("seed")
-        config = factory.create_config(
+        result = hook.run_dbt_task(
+            "seed",
             project_dir=dbt_project_file.parent,
             profiles_dir=profiles_file.parent,
             target=conn_id,
             select=[str(s.stem) for s in seed_files],
         )
-        success, results = hook.run_dbt_task(config)
 
-        assert success is True
-        assert results.args["target"] == conn_id
-        assert len(results.results) == 2
+        assert result.success is True
+        assert result.run_results.args["target"] == conn_id
 
-        for index, result in enumerate(results.results, start=1):
-            assert result.status == RunStatus.Success
-            assert result.node.unique_id == f"seed.test.seed_{index}"
+        assert len(result.run_results) == 2
+        for index, run_result in enumerate(result.run_results, start=1):
+            assert run_result.status == RunStatus.Success
+            assert run_result.node.unique_id == f"seed.test.seed_{index}"
 
 
 def test_dbt_seed_with_airflow_connection_and_no_profiles(
@@ -166,50 +166,45 @@ def test_dbt_seed_with_airflow_connection_and_no_profiles(
     We omit the profiles_file hook as it should not be needed.
     """
     for conn_id in airflow_conns:
-        factory = hook.get_config_factory("seed")
-        config = factory.create_config(
+        result = hook.run_dbt_task(
+            "seed",
             project_dir=dbt_project_file.parent,
             profiles_dir=None,
             target=conn_id,
             select=[str(s.stem) for s in seed_files],
         )
-        success, results = hook.run_dbt_task(config)
 
-        assert success is True
-        assert results.args["target"] == conn_id
-        assert len(results.results) == 2
+        assert result.success is True
+        assert result.run_results.args["target"] == conn_id
 
-        for index, result in enumerate(results.results, start=1):
-            assert result.status == RunStatus.Success
-            assert result.node.unique_id == f"seed.test.seed_{index}"
+        assert len(result.run_results) == 2
+        for index, run_result in enumerate(result.run_results, start=1):
+            assert run_result.status == RunStatus.Success
+            assert run_result.node.unique_id == f"seed.test.seed_{index}"
 
 
 def test_dbt_seed_with_non_existent_airflow_connection(
     hook, dbt_project_file, seed_files, airflow_conns
 ):
     """An Exception should be raised if a connection is not found."""
-    factory = hook.get_config_factory("seed")
-    config = factory.create_config(
-        project_dir=dbt_project_file.parent,
-        target="invalid_conn_id",
-        select=[str(s.stem) for s in seed_files],
-    )
-
     with pytest.raises(DbtProfileError):
-        hook.run_dbt_task(config)
+        hook.run_dbt_task(
+            "seed",
+            project_dir=dbt_project_file.parent,
+            target="invalid_conn_id",
+            select=[str(s.stem) for s in seed_files],
+        )
 
 
 def test_dbt_run_with_non_existent_airflow_connection_and_profiles(
     hook, dbt_project_file, seed_files, airflow_conns, profiles_file
 ):
     """An Exception should be raised if a connection is not found."""
-    factory = hook.get_config_factory("seed")
-    config = factory.create_config(
-        project_dir=dbt_project_file.parent,
-        profiles_dir=profiles_file.parent,
-        target="invalid_conn_id",
-        select=[str(s.stem) for s in seed_files],
-    )
-
     with pytest.raises(DbtProfileError):
-        hook.run_dbt_task(config)
+        hook.run_dbt_task(
+            "seed",
+            project_dir=dbt_project_file.parent,
+            profiles_dir=profiles_file.parent,
+            target="invalid_conn_id",
+            select=[str(s.stem) for s in seed_files],
+        )
