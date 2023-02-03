@@ -186,9 +186,9 @@ class BaseConfig:
             TypeError: If the dbt task is not a subclass of ManifestTask.
         """
         try:
-            from dbt.exceptions import InternalException as DbtException
+            from dbt.exceptions import InternalException as DbtException  # type: ignore
         except ImportError:
-            from dbt.exceptions import DbtRuntimeError as DbtException
+            from dbt.exceptions import DbtRuntimeError as DbtException  # type: ignore
 
         if isinstance(task, ManifestTask) is False:
             raise TypeError(
