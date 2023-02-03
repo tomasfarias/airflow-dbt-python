@@ -23,7 +23,6 @@ from dbt.config.runtime import RuntimeConfig, UnsetProfileConfig
 from dbt.contracts.graph.manifest import Manifest
 from dbt.contracts.results import RunResult
 from dbt.events.functions import setup_event_logger
-from dbt.exceptions import InternalException
 from dbt.graph import Graph
 from dbt.main import adapter_management, track_run
 from dbt.task.base import BaseTask, move_to_nearest_project_dir
@@ -186,6 +185,11 @@ class BaseConfig:
         Raises:
             TypeError: If the dbt task is not a subclass of ManifestTask.
         """
+        try:
+            from dbt.exceptions import InternalException as DbtException
+        except ImportError:
+            from dbt.exceptions import DbtRuntimeError as DbtException
+
         if isinstance(task, ManifestTask) is False:
             raise TypeError(
                 f"Patching requires an instance of ManifestTask, not {type(task)}"
@@ -220,7 +224,7 @@ class BaseConfig:
                 elif uid in task.manifest.sources:
                     task._flattened_nodes.append(task.manifest.sources[uid])
                 else:
-                    raise InternalException(
+                    raise DbtException(
                         f"Node selection returned {uid}, expected a node or a "
                         f"source"
                     )
