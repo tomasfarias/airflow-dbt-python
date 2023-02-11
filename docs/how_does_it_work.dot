@@ -1,0 +1,40 @@
+digraph HowDoesItWork {
+    graph [fontname="Hack", splines=ortho];
+    node [fontname="Hack", shape=box];
+    edge [fontname="Hack", labelfontsize=12.0, fontsize=12.0];
+    rankdir = "TB";
+    newrank = true;
+    nodesep = 0.8;
+
+    "Airflow DAG" [style=filled, fillcolor="#CBCBCB", color="#00C7D4"];
+    XCom [style=filled, fillcolor="#CBCBCB", color="#00C7D4"];
+    "Other tasks" [style=filled, fillcolor="#CBCBCB", color="#00C7D4"];
+    "Airflow DAG" -> DbtOperator [label="orchestrates"];
+
+    subgraph cluster_0 {
+        color = "#00AD46";
+        label = "airflow-dbt-python";
+        labelloc = "b";
+
+        DbtHook;
+        DbtOperator -> DbtHook [label="run_dbt_task"];
+        DbtRemoteHooks -> DbtHook [label="download"];
+        DbtHook -> DbtRemoteHooks [label="upload", labelfloat=true];
+    }
+
+    "dbt-core" [style=filled, fillcolor="#CBCBCB", color="#FF7557"];
+    DbtHook -> "dbt-core" [headlabel="executes", labeldistance=4.5];
+    {rank=same; "dbt-core"; DbtHook; }
+
+    split [shape=point, label=""];
+    DbtOperator -> split [arrowhead=none];
+    split -> "Other tasks" [label="return"];
+    split -> XCom [label="push", labelfloat=true];
+    XCom -> DbtHook [style=invis, arrowhead=none];
+    {rank=same; split; DbtOperator; }
+
+    "Remote storage" [style=filled, fillcolor="#CBCBCB", color="#FF7557"];
+    DbtRemoteHooks -> "Remote storage" [headlabel="interacts", labeldistance=4.0];
+    {rank=same; "Remote storage"; DbtRemoteHooks; }
+
+}

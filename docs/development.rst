@@ -3,7 +3,9 @@
 Development
 ===========
 
-This section describes how to setup a development environment. If you are looking to dig into the internals of airflow-dbt-python and make a (very appreciated) contribution to the project, read along.
+This section dives into the development process of *airflow-dbt-python* by describing how you may setup a local development environment, and comply with all coding standards to make an effective contribution.
+
+If you are looking to dig into the internals of *airflow-dbt-python* and make a (very appreciated) contribution to the project, it's recommended that you check out the :ref:`how_does_it_work` page which describes how *airflow-dbt-python* works as well as the thought process and some of the history behind the design decisions taken.
 
 Poetry
 ------
@@ -15,7 +17,7 @@ As of `airflow-dbt-python` version 0.14, we have moved the project to Poetry ver
 Installing Airflow
 ------------------
 
-Development requires a local installation of Airflow, as airflow-dbt-python doesn't come bundled with one. We can install a specific version using ``pip``:
+Development requires a local installation of Airflow, as *airflow-dbt-python* doesn't come bundled with one. We can install a specific version using ``pip``:
 
 .. code-block:: shell
 
