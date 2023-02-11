@@ -88,6 +88,7 @@ class DbtBaseOperator(BaseOperator):
         anonymous_usage_stats: Optional[bool] = None,
         no_anonymous_usage_stats: Optional[bool] = None,
         # Extra features configuration
+        dbt_conn_id: Optional[str] = "dbt_conn_id",
         profiles_conn_id: Optional[str] = None,
         project_conn_id: Optional[str] = None,
         do_xcom_push_artifacts: Optional[list[str]] = None,
@@ -139,6 +140,7 @@ class DbtBaseOperator(BaseOperator):
         self.version_check = no_version_check
         self.no_version_check = no_version_check
 
+        self.dbt_conn_id = dbt_conn_id
         self.profiles_conn_id = profiles_conn_id
         self.project_conn_id = project_conn_id
         self.do_xcom_push_artifacts = do_xcom_push_artifacts
@@ -203,7 +205,11 @@ class DbtBaseOperator(BaseOperator):
         if self._dbt_hook is None:
             from airflow_dbt_python.hooks.dbt import DbtHook
 
-            self._dbt_hook = DbtHook()
+            self._dbt_hook = DbtHook(
+                dbt_conn_id=self.dbt_conn_id,
+                project_conn_id=self.project_conn_id,
+                profiles_conn_id=self.profiles_conn_id,
+            )
         return self._dbt_hook
 
     def xcom_push_dbt_results(self, context, dbt_results: DbtTaskResult) -> None:

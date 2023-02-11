@@ -85,26 +85,24 @@ def test_dbt_hook_upload_dbt_project():
 
 def test_dbt_hook_download_dbt_project():
     """Test dbt hook calls remote correctly."""
-    hook = DbtHook()
+    hook = DbtHook(project_conn_id="conn_id")
     hook.remotes[("", "conn_id")] = FakeRemote()
 
-    args, kwargs = hook.download_dbt_project(
-        "/path/to/profiles", "/path/to/store", conn_id="conn_id"
-    )
+    args, kwargs = hook.download_dbt_project("/path/to/profiles", "/path/to/store")
 
     assert args == ("/path/to/profiles", "/path/to/store")
     assert kwargs == {}
 
 
-def test_dbt_hook_get_target_from_connection(airflow_conns, database):
+def test_dbt_hook_get_dbt_target_from_connection(airflow_conns, database):
     """Test fetching Airflow connections."""
     hook = DbtHook()
 
     for conn_id in airflow_conns:
-        extra_target = hook.get_target_from_connection(conn_id)
+        extra_target = hook.get_dbt_target_from_connection(conn_id)
 
+        assert extra_target is not None
         assert conn_id in extra_target
-        assert extra_target[conn_id]["type"] == "postgres"
         assert extra_target[conn_id]["user"] == database.user
         assert extra_target[conn_id]["password"] == database.password
         assert extra_target[conn_id]["dbname"] == database.dbname
@@ -114,7 +112,7 @@ def test_dbt_hook_get_target_from_connection(airflow_conns, database):
 def test_dbt_hook_get_target_from_connection_non_existent(conn_id):
     """Test None is returned when Airflow connections do not exist."""
     hook = DbtHook()
-    assert hook.get_target_from_connection(conn_id) is None
+    assert hook.get_dbt_target_from_connection(conn_id) is None
 
 
 @pytest.fixture
@@ -147,9 +145,93 @@ def test_dbt_hook_get_target_from_empty_connection(no_user_airflow_conn, databas
     """Test fetching Airflow connections."""
     hook = DbtHook()
 
-    extra_target = hook.get_target_from_connection(no_user_airflow_conn)
+    extra_target = hook.get_dbt_target_from_connection(no_user_airflow_conn)
 
+    assert extra_target is not None
     assert no_user_airflow_conn in extra_target
-    assert extra_target[no_user_airflow_conn].get("type") == "postgres"
     assert extra_target[no_user_airflow_conn].get("user") is None
     assert extra_target[no_user_airflow_conn]["dbname"] == database.dbname
+
+
+class FakeConnection:
+    """A fake Airflow Connection for testing."""
+
+    def __init__(self, extras, **kwargs):
+        for key, value in kwargs.items():
+            setattr(self, key, value)
+        self.extra_dejson = extras
+
+
+def hook_with_conn_parameters(conn_params, conn_extra_params):
+    """Create a hook with connection parameters for testing."""
+    hook = DbtHook()
+    hook.conn_params = conn_params
+    hook.conn_extra_params = conn_extra_params
+
+    return hook
+
+
+@pytest.mark.parametrize(
+    "hook,fake_conn,expected",
+    (
+        (DbtHook(), FakeConnection({}), {}),
+        (
+            DbtHook(),
+            FakeConnection(
+                {"extra_param": 123},
+                conn_type="postgres",
+                host="localhost",
+                schema="test",
+                port=5432,
+                login="user",
+            ),
+            {
+                "type": "postgres",
+                "host": "localhost",
+                "schema": "test",
+                "user": "user",
+                "port": 5432,
+                "extra_param": 123,
+            },
+        ),
+        (
+            hook_with_conn_parameters([], []),
+            FakeConnection(
+                {"extra_param": 123, "extra_param_2": 456},
+                conn_type="postgres",
+                host="localhost",
+                schema="test",
+                port=5432,
+                login="user",
+            ),
+            {
+                "extra_param": 123,
+                "extra_param_2": 456,
+            },
+        ),
+        (
+            hook_with_conn_parameters(
+                ["custom_param"], ["custom_extra", "custom_extra_1"]
+            ),
+            FakeConnection(
+                {
+                    "custom_extra": "extra",
+                    "extra_param": 123,
+                    "extra_param_2": 456,
+                },
+                conn_type="postgres",
+                custom_param="test",
+                host="localhost",
+                schema="test",
+                port=5432,
+                login="user",
+            ),
+            {"custom_param": "test", "custom_extra": "extra"},
+        ),
+    ),
+)
+def test_dbt_details_from_connection(hook, fake_conn, expected):
+    """Assert dbt connection details are read from a fake Airflow Connection."""
+    dbt_details = hook.get_dbt_details_from_connection(fake_conn)
+
+    assert dbt_details == expected

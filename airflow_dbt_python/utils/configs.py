@@ -6,7 +6,7 @@ import json
 import os
 import pickle
 from pathlib import Path
-from typing import Any, Optional, Type, Union
+from typing import TYPE_CHECKING, Any, Optional, Type, TypeVar, Union
 
 import dbt.flags as flags
 import yaml
@@ -29,13 +29,15 @@ from dbt.task.list import ListTask
 from dbt.task.parse import ParseTask
 from dbt.task.run import RunTask
 from dbt.task.run_operation import RunOperationTask
-from dbt.task.runnable import ManifestTask
 from dbt.task.seed import SeedTask
 from dbt.task.snapshot import SnapshotTask
 from dbt.task.test import TestTask
 from dbt.tracking import initialize_from_flags
 
 from airflow_dbt_python.utils.enums import FromStrEnum, LogFormat, Output
+
+if TYPE_CHECKING:
+    from dbt.task.runnable import GraphRunnableTask
 
 
 def parse_yaml_args(args: Optional[Union[str, dict[str, Any]]]) -> dict[str, Any]:
@@ -162,7 +164,7 @@ class BaseConfig:
             )
         return getattr(self, "cls")
 
-    def patch_manifest_task(self, task: ManifestTask):
+    def patch_manifest_task(self, task: GraphRunnableTask):
         """Patch a dbt task to use a pre-compiled graph and manifest.
 
         Parsing and compilation of a dbt project starts with the invocation of
@@ -173,7 +175,14 @@ class BaseConfig:
         Raises:
             TypeError: If the dbt task is not a subclass of ManifestTask.
         """
-        if isinstance(task, ManifestTask) is False:
+        from dbt.task.runnable import GraphRunnableTask
+
+        try:
+            from dbt.exceptions import InternalException as DbtException  # type: ignore
+        except ImportError:
+            from dbt.exceptions import DbtRuntimeError as DbtException  # type: ignore
+
+        if isinstance(task, GraphRunnableTask) is False:
             raise TypeError(
                 f"Patching requires an instance of ManifestTask, not {type(task)}"
             )
@@ -190,10 +199,11 @@ class BaseConfig:
 
             with open(manifest_path) as f:
                 loaded_manifest = json.load(f)
-                # If I'm taking something from this experience, it's this Mashumaro
-                # package. I spent a long time trying to build a manifest, when I only
-                # had to call from_dict. Amazing stuff.
-                Manifest.from_dict(loaded_manifest)
+                new_root_path = os.getcwd()
+
+                for node in loaded_manifest.get("nodes", {}).keys():
+                    loaded_manifest["nodes"][node]["root_path"] = new_root_path
+
                 task.manifest = Manifest.from_dict(loaded_manifest)
 
             # What follows is the remaining _runtime_initialize method of
@@ -207,7 +217,7 @@ class BaseConfig:
                 elif uid in task.manifest.sources:
                     task._flattened_nodes.append(task.manifest.sources[uid])
                 else:
-                    raise InternalException(
+                    raise DbtException(
                         f"Node selection returned {uid}, expected a node or a "
                         f"source"
                     )
@@ -235,8 +245,8 @@ class BaseConfig:
         runtime_config = self.create_runtime_config(extra_targets)
         task = self.dbt_task(args=self, config=runtime_config)
 
-        if self.compiled_target is not None and isinstance(task, ManifestTask) is True:
-            # Only supported by subclasses of dbt's ManifestTask.
+        if self.compiled_target is not None:
+            # Only supported by subclasses of dbt's GraphRunnableTask.
             # Represented here by the presence of the compiled_target attribute.
             self.patch_manifest_task(task)  # type: ignore
 
@@ -380,7 +390,7 @@ class SelectionConfig(BaseConfig):
     exclude: Optional[list[str]] = None
     select: Optional[list[str]] = None
     selector_name: Optional[list[str]] = None
-    state: Optional[Path] = None
+    state: Optional[Union[Path, str]] = None
 
     # Kept for compatibility with dbt versions < 0.21
     models: Optional[list[str]] = None
@@ -574,6 +584,9 @@ class TestTaskConfig(SelectionConfig):
                 self.select = ["test_type:generic"]
 
 
+ConcreteConfig = TypeVar("ConcreteConfig", bound=BaseConfig)
+
+
 class ConfigFactory(FromStrEnum):
     """Produce configurations for each dbt task."""
 
@@ -593,16 +606,21 @@ class ConfigFactory(FromStrEnum):
     SOURCE = SourceFreshnessTaskConfig
     TEST = TestTaskConfig
 
-    def create_config(self, **kwargs) -> BaseConfig:
+    def create_config(self, **kwargs) -> ConcreteConfig:
         """Instantiate a dbt task config with the given args and kwargs."""
         config_fields = [field.name for field in self.fields]
-        config = self.value(
-            **{
-                k.removeprefix("dbt_"): v
-                for k, v in kwargs.items()
-                if k in config_fields
-            }
-        )
+
+        config_kwargs = {}
+        for field in config_fields:
+            field_value = kwargs.get(f"dbt_{field}", kwargs.get(field, None))
+
+            if field_value is None:
+                continue
+
+            config_kwargs[field] = field_value
+
+        config = self.value(**config_kwargs)
+
         return config
 
     @property

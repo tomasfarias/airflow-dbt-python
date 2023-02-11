@@ -44,6 +44,19 @@ def test_dags_loaded(dagbag):
         assert dag is not None
 
 
+@pytest.fixture(scope="function")
+def clear_dagruns():
+    """Ensure we are starting from a clean DagRun table."""
+    session = settings.Session()
+    session.query(DagRun).delete()
+    session.commit()
+
+    yield
+
+    session.query(DagRun).delete()
+    session.commit()
+
+
 @pytest.fixture
 def basic_dag(
     dbt_project_file,
@@ -52,6 +65,7 @@ def basic_dag(
     seed_files,
     singular_tests_files,
     generic_tests_files,
+    clear_dagruns,
 ):
     """Create a basic testing DAG that utilizes Airflow connections."""
     with DAG(
@@ -88,10 +102,7 @@ def basic_dag(
 
         dbt_seed >> dbt_run >> dbt_test
 
-    yield dag
-
-    session = settings.Session()
-    session.query(DagRun).delete()
+    return dag
 
 
 def test_dbt_operators_in_dag(basic_dag, dbt_project_file, profiles_file):
@@ -136,6 +147,7 @@ def taskflow_dag(
     seed_files,
     singular_tests_files,
     generic_tests_files,
+    clear_dagruns,
 ):
     """Create a testing DAG that utilizes Airflow taskflow decorators."""
     from airflow.decorators import dag, task
@@ -190,10 +202,7 @@ def taskflow_dag(
 
         dbt_seed >> dbt_run >> dbt_test
 
-    yield generate_dag()
-
-    session = settings.Session()
-    session.query(DagRun).delete()
+    return generate_dag()
 
 
 def test_dbt_operators_in_taskflow_dag(taskflow_dag, dbt_project_file, profiles_file):
@@ -285,6 +294,7 @@ def target_connection_dag(
     seed_files,
     singular_tests_files,
     generic_tests_files,
+    clear_dagruns,
 ):
     """Create a testing DAG that utilizes Airflow connections."""
 
@@ -322,10 +332,7 @@ def target_connection_dag(
 
         dbt_seed >> dbt_run >> dbt_test
 
-    yield dag
-
-    session = settings.Session()
-    session.query(DagRun).delete()
+    return dag
 
 
 def test_dbt_operators_in_connection_dag(target_connection_dag, dbt_project_file):

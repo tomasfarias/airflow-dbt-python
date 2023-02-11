@@ -1,6 +1,4 @@
 """Unit test module for running dbt seed with the DbtHook."""
-from pathlib import Path
-
 import pytest
 from dbt.contracts.results import RunStatus
 from dbt.exceptions import DbtProfileError
@@ -53,12 +51,24 @@ GB,United Kingdom,3
 
 
 @pytest.fixture(scope="function")
-def new_seed_file(dbt_project_dir):
+def new_seed_file(dbt_project_dir, seed_files, dbt_project_file, profiles_file):
     """Create a new seed file to test full_refresh."""
-    d = dbt_project_dir / "seeds"
-    s1 = d / "seed_1.csv"
-    target = Path("seed_temp.csv")
+    s1 = seed_files[0]
+
+    hook = DbtHook()
+    result = hook.run_dbt_task(
+        "seed",
+        project_dir=dbt_project_file.parent,
+        profiles_dir=profiles_file.parent,
+        select=[str(s1.stem)],
+    )
+    assert result.success is True
+
+    # Save existing file to restore after testing.
+    target = dbt_project_dir / "save" / "seed_temp.csv"
+    target.parent.mkdir(exist_ok=True)
     s1.rename(target)
+
     s1.write_text(SEED_1_REVISED)
 
     yield s1
@@ -85,9 +95,10 @@ def test_dbt_seed_task_new_file_without_full_refresh(
     assert result.success is False
     assert result.run_results.args.get("full_refresh", None) is None
 
+    assert result.run_results is not None
     assert len(result.run_results) == 1
     for index, run_result in enumerate(result.run_results, start=1):
-        assert run_result.status == RunStatus.Success
+        assert run_result.status == RunStatus.Error
         assert run_result.node.unique_id == f"seed.test.seed_{index}"
 
 
