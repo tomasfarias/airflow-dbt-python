@@ -3,9 +3,9 @@ import json
 from pathlib import Path
 
 import pytest
+from airflow import AirflowException
 from dbt.contracts.results import RunStatus
 
-from airflow import AirflowException
 from airflow_dbt_python.operators.dbt import DbtBuildOperator
 from airflow_dbt_python.utils.configs import BuildTaskConfig
 
@@ -14,7 +14,7 @@ try:
     from airflow_dbt_python.hooks.s3 import DbtS3RemoteHook
 except ImportError:
     condition = True
-no_s3_backend = pytest.mark.skipif(
+no_s3_remote = pytest.mark.skipif(
     condition, reason="S3 RemoteHook not available, consider installing amazon extras"
 )
 
@@ -43,7 +43,7 @@ def test_dbt_build_mocked_all_args():
 
     assert op.command == "build"
 
-    config = op.get_dbt_config()
+    config = op.dbt_hook.get_dbt_task_config(command=op.command, **vars(op))
 
     assert isinstance(config, BuildTaskConfig) is True
     assert config.project_dir == "/path/to/project/"
@@ -145,7 +145,7 @@ def test_dbt_build_fails_with_non_existent_project(profiles_file, dbt_project_fi
         op.execute({})
 
 
-@no_s3_backend
+@no_s3_remote
 def test_dbt_build_models_from_s3(
     s3_bucket, s3_hook, profiles_file, dbt_project_file, model_files
 ):
@@ -180,7 +180,7 @@ def test_dbt_build_models_from_s3(
     assert build_result["status"] == RunStatus.Success
 
 
-@no_s3_backend
+@no_s3_remote
 def test_dbt_build_models_with_profile_from_s3(
     s3_bucket, s3_hook, profiles_file, dbt_project_file, model_files
 ):
@@ -204,7 +204,7 @@ def test_dbt_build_models_with_profile_from_s3(
     assert build_result["status"] == RunStatus.Success
 
 
-@no_s3_backend
+@no_s3_remote
 def test_dbt_build_models_with_project_from_s3(
     s3_bucket, s3_hook, profiles_file, dbt_project_file, model_files
 ):

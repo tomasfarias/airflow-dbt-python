@@ -127,13 +127,12 @@ def pre_run(hook, repo_dir):
     """Fixture to run a dbt run task."""
     import shutil
 
-    factory = hook.get_config_factory("run")
-    config = factory.create_config(
+    hook.run_dbt_task(
+        "run",
         project_dir=repo_dir,
         profiles_dir=repo_dir,
+        upload_dbt_project=True,
     )
-
-    hook.run_dbt_task(config)
 
     yield
 

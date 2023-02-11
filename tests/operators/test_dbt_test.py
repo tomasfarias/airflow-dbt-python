@@ -40,7 +40,8 @@ def test_dbt_test_configuration_all_args():
 
     assert op.command == "test"
 
-    config = op.get_dbt_config()
+    config = op.dbt_hook.get_dbt_task_config(command=op.command, **vars(op))
+
     assert isinstance(config, TestTaskConfig) is True
     assert config.project_dir == "/path/to/project/"
     assert config.profiles_dir == "/path/to/profiles/"
@@ -66,12 +67,11 @@ def test_dbt_test_configuration_all_args():
 @pytest.fixture
 def run_models(hook, dbt_project_file, profiles_file, model_files):
     """We need to run some models before we can test."""
-    factory = hook.get_config_factory("run")
-    config = factory.create_config(
+    hook.run_dbt_task(
+        "run",
         project_dir=dbt_project_file.parent,
         profiles_dir=profiles_file.parent,
     )
-    hook.run_dbt_task(config)
     yield
 
 

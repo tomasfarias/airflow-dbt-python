@@ -384,7 +384,7 @@ def hook():
 
 
 @pytest.fixture
-def pre_compile(hook, dbt_project_file, profiles_file):
+def pre_compile(hook, model_files, seed_files, dbt_project_file, profiles_file):
     """Fixture to run a dbt compile task."""
     import shutil
 
@@ -396,6 +396,7 @@ def pre_compile(hook, dbt_project_file, profiles_file):
         profiles_dir=profiles_file.parent,
         upload_dbt_project=True,
         delete_before_upload=True,
+        full_refresh=True,
     )
 
     yield

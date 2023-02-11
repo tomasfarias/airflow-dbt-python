@@ -1,11 +1,11 @@
 """Unit test module for running dbt run with the DbtHook."""
 from pathlib import Path
+from unittest import mock
 
 import pytest
 from airflow.exceptions import AirflowException
 from dbt.contracts.results import RunStatus
 from dbt.exceptions import DbtProfileError, DbtProjectError
-from unittest import mock
 
 
 def test_dbt_run_task(hook, profiles_file, dbt_project_file, model_files):
@@ -112,17 +112,20 @@ def test_dbt_run_fails_with_malformed_sql(
 
 
 @pytest.fixture
-def ensure_no_models(dbt_project_file, profiles_file, pre_compile):
+def ensure_no_models(dbt_project_file, profiles_file, pre_compile, test_files):
     """Move model files before running from compiled files."""
     import shutil
 
     models_path = dbt_project_file.parent / "models"
     new_path = dbt_project_file.parent / "new_models"
-    shutil.move(models_path, new_path)
+
+    if models_path.exists():
+        shutil.move(models_path, new_path)
 
     yield
 
-    shutil.move(new_path, models_path)
+    if new_path.exists():
+        shutil.move(new_path, models_path)
 
 
 def test_dbt_run_task_compiled(

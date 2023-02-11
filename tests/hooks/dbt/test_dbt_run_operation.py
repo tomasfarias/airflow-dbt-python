@@ -25,4 +25,4 @@ def test_dbt_run_operation_task_with_no_args(
         macro=non_arg_macro_name,
     )
 
-    assert success is True
+    assert result.success is True
