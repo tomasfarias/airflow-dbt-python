@@ -1,26 +1,25 @@
+
 Introduction
 ============
 
-Airflow-dbt-python is a Python library that contains a collection of `Airflow <https://airflow.apache.org/>`_ operators and hooks to operate with `dbt <https://www.getdbt.com/>`_.
+*airflow-dbt-python* is a Python library that contains a collection of `Airflow <https://airflow.apache.org/>`_ operators, hooks, and utilities to integrate with `dbt <https://www.getdbt.com/>`_.
 
-Use airflow-dbt-python to run your `dbt <https://www.getdbt.com/>`_ transformation pipelines end-to-end, with coverage for most dbt commands. Each airflow-dbt-python operator exposes the same parameters you would use with the dbt CLI, which makes it easy to migrate into.
-
+Use *airflow-dbt-python* to run your *dbt* transformation pipelines end-to-end, as it offers operators for most *dbt* commands. Each of these *airflow-dbt-python* operators exposes the same arguments you would use with the *dbt* CLI, which makes it easy to migrate into. Moreover, take advantage of Airflow `connections <https://airflow.apache.org/docs/apache-airflow/stable/howto/connection.html>`_, to configure.
 
 Features
 --------
 
-Airflow-dbt-python aims to make dbt a **first-class citizen** of Airflow by supporting additional features that integrate both tools. As you would expect, airflow-dbt-python can run all your dbt workflows in Airflow with the same interface you are used to from the CLI, but without being a mere wrapper: airflow-dbt-python directly interfaces with internal `dbt-core <https://pypi.org/project/dbt-core/>`_ classes, bridging the gap between them and Airflow's operator interface.
+*airflow-dbt-python* aims to make *dbt* a **first-class citizen** of Airflow by supporting additional features that integrate both tools. As you would expect, *airflow-dbt-python* can run all your *dbt* workflows in Airflow with the same results that you are used to from the CLI, but without being a mere wrapper: *airflow-dbt-python* directly interfaces with the internal parts of `dbt-core <https://pypi.org/project/dbt-core/>`_ instead of running the CLI in a, for example, ``BashOperator``.
 
-As this integration was completed, several features were developed to **extend the capabilities of dbt** to leverage Airflow as much as possible. Can you think of a way dbt could leverage Airflow that is not currently supported? Let us know in a `GitHub issue <https://github.com/tomasfarias/airflow-dbt-python/issues/new/choose>`_! The current list of supported features is as follows:
+We believe Airflow can **enhance** a *dbt* user's experience with several additional features that leverage Airflow as much as possible:
 
-.. _independent-task-execution:
+* Configuring *dbt* connections with Airflow connections.
+* Downloading *dbt* projects from remote storages, like `AWS S3 <https://aws.amazon.com/s3/>`_ or Github repositories.
+* Communicate between tasks by pushing results and artifacts to `XCom <https://airflow.apache.org/docs/apache-airflow/stable/core-concepts/xcoms.html>`_.
 
-Independent task execution
-^^^^^^^^^^^^^^^^^^^^^^^^^^
+Can you think of another way Airflow can enhance *dbt*? Let us know in a `GitHub issue <https://github.com/tomasfarias/airflow-dbt-python/issues/new/choose>`_!
 
-Airflow executes `Tasks <https://airflow.apache.org/docs/apache-airflow/stable/concepts/tasks.html>`_ independent of one another: even though downstream and upstream dependencies between tasks exist, the execution of an individual task happens entirely independently of any other task execution (see: `Tasks Relationships <https://airflow.apache.org/docs/apache-airflow/stable/concepts/tasks.html#relationships>`_).
-
-In order to work with this constraint, airflow-dbt-python runs each dbt command in a temporary and isolated directory. Before execution, all the relevant dbt files are copied from supported backends, and after executing the command any artifacts are exported. This ensures dbt can work with any Airflow deployment, including most production deployments as they are usually running `Remote Executors <https://airflow.apache.org/docs/apache-airflow/stable/executor/index.html#executor-types>`_ and do not guarantee any files will be shared by default between tasks, since each task may run in a completely different environment.
+Read along for a breakdown of *airflow-dbt-python*'s main features, or head over to :ref:`getting_started` to get your *dbt* workflows running in Airflow!
 
 .. _download-dbt-files-from-s3:
 
@@ -37,8 +36,6 @@ This feature is intended to work in line with Airflow's `description of the task
 | Tasks don’t pass information to each other by default, and run entirely independently.
 
 In our world, that means task should be responsible of fetching all the dbt related files it needs in order to run independently, as already described in :ref:`independent-task-execution`.
-
-As of the time of writing S3 is the only supported backend for dbt projects, but we have plans to extend this to support more backends, initially targeting other file storages that are commonly used in Airflow connections.
 
 Push dbt artifacts to XCom
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
