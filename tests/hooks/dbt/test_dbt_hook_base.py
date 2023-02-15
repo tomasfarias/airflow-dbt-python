@@ -13,7 +13,16 @@ try:
 except ImportError:
     condition = True
 no_s3_remote = pytest.mark.skipif(
-    condition, reason="S3 Remote not available, consider installing amazon extras"
+    condition, reason="S3 Remote not available, consider installing s3 extra"
+)
+
+condition = False
+try:
+    from airflow_dbt_python.hooks.git import DbtGitRemoteHook
+except ImportError:
+    condition = True
+no_git_remote = pytest.mark.skipif(
+    condition, reason="Git Remote not available, consider installing git extra"
 )
 
 
@@ -41,6 +50,17 @@ def test_dbt_hook_get_local_fs_remote():
 
     assert isinstance(remote, DbtLocalFsRemoteHook)
     assert isinstance(remote, FSHook)
+
+
+@no_git_remote
+@pytest.mark.parametrize("scheme", ("https", "git", "git+ssh", "ssh", "http"))
+def test_dbt_hook_get_git_remote(scheme):
+    """Test the correct remote is procured."""
+    hook = DbtHook()
+
+    remote = hook.get_remote(scheme, None)
+
+    assert isinstance(remote, DbtGitRemoteHook)
 
 
 def test_dbt_hook_get_remote_raises_not_implemented():

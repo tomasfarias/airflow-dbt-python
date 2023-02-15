@@ -116,11 +116,14 @@ def get_remote(scheme: str, conn_id: Optional[str] = None) -> DbtRemoteHook:
     In the future we should make our hooks discoverable and package ourselves as a
     proper Airflow providers package.
     """
+    from .git import DbtGitRemoteHook
     from .localfs import DbtLocalFsRemoteHook
     from .s3 import DbtS3RemoteHook
 
     if scheme == "s3":
         remote_cls: Type[DbtRemoteHook] = DbtS3RemoteHook
+    elif scheme in ("https", "git", "git+ssh", "ssh", "http"):
+        remote_cls = DbtGitRemoteHook
     elif scheme == "":
         remote_cls = DbtLocalFsRemoteHook
     else:
