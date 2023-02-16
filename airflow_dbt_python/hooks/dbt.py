@@ -44,8 +44,8 @@ class DbtConnectionParam(NamedTuple):
     Attributes:
         name: The name of the connection parameter. This name will be used to get the
             parameter from an Airflow Connection or its extras.
-        store_override_name: A new name for the connection parameter. If not None, this is
-            the name used in a dbt profiles.
+        store_override_name: A new name for the connection parameter. If not None, this
+            is the name used in a dbt profiles.
         default: A default value if the parameter is not found.
     """
 

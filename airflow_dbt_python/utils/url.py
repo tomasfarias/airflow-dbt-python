@@ -6,7 +6,7 @@ import tarfile
 from enum import Enum
 from pathlib import Path
 from tarfile import TarFile
-from typing import Generator, Optional, Union
+from typing import Generator, Union
 from urllib.parse import urljoin, urlparse, urlunparse
 from zipfile import ZipFile
 
@@ -14,6 +14,8 @@ URLLike = Union["URL", str, Path]
 
 
 class SupportedArchives(str, Enum):
+    """Enumeration of supported archive formats."""
+
     ZIP = "zip"
     TAR = "tar"
 
@@ -119,11 +121,11 @@ class URL:
         True
         >>> URL("/local/path/to/project.zip").is_relative_to("/etc")
         False
-        >>> URL("s3://airflow-dbt-test-s3-bucket/project/data/").is_relative_to("project")
+        >>> URL("s3://test-s3-bucket/project/data/").is_relative_to("project")
         True
-        >>> URL("s3://airflow-dbt-test-s3-bucket/project/data/").is_relative_to("data")
+        >>> URL("s3://test-s3-bucket/project/data/").is_relative_to("data")
         False
-        >>> URL("s3://airflow-dbt-test-s3-bucket/project/data/").is_relative_to("different")
+        >>> URL("s3://test-s3-bucket/project/data/").is_relative_to("different")
         False
         """
         if isinstance(base, URL):

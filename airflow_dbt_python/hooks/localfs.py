@@ -59,6 +59,10 @@ class DbtLocalFsRemoteHook(FSHook, DbtRemoteHook):
         replace: bool = False,
         delete_before: bool = False,
     ) -> None:
+        """Implement download method of dbt remote interface.
+
+        For a local filesystem, this copies the source directory or file to destination.
+        """
         destination.parent.mkdir(parents=True, exist_ok=True)
 
         if source.is_dir():
@@ -73,6 +77,10 @@ class DbtLocalFsRemoteHook(FSHook, DbtRemoteHook):
         replace: bool = False,
         delete_before: bool = False,
     ) -> None:
+        """Implement upload method of dbt remote interface.
+
+        For a local filesystem, this copies the source directory or file to destination.
+        """
         destination.parent.mkdir(parents=True, exist_ok=True)
 
         if source.is_dir():

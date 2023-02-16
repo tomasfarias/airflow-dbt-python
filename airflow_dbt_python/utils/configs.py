@@ -553,7 +553,7 @@ class SourceFreshnessTaskConfig(SelectionConfig):
     """Dbt source freshness task arguments."""
 
     cls: Type[BaseTask] = dataclasses.field(default=FreshnessTask, init=False)
-    output: Optional[StrPath] = None
+    output: Optional[Union[str, Path]] = None
     which: str = dataclasses.field(default="source-freshness", init=False)
 
 

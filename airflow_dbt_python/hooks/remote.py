@@ -1,4 +1,5 @@
 """The DbtRemoteHook interface includes methods for downloading and uploading files.
+
 Internally, DbtRemoteHooks can use Airflow hooks to execute the actual operations.
 
 Currently, only AWS S3 and the local filesystem are supported as remotes.
@@ -52,6 +53,15 @@ class DbtRemoteHook(ABC, LoggingMixin):
         return NotImplemented
 
     def download_dbt_project(self, source: URLLike, destination: URLLike) -> Path:
+        """Download all dbt project files from a given source.
+
+        Args:
+            source: URLLike to a directory containing a dbt project.
+            destination: URLLike to a directory where the  will be stored.
+
+        Returns:
+            The destination Path.
+        """
         self.log.info("Downloading dbt project from %s to %s", source, destination)
 
         source_url = URL(source)
@@ -72,6 +82,15 @@ class DbtRemoteHook(ABC, LoggingMixin):
         return destination_path
 
     def download_dbt_profiles(self, source: URLLike, destination: URLLike) -> Path:
+        """Download a dbt profiles.yml file from a given source.
+
+        Args:
+            source: URLLike pointing to a remote containing a profiles.yml file.
+            destination: URLLike to a directory where the profiles.yml will be stored.
+
+        Returns:
+            The destination Path.
+        """
         self.log.info("Downloading dbt profiles from %s to %s", source, destination)
 
         source_url = URL(source)
@@ -94,6 +113,15 @@ class DbtRemoteHook(ABC, LoggingMixin):
         replace: bool = False,
         delete_before: bool = False,
     ):
+        """Upload all dbt project files from a given source.
+
+        Args:
+            source: URLLike to a directory containing a dbt project.
+            destination: URLLike to a directory where the dbt project will be stored.
+            replace: Flag to indicate whether to replace existing files.
+            delete_before: Flag to indicate wheter to clear any existing files before
+                uploading the dbt project.
+        """
         self.log.info("Uploading dbt project from %s to %s", source, destination)
 
         source_url = URL(source)
