@@ -40,13 +40,13 @@ class DbtGitRemoteHook(SSHHook, DbtRemoteHook):
 
     def __init__(
         self,
-        *args,
         git_conn_id: Optional[str] = None,
         commit_author: str = "Airflow dbt <>",
         commit_msg: str = "Airflow dbt committed on {ts: Y%-%m-%d H%:%M:%S}",
         username: str = "git",
         upload_branch: Optional[str] = None,
         upload_filter: Callable[[URL], bool] = no_filter,
+        remote_host: str = "localhost",
         **kwargs,
     ):
         """Initialize a dbt remote for git via SSH or HTTP."""
@@ -56,10 +56,9 @@ class DbtGitRemoteHook(SSHHook, DbtRemoteHook):
         self.upload_branch = upload_branch
         self.upload_filter = upload_filter
         super().__init__(
-            *args,
             ssh_conn_id=git_conn_id,
             username=username,
-            remote_host="localhost",
+            remote_host=remote_host,
             **kwargs,
         )
 
@@ -159,7 +158,7 @@ class DbtGitRemoteHook(SSHHook, DbtRemoteHook):
     def get_git_client_path(self, url: URL) -> tuple[GitClients, str]:
         """Initialize a dulwich git client according to given URL's scheme."""
         if url.scheme == "git":
-            client = TCPGitClient(url.hostname, url.port)
+            client: GitClients = TCPGitClient(url.hostname, url.port)
             path = str(url.path)
 
         elif url.scheme in ("git+ssh", "ssh"):

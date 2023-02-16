@@ -95,7 +95,7 @@ class DbtS3RemoteHook(S3Hook, DbtRemoteHook):
         self.log.info("Loading file %s to S3: %s", file_url, key)
         try:
             self.load_file(
-                file_url,
+                str(file_url),
                 key,
                 bucket_name=bucket_name,
                 replace=replace,

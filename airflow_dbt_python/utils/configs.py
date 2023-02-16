@@ -584,9 +584,6 @@ class TestTaskConfig(SelectionConfig):
                 self.select = ["test_type:generic"]
 
 
-ConcreteConfig = TypeVar("ConcreteConfig", bound=BaseConfig)
-
-
 class ConfigFactory(FromStrEnum):
     """Produce configurations for each dbt task."""
 
@@ -606,7 +603,7 @@ class ConfigFactory(FromStrEnum):
     SOURCE = SourceFreshnessTaskConfig
     TEST = TestTaskConfig
 
-    def create_config(self, **kwargs) -> ConcreteConfig:
+    def create_config(self, **kwargs) -> BaseConfig:
         """Instantiate a dbt task config with the given args and kwargs."""
         config_fields = [field.name for field in self.fields]
 

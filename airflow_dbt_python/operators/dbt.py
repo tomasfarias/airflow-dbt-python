@@ -19,6 +19,15 @@ if TYPE_CHECKING:
 
     from airflow_dbt_python.hooks.dbt import DbtHook, DbtTaskResult
 
+base_template_fields = [
+    "project_dir",
+    "profiles_dir",
+    "profile",
+    "target",
+    "state",
+    "vars",
+]
+
 
 class DbtBaseOperator(BaseOperator):
     """The basic Airflow dbt operator.
@@ -41,14 +50,7 @@ class DbtBaseOperator(BaseOperator):
         do_xcom_push_artifacts: A list of dbt artifacts to XCom push.
     """
 
-    template_fields = (
-        "project_dir",
-        "profiles_dir",
-        "profile",
-        "target",
-        "state",
-        "vars",
-    )
+    template_fields = base_template_fields
 
     def __init__(
         self,
@@ -148,7 +150,7 @@ class DbtBaseOperator(BaseOperator):
         self.delete_before_upload = delete_before_upload
         self.replace_on_upload = replace_on_upload
 
-        self._dbt_hook = None
+        self._dbt_hook: Optional[DbtHook] = None
 
     def execute(self, context):
         """Execute dbt command with prepared arguments.
@@ -245,6 +247,9 @@ class DbtBaseOperator(BaseOperator):
         return asdict(result, dict_factory=run_result_factory)
 
 
+selection_template_fields = ["select", "exclude"]
+
+
 class DbtRunOperator(DbtBaseOperator):
     """Executes a dbt run command.
 
@@ -253,13 +258,7 @@ class DbtRunOperator(DbtBaseOperator):
     https://docs.getdbt.com/reference/commands/run.
     """
 
-    template_fields = chain(
-        DbtBaseOperator.template_fields,
-        (
-            "select",
-            "exclude",
-        ),
-    )
+    template_fields = base_template_fields + selection_template_fields
 
     def __init__(
         self,
@@ -290,13 +289,7 @@ class DbtSeedOperator(DbtBaseOperator):
     https://docs.getdbt.com/reference/commands/seed.
     """
 
-    template_fields = chain(
-        DbtBaseOperator.template_fields,
-        (
-            "select",
-            "exclude",
-        ),
-    )
+    template_fields = base_template_fields + selection_template_fields
 
     def __init__(
         self,
@@ -328,13 +321,7 @@ class DbtTestOperator(DbtBaseOperator):
     https://docs.getdbt.com/reference/commands/test.
     """
 
-    template_fields = chain(
-        DbtBaseOperator.template_fields,
-        (
-            "select",
-            "exclude",
-        ),
-    )
+    template_fields = base_template_fields + selection_template_fields
 
     def __init__(
         self,
@@ -369,13 +356,7 @@ class DbtCompileOperator(DbtBaseOperator):
     https://docs.getdbt.com/reference/commands/compile.
     """
 
-    template_fields = chain(
-        DbtBaseOperator.template_fields,
-        (
-            "select",
-            "exclude",
-        ),
-    )
+    template_fields = base_template_fields + selection_template_fields
 
     def __init__(
         self,
@@ -490,13 +471,7 @@ class DbtSnapshotOperator(DbtBaseOperator):
     https://docs.getdbt.com/reference/commands/snapshot.
     """
 
-    template_fields = chain(
-        DbtBaseOperator.template_fields,
-        (
-            "select",
-            "exclude",
-        ),
-    )
+    template_fields = base_template_fields + selection_template_fields
 
     def __init__(
         self,
@@ -523,13 +498,8 @@ class DbtLsOperator(DbtBaseOperator):
     https://docs.getdbt.com/reference/commands/list.
     """
 
-    template_fields = chain(
-        DbtBaseOperator.template_fields,
-        (
-            "select",
-            "exclude",
-            "resource_types",
-        ),
+    template_fields = (
+        base_template_fields + selection_template_fields + ["resource_type"]
     )
 
     def __init__(
@@ -571,13 +541,7 @@ class DbtRunOperationOperator(DbtBaseOperator):
     https://docs.getdbt.com/reference/commands/run-operation.
     """
 
-    template_fields = chain(
-        DbtBaseOperator.template_fields,
-        (
-            "macro",
-            "args",
-        ),
-    )
+    template_fields = base_template_fields + ["macro", "args"]
 
     def __init__(
         self,
@@ -653,13 +617,7 @@ class DbtBuildOperator(DbtBaseOperator):
     https://docs.getdbt.com/reference/commands/build.
     """
 
-    template_fields = chain(
-        DbtBaseOperator.template_fields,
-        (
-            "select",
-            "exclude",
-        ),
-    )
+    template_fields = base_template_fields + selection_template_fields
 
     def __init__(
         self,

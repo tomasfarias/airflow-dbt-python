@@ -7,7 +7,7 @@ from enum import Enum
 from pathlib import Path
 from tarfile import TarFile
 from typing import Generator, Union
-from urllib.parse import urljoin, urlparse, urlunparse
+from urllib.parse import ParseResult, urljoin, urlparse, urlunparse
 from zipfile import ZipFile
 
 URLLike = Union["URL", str, Path]
@@ -73,7 +73,7 @@ class URL:
         if self.path.is_absolute() and parsed.netloc != "":
             self.path = self.path.relative_to("/")
 
-        self._parsed = parsed
+        self._parsed: ParseResult = parsed
 
     @classmethod
     def from_parts(
@@ -114,7 +114,7 @@ class URL:
             fragment=new_parsed.fragment,
         )
 
-    def is_relative_to(self, base: Union[str, "URL"]) -> "URL":
+    def is_relative_to(self, base: Union[str, "URL"]) -> bool:
         """Check whether this URL is relative to base.
 
         >>> URL("/local/path/to/project.zip").is_relative_to("/local/path")
@@ -404,7 +404,7 @@ def zip_dir_from_url(url: URL, zip_url: URL) -> None:
             zf.write(_file, arcname=_file.relative_to(url))
 
 
-def tar_dir_from_url(url: URL, tar_url: str) -> None:
+def tar_dir_from_url(url: URL, tar_url: URL) -> None:
     """Add all paths to a tar file in tar_url."""
     try:
         compression: str = url.name.rsplit(".", maxsplit=2)[2]

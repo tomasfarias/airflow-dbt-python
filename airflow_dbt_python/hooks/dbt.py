@@ -6,7 +6,7 @@ import logging
 from contextlib import contextmanager
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import TYPE_CHECKING, Any, Iterable, Iterator, NamedTuple, Optional
+from typing import TYPE_CHECKING, Any, Iterable, Iterator, NamedTuple, Optional, Union
 from urllib.parse import urlparse
 
 from airflow.exceptions import AirflowException
@@ -18,7 +18,7 @@ if TYPE_CHECKING:
     from dbt.task.base import BaseTask
 
     from airflow_dbt_python.hooks.remote import DbtRemoteHook
-    from airflow_dbt_python.utils.configs import ConcreteConfig
+    from airflow_dbt_python.utils.configs import BaseConfig
     from airflow_dbt_python.utils.url import URLLike
 
     DbtRemoteHooksDict = dict[tuple[str, Optional[str]], DbtRemoteHook]
@@ -78,7 +78,7 @@ class DbtHook(BaseHook):
     conn_type = "dbt"
     hook_name = "dbt Hook"
 
-    conn_params = [
+    conn_params: list[Union[DbtConnectionParam, str]] = [
         DbtConnectionParam("conn_type", "type"),
         "host",
         DbtConnectionParam("conn_id", "dbname"),
@@ -87,12 +87,12 @@ class DbtHook(BaseHook):
         "password",
         "port",
     ]
-    conn_extra_params = []
+    conn_extra_params: list[Union[DbtConnectionParam, str]] = []
 
     def __init__(
         self,
         *args,
-        dbt_conn_id: str = default_conn_name,
+        dbt_conn_id: Optional[str] = default_conn_name,
         project_conn_id: Optional[str] = None,
         profiles_conn_id: Optional[str] = None,
         **kwargs,
@@ -192,7 +192,6 @@ class DbtHook(BaseHook):
 
         config = self.get_dbt_task_config(command, **kwargs)
         extra_target = self.get_dbt_target_from_connection(config.target)
-        print("PROFILES_DIR", config.profiles_dir)
 
         with self.dbt_directory(
             config,
@@ -200,8 +199,6 @@ class DbtHook(BaseHook):
             delete_before_upload=delete_before_upload,
             replace_on_upload=replace_on_upload,
         ) as dbt_dir:
-            print("PROFILES_DIR", config.profiles_dir)
-
             config.dbt_task.pre_init_hook(config)
             self.ensure_profiles(config.profiles_dir)
 
@@ -242,7 +239,7 @@ class DbtHook(BaseHook):
 
         return DbtTaskResult(success, results, saved_artifacts)
 
-    def get_dbt_task_config(self, command: str, **config_kwargs) -> ConcreteConfig:
+    def get_dbt_task_config(self, command: str, **config_kwargs) -> BaseConfig:
         """Initialize a configuration for given dbt command with given kwargs."""
         from airflow_dbt_python.utils.configs import ConfigFactory
 
@@ -393,11 +390,13 @@ class DbtHook(BaseHook):
             A dictionary with a configuration for a dbt target, or None if a matching
                 Airflow connection is not found for given dbt target.
         """
-        if target is None:
-            target = self.dbt_conn_id
+        conn_id = target or self.dbt_conn_id
+
+        if conn_id is None:
+            return None
 
         try:
-            conn = self.get_connection(target)
+            conn = self.get_connection(conn_id)
         except AirflowException:
             self.log.debug(
                 "No Airflow connection matching dbt target %s was found.", target
@@ -406,7 +405,7 @@ class DbtHook(BaseHook):
 
         details = self.get_dbt_details_from_connection(conn)
 
-        return {target: details}
+        return {conn_id: details}
 
     def get_dbt_details_from_connection(self, conn: Connection) -> dict[str, Any]:
         """Extract dbt connection details from Airflow Connection.
