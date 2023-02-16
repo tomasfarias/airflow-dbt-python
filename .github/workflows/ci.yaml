@@ -15,17 +15,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: [3.7, 3.8, 3.9, '3.10']
-        airflow-version: ['1.10.15', '2.2.2', '2.4.2']
-        exclude:
-          - python-version: '3.10'
-            airflow-version: '1.10.15'
-          - python-version: '3.10'
-            airflow-version: '2.2.2'
-        include:
-          - airflow-version: '1.10.15'
-            constraints: 'constraints-3.8.txt'
-            install: 'apache-airflow[amazon]==1.10.15'
+        python-version: [3.7, 3.8, 3.9, '3.10', '3.11']
+        airflow-version: ['2.5.1', '2.4.3']
 
     runs-on: ubuntu-latest
     steps:
@@ -66,18 +57,9 @@ jobs:
         run: poetry run black --check .
 
       - name: Install Airflow with constraints
-        if: ${{ matrix.constraints }}
-        run: |
-          wget https://raw.githubusercontent.com/apache/airflow/constraints-${{ matrix.airflow-version }}/${{ matrix.constraints }} -O constraints.txt
-          poetry run pip install ${{ matrix.install }} -c constraints.txt
-          poetry run airflow db init
-          poetry run pip install typing-extensions==4.4.0
-
-      - name: Install Airflow with constraints
-        if: matrix.constraints == ''
         run: |
           wget https://raw.githubusercontent.com/apache/airflow/constraints-${{ matrix.airflow-version }}/constraints-${{ matrix.python-version }}.txt -O constraints.txt
-          poetry run pip install apache-airflow==${{ matrix.airflow-version }} apache-airflow-providers-amazon -c constraints.txt
+          poetry run pip install apache-airflow==${{ matrix.airflow-version }} apache-airflow-providers-amazon apache-airflow-providers-ssh -c constraints.txt
           poetry run airflow db init
 
       - name: Set COVERAGE_FILE in environment
