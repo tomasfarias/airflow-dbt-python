@@ -22,7 +22,10 @@ def test_dbt_build_task(
     assert len(result.run_results) == 12
 
     for run_result in result.run_results:
-        assert run_result.status == RunStatus.Success or run_result.status == TestStatus.Pass
+        assert (
+            run_result.status == RunStatus.Success
+            or run_result.status == TestStatus.Pass
+        )
 
 
 def test_dbt_build_task_non_existent_model(

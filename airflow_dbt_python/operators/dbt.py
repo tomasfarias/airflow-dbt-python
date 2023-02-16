@@ -4,7 +4,6 @@ from __future__ import annotations
 import datetime as dt
 import os
 from dataclasses import asdict, is_dataclass
-from itertools import chain
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Optional, Union
 
@@ -12,12 +11,11 @@ from airflow.exceptions import AirflowException
 from airflow.models.baseoperator import BaseOperator
 from airflow.models.xcom import XCOM_RETURN_KEY
 
-from airflow_dbt_python.utils.enums import LogFormat, Output
-
 if TYPE_CHECKING:
     from dbt.contracts.results import RunResult
 
     from airflow_dbt_python.hooks.dbt import DbtHook, DbtTaskResult
+    from airflow_dbt_python.utils.enums import LogFormat, Output
 
 base_template_fields = [
     "project_dir",
@@ -71,7 +69,7 @@ class DbtBaseOperator(BaseOperator):
         warn_error: Optional[bool] = None,
         # Logging
         debug: Optional[bool] = None,
-        log_format: Optional[str] = None,
+        log_format: Optional[LogFormat] = None,
         log_cache_events: Optional[bool] = False,
         quiet: Optional[bool] = None,
         no_print: Optional[bool] = None,
@@ -119,9 +117,7 @@ class DbtBaseOperator(BaseOperator):
         self.log_cache_events = log_cache_events
         self.quiet = quiet
         self.no_print = no_print
-        self.log_format = (
-            LogFormat.from_str(log_format) if log_format is not None else None
-        )
+        self.log_format = log_format
         self.record_timing_info = record_timing_info
 
         self.dbt_defer = defer
@@ -508,7 +504,7 @@ class DbtLsOperator(DbtBaseOperator):
         select: Optional[list[str]] = None,
         exclude: Optional[list[str]] = None,
         selector_name: Optional[str] = None,
-        dbt_output: Optional[str] = None,
+        dbt_output: Optional[Output] = None,
         output_keys: Optional[list[str]] = None,
         indirect_selection: Optional[str] = None,
         **kwargs,
@@ -518,9 +514,7 @@ class DbtLsOperator(DbtBaseOperator):
         self.select = select
         self.exclude = exclude
         self.selector_name = selector_name
-        self.dbt_output = (
-            Output.from_str(dbt_output) if dbt_output is not None else None
-        )
+        self.dbt_output = dbt_output
         self.output_keys = output_keys
         self.indirect_selection = indirect_selection
 

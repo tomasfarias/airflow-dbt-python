@@ -1,6 +1,6 @@
 """A concrete DbtRemoteHook for git repositories with dulwich."""
 import datetime as dt
-from typing import Callable, Optional, Union
+from typing import Callable, Optional, Tuple, Union
 
 from airflow.providers.ssh.hooks.ssh import SSHHook
 from dulwich.client import HttpGitClient, SSHGitClient, TCPGitClient
@@ -155,7 +155,7 @@ class DbtGitRemoteHook(SSHHook, DbtRemoteHook):
 
         client.clone(path, str(destination), mkdir=not destination.exists())
 
-    def get_git_client_path(self, url: URL) -> tuple[GitClients, str]:
+    def get_git_client_path(self, url: URL) -> Tuple[GitClients, str]:
         """Initialize a dulwich git client according to given URL's scheme."""
         if url.scheme == "git":
             client: GitClients = TCPGitClient(url.hostname, url.port)

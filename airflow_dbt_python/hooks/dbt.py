@@ -6,7 +6,17 @@ import logging
 from contextlib import contextmanager
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import TYPE_CHECKING, Any, Iterable, Iterator, NamedTuple, Optional, Union
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Dict,
+    Iterable,
+    Iterator,
+    NamedTuple,
+    Optional,
+    Tuple,
+    Union,
+)
 from urllib.parse import urlparse
 
 from airflow.exceptions import AirflowException
@@ -21,7 +31,7 @@ if TYPE_CHECKING:
     from airflow_dbt_python.utils.configs import BaseConfig
     from airflow_dbt_python.utils.url import URLLike
 
-    DbtRemoteHooksDict = dict[tuple[str, Optional[str]], DbtRemoteHook]
+    DbtRemoteHooksDict = Dict[Tuple[str, Optional[str]], DbtRemoteHook]
 
 
 class DbtTaskResult(NamedTuple):

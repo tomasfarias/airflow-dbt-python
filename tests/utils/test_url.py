@@ -1,5 +1,6 @@
 """Unit test module for URL utility."""
 from tarfile import TarFile
+from typing import Dict
 from zipfile import ZipFile
 
 import pytest
@@ -63,7 +64,7 @@ def test_url_initialize(urllike: URLLike, expected: bool):
         ),
     ),
 )
-def test_url_initialize_from_parts(parts: dict[str, str], expected: URL):
+def test_url_initialize_from_parts(parts: Dict[str, str], expected: URL):
     """Test parsing of URLs during initialization."""
     result = URL.from_parts(**parts)
     assert result == expected

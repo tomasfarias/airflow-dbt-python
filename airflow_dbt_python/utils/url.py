@@ -128,10 +128,18 @@ class URL:
         >>> URL("s3://test-s3-bucket/project/data/").is_relative_to("different")
         False
         """
-        if isinstance(base, URL):
-            return self.path.is_relative_to(base.path)
-        else:
-            return self.path.is_relative_to(base)
+        is_relative = True
+        try:
+            # is_relative_to was added in Python 3.9 and we have to support 3.7 and 3.8.
+            if isinstance(base, URL):
+                self.path.relative_to(base.path)
+            else:
+                self.path.relative_to(base)
+
+        except ValueError:
+            is_relative = False
+
+        return is_relative
 
     def join(self, relative: str) -> "URL":
         """Return a new URL by joining this with relative.
@@ -279,7 +287,13 @@ class URL:
         if self.is_local() is False:
             raise ValueError("Cannot unlink remote file.")
 
-        self.path.unlink(missing_ok)
+        try:
+            self.path.unlink()
+        except FileNotFoundError:
+            # In python 3.8, the missing_ok parameter was added to ignore these
+            # exceptions. Once we drop Python 3.7 support, we can remove this block.
+            if missing_ok:
+                raise
 
     def mkdir(self, parents: bool = False, exist_ok: bool = False) -> None:
         """Call this URL's underlying Path's mkdir."""

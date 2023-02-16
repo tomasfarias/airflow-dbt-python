@@ -6,7 +6,7 @@ import json
 import os
 import pickle
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Optional, Type, TypeVar, Union
+from typing import TYPE_CHECKING, Any, Optional, Type, Union
 
 import dbt.flags as flags
 import yaml
@@ -492,7 +492,7 @@ class ListTaskConfig(SelectionConfig):
 
     cls: Type[BaseTask] = dataclasses.field(default=ListTask, init=False)
     indirect_selection: Optional[str] = None
-    output: Output = Output.SELECTOR
+    output: Output = Output["selector"]
     output_keys: Optional[list[str]] = None
     resource_types: Optional[list[str]] = None
     which: str = dataclasses.field(default="list", init=False)

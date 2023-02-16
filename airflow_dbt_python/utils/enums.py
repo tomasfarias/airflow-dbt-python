@@ -20,7 +20,7 @@ class FromStrEnum(Enum):
         return Enum.__eq__(self, other)
 
 
-class LogFormat(FromStrEnum):
+class LogFormat(str, Enum):
     """Allowed dbt log formats."""
 
     DEFAULT = "default"
@@ -28,7 +28,7 @@ class LogFormat(FromStrEnum):
     TEXT = "text"
 
 
-class Output(FromStrEnum):
+class Output(str, Enum):
     """Allowed output arguments."""
 
     JSON = "json"
