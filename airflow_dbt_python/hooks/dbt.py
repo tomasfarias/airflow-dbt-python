@@ -362,6 +362,7 @@ class DbtHook(BaseHook):
             # In the future, handlers may also be cleared or setup to use Airflow's.
             file_log.setLevel("INFO")
             configured_file.setLevel("INFO")
+            configured_file.propagate = False
 
     def ensure_profiles(self, profiles_dir: Optional[str]):
         """Ensure a profiles file exists."""
