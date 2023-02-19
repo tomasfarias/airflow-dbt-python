@@ -261,7 +261,7 @@ class URL:
             if isinstance(output, SupportedArchives):
                 extension = output.value
             else:
-                extension = SupportedArchives[str(output).upper()]
+                extension = SupportedArchives[str(output).upper()].value
             archive_name = f"output.{extension}"
 
         except KeyError:
