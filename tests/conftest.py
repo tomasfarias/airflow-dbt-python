@@ -4,6 +4,7 @@ Common fixtures include a connection to a postgres database, a set of sample mod
  seed files, dbt configuration files, and temporary directories for everything.
 """
 import shutil
+from typing import List
 
 import boto3
 import pytest
@@ -591,7 +592,7 @@ def assert_dir_contents():
     """Helper function to assert contents of dir_url contain expected."""
     from airflow_dbt_python.utils.url import URL, URLLike
 
-    def wrapper(dir_url: URLLike, expected: list[URL], exact: bool = True):
+    def wrapper(dir_url: URLLike, expected: List[URL], exact: bool = True):
         """Assert file URLs under dir_url match expected."""
         url = URL(dir_url)
         dir_contents = [f for f in url if not f.is_dir()]
