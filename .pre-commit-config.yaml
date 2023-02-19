@@ -1,19 +1,19 @@
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.0.1
+    rev: v4.4.0
     hooks:
       - id: trailing-whitespace
       - id: end-of-file-fixer
 
   - repo: https://github.com/psf/black
-    rev: 22.3.0
+    rev: 23.1.0
     hooks:
     - id: black
       name: Python code formatting
       types_or: [python, pyi]
 
   - repo: https://github.com/pycqa/flake8
-    rev: 5.0.4
+    rev: 6.0.0
     hooks:
       - id: flake8
         additional_dependencies: [flake8-docstrings]
@@ -22,21 +22,21 @@ repos:
         exclude: tests/
 
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v0.942
+    rev: v1.0.1
     hooks:
       - id: mypy
         name: Static type checking
         additional_dependencies: ["types-freezegun==1.1.6", "boto3-stubs[s3]", "types-PyYAML"]
 
   - repo: https://github.com/pycqa/isort
-    rev: 5.10.1
+    rev: 5.12.0
     hooks:
       - id: isort
         name: Sort import statements
         args: ["--profile", "black", "--filter-files"]
 
   - repo: https://github.com/Yelp/detect-secrets
-    rev: v1.1.0
+    rev: v1.4.0
     hooks:
       - id: detect-secrets
         name: Detect secrets

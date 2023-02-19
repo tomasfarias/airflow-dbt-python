@@ -465,7 +465,6 @@ def test_example_complete_dbt_workflow_dag(
     )
 
     for task in dag.tasks:
-
         task.project_dir = dbt_project_file.parent
         task.profiles_dir = profiles_file.parent
         task.target = "test"

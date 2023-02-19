@@ -106,7 +106,7 @@ class DbtGitRemoteHook(SSHHook, DbtRemoteHook):
             )
             new_refs = {}
 
-            for (lh, rh, force_ref) in selected_refs:
+            for lh, rh, force_ref in selected_refs:
                 if lh is None:
                     new_refs[rh] = ZERO_SHA
                     remote_changed_refs[rh] = None

@@ -29,11 +29,6 @@ apache-airflow-providers-ssh = { version = ">=3.0.0", optional = true }
 dulwich = { version = ">=0.20", optional = true }
 
 dbt-core = ">=1.0.0"
-dbt-postgres = { version = ">=1.0.0", optional = true }
-dbt-redshift = { version = ">=1.0.0", optional = true }
-dbt-snowflake = { version = ">=1.0.0", optional = true }
-dbt-bigquery = { version = ">=1.0.0", optional = true }
-dbt-spark = { version = ">=1.0.0", optional = true }
 
 [tool.poetry.group.dev]
 optional = true
@@ -47,7 +42,7 @@ coverage = { extras = ["toml"], version = "^6.5" }
 dbt-postgres = ">=1.0.0"
 dulwich = ">=0.20"
 moto = "^4.0.3"
-mypy = "0.990"
+mypy = "1.0"
 flake8 = "<=4.0"
 flake8-docstrings = "^1.6.0"
 freezegun = "^1.1.0"
@@ -67,6 +62,16 @@ optional = true
 Sphinx = "^5.3"
 sphinx-rtd-theme = "^1.1"
 sphinx-copybutton = "^0.5"
+
+[tool.poetry.group.adapters]
+optional = true
+
+[tool.poetry.group.adapters.dependencies]
+dbt-bigquery = { version = ">=1.0.0", optional = true }
+dbt-postgres = { version = ">=1.0.0", optional = true }
+dbt-redshift = { version = ">=1.0.0", optional = true }
+dbt-snowflake = { version = ">=1.0.0", optional = true }
+dbt-spark = { version = ">=1.0.0", optional = true }
 
 [tool.poetry.extras]
 airflow = ["apache-airflow"]

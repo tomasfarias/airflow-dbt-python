@@ -492,7 +492,7 @@ class ListTaskConfig(SelectionConfig):
 
     cls: Type[BaseTask] = dataclasses.field(default=ListTask, init=False)
     indirect_selection: Optional[str] = None
-    output: Output = Output["selector"]
+    output: Output = Output.SELECTOR
     output_keys: Optional[list[str]] = None
     resource_types: Optional[list[str]] = None
     which: str = dataclasses.field(default="list", init=False)

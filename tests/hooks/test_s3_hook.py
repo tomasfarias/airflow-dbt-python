@@ -313,7 +313,6 @@ def test_upload_dbt_project_with_no_replace(s3_bucket, s3_hook, test_files):
     project_dir = test_files[0].parent.parent
 
     with freezegun.freeze_time("2022-01-01"):
-
         for _file in project_dir.glob("**/*"):
             if _file.is_dir():
                 continue
