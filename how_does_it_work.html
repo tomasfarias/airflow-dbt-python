@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>How does it work? &mdash; airflow-dbt-python 1.0.0b0 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="_static/copybutton.css" type="text/css" />
+      <link rel="stylesheet" href="_static/graphviz.css" type="text/css" />
+      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/hack-font/3.3.0/web/hack.min.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/sphinx_highlight.js"></script>
+        <script src="_static/clipboard.min.js"></script>
+        <script src="_static/copybutton.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Development" href="development.html" />
+    <link rel="prev" title="Example DAGs" href="example_dags.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            airflow-dbt-python
+          </a>
+              <div class="version">
+                1.0.0b0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="introduction.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="example_dags.html">Example DAGs</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">How does it work?</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#dbt-as-a-library"><em>dbt</em> as a library</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#dbt-operators"><em>dbt</em> operators</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#dbt-hooks"><em>dbt</em> hooks</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#temporary-directories-ensure-task-independence">Temporary directories ensure task independence</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#dbt-remote-hooks"><em>dbt</em> remote hooks</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#implementing-the-dbtremotehook-interface">Implementing the <code class="docutils literal notranslate"><span class="pre">DbtRemoteHook</span></code> interface</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="development.html">Development</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reference.html">Reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">airflow-dbt-python</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">How does it work?</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/how_does_it_work.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="how-does-it-work">
+<span id="id1"></span><h1>How does it work?<a class="headerlink" href="#how-does-it-work" title="Permalink to this heading"></a></h1>
+<p><em>airflow-dbt-python</em>’s main goal is to elevate <em>dbt</em> to a <strong>first-class citizen</strong> in Airflow. By this we mean that users of <em>dbt</em> can leverage as many Airflow features as possible, without breaking the assumptions that Airflow expects from any workflows it orchestrates. Perhaps more importantly, Airflow should <strong>enhance</strong> a <em>dbt</em> user’s experience and not simply emulate the way they would run <em>dbt</em> in the command line.</p>
+<p>To achieve this goal <em>airflow-dbt-python</em> provides Airflow operators, hooks, and other utilities. Hooks in particular come in two flavors:</p>
+<ul class="simple">
+<li><p>A <code class="docutils literal notranslate"><span class="pre">DbtHook</span></code> that abstracts all interaction with <em>dbt</em> internals.</p></li>
+<li><p>Subclasses of <code class="docutils literal notranslate"><span class="pre">DbtRemoteHook</span></code> that expose an interface to interact with <em>dbt</em> remote storages where project files are located (like AWS S3 buckets or git repositories).</p></li>
+</ul>
+<div class="graphviz"><object data="_images/graphviz-9dd7c29a87b67c098827658d1d43cfe5867b37d0.svg" type="image/svg+xml" class="graphviz">
+<p class="warning">digraph HowDoesItWork {
+    graph [fontname=&quot;Hack&quot;, splines=ortho];
+    node [fontname=&quot;Hack&quot;, shape=box];
+    edge [fontname=&quot;Hack&quot;, labelfontsize=12.0, fontsize=12.0];
+    rankdir = &quot;TB&quot;;
+    newrank = true;
+    nodesep = 0.8;
+
+    &quot;Airflow DAG&quot; [style=filled, fillcolor=&quot;#CBCBCB&quot;, color=&quot;#00C7D4&quot;];
+    XCom [style=filled, fillcolor=&quot;#CBCBCB&quot;, color=&quot;#00C7D4&quot;];
+    &quot;Other tasks&quot; [style=filled, fillcolor=&quot;#CBCBCB&quot;, color=&quot;#00C7D4&quot;];
+    &quot;Airflow DAG&quot; -&gt; DbtOperator [label=&quot;orchestrates&quot;];
+
+    subgraph cluster_0 {
+        color = &quot;#00AD46&quot;;
+        label = &quot;airflow-dbt-python&quot;;
+        labelloc = &quot;b&quot;;
+
+        DbtHook;
+        DbtOperator -&gt; DbtHook [label=&quot;run_dbt_task&quot;];
+        DbtRemoteHooks -&gt; DbtHook [label=&quot;download&quot;];
+        DbtHook -&gt; DbtRemoteHooks [label=&quot;upload&quot;, labelfloat=true];
+    }
+
+    &quot;dbt-core&quot; [style=filled, fillcolor=&quot;#CBCBCB&quot;, color=&quot;#FF7557&quot;];
+    DbtHook -&gt; &quot;dbt-core&quot; [headlabel=&quot;executes&quot;, labeldistance=4.5];
+    {rank=same; &quot;dbt-core&quot;; DbtHook; }
+
+    split [shape=point, label=&quot;&quot;];
+    DbtOperator -&gt; split [arrowhead=none];
+    split -&gt; &quot;Other tasks&quot; [label=&quot;return&quot;];
+    split -&gt; XCom [label=&quot;push&quot;, labelfloat=true];
+    XCom -&gt; DbtHook [style=invis, arrowhead=none];
+    {rank=same; split; DbtOperator; }
+
+    &quot;Remote storage&quot; [style=filled, fillcolor=&quot;#CBCBCB&quot;, color=&quot;#FF7557&quot;];
+    DbtRemoteHooks -&gt; &quot;Remote storage&quot; [headlabel=&quot;interacts&quot;, labeldistance=4.0];
+    {rank=same; &quot;Remote storage&quot;; DbtRemoteHooks; }
+
+}</p></object></div>
+<section id="dbt-as-a-library">
+<h2><em>dbt</em> as a library<a class="headerlink" href="#dbt-as-a-library" title="Permalink to this heading"></a></h2>
+<p>A lot of the code in <em>airflow-dbt-python</em> is required to provide a <a class="reference external" href="https://en.wikipedia.org/wiki/Adapter_pattern">wrapper</a> for <em>dbt</em>, as <em>dbt</em> only provides a CLI interface. There are <a class="reference external" href="https://github.com/dbt-labs/dbt-core/issues/6356">ongoing efforts</a> to provide a dbt library, which would significantly simplify our codebase.</p>
+</section>
+<section id="dbt-operators">
+<span id="id2"></span><h2><em>dbt</em> operators<a class="headerlink" href="#dbt-operators" title="Permalink to this heading"></a></h2>
+<p><em>airflow-dbt-python</em> provides one operator per <em>dbt</em> task: for example, <code class="docutils literal notranslate"><span class="pre">DbtRunOperator</span></code> can be used to execute a <em>dbt</em> run command, as if running <code class="docutils literal notranslate"><span class="pre">dbt</span> <span class="pre">run</span> <span class="pre">...</span></code> in the CLI.</p>
+</section>
+<section id="dbt-hooks">
+<span id="id3"></span><h2><em>dbt</em> hooks<a class="headerlink" href="#dbt-hooks" title="Permalink to this heading"></a></h2>
+<p><em>airflow-dbt-python</em> provides a <code class="docutils literal notranslate"><span class="pre">DbtHook</span></code> to abstract all interactions with dbt. The main method of <code class="docutils literal notranslate"><span class="pre">DbtHook</span></code> operators should be calling is <code class="docutils literal notranslate"><span class="pre">DbtHook.run_dbt_task</span></code> which takes any <em>dbt</em> command as it’s first argument, and any configuration parameters keyword arguments. This hook abstracts interactions with <em>dbt</em>, including:</p>
+<ul class="simple">
+<li><p>Setting up a temporary directory for <em>dbt</em> execution.
+* Potentially downloading files from a <em>dbt</em> remote into this directory.</p></li>
+<li><p>Using Airflow connections to configure <em>dbt</em> connections (“targets” as these connections are found in <em>profiles.yml</em>).</p></li>
+<li><p>Initializing a configuration for <em>dbt</em> with parameters provided.
+* Includes configuring <em>dbt</em> logging.</p></li>
+</ul>
+<section id="temporary-directories-ensure-task-independence">
+<span id="independent-task-execution"></span><h3>Temporary directories ensure task independence<a class="headerlink" href="#temporary-directories-ensure-task-independence" title="Permalink to this heading"></a></h3>
+<p>Airflow executes <a class="reference external" href="https://airflow.apache.org/docs/apache-airflow/stable/concepts/tasks.html">tasks</a> independent of one another: even though downstream and upstream dependencies between tasks exist, the execution of an individual task happens entirely independently of any other task execution (see: <a class="reference external" href="https://airflow.apache.org/docs/apache-airflow/stable/concepts/tasks.html#relationships">Tasks Relationships</a>).</p>
+<p>In order to respect this constraint, <em>airflow-dbt-python</em> hooks run each <em>dbt</em> command in a temporary and isolated directory:</p>
+<ol class="arabic simple">
+<li><p>Before execution, all the relevant <em>dbt</em> files are downloaded from supported remotes.</p></li>
+<li><p>After execution, any resulting artifacts are uploaded back to supported remotes (if configured).</p></li>
+</ol>
+<p>This ensures <em>dbt</em> can work with any Airflow deployment, including most production deployments running <a class="reference external" href="https://airflow.apache.org/docs/apache-airflow/stable/executor/index.html#executor-types">Remote Executors</a> that do not guarantee any files will be shared between tasks, since each task may run in a completely different worker.</p>
+</section>
+</section>
+<section id="dbt-remote-hooks">
+<span id="id4"></span><h2><em>dbt</em> remote hooks<a class="headerlink" href="#dbt-remote-hooks" title="Permalink to this heading"></a></h2>
+<p><em>dbt</em> remote hooks implement a simple interface to communicate with <em>dbt</em> remotes. A <em>dbt</em> remote can be any external storage that contains a <em>dbt</em> project and potentially also a <em>profiles.yml</em> file for example: an AWS S3 bucket or a GitHub repository. See the reference for a list of which remotes are currently supported.</p>
+<section id="implementing-the-dbtremotehook-interface">
+<h3>Implementing the <code class="docutils literal notranslate"><span class="pre">DbtRemoteHook</span></code> interface<a class="headerlink" href="#implementing-the-dbtremotehook-interface" title="Permalink to this heading"></a></h3>
+<p>Supporting a new remote to store <em>dbt</em> files requires implementing the <code class="docutils literal notranslate"><span class="pre">DbtRemoteHook</span></code> interface. There are only two methods in the interface: <code class="docutils literal notranslate"><span class="pre">DbtRemoteHook.download</span></code> and <code class="docutils literal notranslate"><span class="pre">DbtRemoteHook.upload</span></code>.</p>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="example_dags.html" class="btn btn-neutral float-left" title="Example DAGs" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="development.html" class="btn btn-neutral float-right" title="Development" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright Copyright 2021 Tomás Farías Santana.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

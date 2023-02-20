@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>airflow_dbt_python.hooks.localfs &mdash; airflow-dbt-python 1.0.0b0 documentation</title>
+      <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/copybutton.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/graphviz.css" type="text/css" />
+      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/hack-font/3.3.0/web/hack.min.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script src="../../../_static/sphinx_highlight.js"></script>
+        <script src="../../../_static/clipboard.min.js"></script>
+        <script src="../../../_static/copybutton.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            airflow-dbt-python
+          </a>
+              <div class="version">
+                1.0.0b0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../introduction.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../getting_started.html">Getting started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../example_dags.html">Example DAGs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../how_does_it_work.html">How does it work?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../development.html">Development</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../reference.html">Reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">airflow-dbt-python</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">airflow_dbt_python.hooks.localfs</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for airflow_dbt_python.hooks.localfs</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;A local filesystem remote for dbt.</span>
+
+<span class="sd">Intended to be used only when running Airflow with a LocalExceutor.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">import</span> <span class="nn">shutil</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">from</span> <span class="nn">functools</span> <span class="kn">import</span> <span class="n">partial</span>
+<span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Optional</span>
+
+<span class="kn">from</span> <span class="nn">airflow.hooks.filesystem</span> <span class="kn">import</span> <span class="n">FSHook</span>
+
+<span class="kn">from</span> <span class="nn">airflow_dbt_python.hooks.remote</span> <span class="kn">import</span> <span class="n">DbtRemoteHook</span>
+<span class="kn">from</span> <span class="nn">airflow_dbt_python.utils.url</span> <span class="kn">import</span> <span class="n">URL</span>
+
+
+<div class="viewcode-block" id="DbtLocalFsRemoteHook"><a class="viewcode-back" href="../../../reference/hooks.html#airflow_dbt_python.hooks.localfs.DbtLocalFsRemoteHook">[docs]</a><span class="k">class</span> <span class="nc">DbtLocalFsRemoteHook</span><span class="p">(</span><span class="n">FSHook</span><span class="p">,</span> <span class="n">DbtRemoteHook</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A concrete dbt remote for a local filesystem.</span>
+
+<span class="sd">    This remote is intended to be used when running Airflow with a LocalExecutor, and</span>
+<span class="sd">    it relies on shutil from the standard library to do all the file manipulation. For</span>
+<span class="sd">    these reasons, running multiple concurrent tasks with this remote may lead to race</span>
+<span class="sd">    conditions if attempting to push files to the remote.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">conn_name_attr</span> <span class="o">=</span> <span class="s2">&quot;fs_conn_id&quot;</span>
+    <span class="n">default_conn_name</span> <span class="o">=</span> <span class="s2">&quot;fs_default&quot;</span>
+    <span class="n">conn_type</span> <span class="o">=</span> <span class="s2">&quot;filesystem&quot;</span>
+    <span class="n">hook_name</span> <span class="o">=</span> <span class="s2">&quot;dbt Local Filesystem RemoteHook&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">fs_conn_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">default_conn_name</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize a dbt remote for Local Filesystem.&quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">fs_conn_id</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fs_conn_id</span> <span class="o">=</span> <span class="n">fs_conn_id</span>
+
+<div class="viewcode-block" id="DbtLocalFsRemoteHook.get_url"><a class="viewcode-back" href="../../../reference/hooks.html#airflow_dbt_python.hooks.localfs.DbtLocalFsRemoteHook.get_url">[docs]</a>    <span class="k">def</span> <span class="nf">get_url</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">url</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">URL</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">URL</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return an url relative to this hook&#39;s basepath.</span>
+
+<span class="sd">        If the given url is absolute, simply return the url. If it&#39;s none,</span>
+<span class="sd">        then return an url made from basepath.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">url</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">URL</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">basepath</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">url</span><span class="o">.</span><span class="n">is_absolute</span><span class="p">():</span>
+            <span class="k">return</span> <span class="n">url</span>
+
+        <span class="k">return</span> <span class="n">URL</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">basepath</span><span class="p">)</span> <span class="o">/</span> <span class="n">url</span></div>
+
+<div class="viewcode-block" id="DbtLocalFsRemoteHook.download"><a class="viewcode-back" href="../../../reference/hooks.html#airflow_dbt_python.hooks.localfs.DbtLocalFsRemoteHook.download">[docs]</a>    <span class="k">def</span> <span class="nf">download</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">source</span><span class="p">:</span> <span class="n">URL</span><span class="p">,</span>
+        <span class="n">destination</span><span class="p">:</span> <span class="n">URL</span><span class="p">,</span>
+        <span class="n">replace</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">delete_before</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Implement download method of dbt remote interface.</span>
+
+<span class="sd">        For a local filesystem, this copies the source directory or file to destination.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">destination</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">source</span><span class="o">.</span><span class="n">is_dir</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">destination</span><span class="p">,</span> <span class="n">replace</span><span class="p">,</span> <span class="n">delete_before</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">copy_one</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">destination</span><span class="p">,</span> <span class="n">replace</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="DbtLocalFsRemoteHook.upload"><a class="viewcode-back" href="../../../reference/hooks.html#airflow_dbt_python.hooks.localfs.DbtLocalFsRemoteHook.upload">[docs]</a>    <span class="k">def</span> <span class="nf">upload</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">source</span><span class="p">:</span> <span class="n">URL</span><span class="p">,</span>
+        <span class="n">destination</span><span class="p">:</span> <span class="n">URL</span><span class="p">,</span>
+        <span class="n">replace</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">delete_before</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Implement upload method of dbt remote interface.</span>
+
+<span class="sd">        For a local filesystem, this copies the source directory or file to destination.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">destination</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">source</span><span class="o">.</span><span class="n">is_dir</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">destination</span><span class="p">,</span> <span class="n">replace</span><span class="p">,</span> <span class="n">delete_before</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">copy_one</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">destination</span><span class="p">,</span> <span class="n">replace</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="DbtLocalFsRemoteHook.copy_one"><a class="viewcode-back" href="../../../reference/hooks.html#airflow_dbt_python.hooks.localfs.DbtLocalFsRemoteHook.copy_one">[docs]</a>    <span class="k">def</span> <span class="nf">copy_one</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source</span><span class="p">:</span> <span class="n">URL</span><span class="p">,</span> <span class="n">destination</span><span class="p">:</span> <span class="n">URL</span><span class="p">,</span> <span class="n">replace</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Pull many files from local path.</span>
+
+<span class="sd">        If the file already exists, it will be ignored if replace is False (the</span>
+<span class="sd">        default).</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            source: A local path to a directory containing the files to pull.</span>
+<span class="sd">            destination: A destination path where to pull the file to.</span>
+<span class="sd">            replace: A bool flag to indicate whether to replace existing files.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">replace</span> <span class="ow">is</span> <span class="kc">False</span> <span class="ow">and</span> <span class="n">Path</span><span class="p">(</span><span class="n">destination</span><span class="p">)</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+            <span class="k">return</span>
+        <span class="n">shutil</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">destination</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="DbtLocalFsRemoteHook.copy"><a class="viewcode-back" href="../../../reference/hooks.html#airflow_dbt_python.hooks.localfs.DbtLocalFsRemoteHook.copy">[docs]</a>    <span class="k">def</span> <span class="nf">copy</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">source</span><span class="p">:</span> <span class="n">URL</span><span class="p">,</span>
+        <span class="n">destination</span><span class="p">:</span> <span class="n">URL</span><span class="p">,</span>
+        <span class="n">replace</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">delete_before</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Push all dbt files under the source directory to another local path.</span>
+
+<span class="sd">        Pushing supports zipped projects: the destination will be used to determine</span>
+<span class="sd">        if we are working with a zip file by looking at the file extension.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            source: A local file path where to fetch the files to push.</span>
+<span class="sd">            destination: A local path where the file should be copied.</span>
+<span class="sd">            replace: Whether to replace existing files or not.</span>
+<span class="sd">            delete_before: Whether to delete the contents of destination before pushing.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">delete_before</span><span class="p">:</span>
+            <span class="n">shutil</span><span class="o">.</span><span class="n">rmtree</span><span class="p">(</span><span class="n">destination</span><span class="p">)</span>
+
+        <span class="n">copy_function</span> <span class="o">=</span> <span class="n">partial</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">copy_one</span><span class="p">,</span> <span class="n">replace</span><span class="o">=</span><span class="n">replace</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">version_info</span><span class="o">.</span><span class="n">major</span> <span class="o">==</span> <span class="mi">3</span> <span class="ow">and</span> <span class="n">sys</span><span class="o">.</span><span class="n">version_info</span><span class="o">.</span><span class="n">minor</span> <span class="o">&lt;</span> <span class="mi">8</span><span class="p">:</span>
+            <span class="n">py37_copytree</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">destination</span><span class="p">,</span> <span class="n">replace</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">shutil</span><span class="o">.</span><span class="n">copytree</span><span class="p">(</span>  <span class="c1"># type: ignore</span>
+                <span class="n">source</span><span class="p">,</span> <span class="n">destination</span><span class="p">,</span> <span class="n">copy_function</span><span class="o">=</span><span class="n">copy_function</span><span class="p">,</span> <span class="n">dirs_exist_ok</span><span class="o">=</span><span class="kc">True</span>
+            <span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="py37_copytree"><a class="viewcode-back" href="../../../reference/hooks.html#airflow_dbt_python.hooks.localfs.py37_copytree">[docs]</a><span class="k">def</span> <span class="nf">py37_copytree</span><span class="p">(</span><span class="n">source</span><span class="p">:</span> <span class="n">URL</span><span class="p">,</span> <span class="n">destination</span><span class="p">:</span> <span class="n">URL</span><span class="p">,</span> <span class="n">replace</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A (probably) poor attempt at replicating shutil.copytree for Python 3.7.</span>
+
+<span class="sd">    shutil.copytree is available in Python 3.7, however it doesn&#39;t have the</span>
+<span class="sd">    dirs_exist_ok parameter, and we really need that. If the destination path doesn&#39;t</span>
+<span class="sd">    exist, we can use shutil.copytree, however if it does then we need to copy files</span>
+<span class="sd">    one by one and make any subdirectories ourselves.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">destination</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+        <span class="k">for</span> <span class="n">url</span> <span class="ow">in</span> <span class="n">source</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">url</span><span class="o">.</span><span class="n">is_dir</span><span class="p">():</span>
+                <span class="k">continue</span>
+
+            <span class="n">target_url</span> <span class="o">=</span> <span class="n">destination</span> <span class="o">/</span> <span class="n">url</span><span class="o">.</span><span class="n">relative_to</span><span class="p">(</span><span class="n">source</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">target_url</span><span class="o">.</span><span class="n">exists</span><span class="p">()</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">replace</span><span class="p">:</span>
+                <span class="c1"># shutil.copy replaces by default</span>
+                <span class="k">continue</span>
+
+            <span class="n">target_url</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">shutil</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">target_url</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">shutil</span><span class="o">.</span><span class="n">copytree</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">destination</span><span class="p">)</span></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright Copyright 2021 Tomás Farías Santana.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

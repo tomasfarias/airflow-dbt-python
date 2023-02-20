@@ -8,7 +8,10 @@ Welcome to airflow-dbt-python's documentation!
    introduction.rst
    getting_started.rst
    example_dags.rst
+
+   how_does_it_work.rst
    development.rst
+
    reference.rst
 
 Indices and tables

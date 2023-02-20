@@ -1,13 +1,14 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Welcome to airflow-dbt-python’s documentation! &mdash; airflow-dbt-python 0.15.3 documentation</title>
+  <title>Welcome to airflow-dbt-python’s documentation! &mdash; airflow-dbt-python 1.0.0b0 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="_static/copybutton.css" type="text/css" />
+      <link rel="stylesheet" href="_static/graphviz.css" type="text/css" />
       <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/hack-font/3.3.0/web/hack.min.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
@@ -32,14 +33,18 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-            <a href="#" class="icon icon-home"> airflow-dbt-python
+
+          
+          
+          <a href="#" class="icon icon-home">
+            airflow-dbt-python
           </a>
               <div class="version">
-                0.15.3
+                1.0.0b0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -50,6 +55,7 @@
 <li class="toctree-l1"><a class="reference internal" href="introduction.html">Introduction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting started</a></li>
 <li class="toctree-l1"><a class="reference internal" href="example_dags.html">Example DAGs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="how_does_it_work.html">How does it work?</a></li>
 <li class="toctree-l1"><a class="reference internal" href="development.html">Development</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reference.html">Reference</a></li>
 </ul>
@@ -67,7 +73,7 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="#" class="icon icon-home"></a></li>
+      <li><a href="#" class="icon icon-home" aria-label="Home"></a></li>
       <li class="breadcrumb-item active">Welcome to airflow-dbt-python’s documentation!</li>
       <li class="wy-breadcrumbs-aside">
             <a href="_sources/index.rst.txt" rel="nofollow"> View page source</a>
@@ -90,7 +96,7 @@
 <li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting started</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="getting_started.html#requirements">Requirements</a></li>
 <li class="toctree-l2"><a class="reference internal" href="getting_started.html#installation">Installation</a></li>
-<li class="toctree-l2"><a class="reference internal" href="getting_started.html#setting-up-a-dbt-project">Setting up a dbt project</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting_started.html#accessing-a-dbt-project">Accessing a <em>dbt</em> project</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="example_dags.html">Example DAGs</a><ul>
@@ -100,19 +106,26 @@
 <li class="toctree-l2"><a class="reference internal" href="example_dags.html#using-dbt-artifacts">Using dbt artifacts</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="how_does_it_work.html">How does it work?</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="how_does_it_work.html#dbt-as-a-library"><em>dbt</em> as a library</a></li>
+<li class="toctree-l2"><a class="reference internal" href="how_does_it_work.html#dbt-operators"><em>dbt</em> operators</a></li>
+<li class="toctree-l2"><a class="reference internal" href="how_does_it_work.html#dbt-hooks"><em>dbt</em> hooks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="how_does_it_work.html#dbt-remote-hooks"><em>dbt</em> remote hooks</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="development.html">Development</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="development.html#poetry">Poetry</a></li>
-<li class="toctree-l2"><a class="reference internal" href="development.html#installing-airflow">Installing Airflow</a></li>
-<li class="toctree-l2"><a class="reference internal" href="development.html#building-from-source">Building from source</a></li>
+<li class="toctree-l2"><a class="reference internal" href="development.html#project-management-poetry">Project management: Poetry</a></li>
+<li class="toctree-l2"><a class="reference internal" href="development.html#installing-airflow-dbt-python">Installing <em>airflow-dbt-python</em></a></li>
+<li class="toctree-l2"><a class="reference internal" href="development.html#installing-a-different-version-of-airflow">Installing a different version of Airflow</a></li>
 <li class="toctree-l2"><a class="reference internal" href="development.html#modifying-dependencies">Modifying dependencies</a></li>
 <li class="toctree-l2"><a class="reference internal" href="development.html#pre-commit-hooks">Pre-commit hooks</a></li>
-<li class="toctree-l2"><a class="reference internal" href="development.html#testing">Testing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="development.html#testing-airflow-dbt-python">Testing <em>airflow-dbt-python</em></a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="reference.html">Reference</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="reference/hooks.html">airflow_dbt_python.hooks</a></li>
 <li class="toctree-l2"><a class="reference internal" href="reference/operators.html">airflow_dbt_python.operators</a></li>
-<li class="toctree-l2"><a class="reference internal" href="reference/backends.html">airflow_dbt_python.hooks.backends</a></li>
+<li class="toctree-l2"><a class="reference internal" href="reference/utils.html">airflow_dbt_python.utils</a></li>
 </ul>
 </li>
 </ul>

@@ -1,13 +1,14 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Reference &mdash; airflow-dbt-python 0.15.3 documentation</title>
+  <title>Reference &mdash; airflow-dbt-python 1.0.0b0 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="_static/copybutton.css" type="text/css" />
+      <link rel="stylesheet" href="_static/graphviz.css" type="text/css" />
       <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/hack-font/3.3.0/web/hack.min.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
@@ -33,14 +34,18 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-            <a href="index.html" class="icon icon-home"> airflow-dbt-python
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            airflow-dbt-python
           </a>
               <div class="version">
-                0.15.3
+                1.0.0b0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -51,11 +56,12 @@
 <li class="toctree-l1"><a class="reference internal" href="introduction.html">Introduction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting started</a></li>
 <li class="toctree-l1"><a class="reference internal" href="example_dags.html">Example DAGs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="how_does_it_work.html">How does it work?</a></li>
 <li class="toctree-l1"><a class="reference internal" href="development.html">Development</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Reference</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="reference/hooks.html">airflow_dbt_python.hooks</a></li>
 <li class="toctree-l2"><a class="reference internal" href="reference/operators.html">airflow_dbt_python.operators</a></li>
-<li class="toctree-l2"><a class="reference internal" href="reference/backends.html">airflow_dbt_python.hooks.backends</a></li>
+<li class="toctree-l2"><a class="reference internal" href="reference/utils.html">airflow_dbt_python.utils</a></li>
 </ul>
 </li>
 </ul>
@@ -73,7 +79,7 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="index.html" class="icon icon-home"></a></li>
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
       <li class="breadcrumb-item active">Reference</li>
       <li class="wy-breadcrumbs-aside">
             <a href="_sources/reference.rst.txt" rel="nofollow"> View page source</a>
@@ -89,58 +95,22 @@
 <div class="toctree-wrapper compound">
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="reference/hooks.html">airflow_dbt_python.hooks</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="reference/hooks.html#airflow_dbt_python.hooks.dbt.BaseConfig"><code class="docutils literal notranslate"><span class="pre">BaseConfig</span></code></a><ul>
-<li class="toctree-l3"><a class="reference internal" href="reference/hooks.html#airflow_dbt_python.hooks.dbt.BaseConfig.create_dbt_profile"><code class="docutils literal notranslate"><span class="pre">BaseConfig.create_dbt_profile()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="reference/hooks.html#airflow_dbt_python.hooks.dbt.BaseConfig.create_dbt_project_and_profile"><code class="docutils literal notranslate"><span class="pre">BaseConfig.create_dbt_project_and_profile()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="reference/hooks.html#airflow_dbt_python.hooks.dbt.BaseConfig.create_dbt_task"><code class="docutils literal notranslate"><span class="pre">BaseConfig.create_dbt_task()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="reference/hooks.html#airflow_dbt_python.hooks.dbt.BaseConfig.create_runtime_config"><code class="docutils literal notranslate"><span class="pre">BaseConfig.create_runtime_config()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="reference/hooks.html#airflow_dbt_python.hooks.dbt.BaseConfig.dbt_task"><code class="docutils literal notranslate"><span class="pre">BaseConfig.dbt_task</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="reference/hooks.html#airflow_dbt_python.hooks.dbt.BaseConfig.partial_project"><code class="docutils literal notranslate"><span class="pre">BaseConfig.partial_project</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="reference/hooks.html#airflow_dbt_python.hooks.dbt.BaseConfig.patch_manifest_task"><code class="docutils literal notranslate"><span class="pre">BaseConfig.patch_manifest_task()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="reference/hooks.html#airflow_dbt_python.hooks.dbt.BaseConfig.profile_name"><code class="docutils literal notranslate"><span class="pre">BaseConfig.profile_name</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="reference/hooks.html#airflow_dbt_python.hooks.dbt.BaseConfig.profile_renderer"><code class="docutils literal notranslate"><span class="pre">BaseConfig.profile_renderer</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="reference/hooks.html#module-airflow_dbt_python.hooks.dbt">Core <em>dbt</em> hooks</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="reference/hooks.html#airflow_dbt_python.hooks.dbt.DbtConnectionParam"><code class="docutils literal notranslate"><span class="pre">DbtConnectionParam</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/hooks.html#airflow_dbt_python.hooks.dbt.DbtHook"><code class="docutils literal notranslate"><span class="pre">DbtHook</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/hooks.html#airflow_dbt_python.hooks.dbt.DbtPostgresHook"><code class="docutils literal notranslate"><span class="pre">DbtPostgresHook</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/hooks.html#airflow_dbt_python.hooks.dbt.DbtRedshiftHook"><code class="docutils literal notranslate"><span class="pre">DbtRedshiftHook</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/hooks.html#airflow_dbt_python.hooks.dbt.DbtSnowflakeHook"><code class="docutils literal notranslate"><span class="pre">DbtSnowflakeHook</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/hooks.html#airflow_dbt_python.hooks.dbt.DbtTaskResult"><code class="docutils literal notranslate"><span class="pre">DbtTaskResult</span></code></a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="reference/hooks.html#airflow_dbt_python.hooks.dbt.BuildTaskConfig"><code class="docutils literal notranslate"><span class="pre">BuildTaskConfig</span></code></a><ul>
-<li class="toctree-l3"><a class="reference internal" href="reference/hooks.html#airflow_dbt_python.hooks.dbt.BuildTaskConfig.cls"><code class="docutils literal notranslate"><span class="pre">BuildTaskConfig.cls</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="reference/hooks.html#supported-dbt-remote-hooks">Supported <em>dbt</em> remote hooks</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="reference/hooks.html#module-airflow_dbt_python.hooks.remote">The DbtRemoteHook interface</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/hooks.html#dbt-git-remote"><em>dbt</em> git remote</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/hooks.html#module-airflow_dbt_python.hooks.localfs"><em>dbt</em> localfs remote</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/hooks.html#module-airflow_dbt_python.hooks.s3"><em>dbt</em> S3 remote</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="reference/hooks.html#airflow_dbt_python.hooks.dbt.CleanTaskConfig"><code class="docutils literal notranslate"><span class="pre">CleanTaskConfig</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="reference/hooks.html#airflow_dbt_python.hooks.dbt.CompileTaskConfig"><code class="docutils literal notranslate"><span class="pre">CompileTaskConfig</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="reference/hooks.html#airflow_dbt_python.hooks.dbt.ConfigFactory"><code class="docutils literal notranslate"><span class="pre">ConfigFactory</span></code></a><ul>
-<li class="toctree-l3"><a class="reference internal" href="reference/hooks.html#airflow_dbt_python.hooks.dbt.ConfigFactory.create_config"><code class="docutils literal notranslate"><span class="pre">ConfigFactory.create_config()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="reference/hooks.html#airflow_dbt_python.hooks.dbt.ConfigFactory.fields"><code class="docutils literal notranslate"><span class="pre">ConfigFactory.fields</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="reference/hooks.html#airflow_dbt_python.hooks.dbt.DbtHook"><code class="docutils literal notranslate"><span class="pre">DbtHook</span></code></a><ul>
-<li class="toctree-l3"><a class="reference internal" href="reference/hooks.html#airflow_dbt_python.hooks.dbt.DbtHook.ensure_profiles"><code class="docutils literal notranslate"><span class="pre">DbtHook.ensure_profiles()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="reference/hooks.html#airflow_dbt_python.hooks.dbt.DbtHook.get_backend"><code class="docutils literal notranslate"><span class="pre">DbtHook.get_backend()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="reference/hooks.html#airflow_dbt_python.hooks.dbt.DbtHook.get_config_factory"><code class="docutils literal notranslate"><span class="pre">DbtHook.get_config_factory()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="reference/hooks.html#airflow_dbt_python.hooks.dbt.DbtHook.get_target_from_connection"><code class="docutils literal notranslate"><span class="pre">DbtHook.get_target_from_connection()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="reference/hooks.html#airflow_dbt_python.hooks.dbt.DbtHook.pull_dbt_profiles"><code class="docutils literal notranslate"><span class="pre">DbtHook.pull_dbt_profiles()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="reference/hooks.html#airflow_dbt_python.hooks.dbt.DbtHook.pull_dbt_project"><code class="docutils literal notranslate"><span class="pre">DbtHook.pull_dbt_project()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="reference/hooks.html#airflow_dbt_python.hooks.dbt.DbtHook.push_dbt_project"><code class="docutils literal notranslate"><span class="pre">DbtHook.push_dbt_project()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="reference/hooks.html#airflow_dbt_python.hooks.dbt.DbtHook.run_dbt_task"><code class="docutils literal notranslate"><span class="pre">DbtHook.run_dbt_task()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="reference/hooks.html#airflow_dbt_python.hooks.dbt.DbtHook.setup_dbt_logging"><code class="docutils literal notranslate"><span class="pre">DbtHook.setup_dbt_logging()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="reference/hooks.html#airflow_dbt_python.hooks.dbt.DebugTaskConfig"><code class="docutils literal notranslate"><span class="pre">DebugTaskConfig</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="reference/hooks.html#airflow_dbt_python.hooks.dbt.DepsTaskConfig"><code class="docutils literal notranslate"><span class="pre">DepsTaskConfig</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="reference/hooks.html#airflow_dbt_python.hooks.dbt.GenerateTaskConfig"><code class="docutils literal notranslate"><span class="pre">GenerateTaskConfig</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="reference/hooks.html#airflow_dbt_python.hooks.dbt.ListTaskConfig"><code class="docutils literal notranslate"><span class="pre">ListTaskConfig</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="reference/hooks.html#airflow_dbt_python.hooks.dbt.ParseTaskConfig"><code class="docutils literal notranslate"><span class="pre">ParseTaskConfig</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="reference/hooks.html#airflow_dbt_python.hooks.dbt.RunOperationTaskConfig"><code class="docutils literal notranslate"><span class="pre">RunOperationTaskConfig</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="reference/hooks.html#airflow_dbt_python.hooks.dbt.RunTaskConfig"><code class="docutils literal notranslate"><span class="pre">RunTaskConfig</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="reference/hooks.html#airflow_dbt_python.hooks.dbt.SeedTaskConfig"><code class="docutils literal notranslate"><span class="pre">SeedTaskConfig</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="reference/hooks.html#airflow_dbt_python.hooks.dbt.SelectionConfig"><code class="docutils literal notranslate"><span class="pre">SelectionConfig</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="reference/hooks.html#airflow_dbt_python.hooks.dbt.SnapshotTaskConfig"><code class="docutils literal notranslate"><span class="pre">SnapshotTaskConfig</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="reference/hooks.html#airflow_dbt_python.hooks.dbt.SourceFreshnessTaskConfig"><code class="docutils literal notranslate"><span class="pre">SourceFreshnessTaskConfig</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="reference/hooks.html#airflow_dbt_python.hooks.dbt.TableMutabilityConfig"><code class="docutils literal notranslate"><span class="pre">TableMutabilityConfig</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="reference/hooks.html#airflow_dbt_python.hooks.dbt.TestTaskConfig"><code class="docutils literal notranslate"><span class="pre">TestTaskConfig</span></code></a><ul>
-<li class="toctree-l3"><a class="reference internal" href="reference/hooks.html#airflow_dbt_python.hooks.dbt.TestTaskConfig.cls"><code class="docutils literal notranslate"><span class="pre">TestTaskConfig.cls</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="reference/hooks.html#airflow_dbt_python.hooks.dbt.parse_yaml_args"><code class="docutils literal notranslate"><span class="pre">parse_yaml_args()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="reference/operators.html">airflow_dbt_python.operators</a><ul>
@@ -155,13 +125,10 @@
 <li class="toctree-l3"><a class="reference internal" href="reference/operators.html#airflow_dbt_python.operators.dbt.DbtBaseOperator.s3_conn_id"><code class="docutils literal notranslate"><span class="pre">DbtBaseOperator.s3_conn_id</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="reference/operators.html#airflow_dbt_python.operators.dbt.DbtBaseOperator.do_xcom_push_artifacts"><code class="docutils literal notranslate"><span class="pre">DbtBaseOperator.do_xcom_push_artifacts</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="reference/operators.html#id0"><code class="docutils literal notranslate"><span class="pre">DbtBaseOperator.command</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="reference/operators.html#airflow_dbt_python.operators.dbt.DbtBaseOperator.dbt_directory"><code class="docutils literal notranslate"><span class="pre">DbtBaseOperator.dbt_directory()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="reference/operators.html#airflow_dbt_python.operators.dbt.DbtBaseOperator.dbt_hook"><code class="docutils literal notranslate"><span class="pre">DbtBaseOperator.dbt_hook</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="reference/operators.html#airflow_dbt_python.operators.dbt.DbtBaseOperator.execute"><code class="docutils literal notranslate"><span class="pre">DbtBaseOperator.execute()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="reference/operators.html#airflow_dbt_python.operators.dbt.DbtBaseOperator.get_dbt_config"><code class="docutils literal notranslate"><span class="pre">DbtBaseOperator.get_dbt_config()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="reference/operators.html#airflow_dbt_python.operators.dbt.DbtBaseOperator.prepare_directory"><code class="docutils literal notranslate"><span class="pre">DbtBaseOperator.prepare_directory()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="reference/operators.html#airflow_dbt_python.operators.dbt.DbtBaseOperator.serializable_result"><code class="docutils literal notranslate"><span class="pre">DbtBaseOperator.serializable_result()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="reference/operators.html#airflow_dbt_python.operators.dbt.DbtBaseOperator.xcom_push_artifacts"><code class="docutils literal notranslate"><span class="pre">DbtBaseOperator.xcom_push_artifacts()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/operators.html#airflow_dbt_python.operators.dbt.DbtBaseOperator.make_run_results_serializable"><code class="docutils literal notranslate"><span class="pre">DbtBaseOperator.make_run_results_serializable()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="reference/operators.html#airflow_dbt_python.operators.dbt.DbtBaseOperator.xcom_push_dbt_results"><code class="docutils literal notranslate"><span class="pre">DbtBaseOperator.xcom_push_dbt_results()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="reference/operators.html#airflow_dbt_python.operators.dbt.DbtBuildOperator"><code class="docutils literal notranslate"><span class="pre">DbtBuildOperator</span></code></a><ul>
@@ -221,35 +188,10 @@
 <li class="toctree-l3"><a class="reference internal" href="reference/operators.html#airflow_dbt_python.operators.dbt.DbtTestOperator.command"><code class="docutils literal notranslate"><span class="pre">DbtTestOperator.command</span></code></a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="reference/operators.html#airflow_dbt_python.operators.dbt.apply_defaults"><code class="docutils literal notranslate"><span class="pre">apply_defaults()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="reference/operators.html#airflow_dbt_python.operators.dbt.run_result_factory"><code class="docutils literal notranslate"><span class="pre">run_result_factory()</span></code></a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="reference/backends.html">airflow_dbt_python.hooks.backends</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="reference/backends.html#airflow_dbt_python.hooks.backends.build_backend"><code class="docutils literal notranslate"><span class="pre">build_backend()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="reference/backends.html#airflow_dbt_python.hooks.backends.localfs.DbtLocalFsBackend"><code class="docutils literal notranslate"><span class="pre">DbtLocalFsBackend</span></code></a><ul>
-<li class="toctree-l3"><a class="reference internal" href="reference/backends.html#airflow_dbt_python.hooks.backends.localfs.DbtLocalFsBackend.pull_many"><code class="docutils literal notranslate"><span class="pre">DbtLocalFsBackend.pull_many()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="reference/backends.html#airflow_dbt_python.hooks.backends.localfs.DbtLocalFsBackend.pull_one"><code class="docutils literal notranslate"><span class="pre">DbtLocalFsBackend.pull_one()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="reference/backends.html#airflow_dbt_python.hooks.backends.localfs.DbtLocalFsBackend.push_many"><code class="docutils literal notranslate"><span class="pre">DbtLocalFsBackend.push_many()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="reference/backends.html#airflow_dbt_python.hooks.backends.localfs.DbtLocalFsBackend.push_one"><code class="docutils literal notranslate"><span class="pre">DbtLocalFsBackend.push_one()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="reference/backends.html#airflow_dbt_python.hooks.backends.localfs.py37_copytree"><code class="docutils literal notranslate"><span class="pre">py37_copytree()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="reference/backends.html#airflow_dbt_python.hooks.backends.s3.DbtS3Backend"><code class="docutils literal notranslate"><span class="pre">DbtS3Backend</span></code></a><ul>
-<li class="toctree-l3"><a class="reference internal" href="reference/backends.html#airflow_dbt_python.hooks.backends.s3.DbtS3Backend.connection_id"><code class="docutils literal notranslate"><span class="pre">DbtS3Backend.connection_id</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="reference/backends.html#airflow_dbt_python.hooks.backends.s3.DbtS3Backend.download_many_from_key_prefix"><code class="docutils literal notranslate"><span class="pre">DbtS3Backend.download_many_from_key_prefix()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="reference/backends.html#airflow_dbt_python.hooks.backends.s3.DbtS3Backend.download_one_s3_object"><code class="docutils literal notranslate"><span class="pre">DbtS3Backend.download_one_s3_object()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="reference/backends.html#airflow_dbt_python.hooks.backends.s3.DbtS3Backend.download_zip_s3_object"><code class="docutils literal notranslate"><span class="pre">DbtS3Backend.download_zip_s3_object()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="reference/backends.html#airflow_dbt_python.hooks.backends.s3.DbtS3Backend.hook"><code class="docutils literal notranslate"><span class="pre">DbtS3Backend.hook</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="reference/backends.html#airflow_dbt_python.hooks.backends.s3.DbtS3Backend.load_file_handle_replace_error"><code class="docutils literal notranslate"><span class="pre">DbtS3Backend.load_file_handle_replace_error()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="reference/backends.html#airflow_dbt_python.hooks.backends.s3.DbtS3Backend.pull_many"><code class="docutils literal notranslate"><span class="pre">DbtS3Backend.pull_many()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="reference/backends.html#airflow_dbt_python.hooks.backends.s3.DbtS3Backend.pull_one"><code class="docutils literal notranslate"><span class="pre">DbtS3Backend.pull_one()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="reference/backends.html#airflow_dbt_python.hooks.backends.s3.DbtS3Backend.push_many"><code class="docutils literal notranslate"><span class="pre">DbtS3Backend.push_many()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="reference/backends.html#airflow_dbt_python.hooks.backends.s3.DbtS3Backend.push_one"><code class="docutils literal notranslate"><span class="pre">DbtS3Backend.push_one()</span></code></a></li>
-</ul>
-</li>
-</ul>
-</li>
+<li class="toctree-l1"><a class="reference internal" href="reference/utils.html">airflow_dbt_python.utils</a></li>
 </ul>
 </div>
 </section>
