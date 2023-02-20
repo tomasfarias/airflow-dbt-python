@@ -6,6 +6,7 @@ build:
     python: "3.10"
   jobs:
     post_install:
-      - pip install poetry==1.2.2
+      - sudo apt-get install graphviz
+      - pip install poetry==1.3.2
       - poetry config virtualenvs.create false
-      - poetry install --with docs
+      - poetry install -E airflow -E git -E s3 --with docs
