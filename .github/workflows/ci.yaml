@@ -46,7 +46,7 @@ jobs:
       - name: Install Poetry
         uses: abatilo/actions-poetry@v2.1.4
         with:
-          poetry-version: 1.2.2
+          poetry-version: 1.3.2
 
       - name: Install airflow-dbt-python with Poetry
         run: poetry install -E postgres --with dev
@@ -103,7 +103,7 @@ jobs:
       - name: Install Poetry
         uses: abatilo/actions-poetry@v2.1.4
         with:
-          poetry-version: 1.2.2
+          poetry-version: 1.3.2
 
       - name: Install airflow-dbt-python with Poetry
         run: poetry install --with dev -E airflow -E airflow-providers
