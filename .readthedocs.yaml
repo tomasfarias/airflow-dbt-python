@@ -4,9 +4,10 @@ build:
   os: "ubuntu-22.04"
   tools:
     python: "3.10"
+  apt_packages:
+    - graphviz
   jobs:
     post_install:
-      - apt-get install graphviz
       - pip install poetry==1.3.2
       - poetry config virtualenvs.create false
       - poetry install -E airflow -E git -E s3 --with docs
