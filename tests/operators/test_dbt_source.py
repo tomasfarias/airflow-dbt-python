@@ -1,8 +1,9 @@
 """Unit test module for DbtSourceFreshnessOperator."""
 from pathlib import Path
 
-from airflow_dbt_python.hooks.dbt import Output, SourceFreshnessTaskConfig
 from airflow_dbt_python.operators.dbt import DbtSourceFreshnessOperator
+from airflow_dbt_python.utils.configs import SourceFreshnessTaskConfig
+from airflow_dbt_python.utils.enums import Output
 
 
 def test_dbt_source_mocked_all_args():
@@ -22,7 +23,8 @@ def test_dbt_source_mocked_all_args():
     )
     assert op.command == "source"
 
-    config = op.get_dbt_config()
+    config = op.dbt_hook.get_dbt_task_config(command=op.command, **vars(op))
+
     assert isinstance(config, SourceFreshnessTaskConfig) is True
     assert config.project_dir == "/path/to/project/"
     assert config.profiles_dir == "/path/to/profiles/"
@@ -42,6 +44,7 @@ def test_dbt_source_basic(profiles_file, dbt_project_file):
         task_id="dbt_task",
         project_dir=dbt_project_file.parent,
         profiles_dir=profiles_file.parent,
+        upload_dbt_project=True,
     )
 
     sources = Path(dbt_project_file.parent) / "target/sources.json"
@@ -63,6 +66,7 @@ def test_dbt_source_different_output(profiles_file, dbt_project_file):
         task_id="dbt_task",
         project_dir=dbt_project_file.parent,
         profiles_dir=profiles_file.parent,
+        upload_dbt_project=True,
         dbt_output=new_sources,
     )
 

@@ -1,18 +1,16 @@
 """Unit test module for DbtDocsGenerateOperator."""
-from unittest.mock import patch
-
 import pytest
 
-from airflow_dbt_python.hooks.dbt import GenerateTaskConfig
 from airflow_dbt_python.operators.dbt import DbtDocsGenerateOperator
+from airflow_dbt_python.utils.configs import GenerateTaskConfig
 
 condition = False
 try:
-    from airflow_dbt_python.hooks.backends import DbtS3Backend
+    from airflow_dbt_python.hooks.s3 import DbtS3RemoteHook
 except ImportError:
     condition = True
 no_s3_backend = pytest.mark.skipif(
-    condition, reason="S3 Backend not available, consider installing amazon extras"
+    condition, reason="S3 RemoteHook not available, consider installing amazon extras"
 )
 
 
@@ -25,18 +23,19 @@ def test_dbt_docs_generate_config_all_args():
         profile="dbt-profile",
         target="dbt-target",
         compile=False,
-        push_dbt_project=False,
+        upload_dbt_project=False,
     )
     assert op.command == "generate"
 
-    config = op.get_dbt_config()
+    config = op.dbt_hook.get_dbt_task_config(command=op.command, **vars(op))
+
     assert isinstance(config, GenerateTaskConfig) is True
     assert config.project_dir == "/path/to/project/"
     assert config.profiles_dir == "/path/to/profiles/"
     assert config.profile == "dbt-profile"
     assert config.target == "dbt-target"
     assert config.compile is False
-    assert op.push_dbt_project is False
+    assert op.upload_dbt_project is False
 
 
 def test_dbt_docs_generate_produces_documentation_files(
@@ -71,7 +70,7 @@ def test_dbt_docs_generate_produces_documentation_files(
 
 
 @no_s3_backend
-def test_dbt_docs_generate_push_to_s3(
+def test_dbt_docs_generate_upload_to_s3(
     s3_bucket, s3_hook, profiles_file, dbt_project_file, model_files
 ):
     """Test execution of DbtDocsGenerateOperator with a push to S3 at the end."""
@@ -106,7 +105,7 @@ def test_dbt_docs_generate_push_to_s3(
         task_id="dbt_task",
         project_dir=f"s3://{s3_bucket}/project/",
         profiles_dir=f"s3://{s3_bucket}/project/",
-        push_dbt_project=True,
+        upload_dbt_project=True,
     )
     results = op.execute({})
     assert results is not None

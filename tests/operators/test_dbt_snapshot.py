@@ -2,11 +2,11 @@
 from pathlib import Path
 
 import pytest
+from airflow import AirflowException
 from dbt.contracts.results import RunStatus
 
-from airflow import AirflowException
-from airflow_dbt_python.hooks.dbt import SnapshotTaskConfig
 from airflow_dbt_python.operators.dbt import DbtSnapshotOperator
+from airflow_dbt_python.utils.configs import SnapshotTaskConfig
 
 
 def test_dbt_snapshot_mocked_all_args():
@@ -27,7 +27,8 @@ def test_dbt_snapshot_mocked_all_args():
     )
     assert op.command == "snapshot"
 
-    config = op.get_dbt_config()
+    config = op.dbt_hook.get_dbt_task_config(command=op.command, **vars(op))
+
     assert isinstance(config, SnapshotTaskConfig) is True
     assert config.project_dir == "/path/to/project/"
     assert config.profiles_dir == "/path/to/profiles/"

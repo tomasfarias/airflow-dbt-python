@@ -10,15 +10,15 @@ def test_dbt_docs_generate_task(hook, profiles_file, dbt_project_file, model_fil
         shutil.rmtree(target_dir)
     assert target_dir.exists() is False
 
-    factory = hook.get_config_factory("generate")
-    config = factory.create_config(
+    result = hook.run_dbt_task(
+        "generate",
         project_dir=dbt_project_file.parent,
         profiles_dir=profiles_file.parent,
+        upload_dbt_project=True,
     )
-    success, results = hook.run_dbt_task(config)
 
-    assert success is True
-    assert results is not None
+    assert result.success is True
+    assert result.run_results is not None
     assert target_dir.exists() is True
 
     index = target_dir / "index.html"
@@ -42,16 +42,16 @@ def test_dbt_docs_generate_task_no_compile(
         shutil.rmtree(target_dir)
     assert target_dir.exists() is False
 
-    factory = hook.get_config_factory("generate")
-    config = factory.create_config(
+    result = hook.run_dbt_task(
+        "generate",
         project_dir=dbt_project_file.parent,
         profiles_dir=profiles_file.parent,
         compile=False,
+        upload_dbt_project=True,
     )
-    success, results = hook.run_dbt_task(config)
 
-    assert success is True
-    assert results is not None
+    assert result.success is True
+    assert result.run_results is not None
     assert target_dir.exists() is True
 
     index = target_dir / "index.html"

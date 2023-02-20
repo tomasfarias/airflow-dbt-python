@@ -4,16 +4,16 @@ from pathlib import Path
 import pytest
 from dbt.contracts.results import TestStatus
 
-from airflow_dbt_python.hooks.dbt import TestTaskConfig
 from airflow_dbt_python.operators.dbt import DbtTestOperator
+from airflow_dbt_python.utils.configs import TestTaskConfig
 
 condition = False
 try:
-    from airflow_dbt_python.hooks.backends import DbtS3Backend
+    from airflow_dbt_python.hooks.s3 import DbtS3RemoteHook
 except ImportError:
     condition = True
 no_s3_backend = pytest.mark.skipif(
-    condition, reason="S3 Backend not available, consider installing amazon extras"
+    condition, reason="S3 RemoteHook not available, consider installing amazon extras"
 )
 
 
@@ -40,7 +40,8 @@ def test_dbt_test_configuration_all_args():
 
     assert op.command == "test"
 
-    config = op.get_dbt_config()
+    config = op.dbt_hook.get_dbt_task_config(command=op.command, **vars(op))
+
     assert isinstance(config, TestTaskConfig) is True
     assert config.project_dir == "/path/to/project/"
     assert config.profiles_dir == "/path/to/profiles/"
@@ -66,12 +67,11 @@ def test_dbt_test_configuration_all_args():
 @pytest.fixture
 def run_models(hook, dbt_project_file, profiles_file, model_files):
     """We need to run some models before we can test."""
-    factory = hook.get_config_factory("run")
-    config = factory.create_config(
+    hook.run_dbt_task(
+        "run",
         project_dir=dbt_project_file.parent,
         profiles_dir=profiles_file.parent,
     )
-    hook.run_dbt_task(config)
     yield
 
 

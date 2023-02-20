@@ -1,8 +1,6 @@
 """Unit test module for DbtDebugOperator."""
-from unittest.mock import patch
-
-from airflow_dbt_python.hooks.dbt import DebugTaskConfig
 from airflow_dbt_python.operators.dbt import DbtDebugOperator
+from airflow_dbt_python.utils.configs import DebugTaskConfig
 
 
 def test_dbt_debug_mocked_all_args():
@@ -20,7 +18,8 @@ def test_dbt_debug_mocked_all_args():
     )
     assert op.command == "debug"
 
-    config = op.get_dbt_config()
+    config = op.dbt_hook.get_dbt_task_config(command=op.command, **vars(op))
+
     assert isinstance(config, DebugTaskConfig) is True
     assert config.project_dir == "/path/to/project/"
     assert config.profiles_dir == "/path/to/profiles/"

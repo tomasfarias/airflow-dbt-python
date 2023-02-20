@@ -1,14 +1,13 @@
-"""Unit test module for dbt task configurations found as part of the DbtHook."""
+"""Unit test module for dbt task configuration utilities."""
 import pytest
 from dbt.exceptions import DbtProfileError
-from dbt.task.base import BaseTask
 from dbt.task.build import BuildTask
 from dbt.task.compile import CompileTask
 from dbt.task.debug import DebugTask
 from dbt.task.deps import DepsTask
 from dbt.task.run import RunTask
 
-from airflow_dbt_python.hooks.dbt import (
+from airflow_dbt_python.utils.configs import (
     BaseConfig,
     BuildTaskConfig,
     CompileTaskConfig,
@@ -263,7 +262,7 @@ def test_base_config_create_dbt_profile_with_extra_target(
             project_dir=dbt_project_file.parent,
             profiles_dir=profiles_file.parent,
         )
-        extra_target = hook.get_target_from_connection(conn_id)
+        extra_target = hook.get_dbt_target_from_connection(conn_id)
 
         profile = config.create_dbt_profile(extra_target)
         assert profile.profile_name == "default"
@@ -282,7 +281,7 @@ def test_base_config_create_dbt_profile_with_extra_target_no_profile(
         config = BaseConfig(
             target=conn_id, project_dir=dbt_project_file.parent, profiles_dir=None
         )
-        extra_target = hook.get_target_from_connection(conn_id)
+        extra_target = hook.get_dbt_target_from_connection(conn_id)
 
         profile = config.create_dbt_profile(extra_target)
         assert profile.profile_name == "default"
@@ -357,7 +356,7 @@ def test_base_config_create_dbt_project_and_profile_with_no_profile(
     for conn_id in airflow_conns:
         config.target = conn_id
 
-        extra_target = hook.get_target_from_connection(conn_id)
+        extra_target = hook.get_dbt_target_from_connection(conn_id)
         project, profile = config.create_dbt_project_and_profile(extra_target)
 
         assert project.model_paths == ["models"]

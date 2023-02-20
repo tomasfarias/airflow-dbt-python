@@ -38,6 +38,7 @@ extensions = [
     "sphinx.ext.githubpages",
     "sphinx.ext.viewcode",
     "sphinx_copybutton",
+    "sphinx.ext.graphviz",
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -48,6 +49,7 @@ templates_path = ["_templates"]
 # This pattern also affects html_static_path and html_extra_path.
 exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 
+graphviz_output_format = "svg"
 
 # -- Options for HTML output -------------------------------------------------
 

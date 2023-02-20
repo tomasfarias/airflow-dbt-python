@@ -12,18 +12,20 @@ def test_dbt_build_task(
     generic_tests_files,
 ):
     """Test a dbt build task."""
-    factory = hook.get_config_factory("build")
-    config = factory.create_config(
+    result = hook.run_dbt_task(
+        command="build",
         project_dir=dbt_project_file.parent,
         profiles_dir=profiles_file.parent,
     )
-    success, results = hook.run_dbt_task(config)
 
-    assert success is True
-    assert len(results.results) == 12
+    assert result.success is True
+    assert len(result.run_results) == 12
 
-    for result in results.results:
-        assert result.status == RunStatus.Success or result.status == TestStatus.Pass
+    for run_result in result.run_results:
+        assert (
+            run_result.status == RunStatus.Success
+            or run_result.status == TestStatus.Pass
+        )
 
 
 def test_dbt_build_task_non_existent_model(
@@ -36,13 +38,12 @@ def test_dbt_build_task_non_existent_model(
     generic_tests_files,
 ):
     """Test a dbt build task with non existent model."""
-    factory = hook.get_config_factory("build")
-    config = factory.create_config(
+    result = hook.run_dbt_task(
+        command="build",
         project_dir=dbt_project_file.parent,
         profiles_dir=profiles_file.parent,
         select=["missing"],
     )
-    success, results = hook.run_dbt_task(config)
 
-    assert success is True
-    assert len(results.results) == 0
+    assert result.success is True
+    assert len(result.run_results) == 0

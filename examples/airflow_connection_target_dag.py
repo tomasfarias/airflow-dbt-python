@@ -2,9 +2,9 @@
 import datetime as dt
 import json
 
+import pendulum
 from airflow import DAG, settings
 from airflow.models.connection import Connection
-from airflow.utils.dates import days_ago
 
 from airflow_dbt_python.operators.dbt import DbtRunOperator
 
@@ -35,8 +35,8 @@ if existing is None:
 
 with DAG(
     dag_id="example_airflow_connection",
-    schedule_interval="0 * * * *",
-    start_date=days_ago(1),
+    schedule="0 * * * *",
+    start_date=pendulum.today("UTC").add(days=1),
     catchup=False,
     dagrun_timeout=dt.timedelta(minutes=60),
 ) as dag:

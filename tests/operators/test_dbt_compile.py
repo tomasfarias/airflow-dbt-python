@@ -3,8 +3,8 @@ from pathlib import Path
 
 from dbt.contracts.results import RunStatus
 
-from airflow_dbt_python.hooks.dbt import CompileTaskConfig
 from airflow_dbt_python.operators.dbt import DbtCompileOperator
+from airflow_dbt_python.utils.configs import CompileTaskConfig
 
 
 def test_dbt_compile_mocked_all_args():
@@ -29,7 +29,7 @@ def test_dbt_compile_mocked_all_args():
 
     assert op.command == "compile"
 
-    config = op.get_dbt_config()
+    config = op.dbt_hook.get_dbt_task_config(command=op.command, **vars(op))
 
     assert isinstance(config, CompileTaskConfig) is True
     assert config.project_dir == "/path/to/project/"
@@ -147,7 +147,7 @@ def test_dbt_compile_models_full_refresh(
         models=[str(m.stem) for m in model_files],
         full_refresh=True,
         do_xcom_push=True,
-        replace_on_push=True,
+        replace_on_upload=True,
     )
     execution_results = op.execute({})
     run_result = execution_results["results"][0]

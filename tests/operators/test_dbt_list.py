@@ -1,9 +1,7 @@
 """Unit test module for DbtListOperator."""
-from itertools import chain
-from unittest.mock import patch
 
-from airflow_dbt_python.hooks.dbt import ListTaskConfig
 from airflow_dbt_python.operators.dbt import DbtLsOperator
+from airflow_dbt_python.utils.configs import ListTaskConfig
 
 
 def test_dbt_ls_command_configuration(profiles_file, dbt_project_file):
@@ -16,7 +14,8 @@ def test_dbt_ls_command_configuration(profiles_file, dbt_project_file):
 
     assert op.command == "list"
 
-    config = op.get_dbt_config()
+    config = op.dbt_hook.get_dbt_task_config(command=op.command, **vars(op))
+
     assert isinstance(config, ListTaskConfig) is True
     assert config.project_dir == dbt_project_file.parent
     assert config.profiles_dir == profiles_file.parent

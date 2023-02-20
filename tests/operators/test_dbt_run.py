@@ -6,16 +6,16 @@ import pytest
 from airflow import AirflowException
 from dbt.contracts.results import RunStatus
 
-from airflow_dbt_python.hooks.dbt import RunTaskConfig
 from airflow_dbt_python.operators.dbt import DbtRunOperator
+from airflow_dbt_python.utils.configs import RunTaskConfig
 
 condition = False
 try:
-    from airflow_dbt_python.hooks.backends import DbtS3Backend
+    from airflow_dbt_python.hooks.s3 import DbtS3RemoteHook
 except ImportError:
     condition = True
 no_s3_backend = pytest.mark.skipif(
-    condition, reason="S3 Backend not available, consider installing amazon extras"
+    condition, reason="S3 RemoteHook not available, consider installing amazon extras"
 )
 
 
@@ -39,7 +39,8 @@ def test_dbt_run_mocked_all_args():
     )
     assert op.command == "run"
 
-    config = op.get_dbt_config()
+    config = op.dbt_hook.get_dbt_task_config(command=op.command, **vars(op))
+
     assert isinstance(config, RunTaskConfig) is True
     assert config.project_dir == "/path/to/project/"
     assert config.profiles_dir == "/path/to/profiles/"
@@ -91,6 +92,7 @@ def test_dbt_run_models(profiles_file, dbt_project_file, model_files, logs_dir):
         profiles_dir=profiles_file.parent,
         models=[str(m.stem) for m in model_files],
         do_xcom_push=True,
+        debug=True,
     )
 
     execution_results = op.execute({})

@@ -4,6 +4,7 @@ Common fixtures include a connection to a postgres database, a set of sample mod
  seed files, dbt configuration files, and temporary directories for everything.
 """
 import shutil
+from typing import List
 
 import boto3
 import pytest
@@ -239,7 +240,7 @@ def dbt_project_file(dbt_project_dir, logs_dir, request):
     """Create a test dbt_project.yml file."""
     p = dbt_project_dir / "dbt_project.yml"
     PROJECT_CONTENT = PROJECT + LOG_PATH_CONFIG.format(log_path=str(logs_dir))
-    print(PROJECT_CONTENT)
+
     p.write_text(PROJECT_CONTENT)
 
     yield p
@@ -384,18 +385,23 @@ def hook():
 
 
 @pytest.fixture
-def pre_compile(hook, dbt_project_file, profiles_file):
+def pre_compile(hook, model_files, seed_files, dbt_project_file, profiles_file):
     """Fixture to run a dbt compile task."""
     import shutil
 
-    factory = hook.get_config_factory("run")
-    config = factory.create_config(
+    target_dir = dbt_project_file.parent / "target"
+
+    hook.run_dbt_task(
+        "compile",
         project_dir=dbt_project_file.parent,
         profiles_dir=profiles_file.parent,
+        upload_dbt_project=True,
+        delete_before_upload=True,
+        full_refresh=True,
     )
-    hook.run_dbt_task(config)
+
     yield
-    target_dir = dbt_project_file.parent / "target"
+
     shutil.rmtree(target_dir, ignore_errors=True)
 
 
@@ -534,7 +540,7 @@ def non_arg_macro_name(dbt_project_dir):
 @pytest.fixture
 def test_files(tmp_path_factory, dbt_project_file):
     """Create test files for backends."""
-    d = tmp_path_factory.mktemp("test_s3")
+    d = tmp_path_factory.mktemp("test_files_dir")
     seed_dir = d / "seeds"
     seed_dir.mkdir(exist_ok=True)
     f1 = seed_dir / "a_seed.csv"
@@ -579,3 +585,26 @@ def pytest_collection_modifyitems(config, items):
     for item in items:
         if "integration" in item.keywords:
             item.add_marker(skip_integration)
+
+
+@pytest.fixture(scope="session")
+def assert_dir_contents():
+    """Helper function to assert contents of dir_url contain expected."""
+    from airflow_dbt_python.utils.url import URL, URLLike
+
+    def wrapper(dir_url: URLLike, expected: List[URL], exact: bool = True):
+        """Assert file URLs under dir_url match expected."""
+        url = URL(dir_url)
+        dir_contents = [f for f in url if not f.is_dir()]
+
+        if exact is True:
+            assert sorted(dir_contents, key=lambda u: u.name) == sorted(
+                expected, key=lambda u: u.name
+            )
+        else:
+            missing_contents = [exp for exp in expected if exp not in dir_contents]
+            assert (
+                len(missing_contents) == 0
+            ), f"Missing dir contents: {missing_contents}"
+
+    return wrapper

@@ -1,9 +1,9 @@
 """Sample DAG to showcase pulling dbt artifacts from XCOM."""
 import datetime as dt
 
+import pendulum
 from airflow import DAG
 from airflow.operators.python import PythonOperator
-from airflow.utils.dates import days_ago
 
 from airflow_dbt_python.operators.dbt import DbtRunOperator
 
@@ -51,8 +51,8 @@ def process_dbt_artifacts(**context):
 
 with DAG(
     dag_id="example_dbt_artifacts",
-    schedule_interval="0 0 * * *",
-    start_date=days_ago(1),
+    schedule="0 0 * * *",
+    start_date=pendulum.today("UTC").add(days=-1),
     catchup=False,
     dagrun_timeout=dt.timedelta(minutes=60),
 ) as dag:

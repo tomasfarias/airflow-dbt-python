@@ -15,17 +15,12 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: [3.7, 3.8, 3.9, '3.10']
-        airflow-version: ['1.10.15', '2.2.2', '2.4.2']
+        python-version: [3.7, 3.8, 3.9, '3.10', '3.11']
+        airflow-version: ['2.5.1', '2.4.3']
         exclude:
-          - python-version: '3.10'
-            airflow-version: '1.10.15'
-          - python-version: '3.10'
-            airflow-version: '2.2.2'
-        include:
-          - airflow-version: '1.10.15'
-            constraints: 'constraints-3.8.txt'
-            install: 'apache-airflow[amazon]==1.10.15'
+          # No constraints available
+          - python-version: '3.11'
+            airflow-version: '2.4.3'
 
     runs-on: ubuntu-latest
     steps:
@@ -56,6 +51,12 @@ jobs:
       - name: Install airflow-dbt-python with Poetry
         run: poetry install -E postgres --with dev
 
+      - name: Install Airflow with constraints
+        run: |
+          wget https://raw.githubusercontent.com/apache/airflow/constraints-${{ matrix.airflow-version }}/constraints-${{ matrix.python-version }}.txt -O constraints.txt
+          poetry run pip install apache-airflow==${{ matrix.airflow-version }} apache-airflow-providers-amazon apache-airflow-providers-ssh -c constraints.txt
+          poetry run airflow db init
+
       - name: Style guide enforcement with flake8
         run: poetry run flake8 .
 
@@ -65,26 +66,11 @@ jobs:
       - name: Code formatting with black
         run: poetry run black --check .
 
-      - name: Install Airflow with constraints
-        if: ${{ matrix.constraints }}
-        run: |
-          wget https://raw.githubusercontent.com/apache/airflow/constraints-${{ matrix.airflow-version }}/${{ matrix.constraints }} -O constraints.txt
-          poetry run pip install ${{ matrix.install }} -c constraints.txt
-          poetry run airflow db init
-          poetry run pip install typing-extensions==4.4.0
-
-      - name: Install Airflow with constraints
-        if: matrix.constraints == ''
-        run: |
-          wget https://raw.githubusercontent.com/apache/airflow/constraints-${{ matrix.airflow-version }}/constraints-${{ matrix.python-version }}.txt -O constraints.txt
-          poetry run pip install apache-airflow==${{ matrix.airflow-version }} apache-airflow-providers-amazon -c constraints.txt
-          poetry run airflow db init
-
       - name: Set COVERAGE_FILE in environment
         run: echo "COVERAGE_FILE=.coverage.${{ matrix.python-version }}.${{ matrix.airflow-version }}" >> $GITHUB_ENV
 
       - name: Run tests with pytest
-        run: poetry run coverage run -m pytest -v tests/
+        run: poetry run coverage run -m pytest -v tests/ airflow_dbt_python/utils/
 
       - name: Upload code coverage
         uses: actions/upload-artifact@v3
@@ -152,7 +138,7 @@ jobs:
         if: github.event_name != 'pull_request'
         with:
           auth: ${{ secrets.GIST_TOKEN }}
-          gistID: 81ef37701aa088d18db8a58ce07c79c7
+          gistID: 81ef37701aa088d18db8a58ce07c79c7 # pragma: allowlist secret
           filename: covbadge.json
           label: Coverage
           message: ${{ env.total }}%

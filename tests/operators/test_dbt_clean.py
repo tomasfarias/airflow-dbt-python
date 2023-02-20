@@ -1,18 +1,16 @@
 """Unit test module for DbtCleanOperator."""
-from unittest.mock import patch
-
 import pytest
 
-from airflow_dbt_python.hooks.dbt import CleanTaskConfig
 from airflow_dbt_python.operators.dbt import DbtCleanOperator, DbtCompileOperator
+from airflow_dbt_python.utils.configs import CleanTaskConfig
 
 condition = False
 try:
-    from airflow_dbt_python.hooks.backends import DbtS3Backend
+    from airflow_dbt_python.hooks.s3 import DbtS3RemoteHook
 except ImportError:
     condition = True
 no_s3_backend = pytest.mark.skipif(
-    condition, reason="S3 Backend not available, consider installing amazon extras"
+    condition, reason="S3 RemoteHook not available, consider installing amazon extras"
 )
 
 
@@ -30,7 +28,8 @@ def test_dbt_clean_configuration_with_all_args():
 
     assert op.command == "clean"
 
-    config = op.get_dbt_config()
+    config = op.dbt_hook.get_dbt_task_config(command=op.command, **vars(op))
+
     assert isinstance(config, CleanTaskConfig) is True
     assert config.project_dir == "/path/to/project/"
     assert config.profiles_dir == "/path/to/profiles/"

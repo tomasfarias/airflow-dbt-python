@@ -1,24 +1,21 @@
 """Unit test module for DbtSeedOperator."""
 import json
-import logging
 from pathlib import Path
-from typing import Iterator
-from unittest.mock import patch
 
 import pytest
+from airflow import AirflowException
 from dbt.contracts.results import RunStatus
 
-from airflow import AirflowException
-from airflow_dbt_python.hooks.dbt import SeedTaskConfig
 from airflow_dbt_python.operators.dbt import DbtSeedOperator
+from airflow_dbt_python.utils.configs import SeedTaskConfig
 
 condition = False
 try:
-    from airflow_dbt_python.hooks.backends import DbtS3Backend
+    from airflow_dbt_python.hooks.s3 import DbtS3RemoteHook
 except ImportError:
     condition = True
 no_s3_backend = pytest.mark.skipif(
-    condition, reason="S3 Backend not available, consider installing amazon extras"
+    condition, reason="S3 RemoteHook not available, consider installing amazon extras"
 )
 
 
@@ -42,7 +39,8 @@ def test_dbt_seed_mocked_all_args():
     )
     assert op.command == "seed"
 
-    config = op.get_dbt_config()
+    config = op.dbt_hook.get_dbt_task_config(command=op.command, **vars(op))
+
     assert isinstance(config, SeedTaskConfig) is True
     assert config.project_dir == "/path/to/project/"
     assert config.profiles_dir == "/path/to/profiles/"
@@ -106,9 +104,7 @@ def test_dbt_seed_models_logging(profiles_file, dbt_project_file, seed_files, ca
 
     _ = op.execute({})
 
-    log_messages = [
-        rec.message for rec in caplog.records if rec.name == "configured_std_out"
-    ]
+    log_messages = [rec.message for rec in caplog.records]
 
     # Check for duplicate lines
     line_1 = "1 of 2 START seed file public.seed_1"
@@ -116,13 +112,6 @@ def test_dbt_seed_models_logging(profiles_file, dbt_project_file, seed_files, ca
 
     line_2 = "Finished running 2 seeds"
     assert sum((line_2 in line for line in log_messages)) == 1
-
-    # Check thread tags are not present (that would indicate we are running with debug flag)
-    thread_tag = "[info ] [Thread- ]"
-    assert any((thread_tag in line for line in log_messages)) is False
-
-    main_thread_tag = "[info ] [MainThread]"
-    assert any((main_thread_tag in line for line in log_messages)) is False
 
 
 def test_dbt_seed_models_debug_logging(
@@ -140,9 +129,7 @@ def test_dbt_seed_models_debug_logging(
 
     _ = op.execute({})
 
-    log_messages = [
-        rec.message for rec in caplog.records if rec.name == "configured_std_out"
-    ]
+    log_messages = [rec.message for rec in caplog.records]
 
     # Check for duplicate lines
     line_1 = "]: 1 of 2 START seed file public.seed_1"

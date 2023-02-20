@@ -1,11 +1,9 @@
 """Unit test module for DbtRunOperationOperator."""
-from unittest.mock import patch
-
 import pytest
-
 from airflow import AirflowException
-from airflow_dbt_python.hooks.dbt import RunOperationTaskConfig
+
 from airflow_dbt_python.operators.dbt import DbtRunOperationOperator
+from airflow_dbt_python.utils.configs import RunOperationTaskConfig
 
 
 def test_dbt_run_operation_mocked_all_args():
@@ -24,7 +22,7 @@ def test_dbt_run_operation_mocked_all_args():
 
     assert op.command == "run-operation"
 
-    config = op.get_dbt_config()
+    config = op.dbt_hook.get_dbt_task_config(command=op.command, **vars(op))
 
     assert isinstance(config, RunOperationTaskConfig) is True
     assert config.project_dir == "/path/to/project/"
