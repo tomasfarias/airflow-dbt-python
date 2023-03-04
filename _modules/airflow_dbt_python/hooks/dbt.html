@@ -327,7 +327,17 @@
 
             <span class="n">saved_artifacts</span> <span class="o">=</span> <span class="p">{}</span>
             <span class="k">for</span> <span class="n">artifact</span> <span class="ow">in</span> <span class="n">artifacts</span><span class="p">:</span>
-                <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="n">dbt_dir</span><span class="p">)</span> <span class="o">/</span> <span class="s2">&quot;target&quot;</span> <span class="o">/</span> <span class="n">artifact</span><span class="p">)</span> <span class="k">as</span> <span class="n">artifact_file</span><span class="p">:</span>
+                <span class="n">artifact_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">dbt_dir</span><span class="p">)</span> <span class="o">/</span> <span class="s2">&quot;target&quot;</span> <span class="o">/</span> <span class="n">artifact</span>
+
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">artifact_path</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+                        <span class="s2">&quot;Required dbt artifact </span><span class="si">%s</span><span class="s2"> was not found. &quot;</span>
+                        <span class="s2">&quot;Perhaps dbt failed and couldn&#39;t generate it.&quot;</span><span class="p">,</span>
+                        <span class="n">artifact</span><span class="p">,</span>
+                    <span class="p">)</span>
+                    <span class="k">continue</span>
+
+                <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">artifact_path</span><span class="p">)</span> <span class="k">as</span> <span class="n">artifact_file</span><span class="p">:</span>
                     <span class="n">json_artifact</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">artifact_file</span><span class="p">)</span>
 
                 <span class="n">saved_artifacts</span><span class="p">[</span><span class="n">artifact</span><span class="p">]</span> <span class="o">=</span> <span class="n">json_artifact</span>

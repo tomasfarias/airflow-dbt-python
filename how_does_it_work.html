@@ -99,7 +99,7 @@
              
   <section id="how-does-it-work">
 <span id="id1"></span><h1>How does it work?<a class="headerlink" href="#how-does-it-work" title="Permalink to this heading"></a></h1>
-<p><em>airflow-dbt-python</em>’s main goal is to elevate <em>dbt</em> to a <strong>first-class citizen</strong> in Airflow. By this we mean that users of <em>dbt</em> can leverage as many Airflow features as possible, without breaking the assumptions that Airflow expects from any workflows it orchestrates. Perhaps more importantly, Airflow should <strong>enhance</strong> a <em>dbt</em> user’s experience and not simply emulate the way they would run <em>dbt</em> in the command line.</p>
+<p><em>airflow-dbt-python</em>’s main goal is to elevate <em>dbt</em> to <strong>first-class citizen</strong> status in Airflow. By this we mean that users of <em>dbt</em> can leverage as many Airflow features as possible, without breaking the assumptions that Airflow expects from any workflows it orchestrates. Perhaps more importantly, Airflow should <strong>enhance</strong> a <em>dbt</em> user’s experience and not simply emulate the way they would run <em>dbt</em> in the command line. This is what separates <em>airflow-dbt-python</em> from other alternatives like <em>airflow-dbt</em> which simply wrap <em>dbt</em> cli commands in <code class="docutils literal notranslate"><span class="pre">BashOperator</span></code>.</p>
 <p>To achieve this goal <em>airflow-dbt-python</em> provides Airflow operators, hooks, and other utilities. Hooks in particular come in two flavors:</p>
 <ul class="simple">
 <li><p>A <code class="docutils literal notranslate"><span class="pre">DbtHook</span></code> that abstracts all interaction with <em>dbt</em> internals.</p></li>
@@ -148,7 +148,8 @@
 }</p></object></div>
 <section id="dbt-as-a-library">
 <h2><em>dbt</em> as a library<a class="headerlink" href="#dbt-as-a-library" title="Permalink to this heading"></a></h2>
-<p>A lot of the code in <em>airflow-dbt-python</em> is required to provide a <a class="reference external" href="https://en.wikipedia.org/wiki/Adapter_pattern">wrapper</a> for <em>dbt</em>, as <em>dbt</em> only provides a CLI interface. There are <a class="reference external" href="https://github.com/dbt-labs/dbt-core/issues/6356">ongoing efforts</a> to provide a dbt library, which would significantly simplify our codebase.</p>
+<p>A lot of the code in <em>airflow-dbt-python</em> is required to provide a <a class="reference external" href="https://en.wikipedia.org/wiki/Adapter_pattern">wrapper</a> for <em>dbt</em>, as <em>dbt</em> only provides a CLI interface. There are <a class="reference external" href="https://github.com/dbt-labs/dbt-core/issues/6356">ongoing efforts</a> to provide a dbt library, which would significantly simplify our codebase. As of the time of development, these efforts are not in a state where they can be used by us, but we can keep an eye out for the future.</p>
+<p>Most of the code used to adapting <em>dbt</em> can be found in the utilities module, as some of our features require that we break some assumptions <em>dbt</em> makes when initializing. For example, we need setup <em>dbt</em> to access project files stored remotely, or intiailize all profile settings from an Airflow Connection.</p>
 </section>
 <section id="dbt-operators">
 <span id="id2"></span><h2><em>dbt</em> operators<a class="headerlink" href="#dbt-operators" title="Permalink to this heading"></a></h2>
