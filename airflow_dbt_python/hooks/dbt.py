@@ -242,7 +242,17 @@ class DbtHook(BaseHook):
 
             saved_artifacts = {}
             for artifact in artifacts:
-                with open(Path(dbt_dir) / "target" / artifact) as artifact_file:
+                artifact_path = Path(dbt_dir) / "target" / artifact
+
+                if not artifact_path.exists():
+                    self.log.warn(
+                        "Required dbt artifact %s was not found. "
+                        "Perhaps dbt failed and couldn't generate it.",
+                        artifact,
+                    )
+                    continue
+
+                with open(artifact_path) as artifact_file:
                     json_artifact = json.load(artifact_file)
 
                 saved_artifacts[artifact] = json_artifact

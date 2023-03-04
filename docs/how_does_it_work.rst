@@ -3,7 +3,7 @@
 How does it work?
 =================
 
-*airflow-dbt-python*'s main goal is to elevate *dbt* to a **first-class citizen** in Airflow. By this we mean that users of *dbt* can leverage as many Airflow features as possible, without breaking the assumptions that Airflow expects from any workflows it orchestrates. Perhaps more importantly, Airflow should **enhance** a *dbt* user's experience and not simply emulate the way they would run *dbt* in the command line.
+*airflow-dbt-python*'s main goal is to elevate *dbt* to **first-class citizen** status in Airflow. By this we mean that users of *dbt* can leverage as many Airflow features as possible, without breaking the assumptions that Airflow expects from any workflows it orchestrates. Perhaps more importantly, Airflow should **enhance** a *dbt* user's experience and not simply emulate the way they would run *dbt* in the command line. This is what separates *airflow-dbt-python* from other alternatives like *airflow-dbt* which simply wrap *dbt* cli commands in ``BashOperator``.
 
 To achieve this goal *airflow-dbt-python* provides Airflow operators, hooks, and other utilities. Hooks in particular come in two flavors:
 
@@ -15,7 +15,9 @@ To achieve this goal *airflow-dbt-python* provides Airflow operators, hooks, and
 *dbt* as a library
 ------------------
 
-A lot of the code in *airflow-dbt-python* is required to provide a `wrapper <https://en.wikipedia.org/wiki/Adapter_pattern>`_ for *dbt*, as *dbt* only provides a CLI interface. There are `ongoing efforts <https://github.com/dbt-labs/dbt-core/issues/6356>`_ to provide a dbt library, which would significantly simplify our codebase.
+A lot of the code in *airflow-dbt-python* is required to provide a `wrapper <https://en.wikipedia.org/wiki/Adapter_pattern>`_ for *dbt*, as *dbt* only provides a CLI interface. There are `ongoing efforts <https://github.com/dbt-labs/dbt-core/issues/6356>`_ to provide a dbt library, which would significantly simplify our codebase. As of the time of development, these efforts are not in a state where they can be used by us, but we can keep an eye out for the future.
+
+Most of the code used to adapting *dbt* can be found in the utilities module, as some of our features require that we break some assumptions *dbt* makes when initializing. For example, we need setup *dbt* to access project files stored remotely, or intiailize all profile settings from an Airflow Connection.
 
 .. _dbt_operators:
 
