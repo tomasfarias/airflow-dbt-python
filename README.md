@@ -175,24 +175,24 @@ from airflow import DAG
 from airflow_dbt_python.operators.dbt import (
     DbtRunOperator,
     DbtSeedOperator,
-    DbtTestoperator,
+    DbtTestOperator,
 )
 
 args = {
-    'owner': 'airflow',
+    "owner": "airflow",
 }
 
 with DAG(
-    dag_id='example_dbt_dag',
+    dag_id="example_dbt_operator",
     default_args=args,
-    schedule='0 0 * * *',
+    schedule="0 0 * * *",
     start_date=pendulum.today("UTC").add(days=-1),
-    dagrun_timeout=timedelta(minutes=60),
-    tags=['example', 'example2'],
+    dagrun_timeout=dt.timedelta(minutes=60),
+    tags=["example", "example2"],
 ) as dag:
     dbt_test = DbtTestOperator(
         task_id="dbt_test",
-        selector_name=["pre-run-tests"],
+        selector_name="pre-run-tests",
     )
 
     dbt_seed = DbtSeedOperator(

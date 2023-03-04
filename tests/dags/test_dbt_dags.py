@@ -12,6 +12,7 @@ airflow = pytest.importorskip("airflow", minversion="2.2")
 
 from airflow import DAG, settings
 from airflow.models import DagBag, DagRun
+from airflow.models.serialized_dag import SerializedDagModel
 from airflow.utils.state import DagRunState, TaskInstanceState
 from airflow.utils.types import DagRunType
 
@@ -31,6 +32,7 @@ DATA_INTERVAL_END = DATA_INTERVAL_START + dt.timedelta(hours=1)
 def dagbag():
     """An Airflow DagBag."""
     dagbag = DagBag(dag_folder="examples/", include_examples=False)
+
     return dagbag
 
 
@@ -55,6 +57,9 @@ def clear_dagruns():
 
     session.query(DagRun).delete()
     session.commit()
+    # We delete any serialized DAGs too for reproducible test runs.
+    session.query(SerializedDagModel)
+    session.commit()
 
 
 @pytest.fixture
@@ -65,7 +70,6 @@ def basic_dag(
     seed_files,
     singular_tests_files,
     generic_tests_files,
-    clear_dagruns,
 ):
     """Create a basic testing DAG that utilizes Airflow connections."""
     with DAG(
@@ -80,6 +84,7 @@ def basic_dag(
             project_dir=dbt_project_file.parent,
             profiles_dir=profiles_file.parent,
             do_xcom_push_artifacts=["run_results.json"],
+            debug=True,
             target="test",
         )
 
@@ -105,7 +110,9 @@ def basic_dag(
     return dag
 
 
-def test_dbt_operators_in_dag(basic_dag, dbt_project_file, profiles_file):
+def test_dbt_operators_in_dag(
+    basic_dag, dbt_project_file, profiles_file, clear_dagruns
+):
     """Assert DAG contains correct dbt operators when running."""
     dagrun = basic_dag.create_dagrun(
         state=DagRunState.RUNNING,
@@ -147,7 +154,6 @@ def taskflow_dag(
     seed_files,
     singular_tests_files,
     generic_tests_files,
-    clear_dagruns,
 ):
     """Create a testing DAG that utilizes Airflow taskflow decorators."""
     from airflow.decorators import dag, task
@@ -205,7 +211,9 @@ def taskflow_dag(
     return generate_dag()
 
 
-def test_dbt_operators_in_taskflow_dag(taskflow_dag, dbt_project_file, profiles_file):
+def test_dbt_operators_in_taskflow_dag(
+    taskflow_dag, dbt_project_file, profiles_file, clear_dagruns
+):
     """Assert DAG contains correct dbt operators when running."""
     dagrun = taskflow_dag.create_dagrun(
         state=DagRunState.RUNNING,
@@ -294,7 +302,6 @@ def target_connection_dag(
     seed_files,
     singular_tests_files,
     generic_tests_files,
-    clear_dagruns,
 ):
     """Create a testing DAG that utilizes Airflow connections."""
 
@@ -335,7 +342,9 @@ def target_connection_dag(
     return dag
 
 
-def test_dbt_operators_in_connection_dag(target_connection_dag, dbt_project_file):
+def test_dbt_operators_in_connection_dag(
+    target_connection_dag, dbt_project_file, clear_dagruns
+):
     """Assert DAG contains correct dbt operators when running."""
     dagrun = target_connection_dag.create_dagrun(
         state=DagRunState.RUNNING,
@@ -382,7 +391,7 @@ def assert_dbt_results(
 
 
 def test_example_basic_dag(
-    dagbag, dbt_project_file, profiles_file, model_files, seed_files
+    dagbag, dbt_project_file, profiles_file, model_files, seed_files, clear_dagruns
 ):
     """Test the example basic DAG."""
     dag = dagbag.get_dag(dag_id="example_basic_dbt")
@@ -489,6 +498,7 @@ def test_example_complete_dbt_workflow_dag(
     seed_files,
     singular_tests_files,
     generic_tests_files,
+    clear_dagruns,
 ):
     """Test the example complete dbt workflow DAG."""
     dag = dagbag.get_dag(dag_id="example_complete_dbt_workflow")
