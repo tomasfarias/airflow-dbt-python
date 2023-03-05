@@ -185,6 +185,7 @@ class DbtHook(BaseHook):
         delete_before_upload: bool = False,
         replace_on_upload: bool = False,
         artifacts: Optional[Iterable[str]] = None,
+        env_vars: Optional[Dict[str, Any]] = None,
         **kwargs,
     ) -> DbtTaskResult:
         """Run a dbt task with a given configuration and return the results.
@@ -208,6 +209,7 @@ class DbtHook(BaseHook):
             upload_dbt_project=upload_dbt_project,
             delete_before_upload=delete_before_upload,
             replace_on_upload=replace_on_upload,
+            env_vars=env_vars,
         ) as dbt_dir:
             config.dbt_task.pre_init_hook(config)
             self.ensure_profiles(config.profiles_dir)
@@ -272,6 +274,7 @@ class DbtHook(BaseHook):
         upload_dbt_project: bool = False,
         delete_before_upload: bool = False,
         replace_on_upload: bool = False,
+        env_vars: Optional[Dict[str, Any]] = None,
     ) -> Iterator[str]:
         """Provides a temporary directory to execute dbt.
 
@@ -284,43 +287,46 @@ class DbtHook(BaseHook):
         Yields:
             The temporary directory's name.
         """
+        from airflow_dbt_python.utils.env import update_environment
+
         store_profiles_dir = config.profiles_dir
         store_project_dir = config.project_dir
 
-        with TemporaryDirectory(prefix="airflow_tmp") as tmp_dir:
-            self.log.info("Initializing temporary directory: %s", tmp_dir)
+        with update_environment(env_vars):
+            with TemporaryDirectory(prefix="airflow_tmp") as tmp_dir:
+                self.log.info("Initializing temporary directory: %s", tmp_dir)
 
-            try:
-                project_dir, profiles_dir = self.prepare_directory(
-                    tmp_dir,
-                    store_project_dir,
-                    store_profiles_dir,
-                )
-            except Exception as e:
-                raise AirflowException(
-                    "Failed to prepare temporary directory for dbt execution"
-                ) from e
+                try:
+                    project_dir, profiles_dir = self.prepare_directory(
+                        tmp_dir,
+                        store_project_dir,
+                        store_profiles_dir,
+                    )
+                except Exception as e:
+                    raise AirflowException(
+                        "Failed to prepare temporary directory for dbt execution"
+                    ) from e
 
-            config.project_dir = project_dir
-            config.profiles_dir = profiles_dir
+                config.project_dir = project_dir
+                config.profiles_dir = profiles_dir
 
-            if getattr(config, "state", None) is not None:
-                state = Path(getattr(config, "state", ""))
-                # Since we are running in a temporary directory, we need to make
-                # state paths relative to this temporary directory.
-                if not state.is_absolute():
-                    setattr(config, "state", str(Path(tmp_dir) / state))
+                if getattr(config, "state", None) is not None:
+                    state = Path(getattr(config, "state", ""))
+                    # Since we are running in a temporary directory, we need to make
+                    # state paths relative to this temporary directory.
+                    if not state.is_absolute():
+                        setattr(config, "state", str(Path(tmp_dir) / state))
 
-            yield tmp_dir
+                yield tmp_dir
 
-            if upload_dbt_project is True:
-                self.log.info("Uploading dbt project to: %s", store_project_dir)
-                self.upload_dbt_project(
-                    tmp_dir,
-                    store_project_dir,
-                    replace=replace_on_upload,
-                    delete_before=delete_before_upload,
-                )
+                if upload_dbt_project is True:
+                    self.log.info("Uploading dbt project to: %s", store_project_dir)
+                    self.upload_dbt_project(
+                        tmp_dir,
+                        store_project_dir,
+                        replace=replace_on_upload,
+                        delete_before=delete_before_upload,
+                    )
 
         config.profiles_dir = store_profiles_dir
         config.project_dir = store_project_dir

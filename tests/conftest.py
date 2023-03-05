@@ -186,6 +186,21 @@ def profiles_file(tmp_path_factory, database):
 
 
 @pytest.fixture(scope="session")
+def profiles_file_with_env(tmp_path_factory):
+    """Create a profiles.yml file that relies on env variables for db connection."""
+    p = tmp_path_factory.mktemp(".dbt_with_env") / "profiles.yml"
+    profiles_content = PROFILES.format(
+        host="\"{{ env_var('DBT_HOST') }}\"",
+        user="\"{{ env_var('DBT_USER') }}\"",
+        port="\"{{ env_var('DBT_PORT') | int }}\"",
+        password="\"{{ env_var('DBT_ENV_SECRET_PASSWORD') }}\"",
+        dbname="\"{{ env_var('DBT_DBNAME') }}\"",
+    )
+    p.write_text(profiles_content)
+    return p
+
+
+@pytest.fixture(scope="session")
 def airflow_conns(database):
     """Create Airflow connections for testing.
 

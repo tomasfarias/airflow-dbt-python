@@ -5,7 +5,7 @@ import datetime as dt
 import os
 from dataclasses import asdict, is_dataclass
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Optional, Union
+from typing import TYPE_CHECKING, Any, Dict, Optional, Union
 
 from airflow.exceptions import AirflowException
 from airflow.models.baseoperator import BaseOperator
@@ -24,6 +24,7 @@ base_template_fields = [
     "target",
     "state",
     "vars",
+    "env_vars",
 ]
 
 
@@ -95,6 +96,7 @@ class DbtBaseOperator(BaseOperator):
         upload_dbt_project: bool = False,
         delete_before_upload: bool = False,
         replace_on_upload: bool = False,
+        env_vars: Optional[Dict[str, Any]] = None,
         **kwargs,
     ) -> None:
         super().__init__(**kwargs)
@@ -145,6 +147,7 @@ class DbtBaseOperator(BaseOperator):
         self.upload_dbt_project = upload_dbt_project
         self.delete_before_upload = delete_before_upload
         self.replace_on_upload = replace_on_upload
+        self.env_vars = env_vars
 
         self._dbt_hook: Optional[DbtHook] = None
 

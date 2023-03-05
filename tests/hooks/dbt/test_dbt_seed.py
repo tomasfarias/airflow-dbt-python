@@ -18,6 +18,35 @@ def test_dbt_seed_task(profiles_file, dbt_project_file, seed_files):
 
     assert result.success is True
 
+    assert result.run_results is not None
+    assert len(result.run_results) == 2
+    for index, run_result in enumerate(result.run_results, start=1):
+        assert run_result.status == RunStatus.Success
+        assert run_result.node.unique_id == f"seed.test.seed_{index}"
+
+
+def test_dbt_seed_task_with_env_vars_profile(
+    hook, profiles_file_with_env, dbt_project_file, model_files, database
+):
+    """Test a dbt seed task that can render env variables in profile."""
+    env = {
+        "DBT_HOST": database.host,
+        "DBT_USER": database.user,
+        "DBT_PORT": str(database.port),
+        "DBT_ENV_SECRET_PASSWORD": database.password,
+        "DBT_DBNAME": database.dbname,
+    }
+
+    result = hook.run_dbt_task(
+        "run",
+        project_dir=dbt_project_file.parent,
+        profiles_dir=profiles_file_with_env.parent,
+        select=[str(m.stem) for m in model_files],
+        env_vars=env,
+    )
+
+    assert result.success is True
+
     assert len(result.run_results) == 2
     for index, run_result in enumerate(result.run_results, start=1):
         assert run_result.status == RunStatus.Success

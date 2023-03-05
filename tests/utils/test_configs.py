@@ -1,6 +1,9 @@
 """Unit test module for dbt task configuration utilities."""
+import os
+from unittest.mock import patch
+
 import pytest
-from dbt.exceptions import DbtProfileError
+from dbt.exceptions import DbtProfileError, EnvVarMissingError
 from dbt.task.build import BuildTask
 from dbt.task.compile import CompileTask
 from dbt.task.debug import DebugTask
@@ -250,6 +253,40 @@ def test_base_config_create_dbt_profile(hook, profiles_file, dbt_project_file):
     target = profile.to_target_dict()
     assert target["name"] == "test"
     assert target["type"] == "postgres"
+
+
+def test_base_config_create_dbt_profile_with_env_vars(
+    profiles_file_with_env, dbt_project_file, database
+):
+    """Test the create_dbt_profile with a profiles file that contains env vars."""
+    config = BaseConfig(
+        project_dir=dbt_project_file.parent,
+        profiles_dir=profiles_file_with_env.parent,
+    )
+
+    with pytest.raises(EnvVarMissingError):
+        # No environment set yet, we should fail.
+        profile = config.create_dbt_profile()
+
+    env = {
+        "DBT_HOST": database.host,
+        "DBT_USER": database.user,
+        "DBT_PORT": str(database.port),
+        "DBT_ENV_SECRET_PASSWORD": database.password,
+        "DBT_DBNAME": database.dbname,
+    }
+
+    with patch.dict(os.environ, env):
+        profile = config.create_dbt_profile()
+        assert profile.credentials.password == database.password
+
+        target = profile.to_target_dict()
+        assert target["name"] == "test"
+        assert target["type"] == "postgres"
+        assert target["host"] == database.host
+        assert target["user"] == database.user
+        assert target["port"] == database.port
+        assert target["dbname"] == database.dbname
 
 
 def test_base_config_create_dbt_profile_with_extra_target(

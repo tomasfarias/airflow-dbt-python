@@ -1,4 +1,5 @@
 """Unit test module for the dbt hook base class."""
+import os
 from pathlib import Path
 
 import pytest
@@ -302,6 +303,28 @@ def test_dbt_directory_with_no_state(
     with hook.dbt_directory(config) as tmp_dir:
         assert Path(tmp_dir).exists()
         assert getattr(config, "state", None) is None
+
+
+def test_dbt_directory_with_env_vars(hook, profiles_file_with_env, dbt_project_file):
+    """Test dbt_directory sets environment variables."""
+    config = RunTaskConfig(
+        project_dir=dbt_project_file.parent,
+        profiles_dir=profiles_file_with_env.parent,
+        state="target/",
+    )
+
+    assert "TEST_ENVAR0" not in os.environ
+    assert "TEST_ENVAR1" not in os.environ
+
+    env_vars = {"TEST_ENVAR0": 1, "TEST_ENVAR1": "abc"}
+
+    with hook.dbt_directory(config, env_vars=env_vars) as tmp_dir:
+        assert Path(tmp_dir).exists()
+        assert os.environ.get("TEST_ENVAR0") == "1"
+        assert os.environ.get("TEST_ENVAR1") == "abc"
+
+    assert "TEST_ENVAR0" not in os.environ
+    assert "TEST_ENVAR1" not in os.environ
 
 
 @no_s3_remote
