@@ -26,7 +26,7 @@ def test_dbt_seed_task(profiles_file, dbt_project_file, seed_files):
 
 
 def test_dbt_seed_task_with_env_vars_profile(
-    hook, profiles_file_with_env, dbt_project_file, model_files, database
+    hook, profiles_file_with_env, dbt_project_file, seed_files, database
 ):
     """Test a dbt seed task that can render env variables in profile."""
     env = {
@@ -38,10 +38,10 @@ def test_dbt_seed_task_with_env_vars_profile(
     }
 
     result = hook.run_dbt_task(
-        "run",
+        "seed",
         project_dir=dbt_project_file.parent,
         profiles_dir=profiles_file_with_env.parent,
-        select=[str(m.stem) for m in model_files],
+        select=[str(s.stem) for s in seed_files],
         env_vars=env,
     )
 
