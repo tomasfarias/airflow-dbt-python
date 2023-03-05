@@ -112,6 +112,45 @@ def test_dbt_run_models(profiles_file, dbt_project_file, model_files, logs_dir):
     )
 
 
+def test_dbt_run_models_with_env_vars(
+    profiles_file_with_env, dbt_project_file, model_files, logs_dir, database
+):
+    """Test execution of DbtRunOperator with all models using env vars in profile."""
+    env = {
+        "DBT_HOST": database.host,
+        "DBT_USER": database.user,
+        "DBT_PORT": str(database.port),
+        "DBT_ENV_SECRET_PASSWORD": database.password,
+        "DBT_DBNAME": database.dbname,
+    }
+
+    op = DbtRunOperator(
+        task_id="dbt_task",
+        project_dir=dbt_project_file.parent,
+        profiles_dir=profiles_file_with_env.parent,
+        models=[str(m.stem) for m in model_files],
+        do_xcom_push=True,
+        debug=True,
+        env_vars=env,
+    )
+
+    execution_results = op.execute({})
+    run_result = execution_results["results"][0]
+
+    assert run_result["status"] == RunStatus.Success
+
+    log_file = logs_dir / "dbt.log"
+    assert log_file.exists()
+
+    with open(log_file) as f:
+        logs = f.read()
+
+    assert (
+        "OK created view model public.model_4" in logs
+        or "OK created sql view model public.model_4" in logs
+    )
+
+
 def test_dbt_run_models_full_refresh(profiles_file, dbt_project_file, model_files):
     """Test dbt run operator with all model files and full-refresh."""
     op = DbtRunOperator(

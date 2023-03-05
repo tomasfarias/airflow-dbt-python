@@ -1,4 +1,5 @@
 """Unit test module for running dbt run with the DbtHook."""
+import os
 from pathlib import Path
 
 import pytest
@@ -14,6 +15,36 @@ def test_dbt_run_task(hook, profiles_file, dbt_project_file, model_files):
         project_dir=dbt_project_file.parent,
         profiles_dir=profiles_file.parent,
         select=[str(m.stem) for m in model_files],
+    )
+
+    assert result.success is True
+
+    assert len(result.run_results) == 3
+
+    # Start from 2 as model_1 is ephemeral, and ephemeral models are not built.
+    for index, run_result in enumerate(result.run_results, start=2):
+        assert run_result.status == RunStatus.Success
+        assert run_result.node.unique_id == f"model.test.model_{index}"
+
+
+def test_dbt_run_task_with_env_vars_profile(
+    hook, profiles_file_with_env, dbt_project_file, model_files, database
+):
+    """Test a dbt run task that can render env variables in profile."""
+    env = {
+        "DBT_HOST": database.host,
+        "DBT_USER": database.user,
+        "DBT_PORT": str(database.port),
+        "DBT_ENV_SECRET_PASSWORD": database.password,
+        "DBT_DBNAME": database.dbname,
+    }
+
+    result = hook.run_dbt_task(
+        "run",
+        project_dir=dbt_project_file.parent,
+        profiles_dir=profiles_file_with_env.parent,
+        select=[str(m.stem) for m in model_files],
+        env_vars=env,
     )
 
     assert result.success is True
