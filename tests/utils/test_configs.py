@@ -105,7 +105,7 @@ def test_base_config():
 def test_base_config_with_mutually_exclusive_arguments():
     """Test a BaseConfig with mutually exclusive arguments."""
     with pytest.raises(ValueError):
-        config = BaseConfig(
+        BaseConfig(
             no_version_check=True,
             version_check=True,
         )
@@ -133,6 +133,7 @@ def test_base_config_with_mutually_exclusive_arguments():
     ],
 )
 def test_config_vars(vars, expected):
+    """Assert vars parsed by BaseConfig match expected."""
     config = BaseConfig(
         vars=vars,
     )
@@ -208,6 +209,7 @@ def test_build_task_minimal_config_singular(hook, profiles_file, dbt_project_fil
     ],
 )
 def test_parse_yaml_args(vars, expected):
+    """Assert yaml args parsed by BaseConfig match expected."""
     result = parse_yaml_args(vars)
     assert result == expected
 

@@ -582,6 +582,7 @@ def test_files(tmp_path_factory, dbt_project_file):
 
 
 def pytest_addoption(parser):
+    """Adds option to run integration tests with pytest."""
     parser.addoption(
         "--run-integration",
         action="store_true",
@@ -591,6 +592,7 @@ def pytest_addoption(parser):
 
 
 def pytest_collection_modifyitems(config, items):
+    """Allows skipping integration tests when flag missing."""
     if config.getoption("--run-integration"):
         return
 

@@ -111,6 +111,6 @@ def test_dbt_docs_generate_upload_to_s3(
     assert results is not None
 
     keys = s3_hook.list_keys(s3_bucket)
-    assert f"project/target/manifest.json" in keys
-    assert f"project/target/catalog.json" in keys
-    assert f"project/target/index.html" in keys
+    assert "project/target/manifest.json" in keys
+    assert "project/target/catalog.json" in keys
+    assert "project/target/index.html" in keys

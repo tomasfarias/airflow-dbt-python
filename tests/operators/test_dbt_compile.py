@@ -101,10 +101,12 @@ GROUP BY
 
 
 def clean_lines(s):
+    """Clean whitespace from lines to support easier comparisons during testing."""
     return [line for line in s.split("\n") if line != ""]
 
 
 def test_dbt_compile_models(profiles_file, dbt_project_file, model_files, compile_dir):
+    """Test execution of DbtCompileOperator with all model files."""
     op = DbtCompileOperator(
         task_id="dbt_task",
         project_dir=dbt_project_file.parent,
@@ -140,6 +142,7 @@ def test_dbt_compile_models(profiles_file, dbt_project_file, model_files, compil
 def test_dbt_compile_models_full_refresh(
     profiles_file, dbt_project_file, model_files, compile_dir
 ):
+    """Test execution of DbtCompileOperator with full_refresh=True."""
     op = DbtCompileOperator(
         task_id="dbt_task",
         project_dir=dbt_project_file.parent,

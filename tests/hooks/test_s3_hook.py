@@ -354,10 +354,10 @@ def test_upload_dbt_project_with_partial_replace(
     s3_bucket, s3_hook, tmpdir, test_files
 ):
     """Test pushing a dbt project to a S3 path with replace = False.
-    For this test we are looking for one file to be pushed while the rest are to be ignored
-    as they already exist and we are running with replace = False.
+
+    For this test we are looking for one file to be pushed while the rest are to be
+    ignored as they already exist and we are running with replace = False.
     """
-    prefix = f"s3://{s3_bucket}/project/"
     bucket = s3_hook.get_bucket(s3_bucket)
 
     last_modified_expected = {}
@@ -390,7 +390,7 @@ def test_upload_dbt_project_with_partial_replace(
     remote = DbtS3RemoteHook()
     with freezegun.freeze_time("2022-02-02"):
         # Attempt to push project a month after.
-        # Only one file should be pushed as the rest exist and we are passing replace = False.
+        # Only one file should be pushed as the rest exist and we using replace = False.
         remote.upload_dbt_project(
             project_dir, f"s3://{s3_bucket}/project/", replace=False
         )

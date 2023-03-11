@@ -19,6 +19,7 @@ def test_dbt_compile_non_existent_model(
 
 @pytest.fixture(scope="function")
 def compile_dir(dbt_project_file):
+    """Return the path to a directory with dbt compiled files."""
     import shutil
 
     compile_dir = dbt_project_file.parent / "target"
