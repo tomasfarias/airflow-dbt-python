@@ -31,4 +31,4 @@ repos:
     rev: 'v0.0.254'
     hooks:
       - id: ruff
-        name: Ruff check
+        name: Linting with ruff
