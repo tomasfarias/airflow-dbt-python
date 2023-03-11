@@ -140,6 +140,7 @@ def test_dbt_seed_models_debug_logging(
 
 
 def test_dbt_seed_models_full_refresh(profiles_file, dbt_project_file, seed_files):
+    """Test the dbt seed operator with full_refresh set to True."""
     op = DbtSeedOperator(
         task_id="dbt_task",
         project_dir=dbt_project_file.parent,
@@ -173,6 +174,7 @@ def broken_file(dbt_project_dir):
 def test_dbt_seed_fails_with_malformed_csv(
     profiles_file, dbt_project_file, broken_file
 ):
+    """Test the dbt seed operator with a malformed CSV file."""
     op = DbtSeedOperator(
         task_id="dbt_task",
         project_dir=dbt_project_file.parent,
@@ -189,6 +191,7 @@ def test_dbt_seed_fails_with_malformed_csv(
 def test_dbt_seed_from_s3(
     s3_bucket, s3_hook, profiles_file, dbt_project_file, seed_files
 ):
+    """Test the dbt seed operator with a dbt S3 remote."""
     bucket = s3_hook.get_bucket(s3_bucket)
 
     with open(dbt_project_file) as pf:
@@ -223,6 +226,7 @@ def test_dbt_seed_from_s3(
 def test_dbt_seed_with_profile_from_s3(
     s3_bucket, s3_hook, profiles_file, dbt_project_file, seed_files
 ):
+    """Test the dbt seed operator with a dbt S3 remote only for profiles."""
     bucket = s3_hook.get_bucket(s3_bucket)
 
     with open(profiles_file) as pf:
@@ -246,6 +250,7 @@ def test_dbt_seed_with_profile_from_s3(
 def test_dbt_seed_with_project_from_s3(
     s3_bucket, s3_hook, profiles_file, dbt_project_file, seed_files
 ):
+    """Test the dbt seed operator with a dbt S3 remote only for project."""
     bucket = s3_hook.get_bucket(s3_bucket)
 
     with open(dbt_project_file) as pf:

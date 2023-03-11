@@ -304,7 +304,6 @@ def target_connection_dag(
     generic_tests_files,
 ):
     """Create a testing DAG that utilizes Airflow connections."""
-
     with DAG(
         dag_id="target_conn_dbt_dag",
         start_date=DATA_INTERVAL_START,

@@ -176,6 +176,7 @@ def test_dbt_test_from_s3(
 def test_dbt_tests_with_profile_from_s3(
     s3_bucket, s3_hook, profiles_file, dbt_project_file, singular_tests_files
 ):
+    """Test a dbt test operator with a profiles.yml stored in s3."""
     bucket = s3_hook.get_bucket(s3_bucket)
 
     with open(profiles_file) as pf:
@@ -197,6 +198,7 @@ def test_dbt_tests_with_profile_from_s3(
 def test_dbt_test_with_project_from_s3(
     s3_bucket, s3_hook, profiles_file, dbt_project_file, singular_tests_files
 ):
+    """Test a dbt test operator with a dbt project stored in s3."""
     bucket = s3_hook.get_bucket(s3_bucket)
 
     with open(dbt_project_file) as pf:

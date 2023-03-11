@@ -1,5 +1,4 @@
 """Unit test module for running dbt run with the DbtHook."""
-import os
 from pathlib import Path
 
 import pytest
@@ -119,7 +118,7 @@ def test_dbt_run_task_exclude_one_file(
 def test_dbt_run_fails_with_non_existent_project(hook, profiles_file, dbt_project_file):
     """Test what exception is raised when running from a fake project."""
     with pytest.raises(AirflowException):
-        result = hook.run_dbt_task(
+        hook.run_dbt_task(
             "run",
             project_dir="/home/fake/project",
             profiles_dir="/home/fake/profiles/",
