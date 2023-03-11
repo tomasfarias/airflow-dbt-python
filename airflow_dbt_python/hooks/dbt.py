@@ -387,6 +387,7 @@ class DbtHook(BaseHook):
             # configured the loggers before the call to setup_event_logger.
             # In the future, handlers may also be cleared or setup to use Airflow's.
             file_log.setLevel("INFO")
+            file_log.propagate = False
             configured_file.setLevel("INFO")
             configured_file.propagate = False
 
