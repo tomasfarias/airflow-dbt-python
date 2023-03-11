@@ -3,7 +3,9 @@ repos:
     rev: v4.4.0
     hooks:
       - id: trailing-whitespace
+        name: Check trailing whitespace
       - id: end-of-file-fixer
+        name: Ensure end of file newline
 
   - repo: https://github.com/psf/black
     rev: 23.1.0
@@ -12,15 +14,6 @@ repos:
       name: Python code formatting
       types_or: [python, pyi]
 
-  - repo: https://github.com/pycqa/flake8
-    rev: 6.0.0
-    hooks:
-      - id: flake8
-        additional_dependencies: [flake8-docstrings]
-        args: ["--config", ".flake8"]
-        name: PEP8 enforcement
-        exclude: tests/
-
   - repo: https://github.com/pre-commit/mirrors-mypy
     rev: v1.0.1
     hooks:
@@ -28,15 +21,14 @@ repos:
         name: Static type checking
         additional_dependencies: ["types-freezegun==1.1.6", "boto3-stubs[s3]", "types-PyYAML"]
 
-  - repo: https://github.com/pycqa/isort
-    rev: 5.12.0
-    hooks:
-      - id: isort
-        name: Sort import statements
-        args: ["--profile", "black", "--filter-files"]
-
   - repo: https://github.com/Yelp/detect-secrets
     rev: v1.4.0
     hooks:
       - id: detect-secrets
         name: Detect secrets
+
+  - repo: https://github.com/charliermarsh/ruff-pre-commit
+    rev: 'v0.0.254'
+    hooks:
+      - id: ruff
+        name: Ruff check
