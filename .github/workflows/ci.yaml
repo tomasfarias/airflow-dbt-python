@@ -61,8 +61,8 @@ jobs:
           poetry run pip install apache-airflow==${{ matrix.airflow-version }} apache-airflow-providers-amazon apache-airflow-providers-ssh -c constraints.txt
           poetry run airflow db init
 
-      - name: Style guide enforcement with flake8
-        run: poetry run flake8 .
+      - name: Linting with ruff
+        run: poetry run ruff .
 
       - name: Static type checking with mypy
         run: poetry run mypy .
