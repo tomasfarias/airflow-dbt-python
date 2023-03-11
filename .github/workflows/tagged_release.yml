@@ -16,23 +16,33 @@ jobs:
           token: ${{ secrets.PA_TOKEN }}
           checkName: CI
           ref: ${{ github.sha }}
-      - uses: actions/checkout@v2.3.4
+
+      - name: Checkout
+        uses: actions/checkout@v2.3.4
+
       - name: Set up Python 3.10
         uses: actions/setup-python@v2
         with:
           python-version: '3.10'
+
       - name: Install Poetry
         uses: abatilo/actions-poetry@v2.1.4
         with:
           poetry-version: 1.3.2
+
       - name: Install airflow-dbt-python with Poetry
         run: poetry install
+
       - name: Build airflow-dbt-python with Poetry
         run: poetry build
-      - name: Release new SemVer tag
-        uses: marvinpinto/action-automatic-releases@latest
+
+      - name: Set prerelease variable
+        run: echo "IS_PRERELEASE=if $(poetry version -s | grep -qP '^v[0-9]+\.[0-9]+\.[0-9]+$'); then echo 'false'; else echo 'true'; fi;" >> $GITHUB_ENV
+
+      - name: Release new tag
+        uses: softprops/action-gh-release@v1
         with:
-          repo_token: "${{ secrets.PA_TOKEN }}"
-          prerelease: false
+          prerelease: ${{ fromJSON(env.IS_PRERELEASE) }}
+          token: ${{ secrets.PA_TOKEN }}
           files: |
             dist/*
