@@ -36,31 +36,29 @@ optional = true
 [tool.poetry.group.dev.dependencies]
 apache-airflow-providers-amazon = ">=3.0.0"
 apache-airflow-providers-ssh = ">=3.0.0"
-black = "^22.3"
-boto3-stubs = { extras = ["s3"], version = "^1.26.8" }
-coverage = { extras = ["toml"], version = "^6.5" }
+black = ">=22"
+boto3-stubs = { extras = ["s3"], version = ">=1.26.8" }
+coverage = { extras = ["toml"], version = ">=7.2" }
 dbt-postgres = ">=1.0.0"
 dulwich = ">=0.20"
-moto = "^4.0.3"
-mypy = "1.0"
-flake8 = "<=4.0"
-flake8-docstrings = "^1.6.0"
-freezegun = "^1.1.0"
-isort = "^5.10.1"
-pre-commit = "^2.18"
-psycopg2-binary = "^2.8.6"
-pytest = "^6.2.4"
-pytest-postgresql = "^3.1.1"
-types-freezegun = "^1.1.6"
-types-PyYAML = "^6.0.7"
+moto = ">=4.0.3"
+mypy = ">=1"
+freezegun = ">=1.1.0"
+pre-commit = ">=2.18"
+psycopg2-binary = ">=2.8.6"
+pytest = ">=7.2"
+pytest-postgresql = ">=3,<4"  # dbt-postgres doesn't support psycopg3 yet
+ruff = ">=0.0.254"
+types-freezegun = ">=1.1.6"
+types-PyYAML = ">=6.0.7"
 
 [tool.poetry.group.docs]
 optional = true
 
 [tool.poetry.group.docs.dependencies]
-Sphinx = "^5.3"
-sphinx-rtd-theme = "^1.1"
-sphinx-copybutton = "^0.5"
+Sphinx = ">=5.3"
+sphinx-rtd-theme = ">=1.1"
+sphinx-copybutton = ">=0.5"
 attrs = ">=22"
 
 [tool.poetry.group.adapters]
@@ -90,13 +88,6 @@ spark = ["dbt-spark"]
 requires = ["poetry-core>=1.2.0"]
 build-backend = "poetry.core.masonry.api"
 
-[tool.isort]
-profile = "black"
-multi_line_output = 3
-known_third_party = [
-  "airflow",
-]
-
 [tool.black]
 line-length = 88
 include = '\.pyi?$'
@@ -124,6 +115,13 @@ source = [
     "/home/runner/*/airflow-dbt-python/airflow_dbt_python"
 ]
 
+[tool.mypy]
+ignore_missing_imports = true
+strict_optional = true
+warn_unused_ignores = false
+warn_redundant_casts = true
+warn_unused_configs = true
+
 [tool.pytest.ini_options]
 addopts = "--doctest-modules"
 postgresql_user = "test"
@@ -139,10 +137,49 @@ markers = [
     "integration: mark test as an integration test"
 ]
 
+[tool.ruff]
+select = ["E", "D", "F", "I"]
+ignore = ["D107"]
+line-length = 88
+target-version = "py311"
+exclude = [
+    ".bzr",
+    ".direnv",
+    ".eggs",
+    ".git",
+    ".hg",
+    ".mypy_cache",
+    ".nox",
+    ".pants.d",
+    ".pytype",
+    ".ruff_cache",
+    ".svn",
+    ".tox",
+    ".venv",
+    "__pypackages__",
+    "_build",
+    "airflow",
+    "buck-out",
+    "build",
+    "dist",
+    "node_modules",
+    "venv",
+    "webserver_config.py",
+]
 
-[tool.mypy]
-ignore_missing_imports = true
-strict_optional = true
-warn_unused_ignores = false
-warn_redundant_casts = true
-warn_unused_configs = true
+[tool.ruff.isort]
+known-third-party = ["airflow"]
+
+[tool.ruff.per-file-ignores]
+"__init__.py" = [
+    "E402",
+    "F401",
+]
+"tests/*" = [
+    "F401",
+    "E402",
+]
+"docs/*" = ["E402"]
+
+[tool.ruff.pydocstyle]
+convention = "google"
