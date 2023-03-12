@@ -472,6 +472,7 @@
             <span class="c1"># configured the loggers before the call to setup_event_logger.</span>
             <span class="c1"># In the future, handlers may also be cleared or setup to use Airflow&#39;s.</span>
             <span class="n">file_log</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="s2">&quot;INFO&quot;</span><span class="p">)</span>
+            <span class="n">file_log</span><span class="o">.</span><span class="n">propagate</span> <span class="o">=</span> <span class="kc">False</span>
             <span class="n">configured_file</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="s2">&quot;INFO&quot;</span><span class="p">)</span>
             <span class="n">configured_file</span><span class="o">.</span><span class="n">propagate</span> <span class="o">=</span> <span class="kc">False</span></div>
 
