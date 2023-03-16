@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>airflow_dbt_python.hooks.remote &mdash; airflow-dbt-python 1.0.0b0 documentation</title>
+  <title>airflow_dbt_python.hooks.remote &mdash; airflow-dbt-python 1.0.1 documentation</title>
       <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="../../../_static/copybutton.css" type="text/css" />
@@ -38,7 +38,7 @@
             airflow-dbt-python
           </a>
               <div class="version">
-                1.0.0b0
+                1.0.1
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
@@ -229,15 +229,17 @@
 <span class="sd">    In the future we should make our hooks discoverable and package ourselves as a</span>
 <span class="sd">    proper Airflow providers package.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="kn">from</span> <span class="nn">.git</span> <span class="kn">import</span> <span class="n">DbtGitRemoteHook</span>
-    <span class="kn">from</span> <span class="nn">.localfs</span> <span class="kn">import</span> <span class="n">DbtLocalFsRemoteHook</span>
-    <span class="kn">from</span> <span class="nn">.s3</span> <span class="kn">import</span> <span class="n">DbtS3RemoteHook</span>
-
     <span class="k">if</span> <span class="n">scheme</span> <span class="o">==</span> <span class="s2">&quot;s3&quot;</span><span class="p">:</span>
+        <span class="kn">from</span> <span class="nn">.s3</span> <span class="kn">import</span> <span class="n">DbtS3RemoteHook</span>
+
         <span class="n">remote_cls</span><span class="p">:</span> <span class="n">Type</span><span class="p">[</span><span class="n">DbtRemoteHook</span><span class="p">]</span> <span class="o">=</span> <span class="n">DbtS3RemoteHook</span>
     <span class="k">elif</span> <span class="n">scheme</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;https&quot;</span><span class="p">,</span> <span class="s2">&quot;git&quot;</span><span class="p">,</span> <span class="s2">&quot;git+ssh&quot;</span><span class="p">,</span> <span class="s2">&quot;ssh&quot;</span><span class="p">,</span> <span class="s2">&quot;http&quot;</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">.git</span> <span class="kn">import</span> <span class="n">DbtGitRemoteHook</span>
+
         <span class="n">remote_cls</span> <span class="o">=</span> <span class="n">DbtGitRemoteHook</span>
     <span class="k">elif</span> <span class="n">scheme</span> <span class="o">==</span> <span class="s2">&quot;&quot;</span><span class="p">:</span>
+        <span class="kn">from</span> <span class="nn">.localfs</span> <span class="kn">import</span> <span class="n">DbtLocalFsRemoteHook</span>
+
         <span class="n">remote_cls</span> <span class="o">=</span> <span class="n">DbtLocalFsRemoteHook</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Backend </span><span class="si">{</span><span class="n">scheme</span><span class="si">}</span><span class="s2"> is not supported&quot;</span><span class="p">)</span>
