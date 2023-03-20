@@ -21,7 +21,7 @@ classifiers = [
 ]
 
 [tool.poetry.dependencies]
-python = ">=3.7.2"
+python = ">=3.7.2,<4.0"
 
 apache-airflow = { version = ">=2.0", optional = true }
 apache-airflow-providers-amazon = { version = ">=3.0.0", optional = true }
@@ -29,6 +29,11 @@ apache-airflow-providers-ssh = { version = ">=3.0.0", optional = true }
 dulwich = { version = ">=0.20", optional = true }
 
 dbt-core = ">=1.0.0"
+dbt-bigquery = { version = ">=1.0.0", optional = true }
+dbt-postgres = { version = ">=1.0.0", optional = true }
+dbt-redshift = { version = ">=1.0.0", optional = true }
+dbt-snowflake = { version = ">=1.0.0", optional = true }
+dbt-spark = { version = ">=1.0.0", optional = true }
 
 [tool.poetry.group.dev]
 optional = true
@@ -65,11 +70,11 @@ attrs = ">=22"
 optional = true
 
 [tool.poetry.group.adapters.dependencies]
-dbt-bigquery = { version = ">=1.0.0", optional = true }
-dbt-postgres = { version = ">=1.0.0", optional = true }
-dbt-redshift = { version = ">=1.0.0", optional = true }
-dbt-snowflake = { version = ">=1.0.0", optional = true }
-dbt-spark = { version = ">=1.0.0", optional = true }
+dbt-bigquery = ">=1.0.0"
+dbt-postgres = ">=1.0.0"
+dbt-redshift = ">=1.0.0"
+dbt-snowflake = ">=1.0.0"
+dbt-spark = ">=1.0.0"
 
 [tool.poetry.extras]
 airflow = ["apache-airflow"]
