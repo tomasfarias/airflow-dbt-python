@@ -173,7 +173,10 @@ exclude = [
 ]
 
 [tool.ruff.isort]
-known-third-party = ["airflow"]
+known-third-party = [
+  "airflow",
+  "dbt",
+]
 
 [tool.ruff.per-file-ignores]
 "__init__.py" = [
