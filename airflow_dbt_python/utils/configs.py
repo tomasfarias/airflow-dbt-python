@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING, Any, Optional, Type, Union
 
 import dbt.flags as flags
 import yaml
-from dbt.clients import yaml_helper
+from dbt.clients import yaml_helper  # type: ignore
 from dbt.config.profile import Profile, read_profile
 from dbt.config.project import PartialProject, Project
 from dbt.config.renderer import DbtProjectYamlRenderer, ProfileRenderer

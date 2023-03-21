@@ -176,6 +176,7 @@ exclude = [
 known-third-party = [
   "airflow",
   "dbt",
+  "yaml",
 ]
 
 [tool.ruff.per-file-ignores]
