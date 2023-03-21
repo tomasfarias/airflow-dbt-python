@@ -85,6 +85,24 @@ def test_dbt_run_non_existent_model(profiles_file, dbt_project_file, model_files
     assert isinstance(json.dumps(execution_results), str)
 
 
+def test_dbt_run_fails_on_non_existent_model_with_warn_error(
+    profiles_file, dbt_project_file, model_files
+):
+    """Test execution of DbtRunOperator with a non-existent model and warn_error."""
+    op = DbtRunOperator(
+        task_id="dbt_task",
+        project_dir=dbt_project_file.parent,
+        profiles_dir=profiles_file.parent,
+        models=["fake"],
+        full_refresh=True,
+        do_xcom_push=True,
+        warn_error=True,
+    )
+
+    with pytest.raises(AirflowException):
+        op.execute({})
+
+
 def test_dbt_run_models(profiles_file, dbt_project_file, model_files, logs_dir):
     """Test execution of DbtRunOperator with all models."""
     op = DbtRunOperator(
