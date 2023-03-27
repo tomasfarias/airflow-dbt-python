@@ -96,7 +96,9 @@ def test_dbt_hook_download_dbt_profiles():
     hook = DbtHook()
     hook.remotes[("", None)] = FakeRemote()  # type: ignore
 
-    args, kwargs = hook.download_dbt_profiles("/path/to/profiles", "/path/to/store")  # type: ignore
+    args, kwargs = hook.download_dbt_profiles(
+        "/path/to/profiles", "/path/to/store"
+    )  # type: ignore
 
     assert args == ("/path/to/profiles", "/path/to/store")
     assert kwargs == {}
@@ -123,7 +125,9 @@ def test_dbt_hook_download_dbt_project():
     hook = DbtHook(project_conn_id="conn_id")
     hook.remotes[("", "conn_id")] = FakeRemote()  # type: ignore
 
-    args, kwargs = hook.download_dbt_project("/path/to/profiles", "/path/to/store")  # type: ignore
+    args, kwargs = hook.download_dbt_project(
+        "/path/to/profiles", "/path/to/store"
+    )  # type: ignore
 
     assert args == ("/path/to/profiles", "/path/to/store")
     assert kwargs == {}
