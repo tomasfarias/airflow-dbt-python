@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import json
 import logging
+import sys
 from contextlib import contextmanager
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -75,6 +76,27 @@ class DbtConnectionParam(NamedTuple):
         if self.store_override_name is None:
             return self.name
         return self.store_override_name
+
+
+class DbtTemporaryDirectory(TemporaryDirectory):
+    """A wrapper on TemporaryDirectory for older versions of Python.
+
+    Support for ignore_cleanup_errors was added in Python 3.10. There is a very obscure
+    error that can happen when cleaning up a directory, even though everything should
+    be cleaned. We would like to use ignore_cleanup_errors to provide clean up on a
+    best-effort basis. For the time being, we are addressing this only for Python>=3.10.
+    """
+
+    def __init__(self, suffix=None, prefix=None, dir=None, ignore_cleanup_errors=True):
+        if sys.version_info.minor < 10 and sys.version_info.major == 3:
+            super().__init__(suffix=suffix, prefix=prefix, dir=dir)
+        else:
+            super().__init__(
+                suffix=suffix,
+                prefix=prefix,
+                dir=dir,
+                ignore_cleanup_errors=ignore_cleanup_errors,
+            )
 
 
 class DbtHook(BaseHook):
@@ -293,11 +315,7 @@ class DbtHook(BaseHook):
         store_project_dir = config.project_dir
 
         with update_environment(env_vars):
-            with TemporaryDirectory(
-                # Cleanup things on a best-effort basis
-                prefix="airflow_tmp",
-                ignore_cleanup_errors=True,
-            ) as tmp_dir:
+            with DbtTemporaryDirectory(prefix="airflow_tmp") as tmp_dir:
                 self.log.info("Initializing temporary directory: %s", tmp_dir)
 
                 try:
