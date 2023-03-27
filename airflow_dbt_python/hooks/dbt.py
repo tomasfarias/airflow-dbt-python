@@ -293,7 +293,11 @@ class DbtHook(BaseHook):
         store_project_dir = config.project_dir
 
         with update_environment(env_vars):
-            with TemporaryDirectory(prefix="airflow_tmp") as tmp_dir:
+            with TemporaryDirectory(
+                # Cleanup things on a best-effort basis
+                prefix="airflow_tmp",
+                ignore_cleanup_errors=True,
+            ) as tmp_dir:
                 self.log.info("Initializing temporary directory: %s", tmp_dir)
 
                 try:
@@ -549,5 +553,5 @@ class DbtSnowflakeHook(DbtHook):
         "connect_retries",
         "connect_timeout",
         "retry_on_database_errors",
-        "retry_on_database_errors",
+        "retry_all",
     ]

@@ -89,22 +89,28 @@ class FakeRemote:
 
 
 def test_dbt_hook_download_dbt_profiles():
-    """Test dbt hook calls remote correctly."""
-    hook = DbtHook()
-    hook.remotes[("", None)] = FakeRemote()
+    """Test dbt hook calls remote correctly.
 
-    args, kwargs = hook.download_dbt_profiles("/path/to/profiles", "/path/to/store")
+    We ignore types as we are monkey patching a FakeRemote for testing.
+    """
+    hook = DbtHook()
+    hook.remotes[("", None)] = FakeRemote()  # type: ignore
+
+    args, kwargs = hook.download_dbt_profiles("/path/to/profiles", "/path/to/store")  # type: ignore
 
     assert args == ("/path/to/profiles", "/path/to/store")
     assert kwargs == {}
 
 
 def test_dbt_hook_upload_dbt_project():
-    """Test dbt hook calls remote correctly."""
-    hook = DbtHook()
-    hook.remotes[("", None)] = FakeRemote()
+    """Test dbt hook calls remote correctly.
 
-    args, kwargs = hook.upload_dbt_project(
+    We ignore types as we are monkey patching a FakeRemote for testing.
+    """
+    hook = DbtHook()
+    hook.remotes[("", None)] = FakeRemote()  # type: ignore
+
+    args, kwargs = hook.upload_dbt_project(  # type: ignore
         "/path/to/profiles", "/path/to/store", replace=True, delete_before=True
     )
 
@@ -115,9 +121,9 @@ def test_dbt_hook_upload_dbt_project():
 def test_dbt_hook_download_dbt_project():
     """Test dbt hook calls remote correctly."""
     hook = DbtHook(project_conn_id="conn_id")
-    hook.remotes[("", "conn_id")] = FakeRemote()
+    hook.remotes[("", "conn_id")] = FakeRemote()  # type: ignore
 
-    args, kwargs = hook.download_dbt_project("/path/to/profiles", "/path/to/store")
+    args, kwargs = hook.download_dbt_project("/path/to/profiles", "/path/to/store")  # type: ignore
 
     assert args == ("/path/to/profiles", "/path/to/store")
     assert kwargs == {}
