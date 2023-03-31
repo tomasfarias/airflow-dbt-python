@@ -26,7 +26,7 @@ python = ">=3.7.2,<4.0"  # Airflow providers require this upper boundary
 apache-airflow = { version = ">=2.0", optional = true }
 apache-airflow-providers-amazon = { version = ">=3.0.0", optional = true }
 apache-airflow-providers-ssh = { version = ">=3.0.0", optional = true }
-dulwich = { version = ">=0.20", optional = true }
+dulwich = { version = ">=0.21", optional = true }
 
 dbt-core = ">=1.0.0"
 dbt-bigquery = { version = ">=1.0.0", optional = true }
@@ -45,7 +45,7 @@ black = ">=22"
 boto3-stubs = { extras = ["s3"], version = ">=1.26.8" }
 coverage = { extras = ["toml"], version = ">=7.2" }
 dbt-postgres = ">=1.0.0"
-dulwich = ">=0.20"
+dulwich = ">=0.21"
 moto = ">=4.0.3"
 mypy = ">=1"
 freezegun = ">=1.1.0"
