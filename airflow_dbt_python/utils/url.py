@@ -6,11 +6,25 @@ import tarfile
 from enum import Enum
 from pathlib import Path
 from tarfile import TarFile
-from typing import Generator, Union
+from typing import Generator, NamedTuple, Optional, Union
 from urllib.parse import ParseResult, urljoin, urlparse, urlunparse
 from zipfile import ZipFile
 
 URLLike = Union["URL", str, Path]
+
+
+class HTTPAuthentication(NamedTuple):
+    """HTTP Basic Authentication parameters."""
+
+    username: Optional[str]
+    password: Optional[str]
+
+    def __repr__(self) -> str:
+        """Return a representation of this HTTPAuthentication.
+
+        We hide username and password since both may contain sensitive values.
+        """
+        return "HTTPAuthentication(username='***', password='***')"
 
 
 class SupportedArchives(str, Enum):
@@ -333,6 +347,21 @@ class URL:
         """
         return URL(self.path.parent)
 
+    @property
+    def authentication(self) -> HTTPAuthentication:
+        """Return this URL HTTP Authentication (if any).
+
+        >>> URL("/local/path/to/project.zip").authentication
+        HTTPAuthentication(username='***', password='***')
+        >>> URL("https://user:pw@gitlab.com").authentication  # pragma: allowlist secret
+        HTTPAuthentication(username='***', password='***')
+        >>> URL("https://username@gitlab.com").authentication
+        HTTPAuthentication(username='***', password='***')
+        """
+        return HTTPAuthentication(
+            username=self._parsed.username, password=self._parsed.password
+        )
+
     def __truediv__(self, other) -> "URL":
         """Allows concatenating a path to this URL's path.
 
@@ -354,8 +383,18 @@ class URL:
 
         >>> str(URL("s3://s3-bucket/path/to/my/profiles.yml"))
         's3://s3-bucket/path/to/my/profiles.yml'
+        >>> str(URL("https://hey:secret@gh.com/hey/repo"))  # pragma: allowlist secret
+        'https://hey:***@github.com/hey/my-repo'
         """
-        return self._parsed.geturl()
+        url_str = self._parsed.geturl()
+
+        if self._parsed.password:
+            url_str = url_str.replace(self._parsed.password, "***")
+
+        if self._parsed.username:
+            url_str = url_str.replace(self._parsed.username, "***")
+
+        return url_str
 
     def __repr__(self) -> str:
         """Return a representation of this URL."""
