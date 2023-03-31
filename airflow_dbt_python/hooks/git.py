@@ -187,17 +187,23 @@ class DbtGitRemoteHook(SSHHook, DbtRemoteHook):
             path = f"{url.netloc.split(':')[1]}/{str(url.path)}"
 
         elif url.scheme in ("http", "https"):
-            parsedurl = url._parsed
-            netloc = parsedurl.hostname
+            base_url = url.hostname
 
-            if parsedurl.port:
-                netloc = "{}:{}".format(netloc, parsedurl.port)
-            if parsedurl.username:
-                netloc = "{}@{}".format(parsedurl.username, netloc)
+            if url.port:
+                base_url = f"{base_url}:{url.port}"
 
-            url._replace(netloc=netloc)
+            auth_params = {}
+            if url.authentication.username and url.authentication.password:
+                auth_params = {
+                    "username": url.authentication.username,
+                    "password": url.authentication.password,
+                }
+                base_url = f"{url.scheme}://{base_url}"
+            elif url.authentication.username:
+                base_url = f"{url.scheme}://{url.authentication.username}@{base_url}"
 
-            client = HttpGitClient(url.netloc)
+            client = HttpGitClient(base_url, **auth_params)
+
             path = str(url.path)
 
         else:

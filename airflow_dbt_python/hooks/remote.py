@@ -62,10 +62,10 @@ class DbtRemoteHook(ABC, LoggingMixin):
         Returns:
             The destination Path.
         """
-        self.log.info("Downloading dbt project from %s to %s", source, destination)
-
         source_url = URL(source)
         destination_url = URL(destination)
+
+        self.log.info("Downloading dbt project from %s to %s", source, destination)
 
         if source_url.is_archive():
             destination_url = destination_url / source_url.name
@@ -91,10 +91,10 @@ class DbtRemoteHook(ABC, LoggingMixin):
         Returns:
             The destination Path.
         """
-        self.log.info("Downloading dbt profiles from %s to %s", source, destination)
-
         source_url = URL(source)
         destination_url = URL(destination)
+
+        self.log.info("Downloading dbt profiles from %s to %s", source, destination)
 
         if source_url.name != "profiles.yml":
             source_url = source_url / "profiles.yml"
@@ -122,10 +122,10 @@ class DbtRemoteHook(ABC, LoggingMixin):
             delete_before: Flag to indicate wheter to clear any existing files before
                 uploading the dbt project.
         """
-        self.log.info("Uploading dbt project from %s to %s", source, destination)
-
         source_url = URL(source)
         destination_url = URL(destination)
+
+        self.log.info("Uploading dbt project from %s to %s", source, destination)
 
         if destination_url.is_archive() and source_url.is_dir():
             zip_url = source_url / destination_url.name
