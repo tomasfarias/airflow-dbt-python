@@ -77,6 +77,11 @@ jobs:
 
       - name: Run tests with pytest
         run: poetry run coverage run -m pytest -v tests/ airflow_dbt_python/utils/
+        env:
+          GITLAB_READ_TOKEN: ${{ secrets.GITLAB_READ_TOKEN }}
+          GITLAB_USERNAME: ${{ secrets.GITLAB_USERNAME }}
+          GITHUB_READ_TOKEN: ${{ secrets.GH_READ_TOKEN }}
+          GITHUB_USERNAME: ${{ secrets.GH_USERNAME }}
 
       - name: Upload code coverage
         uses: actions/upload-artifact@v3
