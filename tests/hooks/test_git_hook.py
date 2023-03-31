@@ -1,6 +1,8 @@
 """Unit test module for DbtGitRemoteHook."""
 import multiprocessing
+import os
 import shutil
+from urllib.parse import quote
 
 import pytest
 from dulwich.repo import Repo
@@ -9,29 +11,262 @@ from dulwich.server import DictBackend, TCPGitServer
 from airflow_dbt_python.hooks.git import DbtGitRemoteHook
 from airflow_dbt_python.utils.url import URL
 
-JAFFLE_SHOP_REPO = "dbt-labs/jaffle_shop"
-PLATFORM = "github.com"
+JAFFLE_SHOP = os.getenv("GIT_TEST_REPO", "tomasfarias/jaffle_shop")
+JAFFLE_SHOP_PRIVATE = os.getenv(
+    "GIT_PRIVATE_TEST_REPO", "tomasfarias/jaffle_shop_private"
+)
+GITHUB = "github.com"
+GITLAB = "gitlab.com"
+
+
+@pytest.mark.parametrize(
+    "repo_url",
+    (
+        f"https://{GITHUB}/{JAFFLE_SHOP}",
+        f"http://{GITHUB}/{JAFFLE_SHOP}",
+    ),
+)
+def test_download_dbt_project_from_http_public_github_repo(
+    tmp_path, repo_url, assert_dir_contents
+):
+    """Test downloading dbt project from GitHub public fork of dbt-lab's jaffle-shop.
+
+    In this test we use an HTTP/HTTPS connection to access GitHub. No credentials are
+    required as the test repo is public.
+    """
+    remote = DbtGitRemoteHook()
+    source = URL(repo_url)
+    local_repo_path = remote.download_dbt_project(source, tmp_path)
+
+    expected = [
+        URL(local_repo_path / "dbt_project.yml"),
+        URL(local_repo_path / "models" / "customers.sql"),
+        URL(local_repo_path / "models" / "orders.sql"),
+        URL(local_repo_path / "seeds" / "raw_customers.csv"),
+        URL(local_repo_path / "seeds" / "raw_orders.csv"),
+    ]
+
+    assert local_repo_path.exists()
+
+    assert_dir_contents(local_repo_path, expected, exact=False)
 
 
 @pytest.mark.xfail(
     strict=False,
-    reason=(
-        "Attempting to clone from GitHub may fail for missing keys, or other reasons."
-    ),
+    reason="Attempting to clone from GitHub may fail for missing keys.",
 )
 @pytest.mark.parametrize(
     "repo_url",
     (
-        f"ssh://{PLATFORM}:{JAFFLE_SHOP_REPO}",
-        f"git+ssh://{PLATFORM}:{JAFFLE_SHOP_REPO}",
-        f"https://{PLATFORM}/{JAFFLE_SHOP_REPO}",
-        f"http://{PLATFORM}/{JAFFLE_SHOP_REPO}",
+        f"ssh://{GITHUB}:{JAFFLE_SHOP}",
+        f"git+ssh://{GITHUB}:{JAFFLE_SHOP}",
     ),
 )
-def test_download_dbt_project(tmp_path, repo_url, assert_dir_contents):
-    """Test downloading dbt project from dbt-lab's very own jaffle-shop."""
+def test_download_dbt_project_from_ssh_public_github_repo(
+    tmp_path, repo_url, assert_dir_contents
+):
+    """Test downloading dbt project from GitHub public fork of dbt-lab's jaffle-shop.
+
+    In this test we use an SSH connection to access GitHub. Currently, this requires an
+    SSH key to be setup in the host, so the tests are flaky by design. Future tests will
+    rely on Airflow connections and test SSH keys instead.
+    """
     remote = DbtGitRemoteHook()
     source = URL(repo_url)
+    local_repo_path = remote.download_dbt_project(source, tmp_path)
+
+    expected = [
+        URL(local_repo_path / "dbt_project.yml"),
+        URL(local_repo_path / "models" / "customers.sql"),
+        URL(local_repo_path / "models" / "orders.sql"),
+        URL(local_repo_path / "seeds" / "raw_customers.csv"),
+        URL(local_repo_path / "seeds" / "raw_orders.csv"),
+    ]
+
+    assert local_repo_path.exists()
+
+    assert_dir_contents(local_repo_path, expected, exact=False)
+
+
+@pytest.mark.parametrize(
+    "repo_url",
+    (
+        f"https://{GITLAB}/{JAFFLE_SHOP}",
+        f"http://{GITLAB}/{JAFFLE_SHOP}",
+    ),
+)
+def test_download_dbt_project_from_http_public_gitlab_repo(
+    tmp_path, repo_url, assert_dir_contents
+):
+    """Test downloading dbt project from GitLab public fork of dbt-lab's jaffle-shop.
+
+    In this test we use an HTTP/HTTPS connection to access GitLab. No credentials are
+    required as the test repo is public.
+    """
+    remote = DbtGitRemoteHook()
+    source = URL(repo_url)
+    local_repo_path = remote.download_dbt_project(source, tmp_path)
+
+    expected = [
+        URL(local_repo_path / "dbt_project.yml"),
+        URL(local_repo_path / "models" / "customers.sql"),
+        URL(local_repo_path / "models" / "orders.sql"),
+        URL(local_repo_path / "seeds" / "raw_customers.csv"),
+        URL(local_repo_path / "seeds" / "raw_orders.csv"),
+    ]
+
+    assert local_repo_path.exists()
+
+    assert_dir_contents(local_repo_path, expected, exact=False)
+
+
+@pytest.mark.skipif(
+    "GITHUB_READ_TOKEN" not in os.environ,
+    reason="Missing Github read token in environment.",
+)
+@pytest.mark.parametrize(
+    "repo_url",
+    (f"https://{{username}}:{{token}}@{GITHUB}/{JAFFLE_SHOP_PRIVATE}",),
+)
+def test_download_dbt_project_from_https_private_github_repo_using_token(
+    tmp_path, repo_url, assert_dir_contents
+):
+    """Test downloading dbt project from Github private fork of dbt-lab's jaffle-shop.
+
+    In this test we use an HTTPS connection to access Github. As the repo is
+    private, we need to authenticate. In this test, we are authenticating with a Github
+    Personal Access Token. Said token will be fetched from the GITHUB_READ_TOKEN env
+    variable. If missing, this test is skipped.
+
+    The user the token represents should have access to the test Github repo. We
+    have no way to check this though. Modify the JAFFLE_SHOP_PRIVATE variable with your
+    own private fork.
+    """
+    username, token = os.environ["GITHUB_USERNAME"], os.environ["GITHUB_READ_TOKEN"]
+
+    remote = DbtGitRemoteHook()
+    source = URL(repo_url.format(username=username, token=token))
+    local_repo_path = remote.download_dbt_project(source, tmp_path)
+
+    expected = [
+        URL(local_repo_path / "dbt_project.yml"),
+        URL(local_repo_path / "models" / "customers.sql"),
+        URL(local_repo_path / "models" / "orders.sql"),
+        URL(local_repo_path / "seeds" / "raw_customers.csv"),
+        URL(local_repo_path / "seeds" / "raw_orders.csv"),
+    ]
+
+    assert local_repo_path.exists()
+
+    assert_dir_contents(local_repo_path, expected, exact=False)
+
+
+@pytest.mark.xfail(
+    strict=False,
+    reason="Attempting to clone from GitLab may fail for missing keys.",
+)
+@pytest.mark.parametrize(
+    "repo_url",
+    (
+        f"ssh://{GITLAB}:{JAFFLE_SHOP}",
+        f"git+ssh://{GITLAB}:{JAFFLE_SHOP}",
+    ),
+)
+def test_download_dbt_project_from_ssh_public_gitlab_repo(
+    tmp_path, repo_url, assert_dir_contents
+):
+    """Test downloading dbt project from GitLab public fork of dbt-lab's jaffle-shop.
+
+    In this test we use an SSH connection to access GitLab. Currently, this requires an
+    SSH key to be setup in the host, so the tests are flaky by design. Future tests will
+    rely on Airflow connections and test SSH keys instead.
+    """
+    remote = DbtGitRemoteHook()
+    source = URL(repo_url)
+    local_repo_path = remote.download_dbt_project(source, tmp_path)
+
+    expected = [
+        URL(local_repo_path / "dbt_project.yml"),
+        URL(local_repo_path / "models" / "customers.sql"),
+        URL(local_repo_path / "models" / "orders.sql"),
+        URL(local_repo_path / "seeds" / "raw_customers.csv"),
+        URL(local_repo_path / "seeds" / "raw_orders.csv"),
+    ]
+
+    assert local_repo_path.exists()
+
+    assert_dir_contents(local_repo_path, expected, exact=False)
+
+
+@pytest.mark.skipif(
+    "GITLAB_READ_TOKEN" not in os.environ,
+    reason="Missing GitLab read token in environment.",
+)
+@pytest.mark.parametrize(
+    "repo_url",
+    (f"https://oauth2:{{token}}@{GITLAB}/{JAFFLE_SHOP_PRIVATE}",),
+)
+def test_download_dbt_project_from_https_private_gitlab_repo_using_token(
+    tmp_path, repo_url, assert_dir_contents
+):
+    """Test downloading dbt project from GitLab private fork of dbt-lab's jaffle-shop.
+
+    In this test we use an HTTPS connection to access GitLab. As the repo is
+    private, we need to authenticate. In this test, we are authenticating with a GitLab
+    Personal Access Token. Said token will be fetched from the GITLAB_READ_TOKEN env
+    variable. If missing, this test is skipped.
+
+    The user the token represents should have access to the test GitLab repo. We
+    have no way to check this though. Modify the JAFFLE_SHOP_PRIVATE variable with your
+    own private fork.
+    """
+    token = os.environ["GITLAB_READ_TOKEN"]
+
+    remote = DbtGitRemoteHook()
+    source = URL(repo_url.format(token=token))
+    local_repo_path = remote.download_dbt_project(source, tmp_path)
+
+    expected = [
+        URL(local_repo_path / "dbt_project.yml"),
+        URL(local_repo_path / "models" / "customers.sql"),
+        URL(local_repo_path / "models" / "orders.sql"),
+        URL(local_repo_path / "seeds" / "raw_customers.csv"),
+        URL(local_repo_path / "seeds" / "raw_orders.csv"),
+    ]
+
+    assert local_repo_path.exists()
+
+    assert_dir_contents(local_repo_path, expected, exact=False)
+
+
+@pytest.mark.skipif(
+    any(
+        env_var not in os.environ for env_var in ("GITLAB_USERNAME", "GITLAB_PASSWORD")
+    ),
+    reason="Missing GitLab credentials in environment.",
+)
+@pytest.mark.parametrize(
+    "repo_url",
+    (f"https://{{username}}:{{password}}@{GITLAB}/{JAFFLE_SHOP_PRIVATE}",),
+)
+def test_download_dbt_project_from_https_private_gitlab_repo_using_credentials(
+    tmp_path, repo_url, assert_dir_contents
+):
+    """Test downloading dbt project from GitLab private fork of dbt-lab's jaffle-shop.
+
+    In this test we use an HTTPS connection to access GitLab. As the repo is
+    private, we need to authenticate. In this test, we are authenticating with GitLab
+    credentials (username and password). Said credentials will be fetched from the
+    GITLAB_USERNAME and GITLAB_PASSWORD env variables. If missing, this test is skipped.
+
+    The user the credentials represent should have access to the test GitLab repo. We
+    have no way to check this though. Modify the JAFFLE_SHOP_PRIVATE variable with your
+    own private fork.
+    """
+    username, password = os.environ["GITLAB_USERNAME"], os.environ["GITLAB_PASSWORD"]
+
+    remote = DbtGitRemoteHook()
+    source = URL(repo_url.format(username=username, password=password))
     local_repo_path = remote.download_dbt_project(source, tmp_path)
 
     expected = [
