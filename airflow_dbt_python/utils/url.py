@@ -384,7 +384,7 @@ class URL:
         >>> str(URL("s3://s3-bucket/path/to/my/profiles.yml"))
         's3://s3-bucket/path/to/my/profiles.yml'
         >>> str(URL("https://hey:secret@gh.com/hey/repo"))  # pragma: allowlist secret
-        'https://hey:***@github.com/hey/my-repo'
+        'https://***:***@gh.com/***/repo'
         """
         url_str = self._parsed.geturl()
 
