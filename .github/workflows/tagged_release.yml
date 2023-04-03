@@ -13,7 +13,7 @@ jobs:
         uses: fountainhead/action-wait-for-check@v1.0.0
         id: wait-for-test
         with:
-          token: ${{ secrets.PA_TOKEN }}
+          token: ${{ secrets.GH_DEPLOY_TOKEN }}
           checkName: CI
           ref: ${{ github.sha }}
 
@@ -37,12 +37,18 @@ jobs:
         run: poetry build
 
       - name: Set prerelease variable
-        run: echo "IS_PRERELEASE=$(if $(poetry version -s | grep -qP '^v[0-9]+\.[0-9]+\.[0-9]+$'); then echo 'false'; else echo 'true'; fi)" >> $GITHUB_ENV
+        run: echo "IS_PRERELEASE=$(if $(poetry version -s | grep -qP '^[0-9]+\.[0-9]+\.[0-9]+$'); then echo 'false'; else echo 'true'; fi)" >> $GITHUB_ENV
+
+      - name: Set release git tag
+        run: echo "RELEASE_TAG=${{ github.ref_name }}" >> $GITHUB_ENV
+
+      - name: Check tag matches package version
+        run: if [[ "$(poetry version -s)" == ${RELEASE_TAG/v/} ]]; then exit 0; else exit 1; fi
 
       - name: Release new tag
         uses: softprops/action-gh-release@v1
         with:
           prerelease: ${{ fromJSON(env.IS_PRERELEASE) }}
-          token: ${{ secrets.PA_TOKEN }}
+          token: ${{ secrets.GH_DEPLOY_TOKEN }}
           files: |
             dist/*
