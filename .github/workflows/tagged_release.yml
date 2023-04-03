@@ -13,7 +13,7 @@ jobs:
         uses: fountainhead/action-wait-for-check@v1.0.0
         id: wait-for-test
         with:
-          token: ${{ secrets.GITHUB_DEPLOY_TOKEN }}
+          token: ${{ secrets.GH_DEPLOY_TOKEN }}
           checkName: CI
           ref: ${{ github.sha }}
 
@@ -49,6 +49,6 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           prerelease: ${{ fromJSON(env.IS_PRERELEASE) }}
-          token: ${{ secrets.GITHUB_DEPLOY_TOKEN }}
+          token: ${{ secrets.GH_DEPLOY_TOKEN }}
           files: |
             dist/*
