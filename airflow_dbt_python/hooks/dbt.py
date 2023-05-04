@@ -219,9 +219,10 @@ class DbtHook(BaseHook):
                 of running the dbt command.
         """
         from dbt.adapters.factory import register_adapter
-        from dbt.config.runtime import UnsetProfileConfig
         from dbt.main import adapter_management, track_run
         from dbt.task.base import move_to_nearest_project_dir
+        from dbt.task.clean import CleanTask
+        from dbt.task.deps import DepsTask
 
         config = self.get_dbt_task_config(command, **kwargs)
         extra_target = self.get_dbt_target_from_connection(config.target)
@@ -237,6 +238,7 @@ class DbtHook(BaseHook):
             self.ensure_profiles(config.profiles_dir)
 
             task, runtime_config = config.create_dbt_task(extra_target)
+            requires_profile = isinstance(task, (CleanTask, DepsTask))
 
             # When creating tasks via from_args, dbt switches to the project directory.
             # We have to do that here as we are not using from_args.
@@ -244,16 +246,15 @@ class DbtHook(BaseHook):
 
             self.setup_dbt_logging(task, config.debug)
 
-            if not isinstance(runtime_config, UnsetProfileConfig):
-                if runtime_config is not None:
-                    # The deps command installs the dependencies, which means they may
-                    # not exist before deps runs and the following would raise a
-                    # CompilationError.
-                    runtime_config.load_dependencies()
+            if runtime_config is not None and not requires_profile:
+                # The deps command installs the dependencies, which means they may
+                # not exist before deps runs and the following would raise a
+                # CompilationError.
+                runtime_config.load_dependencies()
 
             results = None
             with adapter_management():
-                if not isinstance(runtime_config, UnsetProfileConfig):
+                if not requires_profile:
                     if runtime_config is not None:
                         register_adapter(runtime_config)
 
