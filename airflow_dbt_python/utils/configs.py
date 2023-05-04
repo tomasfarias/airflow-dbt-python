@@ -1,6 +1,7 @@
 """A collection of configurations to interact with dbt-core."""
 from __future__ import annotations
 
+import argparse
 import dataclasses
 import json
 import os
@@ -103,15 +104,19 @@ class BaseConfig:
     single_threaded: Optional[bool] = None
     threads: Optional[int] = None
     use_experimental_parser: Optional[bool] = None
+    store_failures: Optional[bool] = None
     vars: Optional[Union[str, dict[str, Any]]] = None
     macro_debugging: Optional[bool] = None
     warn_error: Optional[bool] = None
     warn_error_options: dict[str, Any] = dataclasses.field(default_factory=dict)
+    indirect_selection: str = "eager"
 
     # Logging
     log_format: Optional[LogFormat] = None
+    log_format_file: Optional[LogFormat] = None
     log_path: str = "logs"
-    log_cache_events: Optional[bool] = None
+    log_level: str = "info"
+    log_level_file: Optional[str] = None
     record_timing_info: Optional[str] = None
     debug: Optional[bool] = None
     quiet: Optional[bool] = None
@@ -125,8 +130,20 @@ class BaseConfig:
     partial_parse: Optional[bool] = None
     no_partial_parse: Optional[bool] = dataclasses.field(default=None, repr=False)
 
+    log_cache_events: Optional[bool] = None
+    no_log_cache_events: Optional[bool] = dataclasses.field(default=None, repr=False)
+
     use_colors: Optional[bool] = None
     no_use_colors: Optional[bool] = dataclasses.field(default=None, repr=False)
+
+    use_colors_file: Optional[bool] = None
+    no_use_colors_file: Optional[bool] = dataclasses.field(default=None, repr=False)
+
+    introspect: Optional[bool] = None
+    no_introspect: Optional[bool] = dataclasses.field(default=None, repr=False)
+
+    populate_cache: Optional[bool] = None
+    no_populate_cache: Optional[bool] = dataclasses.field(default=None, repr=False)
 
     static_parser: Optional[bool] = None
     no_static_parser: Optional[bool] = dataclasses.field(default=None, repr=False)
@@ -165,10 +182,12 @@ class BaseConfig:
             "defer",
             "partial_parse",
             "use_colors",
+            "log_cache_events",
             "static_parser",
             "version_check",
             "anonymous_usage_stats",
             "write_json",
+            "use_colors_file",
         )
 
         for attrs in mutually_exclusive_attrs:
@@ -188,6 +207,40 @@ class BaseConfig:
                 setattr(self, negative_attr, not positive_value)
             else:
                 setattr(self, attr, not negative_value)
+
+    def to_flags(self) -> argparse.Namespace:
+        """Return a Namespace to use as dbt flags."""
+        flags_dict = vars(flags.get_flags())
+        flags_dict["MACRO_DEBUGGING"] = self.macro_debugging
+        flags_dict["WARN_ERROR"] = self.warn_error
+        flags_dict["WARN_ERROR_OPTIONS"] = WarnErrorOptions(
+            include=self.warn_error_options.get("include", []),
+            exclude=self.warn_error_options.get("exclude", []),
+        )
+
+        flags_dict["PRINTER_WIDTH"] = self.printer_width
+        flags_dict["TARGET_PATH"] = None
+        flags_dict["LOG_PATH"] = self.log_path
+        flags_dict["LOG_FORMAT"] = self.log_format
+        flags_dict["LOG_FORMAT_FILE"] = self.log_format
+        flags_dict["SEND_ANONYMOUS_USAGE_STATS"] = self.send_anonymous_usage_stats
+        flags_dict["PARTIAL_PARSE"] = self.partial_parse
+        flags_dict["STATIC_PARSER"] = self.static_parser
+        flags_dict["PROFILES_DIR"] = self.profiles_dir
+        flags_dict["STORE_FAILURES"] = self.store_failures
+        flags_dict["LOG_LEVEL"] = self.log_level
+        flags_dict["LOG_LEVEL_FILE"] = self.log_level_file
+        flags_dict["LOG_CACHE_EVENTS"] = self.log_cache_events
+        flags_dict["QUIET"] = self.quiet
+        flags_dict["DEBUG"] = self.debug
+        flags_dict["USE_COLORS_FILE"] = self.use_colors_file
+        flags_dict["WRITE_JSON"] = self.write_json
+        flags_dict["INDIRECT_SELECTION"] = getattr(self, "indirect_selection", None)
+        flags_dict["FAIL_FAST"] = self.fail_fast
+        flags_dict["INTROSPECT"] = self.introspect
+
+        flags_ns = argparse.Namespace(**flags_dict)
+        return flags_ns
 
     @property
     def dbt_task(self) -> Type[BaseTask]:
@@ -314,17 +367,7 @@ class BaseConfig:
             A RuntimeConfig instance.
         """
         if not DBT_INSTALLED_LESS_THAN_1_5:
-            local_flags = flags.get_flags()
-            local_flags.MACRO_DEBUGGING = self.macro_debugging
-            local_flags.WARN_ERROR = self.warn_error
-            local_flags.WARN_ERROR_OPTIONS = WarnErrorOptions(
-                include=self.warn_error_options.get("include", []),
-                exclude=self.warn_error_options.get("exclude", []),
-            )
-            local_flags.PRINTER_WIDTH = self.printer_width
-            local_flags.TARGET_PATH = None
-            local_flags.LOG_PATH = self.log_path
-            local_flags.LOG_FORMAT = self.log_format
+            local_flags = self.to_flags()
             flags.set_flags(local_flags)
 
         project, profile = self.create_dbt_project_and_profile(extra_targets)
