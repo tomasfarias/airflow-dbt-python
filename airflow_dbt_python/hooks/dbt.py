@@ -24,6 +24,8 @@ from airflow.exceptions import AirflowException
 from airflow.hooks.base import BaseHook
 from airflow.models.connection import Connection
 
+from airflow_dbt_python.utils.version import DBT_INSTALLED_LESS_THAN_1_5
+
 if TYPE_CHECKING:
     from dbt.contracts.results import RunResult
     from dbt.task.base import BaseTask
@@ -219,10 +221,17 @@ class DbtHook(BaseHook):
                 of running the dbt command.
         """
         from dbt.adapters.factory import register_adapter
-        from dbt.main import adapter_management, track_run
         from dbt.task.base import move_to_nearest_project_dir
         from dbt.task.clean import CleanTask
         from dbt.task.deps import DepsTask
+
+        from airflow_dbt_python.utils.version import DBT_INSTALLED_LESS_THAN_1_5
+
+        if DBT_INSTALLED_LESS_THAN_1_5:
+            from dbt.main import adapter_management, track_run  # type: ignore
+        else:
+            from dbt.adapters.factory import adapter_management
+            from dbt.tracking import track_run
 
         config = self.get_dbt_task_config(command, **kwargs)
         extra_target = self.get_dbt_target_from_connection(config.target)
@@ -242,7 +251,13 @@ class DbtHook(BaseHook):
 
             # When creating tasks via from_args, dbt switches to the project directory.
             # We have to do that here as we are not using from_args.
-            move_to_nearest_project_dir(config)
+            if DBT_INSTALLED_LESS_THAN_1_5:
+                # For compatibility with older versions of dbt, as the signature
+                # of move_to_nearest_project_dir changed in dbt-core 1.5 to take
+                # just the project_dir.
+                move_to_nearest_project_dir(config)  # type: ignore
+            else:
+                move_to_nearest_project_dir(config.project_dir)
 
             self.setup_dbt_logging(task, config.debug)
 
@@ -395,12 +410,17 @@ class DbtHook(BaseHook):
         initialize them here.
         """
         from dbt.events.functions import setup_event_logger
+        from dbt.flags import get_flags
 
         log_path = None
         if task.config is not None:
             log_path = getattr(task.config, "log_path", None)
 
-        setup_event_logger(log_path or "logs")
+        if DBT_INSTALLED_LESS_THAN_1_5:
+            setup_event_logger(log_path or "logs")
+        else:
+            flags = get_flags()
+            setup_event_logger(flags)
 
         configured_file = logging.getLogger("configured_file")
         file_log = logging.getLogger("file_log")

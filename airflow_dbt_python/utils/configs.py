@@ -6,10 +6,11 @@ import json
 import os
 import pickle
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Optional, Type, Union
+from typing import Any, Optional, Type, Union
 
 import dbt.flags as flags
 import yaml
+from dbt.adapters.factory import register_adapter
 from dbt.clients import yaml_helper  # type: ignore
 from dbt.config.profile import Profile, read_profile
 from dbt.config.project import PartialProject, Project
@@ -17,6 +18,7 @@ from dbt.config.renderer import DbtProjectYamlRenderer, ProfileRenderer
 from dbt.config.runtime import RuntimeConfig
 from dbt.contracts.graph.manifest import Manifest
 from dbt.graph.graph import Graph
+from dbt.helper_types import WarnErrorOptions
 from dbt.task.base import BaseTask
 from dbt.task.build import BuildTask
 from dbt.task.clean import CleanTask
@@ -26,18 +28,41 @@ from dbt.task.deps import DepsTask
 from dbt.task.freshness import FreshnessTask
 from dbt.task.generate import GenerateTask
 from dbt.task.list import ListTask
-from dbt.task.parse import ParseTask
 from dbt.task.run import RunTask
 from dbt.task.run_operation import RunOperationTask
+from dbt.task.runnable import GraphRunnableTask
 from dbt.task.seed import SeedTask
 from dbt.task.snapshot import SnapshotTask
 from dbt.task.test import TestTask
 from dbt.tracking import initialize_from_flags
 
 from airflow_dbt_python.utils.enums import FromStrEnum, LogFormat, Output
+from airflow_dbt_python.utils.version import DBT_INSTALLED_LESS_THAN_1_5
 
-if TYPE_CHECKING:
-    from dbt.task.runnable import GraphRunnableTask
+if DBT_INSTALLED_LESS_THAN_1_5:
+    # dbt 1.5 removed the ParseTask as it only generated a manifest.
+    # This task is now handled by a simple function.
+    # Airflow-dbt-python should still support a ParseTask that does the same,
+    # but this will require writing our own ParseTask class.
+    # In the meantime, we treat ParseTask as CompileTask (which also generates
+    # a manifest) if running with dbt-core >= 1.5.
+    from dbt.task.parse import ParseTask  # type: ignore
+
+    # dbt 1.5 also changed the signature of initialize_from_flags, so we have
+    # this for backwards compabitility.
+    old_initialize_from_flags = initialize_from_flags
+
+    def initialize_from_flags(send_anonymous_usage_stats, profiles_dir):
+        """Call inititalize_from_flags without arguments.
+
+        Added for backwards compatibility with versions of dbt < 1.5.
+        """
+        return old_initialize_from_flags()  # type: ignore
+
+else:
+    from dbt.parser.manifest import ManifestLoader
+
+    ParseTask = CompileTask
 
 
 def parse_yaml_args(args: Optional[Union[str, dict[str, Any]]]) -> dict[str, Any]:
@@ -79,15 +104,19 @@ class BaseConfig:
     threads: Optional[int] = None
     use_experimental_parser: Optional[bool] = None
     vars: Optional[Union[str, dict[str, Any]]] = None
+    macro_debugging: Optional[bool] = None
     warn_error: Optional[bool] = None
+    warn_error_options: dict[str, Any] = dataclasses.field(default_factory=dict)
 
     # Logging
     log_format: Optional[LogFormat] = None
+    log_path: str = "logs"
     log_cache_events: Optional[bool] = None
     record_timing_info: Optional[str] = None
     debug: Optional[bool] = None
     quiet: Optional[bool] = None
     no_print: Optional[bool] = None
+    printer_width: Optional[int] = None
 
     # Mutually exclusive attributes
     defer: Optional[bool] = None
@@ -142,16 +171,21 @@ class BaseConfig:
             "write_json",
         )
 
-        for attr in mutually_exclusive_attrs:
+        for attrs in mutually_exclusive_attrs:
+            if len(attrs) == 1:
+                attr, negative_attr = attrs[0], f"no_{attrs[0]}"
+            else:
+                attr, negative_attr = attrs[0], attrs[1]
+
             positive_value = getattr(self, attr, None)
-            negative_value = getattr(self, f"no_{attr}", None)
+            negative_value = getattr(self, negative_attr, None)
 
             if positive_value is None and negative_value is None:
                 continue
             elif positive_value is not None and negative_value is not None:
-                raise ValueError(f"{attr} and no_{attr} are mutually exclusive")
+                raise ValueError(f"{attr} and {negative_attr} are mutually exclusive")
             elif positive_value is not None:
-                setattr(self, f"no_{attr}", not positive_value)
+                setattr(self, negative_attr, not positive_value)
             else:
                 setattr(self, attr, not negative_value)
 
@@ -243,7 +277,19 @@ class BaseConfig:
             RuntimeConfig for the task.
         """
         runtime_config = self.create_runtime_config(extra_targets)
-        task = self.dbt_task(args=self, config=runtime_config)
+
+        if not DBT_INSTALLED_LESS_THAN_1_5 and runtime_config is not None:
+            register_adapter(runtime_config)
+            manifest = ManifestLoader.get_full_manifest(runtime_config)
+
+            if issubclass(self.dbt_task, GraphRunnableTask):
+                task: BaseTask = self.dbt_task(
+                    args=self, config=runtime_config, manifest=manifest
+                )
+            else:
+                task = self.dbt_task(args=self, config=runtime_config)
+        else:
+            task = self.dbt_task(args=self, config=runtime_config)
 
         if self.compiled_target is not None:
             # Only supported by subclasses of dbt's GraphRunnableTask.
@@ -267,14 +313,30 @@ class BaseConfig:
         Returns:
             A RuntimeConfig instance.
         """
+        if not DBT_INSTALLED_LESS_THAN_1_5:
+            local_flags = flags.get_flags()
+            local_flags.MACRO_DEBUGGING = self.macro_debugging
+            local_flags.WARN_ERROR = self.warn_error
+            local_flags.WARN_ERROR_OPTIONS = WarnErrorOptions(
+                include=self.warn_error_options.get("include", []),
+                exclude=self.warn_error_options.get("exclude", []),
+            )
+            local_flags.PRINTER_WIDTH = self.printer_width
+            local_flags.TARGET_PATH = None
+            local_flags.LOG_PATH = self.log_path
+            local_flags.LOG_FORMAT = self.log_format
+            flags.set_flags(local_flags)
+
         project, profile = self.create_dbt_project_and_profile(extra_targets)
-        initialize_from_flags()
+        initialize_from_flags(self.anonymous_usage_stats, self.profiles_dir)
         self.cls.set_log_format()
-        flags.set_from_args(self, profile.user_config)
+        flags.set_from_args(self, profile.user_config)  # type: ignore
 
         cfg_type = self.dbt_task.ConfigType
 
         if issubclass(cfg_type, RuntimeConfig):
+            if not DBT_INSTALLED_LESS_THAN_1_5 and isinstance(self.vars, str):
+                self.vars = yaml.safe_load(self.vars)
             return cfg_type.from_parts(project=project, profile=profile, args=self)
         return None
 
@@ -295,7 +357,7 @@ class BaseConfig:
         project = Project.from_project_root(
             self.project_dir or ".",
             project_renderer,
-            verify_version=bool(flags.VERSION_CHECK),
+            verify_version=bool(getattr(self, "version_check", True)),
         )
         project.project_env_vars = project_renderer.ctx_obj.env_vars
 
@@ -336,7 +398,7 @@ class BaseConfig:
             A PartialProject instance for this configuration.
         """
         project_root = self.project_dir if self.project_dir else os.getcwd()
-        version_check = bool(flags.VERSION_CHECK)
+        version_check = bool(getattr(self, "version_check", True))
         partial_project = Project.partial_load(
             project_root, verify_version=version_check
         )
@@ -390,6 +452,7 @@ class SelectionConfig(BaseConfig):
     exclude: Optional[list[str]] = None
     select: Optional[list[str]] = None
     selector_name: Optional[list[str]] = None
+    selector: Optional[str] = None
     state: Optional[Union[Path, str]] = None
 
     # Kept for compatibility with dbt versions < 0.21
@@ -419,7 +482,6 @@ class BuildTaskConfig(TableMutabilityConfig):
 
     cls: Type[BaseTask] = dataclasses.field(default=BuildTask, init=False)
     singular: Optional[bool] = None
-    indirect_selection: Optional[str] = None
     resource_types: Optional[list[str]] = None
     generic: Optional[bool] = None
     show: Optional[bool] = None
@@ -491,7 +553,7 @@ class ListTaskConfig(SelectionConfig):
     """Dbt list task arguments."""
 
     cls: Type[BaseTask] = dataclasses.field(default=ListTask, init=False)
-    indirect_selection: Optional[str] = None
+    indirect_selection: str = "eager"
     output: Output = Output.SELECTOR
     output_keys: Optional[list[str]] = None
     resource_types: Optional[list[str]] = None
@@ -500,7 +562,10 @@ class ListTaskConfig(SelectionConfig):
 
 @dataclasses.dataclass
 class ParseTaskConfig(BaseConfig):
-    """Dbt parse task arguments."""
+    """Dbt parse task arguments.
+
+    TODO: Temporarily, handle this as a CompileTask.
+    """
 
     cls: Type[BaseTask] = dataclasses.field(default=ParseTask, init=False)
     compile: Optional[bool] = None
@@ -563,7 +628,7 @@ class TestTaskConfig(SelectionConfig):
 
     cls: Type[BaseTask] = dataclasses.field(default=TestTask, init=False)
     generic: Optional[bool] = None
-    indirect_selection: Optional[str] = None
+    indirect_selection: str = "eager"
     singular: Optional[bool] = None
     store_failures: Optional[bool] = None
     which: str = dataclasses.field(default="test", init=False)
