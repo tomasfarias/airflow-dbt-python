@@ -6,7 +6,7 @@ Currently, only AWS S3 and the local filesystem are supported as remotes.
 """
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import Optional, Type
+from typing import Iterable, Optional, Type
 
 from airflow.utils.log.logging_mixin import LoggingMixin
 
@@ -136,6 +136,40 @@ class DbtRemoteHook(ABC, LoggingMixin):
 
         if destination_url.is_archive():
             source_url.unlink()
+
+    def upload_dbt_artifacts(
+        self,
+        source: URLLike,
+        artifacts: Iterable[str],
+        destination: URLLike,
+        replace: bool = False,
+        delete_before: bool = False,
+    ):
+        """Upload specific dbt artifacts from a given source.
+
+        Args:
+            source: URLLike to a directory containing a dbt project.
+            artifacts: A list of artifacts to upload.
+            destination: URLLike to a directory where the dbt artifacts will be stored.
+            replace: Flag to indicate whether to replace existing files.
+            delete_before: Flag to indicate wheter to clear any existing files before
+                uploading the dbt project.
+        """
+        source_url = URL(source) / "target"
+        destination_url = URL(destination)
+
+        for artifact in artifacts:
+            artifact_path = source_url / artifact
+            self.log.info(
+                "Uploading dbt artifact from %s to %s", artifact_path, destination
+            )
+
+            self.upload(
+                source=artifact_path,
+                destination=destination_url / artifact,
+                replace=replace,
+                delete_before=delete_before,
+            )
 
 
 def get_remote(scheme: str, conn_id: Optional[str] = None) -> DbtRemoteHook:

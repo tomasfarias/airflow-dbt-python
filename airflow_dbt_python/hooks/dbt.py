@@ -200,6 +200,30 @@ class DbtHook(BaseHook):
             project_dir, destination, replace=replace, delete_before=delete_before
         )
 
+    def upload_dbt_artifacts(
+        self,
+        project_dir: URLLike,
+        artifacts: Iterable[str],
+        destination: URLLike,
+        replace: bool = False,
+        delete_before: bool = False,
+    ) -> None:
+        """Push dbt artifacts from a given project_dir.
+
+        This operation is delegated to a DbtRemoteHook. An optional connection id is
+        supported for remotes that require it.
+        """
+        scheme = urlparse(str(destination)).scheme
+        remote = self.get_remote(scheme, self.project_conn_id)
+
+        return remote.upload_dbt_artifacts(
+            project_dir,
+            artifacts,
+            destination,
+            replace=replace,
+            delete_before=delete_before,
+        )
+
     def run_dbt_task(
         self,
         command: str,
@@ -207,6 +231,8 @@ class DbtHook(BaseHook):
         delete_before_upload: bool = False,
         replace_on_upload: bool = False,
         artifacts: Optional[Iterable[str]] = None,
+        upload_dbt_artifacts: Optional[Iterable[str]] = None,
+        upload_dbt_artifacts_destination: Optional[URLLike] = None,
         env_vars: Optional[Dict[str, Any]] = None,
         **kwargs,
     ) -> DbtTaskResult:
@@ -280,6 +306,18 @@ class DbtHook(BaseHook):
                     json_artifact = json.load(artifact_file)
 
                 saved_artifacts[artifact] = json_artifact
+
+            if (
+                upload_dbt_artifacts is not None
+                and upload_dbt_artifacts_destination is not None
+            ):
+                self.upload_dbt_artifacts(
+                    dbt_dir,
+                    upload_dbt_artifacts,
+                    upload_dbt_artifacts_destination,
+                    replace_on_upload,
+                    delete_before_upload,
+                )
 
         return DbtTaskResult(success, results, saved_artifacts)
 
