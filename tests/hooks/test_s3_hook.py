@@ -97,7 +97,7 @@ def test_download_dbt_project(s3_bucket, s3_hook, tmpdir, dbt_project_file):
     remote = DbtS3RemoteHook()
     project_path = remote.download_dbt_project(
         f"s3://{s3_bucket}/project/",
-        tmpdir,
+        tmpdir.mkdir("project"),
     )
 
     assert project_path.exists()
@@ -142,7 +142,7 @@ def test_download_dbt_project_no_trailing_slash(
     remote = DbtS3RemoteHook()
     project_path = remote.download_dbt_project(
         f"s3://{s3_bucket}/project",
-        tmpdir,
+        tmpdir.mkdir("project"),
     )
 
     assert project_path.exists()
@@ -193,7 +193,7 @@ def test_download_dbt_project_from_zip_file(
     remote = DbtS3RemoteHook()
     project_path = remote.download_dbt_project(
         f"s3://{s3_bucket}/project/project.zip",
-        tmpdir,
+        tmpdir.mkdir("project"),
     )
 
     assert project_path.exists()
@@ -238,7 +238,7 @@ def test_download_dbt_project_with_empty_file(
     remote = DbtS3RemoteHook()
     project_path = remote.download_dbt_project(
         f"s3://{s3_bucket}/project",
-        tmpdir,
+        tmpdir.mkdir("project"),
     )
 
     assert project_path.exists()

@@ -20,7 +20,7 @@ from dbt.config.runtime import RuntimeConfig
 from dbt.contracts.graph.manifest import Manifest
 from dbt.graph.graph import Graph
 from dbt.helper_types import WarnErrorOptions
-from dbt.task.base import BaseTask
+from dbt.task.base import BaseTask, ConfiguredTask
 from dbt.task.build import BuildTask
 from dbt.task.clean import CleanTask
 from dbt.task.compile import CompileTask
@@ -35,10 +35,14 @@ from dbt.task.runnable import GraphRunnableTask
 from dbt.task.seed import SeedTask
 from dbt.task.snapshot import SnapshotTask
 from dbt.task.test import TestTask
-from dbt.tracking import initialize_from_flags
+from dbt.tracking import initialize_from_flags as orig_initialize_from_flags
 
 from airflow_dbt_python.utils.enums import FromStrEnum, LogFormat, Output
-from airflow_dbt_python.utils.version import DBT_INSTALLED_LESS_THAN_1_5
+from airflow_dbt_python.utils.version import (
+    DBT_INSTALLED_GTE_1_5,
+    DBT_INSTALLED_GTE_1_7,
+    DBT_INSTALLED_LESS_THAN_1_5,
+)
 
 if DBT_INSTALLED_LESS_THAN_1_5:
     # dbt 1.5 removed the ParseTask as it only generated a manifest.
@@ -50,20 +54,19 @@ if DBT_INSTALLED_LESS_THAN_1_5:
     from dbt.task.parse import ParseTask  # type: ignore
 
     # dbt 1.5 also changed the signature of initialize_from_flags, so we have
-    # this for backwards compabitility.
-    old_initialize_from_flags = initialize_from_flags
-
+    # this for backwards compatibility.
     def initialize_from_flags(send_anonymous_usage_stats, profiles_dir):
-        """Call inititalize_from_flags without arguments.
+        """Call initialize_from_flags without arguments.
 
         Added for backwards compatibility with versions of dbt < 1.5.
         """
-        return old_initialize_from_flags()  # type: ignore
+        return orig_initialize_from_flags()  # type: ignore
 
 else:
     from dbt.parser.manifest import ManifestLoader
 
     ParseTask = CompileTask
+    initialize_from_flags = orig_initialize_from_flags
 
 
 def parse_yaml_args(args: Optional[Union[str, dict[str, Any]]]) -> dict[str, Any]:
@@ -114,9 +117,9 @@ class BaseConfig:
     # Logging
     log_format: Optional[LogFormat] = None
     log_format_file: Optional[LogFormat] = None
-    log_path: str = "logs"
+    log_path: Optional[str] = None if DBT_INSTALLED_LESS_THAN_1_5 else "logs"
     log_level: str = "info"
-    log_level_file: Optional[str] = None
+    log_level_file: str = "none"
     record_timing_info: Optional[str] = None
     debug: Optional[bool] = None
     quiet: Optional[bool] = None
@@ -151,14 +154,41 @@ class BaseConfig:
     version_check: Optional[bool] = None
     no_version_check: Optional[bool] = dataclasses.field(default=None, repr=False)
 
-    send_anonymous_usage_stats: Optional[bool] = None
-    anonymous_usage_stats: Optional[bool] = dataclasses.field(default=None, repr=False)
+    # dbt < 1.5
+    anonymous_usage_stats: Optional[bool] = None
     no_anonymous_usage_stats: Optional[bool] = dataclasses.field(
         default=None, repr=False
     )
 
-    write_json: Optional[bool] = None
-    no_write_json: Optional[bool] = dataclasses.field(default=None, repr=False)
+    # dbt >= 1.5
+    if DBT_INSTALLED_GTE_1_5:
+        send_anonymous_usage_stats: Optional[bool] = None
+        no_send_anonymous_usage_stats: Optional[bool] = dataclasses.field(
+            default=None, repr=False
+        )
+
+        write_json: Optional[bool] = None
+        no_write_json: Optional[bool] = dataclasses.field(default=None, repr=False)
+
+    # dbt >= 1.7
+    if DBT_INSTALLED_GTE_1_7:
+        from dbt.cli.option_types import Package
+
+        include_saved_query: Optional[bool] = None
+        no_include_saved_query: Optional[bool] = dataclasses.field(
+            default=None, repr=False
+        )
+
+        clean_project_files_only: Optional[bool] = None
+        no_clean_project_files_only: Optional[bool] = dataclasses.field(
+            default=None, repr=False
+        )
+
+        add_package: Optional[Package] = None
+        dry_run: bool = False
+        lock: bool = False
+        static: bool = False
+        upgrade: bool = False
 
     def __post_init__(self):
         """Post initialization actions for a dbt configuration."""
@@ -167,6 +197,7 @@ class BaseConfig:
         self.set_mutually_exclusive_attributes()
 
         self.send_anonymous_usage_stats = self.anonymous_usage_stats
+        self.no_send_anonymous_usage_stats = self.no_anonymous_usage_stats
 
     def set_mutually_exclusive_attributes(self):
         """Support pairs of mutually exclusive parameters.
@@ -179,34 +210,47 @@ class BaseConfig:
                 to non-None values.
         """
         mutually_exclusive_attrs = (
-            "defer",
-            "partial_parse",
-            "use_colors",
-            "log_cache_events",
-            "static_parser",
-            "version_check",
-            "anonymous_usage_stats",
-            "write_json",
-            "use_colors_file",
+            ("defer", False),
+            ("partial_parse", True),
+            ("log_cache_events", False),
+            ("use_colors", True),
+            ("use_colors_file", True),
+            ("introspect", True),
+            ("populate_cache", True),
+            ("static_parser", True),
+            ("version_check", True),
+            ("anonymous_usage_stats", True),
+            ("send_anonymous_usage_stats", True),
+            ("write_json", True),
+            ("include_saved_query", None),
+            ("clean_project_files_only", True),
         )
 
-        for attrs in mutually_exclusive_attrs:
-            if len(attrs) == 1:
-                attr, negative_attr = attrs[0], f"no_{attrs[0]}"
-            else:
-                attr, negative_attr = attrs[0], attrs[1]
+        for attrs, default_value in mutually_exclusive_attrs:
+            attr, negative_attr = attrs, f"no_{attrs}"
 
             positive_value = getattr(self, attr, None)
             negative_value = getattr(self, negative_attr, None)
 
-            if positive_value is None and negative_value is None:
-                continue
+            if (
+                positive_value is None
+                and negative_value is None
+                and default_value is not None
+            ):
+                setattr(self, attr, default_value)
+                setattr(self, negative_attr, not default_value)
             elif positive_value is not None and negative_value is not None:
                 raise ValueError(f"{attr} and {negative_attr} are mutually exclusive")
             elif positive_value is not None:
                 setattr(self, negative_attr, not positive_value)
             else:
                 setattr(self, attr, not negative_value)
+
+    def __getattribute__(self, item: str):
+        """Dbt 1.5+ uses uppercase attributes, let's handle this."""
+        if item.isupper():
+            item = item.lower()
+        return super().__getattribute__(item)
 
     def to_flags(self) -> argparse.Namespace:
         """Return a Namespace to use as dbt flags."""
@@ -315,7 +359,9 @@ class BaseConfig:
         task._runtime_initialize = _runtime_initialize  # type: ignore
 
     def create_dbt_task(
-        self, extra_targets: Optional[dict[str, Any]] = None
+        self,
+        extra_targets: Optional[dict[str, Any]] = None,
+        write_perf_info: bool = False,
     ) -> tuple[BaseTask, Optional[RuntimeConfig]]:
         """Create a dbt task given with this configuration.
 
@@ -324,23 +370,34 @@ class BaseConfig:
 
         Args:
             extra_targets: Additional targets for a dbt project's Profile.
+            write_perf_info: Flag to indicate whether to write performance info.
 
         Returns:
-            A tuple with the corresnponding subclass of a dbt BaseTask and the
+            A tuple with the corresponding subclass of a dbt BaseTask and the
             RuntimeConfig for the task.
         """
-        runtime_config = self.create_runtime_config(extra_targets)
+        if not DBT_INSTALLED_LESS_THAN_1_5:
+            local_flags = self.to_flags()
+            flags.set_flags(local_flags)
 
-        if not DBT_INSTALLED_LESS_THAN_1_5 and runtime_config is not None:
-            register_adapter(runtime_config)
-            manifest = ManifestLoader.get_full_manifest(runtime_config)
+        project, profile = self.create_dbt_project_and_profile(extra_targets)
+        runtime_config = self.create_runtime_config(project, profile)
 
-            if issubclass(self.dbt_task, GraphRunnableTask):
+        if not DBT_INSTALLED_LESS_THAN_1_5:
+            if issubclass(self.dbt_task, ConfiguredTask) and runtime_config:
+                register_adapter(runtime_config)
+                manifest = ManifestLoader.get_full_manifest(
+                    runtime_config, write_perf_info=write_perf_info
+                )
                 task: BaseTask = self.dbt_task(
                     args=self, config=runtime_config, manifest=manifest
                 )
-            else:
+            elif issubclass(self.dbt_task, DepsTask):
+                task = self.dbt_task(args=self, project=project)
+            elif issubclass(self.dbt_task, DebugTask):
                 task = self.dbt_task(args=self, config=runtime_config)
+            else:
+                task = self.dbt_task(args=self, config=runtime_config, project=project)
         else:
             task = self.dbt_task(args=self, config=runtime_config)
 
@@ -349,10 +406,10 @@ class BaseConfig:
             # Represented here by the presence of the compiled_target attribute.
             self.patch_manifest_task(task)  # type: ignore
 
-        return (task, runtime_config)
+        return task, runtime_config
 
     def create_runtime_config(
-        self, extra_targets: Optional[dict[str, Any]]
+        self, project: Project, profile: Profile
     ) -> Optional[RuntimeConfig]:
         """Crete a dbt RuntimeConfig, if possible.
 
@@ -361,17 +418,13 @@ class BaseConfig:
         Flags are also initialized as configuration is created.
 
         Args:
-            extra_targets: Additional targets for a dbt project's Profile.
+            project: dbt project.
+            profile: dbt profile.
 
         Returns:
             A RuntimeConfig instance.
         """
-        if not DBT_INSTALLED_LESS_THAN_1_5:
-            local_flags = self.to_flags()
-            flags.set_flags(local_flags)
-
-        project, profile = self.create_dbt_project_and_profile(extra_targets)
-        initialize_from_flags(self.anonymous_usage_stats, self.profiles_dir)
+        initialize_from_flags(self.send_anonymous_usage_stats, self.profiles_dir)
         self.cls.set_log_format()
         flags.set_from_args(self, profile.user_config)  # type: ignore
 
@@ -404,7 +457,7 @@ class BaseConfig:
         )
         project.project_env_vars = project_renderer.ctx_obj.env_vars
 
-        return (project, profile)
+        return project, profile
 
     @property
     def profile_name(self) -> str:
@@ -442,7 +495,7 @@ class BaseConfig:
         """
         project_root = self.project_dir if self.project_dir else os.getcwd()
         version_check = bool(getattr(self, "version_check", True))
-        partial_project = Project.partial_load(
+        partial_project = PartialProject.from_project_root(
             project_root, verify_version=version_check
         )
 
@@ -497,6 +550,7 @@ class SelectionConfig(BaseConfig):
     selector_name: Optional[list[str]] = None
     selector: Optional[str] = None
     state: Optional[Union[Path, str]] = None
+    defer_state: Optional[Union[Path, str]] = None
 
     # Kept for compatibility with dbt versions < 0.21
     models: Optional[list[str]] = None
@@ -506,6 +560,8 @@ class SelectionConfig(BaseConfig):
         super().__post_init__()
         if isinstance(self.state, str):
             self.state = Path(self.state)
+        if isinstance(self.defer_state, str):
+            self.defer_state = Path(self.defer_state)
 
 
 @dataclasses.dataclass
@@ -571,6 +627,7 @@ class DebugTaskConfig(BaseConfig):
 
     cls: Type[BaseTask] = dataclasses.field(default=DebugTask, init=False)
     config_dir: Optional[bool] = None
+    connection: Optional[bool] = None
     which: str = dataclasses.field(default="debug", init=False)
 
 
@@ -588,6 +645,7 @@ class GenerateTaskConfig(SelectionConfig):
 
     cls: Type[BaseTask] = dataclasses.field(default=GenerateTask, init=False)
     compile: bool = True
+    empty_catalog: bool = False
     which: str = dataclasses.field(default="generate", init=False)
 
 
@@ -604,7 +662,7 @@ class ListTaskConfig(SelectionConfig):
 
 
 @dataclasses.dataclass
-class ParseTaskConfig(BaseConfig):
+class ParseTaskConfig(SelectionConfig):
     """Dbt parse task arguments.
 
     TODO: Temporarily, handle this as a CompileTask.
@@ -628,7 +686,7 @@ class RunTaskConfig(TableMutabilityConfig):
 class RunOperationTaskConfig(BaseConfig):
     """Dbt run-operation task arguments."""
 
-    args: str = "{}"
+    args: dict[str, Any] | str = dataclasses.field(default_factory=dict)
     cls: Type[BaseTask] = dataclasses.field(default=RunOperationTask, init=False)
     macro: Optional[str] = None
     which: str = dataclasses.field(default="run-operation", init=False)
@@ -636,7 +694,8 @@ class RunOperationTaskConfig(BaseConfig):
     def __post_init__(self):
         """Support dictionary args by casting them to str after setting."""
         super().__post_init__()
-        self.args = str(self.args)
+        if DBT_INSTALLED_LESS_THAN_1_5:
+            self.args = str(self.args)
 
 
 @dataclasses.dataclass

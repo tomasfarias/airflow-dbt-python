@@ -14,6 +14,7 @@ from moto import mock_s3
 from pytest_postgresql.janitor import DatabaseJanitor
 
 from airflow_dbt_python.hooks.dbt import DbtHook
+from airflow_dbt_python.utils.version import DBT_INSTALLED_LESS_THAN_1_5
 
 PROFILES = """
 config:
@@ -242,26 +243,27 @@ def dbt_project_dir(tmp_path_factory):
     return d
 
 
-@pytest.fixture(scope="session")
-def logs_dir(dbt_project_dir):
+@pytest.fixture(scope="function")
+def logs_dir(tmp_path):
     """Create a directory to persist dbt logs."""
-    d = dbt_project_dir / "logs"
+    d = tmp_path / "logs"
     d.mkdir(exist_ok=True)
-    return d
+    yield d
+    shutil.rmtree(d)
 
 
 @pytest.fixture(scope="function")
 def dbt_project_file(dbt_project_dir, logs_dir, request):
     """Create a test dbt_project.yml file."""
     p = dbt_project_dir / "dbt_project.yml"
-    PROJECT_CONTENT = PROJECT + LOG_PATH_CONFIG.format(log_path=str(logs_dir))
+    PROJECT_CONTENT = PROJECT
+
+    if DBT_INSTALLED_LESS_THAN_1_5:
+        PROJECT_CONTENT += LOG_PATH_CONFIG.format(log_path=str(logs_dir))
 
     p.write_text(PROJECT_CONTENT)
 
-    yield p
-
-    if (logs_dir / "dbt.log").exists():
-        (logs_dir / "dbt.log").unlink()
+    return p
 
 
 @pytest.fixture(scope="session")
@@ -402,8 +404,6 @@ def hook():
 @pytest.fixture
 def pre_compile(hook, model_files, seed_files, dbt_project_file, profiles_file):
     """Fixture to run a dbt compile task."""
-    import shutil
-
     target_dir = dbt_project_file.parent / "target"
 
     hook.run_dbt_task(

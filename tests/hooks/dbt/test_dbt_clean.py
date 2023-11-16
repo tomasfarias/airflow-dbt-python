@@ -15,6 +15,7 @@ def test_dbt_clean_task(
         upload_dbt_project=True,
         delete_before_upload=True,
         replace_on_upload=True,
+        clean_project_files_only=False,
     )
     assert result.success is True
     assert compile_dir.exists() is False

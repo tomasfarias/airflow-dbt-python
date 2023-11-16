@@ -53,6 +53,7 @@ def test_dbt_clean_after_compile(
         task_id="dbt_task",
         project_dir=dbt_project_file.parent,
         profiles_dir=profiles_file.parent,
+        clean_project_files_only=False,
     )
     # Run compile first to ensure a target/ directory exists to be cleaned
     comp.execute({})
@@ -95,6 +96,7 @@ def test_dbt_clean_after_compile_in_s3(
         task_id="dbt_task",
         project_dir=f"s3://{s3_bucket}/project/",
         profiles_dir=f"s3://{s3_bucket}/project/",
+        clean_project_files_only=False,
     )
     # Run compile first to ensure a target/ directory exists to be cleaned
     comp.execute({})

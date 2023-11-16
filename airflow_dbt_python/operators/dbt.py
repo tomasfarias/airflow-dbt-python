@@ -70,6 +70,9 @@ class DbtBaseOperator(BaseOperator):
         warn_error: Optional[bool] = None,
         # Logging
         debug: Optional[bool] = None,
+        log_path: Optional[str] = None,
+        log_level: Optional[str] = None,
+        log_level_file: Optional[str] = None,
         log_format: Optional[LogFormat] = None,
         log_cache_events: Optional[bool] = False,
         quiet: Optional[bool] = None,
@@ -80,12 +83,16 @@ class DbtBaseOperator(BaseOperator):
         no_defer: Optional[bool] = None,
         partial_parse: Optional[bool] = False,
         no_partial_parse: Optional[bool] = None,
+        introspect: Optional[bool] = None,
+        no_introspect: Optional[bool] = None,
         use_colors: Optional[bool] = None,
         no_use_colors: Optional[bool] = None,
         static_parser: Optional[bool] = None,
         no_static_parser: Optional[bool] = None,
         version_check: Optional[bool] = None,
         no_version_check: Optional[bool] = None,
+        write_json: Optional[bool] = None,
+        write_perf_info: Optional[bool] = None,
         anonymous_usage_stats: Optional[bool] = None,
         no_anonymous_usage_stats: Optional[bool] = None,
         # Extra features configuration
@@ -116,9 +123,12 @@ class DbtBaseOperator(BaseOperator):
         self.warn_error = warn_error
 
         self.debug = debug
+        self.log_path = log_path
         self.log_cache_events = log_cache_events
         self.quiet = quiet
         self.no_print = no_print
+        self.log_level = log_level
+        self.log_level_file = log_level_file
         self.log_format = log_format
         self.record_timing_info = record_timing_info
 
@@ -137,8 +147,17 @@ class DbtBaseOperator(BaseOperator):
         self.use_colors = use_colors
         self.no_use_colors = no_use_colors
 
-        self.version_check = no_version_check
+        self.introspect = introspect
+        self.no_introspect = no_introspect
+
+        self.version_check = version_check
         self.no_version_check = no_version_check
+
+        self.write_json = write_json or (
+            do_xcom_push_artifacts and "run_results.json" in do_xcom_push_artifacts
+        )
+
+        self.write_perf_info = write_perf_info
 
         self.dbt_conn_id = dbt_conn_id
         self.profiles_conn_id = profiles_conn_id
@@ -174,7 +193,7 @@ class DbtBaseOperator(BaseOperator):
             )
         except Exception as e:
             self.log.exception(
-                f"An error has ocurred while executing dbt {self.command}", exc_info=e
+                f"An error has occurred while executing dbt {self.command}", exc_info=e
             )
             raise AirflowException(
                 f"An error has occurred while executing dbt {self.command}"
@@ -428,11 +447,13 @@ class DbtCleanOperator(DbtBaseOperator):
         self,
         upload_dbt_project: bool = True,
         delete_before_upload: bool = True,
+        clean_project_files_only: bool = True,
         **kwargs,
     ) -> None:
         super().__init__(**kwargs)
         self.upload_dbt_project = upload_dbt_project
         self.delete_before_upload = delete_before_upload
+        self.clean_project_files_only = clean_project_files_only
 
     @property
     def command(self) -> str:

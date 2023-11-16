@@ -209,4 +209,4 @@ class DbtGitRemoteHook(SSHHook, DbtRemoteHook):
         else:
             raise ValueError(f"Unsupported scheme: {url.scheme}")
 
-        return (client, path)
+        return client, path
