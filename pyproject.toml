@@ -64,7 +64,7 @@ black = ">=22"
 boto3-stubs = { extras = ["s3"], version = ">=1.26.8" }
 coverage = { extras = ["toml"], version = ">=7.2" }
 dbt-postgres = ">=1.0.0,<1.8.0"
-dulwich = ">=0.21"
+dulwich = ">=0.21,!=0.21.6"
 moto = ">=4.0.3"
 mypy = ">=1"
 freezegun = ">=1.1.0"
