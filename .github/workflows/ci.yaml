@@ -39,7 +39,7 @@ jobs:
         exclude:
           # Incompatible combinations
           - python-version: 3.11
-            airflow-version: 2.4
+            airflow-version: '2.4.3'
 
           - python-version: 3.7
             dbt-version: 1.6
@@ -54,7 +54,10 @@ jobs:
             api.github.com:443
             files.pythonhosted.org:443
             hub.getdbt.com:443
+            github.com:80
             github.com:443
+            gitlab.com:80
+            gitlab.com:443
             objects.githubusercontent.com:443
             raw.githubusercontent.com:443
             pypi.org:443
