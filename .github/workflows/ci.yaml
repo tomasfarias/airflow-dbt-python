@@ -41,8 +41,8 @@ jobs:
           - python-version: 3.11
             airflow-version: '2.4.3'
 
-          - python-version: 3.7
-            dbt-version: 1.6
+          - python-version: 3.11
+            airflow-version: '2.5.3'
 
     runs-on: ubuntu-latest
     steps:
