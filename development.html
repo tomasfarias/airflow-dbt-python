@@ -1,27 +1,28 @@
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="en" data-content_root="./">
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Development &mdash; airflow-dbt-python 1.0.5 documentation</title>
-      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-      <link rel="stylesheet" href="_static/copybutton.css" type="text/css" />
-      <link rel="stylesheet" href="_static/graphviz.css" type="text/css" />
-      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/hack-font/3.3.0/web/hack.min.css" type="text/css" />
+  <title>Development &mdash; airflow-dbt-python 2.0.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="_static/graphviz.css?v=eafc0fe6" />
+      <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/hack-font/3.3.0/web/hack.min.css" />
+
+  
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-        <script src="_static/jquery.js"></script>
-        <script src="_static/underscore.js"></script>
-        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
-        <script src="_static/doctools.js"></script>
-        <script src="_static/sphinx_highlight.js"></script>
-        <script src="_static/clipboard.min.js"></script>
-        <script src="_static/copybutton.js"></script>
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="_static/documentation_options.js?v=51b770b3"></script>
+        <script src="_static/doctools.js?v=888ff710"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script src="_static/clipboard.min.js?v=a7894cd8"></script>
+        <script src="_static/copybutton.js?v=f281be69"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -41,7 +42,7 @@
             airflow-dbt-python
           </a>
               <div class="version">
-                1.0.5
+                2.0.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
@@ -100,30 +101,30 @@
            <div itemprop="articleBody">
              
   <section id="development">
-<span id="id1"></span><h1>Development<a class="headerlink" href="#development" title="Permalink to this heading"></a></h1>
+<span id="id1"></span><h1>Development<a class="headerlink" href="#development" title="Link to this heading"></a></h1>
 <p>This section dives into the development process of <em>airflow-dbt-python</em> by describing how you may setup a local development environment and make an effective contribution.</p>
 <p>If you would like to dig a bit into the internals of <em>airflow-dbt-python</em> and learn about the development philosophy, it’s recommended that you check out the <a class="reference internal" href="how_does_it_work.html#how-does-it-work"><span class="std std-ref">How does it work?</span></a> documentation.</p>
 <section id="project-management-poetry">
-<h2>Project management: Poetry<a class="headerlink" href="#project-management-poetry" title="Permalink to this heading"></a></h2>
+<h2>Project management: Poetry<a class="headerlink" href="#project-management-poetry" title="Link to this heading"></a></h2>
 <p><em>airflow-dbt-python</em> uses <a class="reference external" href="https://python-poetry.org/">Poetry</a> for project management. See <a class="reference external" href="https://python-poetry.org/docs/#installation">Poetry’s installation documentation</a> if you need to install it first.</p>
 <p>As of <em>airflow-dbt-python</em> version 0.14, we have moved the project to Poetry version &gt;= 1.2.0 to allow us to use dependency groups. Ensure your installation meets this requirement.</p>
 </section>
 <section id="installing-airflow-dbt-python">
-<h2>Installing <em>airflow-dbt-python</em><a class="headerlink" href="#installing-airflow-dbt-python" title="Permalink to this heading"></a></h2>
+<h2>Installing <em>airflow-dbt-python</em><a class="headerlink" href="#installing-airflow-dbt-python" title="Link to this heading"></a></h2>
 <p>Clone the <em>airflow-dbt-python</em> repository:</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/tomasfarias/airflow-dbt-python.git
 <span class="nb">cd</span><span class="w"> </span>airflow-dbt-python
 </pre></div>
 </div>
 <p>And install it with <em>Poetry</em>:</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>poetry<span class="w"> </span>install<span class="w"> </span>--with<span class="w"> </span>dev<span class="w"> </span>-E<span class="w"> </span>airflow-providers<span class="w"> </span>-E<span class="w"> </span>postgres<span class="w"> </span>-E<span class="w"> </span>airflow
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>poetry<span class="w"> </span>install<span class="w"> </span>--with<span class="w"> </span>dev<span class="w"> </span>-E<span class="w"> </span>airflow-providers<span class="w"> </span>-E<span class="w"> </span>postgres
 </pre></div>
 </div>
 <p>The <em>dev</em> dependency group includes development tools for code formatting, type checking, and testing.</p>
 <p>The additional extras, <em>airflow-providers</em>, <em>postgres</em>, and <em>airflow</em> install dependencies required for testing. If testing a specific Airflow version, the extras may be ommitted, see the following section with more details.</p>
 </section>
 <section id="installing-a-different-version-of-airflow">
-<h2>Installing a different version of Airflow<a class="headerlink" href="#installing-a-different-version-of-airflow" title="Permalink to this heading"></a></h2>
+<h2>Installing a different version of Airflow<a class="headerlink" href="#installing-a-different-version-of-airflow" title="Link to this heading"></a></h2>
 <p>The <em>airflow</em> extra dependency group installs the latest supported version of Airflow. However, <em>airflow-dbt-python</em> is also tested for older versions of Airflow; as a general rule, besides the latest version of Airflow, we test <em>airflow-dbt-python</em> against the latest version available in <a class="reference external" href="https://aws.amazon.com/managed-workflows-for-apache-airflow/">AWS MWAA</a>. Although support for older versions of Airflow is not guaranteed, we are open to patches to ensure backwards compatibility as long as they don’t increase maintenance load signifincantly.</p>
 <p>If you wish to install a different version of Airflow for testing you may skip the <em>airflow</em> and <em>airflow-providers</em> extras of the previous section and use <em>pip</em> instead to install any versions of <em>apache-airflow</em> and required providers:</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>apache-airflow<span class="o">==</span><span class="m">2</span>.2<span class="w"> </span>apache-airflow-providers-amazon<span class="o">==</span><span class="m">5</span>.0
@@ -131,12 +132,12 @@
 </div>
 </section>
 <section id="modifying-dependencies">
-<h2>Modifying dependencies<a class="headerlink" href="#modifying-dependencies" title="Permalink to this heading"></a></h2>
+<h2>Modifying dependencies<a class="headerlink" href="#modifying-dependencies" title="Link to this heading"></a></h2>
 <p>Apache Airflow is a package of significant size that requires a lot of dependencies. Together with <code class="docutils literal notranslate"><span class="pre">dbt-core</span></code>, it’s common to find dependency conflicts all over the place. Ultimately, we allow users to figure these issues out themselves, as most of the dependency conflicts are harmless: We do not interact with the dbt CLI, so any conflicts with CLI-specific packages can be safely ignored, but these requirements are not optional for <code class="docutils literal notranslate"><span class="pre">dbt-core</span></code>.</p>
 <p>All being said, this presents a problem when we try to add dependencies or modify existing ones, as <code class="docutils literal notranslate"><span class="pre">poetry</span></code> will take a long time to check all possible conflicts. Grabbing a constraints file from <a class="reference external" href="https://github.com/apache/airflow">Airflow</a> and adding it as an optional group in <code class="docutils literal notranslate"><span class="pre">pyproject.toml</span></code> can be a useful strategy to speed up the process, as we are limiting the search domain for <code class="docutils literal notranslate"><span class="pre">poetry</span></code>. However, this does require relaxing dependencies one by one in between running <code class="docutils literal notranslate"><span class="pre">poetry</span> <span class="pre">lock</span> <span class="pre">--no-update</span></code>.</p>
 </section>
 <section id="pre-commit-hooks">
-<h2>Pre-commit hooks<a class="headerlink" href="#pre-commit-hooks" title="Permalink to this heading"></a></h2>
+<h2>Pre-commit hooks<a class="headerlink" href="#pre-commit-hooks" title="Link to this heading"></a></h2>
 <p>A handful of <a class="reference external" href="https://pre-commit.com/">pre-commit</a> hooks are provided, and ensuring their checks pass pass is highly recommended as they are later ran as part of CI checks that will block PRs.</p>
 <p>These hooks include:</p>
 <ul class="simple">
@@ -158,14 +159,14 @@
 </div>
 </section>
 <section id="testing-airflow-dbt-python">
-<h2>Testing <em>airflow-dbt-python</em><a class="headerlink" href="#testing-airflow-dbt-python" title="Permalink to this heading"></a></h2>
+<h2>Testing <em>airflow-dbt-python</em><a class="headerlink" href="#testing-airflow-dbt-python" title="Link to this heading"></a></h2>
 <p>Tests are available for all operators, hooks, and utilities. That being said, only a fraction of the large amount of possible inputs that the operators and hooks can take is currently covered, so the unit tests do not offer perfect coverage (a single peek at the <code class="docutils literal notranslate"><span class="pre">DbtBaseOperator</span></code> should give you an idea of the level of state explosion we manage).</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>Unit tests (and <em>airflow-dbt-python</em>) assume <em>dbt</em> works correctly and do not assert the behavior of the <em>dbt</em> commands in depth.</p>
 </div>
 <section id="testing-specific-requirements">
-<h3>Testing specific requirements<a class="headerlink" href="#testing-specific-requirements" title="Permalink to this heading"></a></h3>
+<h3>Testing specific requirements<a class="headerlink" href="#testing-specific-requirements" title="Link to this heading"></a></h3>
 <p>Unit tests interact with a <a class="reference external" href="https://www.postgresql.org/">PostgreSQL</a> database as a target to run dbt commands. This requires <em>PostgreSQL</em> to be installed in your local environment. Installation instructions for all major platforms can be found <a class="reference external" href="https://www.postgresql.org/download/">here</a>.</p>
 <p>An Airflow database needs to be initialized in your local environment. This requires choosing a location for it, via the <code class="docutils literal notranslate"><span class="pre">AIRFLOW_HOME</span></code> environment variable. The same directory where <em>airflow-dbt-python</em> was cloned to can be used for this:</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="nb">export</span><span class="w"> </span><span class="nv">AIRFLOW_HOME</span><span class="o">=</span><span class="nv">$PWD</span>
@@ -177,7 +178,7 @@ poetry<span class="w"> </span>run<span class="w"> </span>airflow<span class="w">
 <p>Finally, some unit tests require Airflow provider packages. These are all provided by the <em>airflow-providers</em> extra.</p>
 </section>
 <section id="running-tests">
-<h3>Running tests<a class="headerlink" href="#running-tests" title="Permalink to this heading"></a></h3>
+<h3>Running tests<a class="headerlink" href="#running-tests" title="Link to this heading"></a></h3>
 <p><em>airflow-dbt-python</em> uses <a class="reference external" href="https://docs.pytest.org/">pytest</a> as its testing framework.</p>
 <p>All unit tests can be run with:</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>poetry<span class="w"> </span>run<span class="w"> </span>pytest<span class="w"> </span>tests/<span class="w"> </span>airflow_dbt_python/<span class="w"> </span>-vv
@@ -186,14 +187,14 @@ poetry<span class="w"> </span>run<span class="w"> </span>airflow<span class="w">
 <p>The majority of tests are found in the <code class="docutils literal notranslate"><span class="pre">tests/</span></code> directory, but we also test <a class="reference external" href="https://docs.python.org/3.10/library/doctest.html">doctest</a> documentation examples.</p>
 </section>
 <section id="measuring-test-coverage">
-<h3>Measuring test coverage<a class="headerlink" href="#measuring-test-coverage" title="Permalink to this heading"></a></h3>
+<h3>Measuring test coverage<a class="headerlink" href="#measuring-test-coverage" title="Link to this heading"></a></h3>
 <p>Generating coverage reports with <em>coverage.py</em> can be done with:</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>poetry<span class="w"> </span>run<span class="w"> </span>coverage<span class="w"> </span>run<span class="w"> </span>-m<span class="w"> </span>pytest<span class="w"> </span>tests/<span class="w"> </span>airflow_dbt_python/
 </pre></div>
 </div>
 </section>
 <section id="unit-tests-and-dag-tests">
-<h3>Unit tests and DAG tests<a class="headerlink" href="#unit-tests-and-dag-tests" title="Permalink to this heading"></a></h3>
+<h3>Unit tests and DAG tests<a class="headerlink" href="#unit-tests-and-dag-tests" title="Link to this heading"></a></h3>
 <p>Most of <em>airflow-dbt-python</em>’s operator and hook tests follow the same pattern:</p>
 <ol class="arabic simple">
 <li><p>Initialize a specific operator or hook.</p></li>

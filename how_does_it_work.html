@@ -1,27 +1,28 @@
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="en" data-content_root="./">
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>How does it work? &mdash; airflow-dbt-python 1.0.5 documentation</title>
-      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-      <link rel="stylesheet" href="_static/copybutton.css" type="text/css" />
-      <link rel="stylesheet" href="_static/graphviz.css" type="text/css" />
-      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/hack-font/3.3.0/web/hack.min.css" type="text/css" />
+  <title>How does it work? &mdash; airflow-dbt-python 2.0.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="_static/graphviz.css?v=eafc0fe6" />
+      <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/hack-font/3.3.0/web/hack.min.css" />
+
+  
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-        <script src="_static/jquery.js"></script>
-        <script src="_static/underscore.js"></script>
-        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
-        <script src="_static/doctools.js"></script>
-        <script src="_static/sphinx_highlight.js"></script>
-        <script src="_static/clipboard.min.js"></script>
-        <script src="_static/copybutton.js"></script>
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="_static/documentation_options.js?v=51b770b3"></script>
+        <script src="_static/doctools.js?v=888ff710"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script src="_static/clipboard.min.js?v=a7894cd8"></script>
+        <script src="_static/copybutton.js?v=f281be69"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -41,7 +42,7 @@
             airflow-dbt-python
           </a>
               <div class="version">
-                1.0.5
+                2.0.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
@@ -98,7 +99,7 @@
            <div itemprop="articleBody">
              
   <section id="how-does-it-work">
-<span id="id1"></span><h1>How does it work?<a class="headerlink" href="#how-does-it-work" title="Permalink to this heading"></a></h1>
+<span id="id1"></span><h1>How does it work?<a class="headerlink" href="#how-does-it-work" title="Link to this heading"></a></h1>
 <p><em>airflow-dbt-python</em>’s main goal is to elevate <em>dbt</em> to <strong>first-class citizen</strong> status in Airflow. By this we mean that users of <em>dbt</em> can leverage as many Airflow features as possible, without breaking the assumptions that Airflow expects from any workflows it orchestrates. Perhaps more importantly, Airflow should <strong>enhance</strong> a <em>dbt</em> user’s experience and not simply emulate the way they would run <em>dbt</em> in the command line. This is what separates <em>airflow-dbt-python</em> from other alternatives like <em>airflow-dbt</em> which simply wrap <em>dbt</em> cli commands in <code class="docutils literal notranslate"><span class="pre">BashOperator</span></code>.</p>
 <p>To achieve this goal <em>airflow-dbt-python</em> provides Airflow operators, hooks, and other utilities. Hooks in particular come in two flavors:</p>
 <ul class="simple">
@@ -147,16 +148,16 @@
 
 }</p></object></div>
 <section id="dbt-as-a-library">
-<h2><em>dbt</em> as a library<a class="headerlink" href="#dbt-as-a-library" title="Permalink to this heading"></a></h2>
+<h2><em>dbt</em> as a library<a class="headerlink" href="#dbt-as-a-library" title="Link to this heading"></a></h2>
 <p>A lot of the code in <em>airflow-dbt-python</em> is required to provide a <a class="reference external" href="https://en.wikipedia.org/wiki/Adapter_pattern">wrapper</a> for <em>dbt</em>, as <em>dbt</em> only provides a CLI interface. There are <a class="reference external" href="https://github.com/dbt-labs/dbt-core/issues/6356">ongoing efforts</a> to provide a dbt library, which would significantly simplify our codebase. As of the time of development, these efforts are not in a state where they can be used by us, but we can keep an eye out for the future.</p>
 <p>Most of the code used to adapting <em>dbt</em> can be found in the utilities module, as some of our features require that we break some assumptions <em>dbt</em> makes when initializing. For example, we need setup <em>dbt</em> to access project files stored remotely, or intiailize all profile settings from an Airflow Connection.</p>
 </section>
 <section id="dbt-operators">
-<span id="id2"></span><h2><em>dbt</em> operators<a class="headerlink" href="#dbt-operators" title="Permalink to this heading"></a></h2>
+<span id="id2"></span><h2><em>dbt</em> operators<a class="headerlink" href="#dbt-operators" title="Link to this heading"></a></h2>
 <p><em>airflow-dbt-python</em> provides one operator per <em>dbt</em> task: for example, <code class="docutils literal notranslate"><span class="pre">DbtRunOperator</span></code> can be used to execute a <em>dbt</em> run command, as if running <code class="docutils literal notranslate"><span class="pre">dbt</span> <span class="pre">run</span> <span class="pre">...</span></code> in the CLI.</p>
 </section>
 <section id="dbt-hooks">
-<span id="id3"></span><h2><em>dbt</em> hooks<a class="headerlink" href="#dbt-hooks" title="Permalink to this heading"></a></h2>
+<span id="id3"></span><h2><em>dbt</em> hooks<a class="headerlink" href="#dbt-hooks" title="Link to this heading"></a></h2>
 <p><em>airflow-dbt-python</em> provides a <code class="docutils literal notranslate"><span class="pre">DbtHook</span></code> to abstract all interactions with dbt. The main method of <code class="docutils literal notranslate"><span class="pre">DbtHook</span></code> operators should be calling is <code class="docutils literal notranslate"><span class="pre">DbtHook.run_dbt_task</span></code> which takes any <em>dbt</em> command as it’s first argument, and any configuration parameters keyword arguments. This hook abstracts interactions with <em>dbt</em>, including:</p>
 <ul class="simple">
 <li><p>Setting up a temporary directory for <em>dbt</em> execution.
@@ -166,7 +167,7 @@
 * Includes configuring <em>dbt</em> logging.</p></li>
 </ul>
 <section id="temporary-directories-ensure-task-independence">
-<span id="independent-task-execution"></span><h3>Temporary directories ensure task independence<a class="headerlink" href="#temporary-directories-ensure-task-independence" title="Permalink to this heading"></a></h3>
+<span id="independent-task-execution"></span><h3>Temporary directories ensure task independence<a class="headerlink" href="#temporary-directories-ensure-task-independence" title="Link to this heading"></a></h3>
 <p>Airflow executes <a class="reference external" href="https://airflow.apache.org/docs/apache-airflow/stable/concepts/tasks.html">tasks</a> independent of one another: even though downstream and upstream dependencies between tasks exist, the execution of an individual task happens entirely independently of any other task execution (see: <a class="reference external" href="https://airflow.apache.org/docs/apache-airflow/stable/concepts/tasks.html#relationships">Tasks Relationships</a>).</p>
 <p>In order to respect this constraint, <em>airflow-dbt-python</em> hooks run each <em>dbt</em> command in a temporary and isolated directory:</p>
 <ol class="arabic simple">
@@ -177,10 +178,10 @@
 </section>
 </section>
 <section id="dbt-remote-hooks">
-<span id="id4"></span><h2><em>dbt</em> remote hooks<a class="headerlink" href="#dbt-remote-hooks" title="Permalink to this heading"></a></h2>
+<span id="id4"></span><h2><em>dbt</em> remote hooks<a class="headerlink" href="#dbt-remote-hooks" title="Link to this heading"></a></h2>
 <p><em>dbt</em> remote hooks implement a simple interface to communicate with <em>dbt</em> remotes. A <em>dbt</em> remote can be any external storage that contains a <em>dbt</em> project and potentially also a <em>profiles.yml</em> file for example: an AWS S3 bucket or a GitHub repository. See the reference for a list of which remotes are currently supported.</p>
 <section id="implementing-the-dbtremotehook-interface">
-<h3>Implementing the <code class="docutils literal notranslate"><span class="pre">DbtRemoteHook</span></code> interface<a class="headerlink" href="#implementing-the-dbtremotehook-interface" title="Permalink to this heading"></a></h3>
+<h3>Implementing the <code class="docutils literal notranslate"><span class="pre">DbtRemoteHook</span></code> interface<a class="headerlink" href="#implementing-the-dbtremotehook-interface" title="Link to this heading"></a></h3>
 <p>Supporting a new remote to store <em>dbt</em> files requires implementing the <code class="docutils literal notranslate"><span class="pre">DbtRemoteHook</span></code> interface. There are only two methods in the interface: <code class="docutils literal notranslate"><span class="pre">DbtRemoteHook.download</span></code> and <code class="docutils literal notranslate"><span class="pre">DbtRemoteHook.upload</span></code>.</p>
 </section>
 </section>

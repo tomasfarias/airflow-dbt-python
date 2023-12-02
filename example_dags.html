@@ -1,27 +1,28 @@
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="en" data-content_root="./">
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Example DAGs &mdash; airflow-dbt-python 1.0.5 documentation</title>
-      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-      <link rel="stylesheet" href="_static/copybutton.css" type="text/css" />
-      <link rel="stylesheet" href="_static/graphviz.css" type="text/css" />
-      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/hack-font/3.3.0/web/hack.min.css" type="text/css" />
+  <title>Example DAGs &mdash; airflow-dbt-python 2.0.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="_static/graphviz.css?v=eafc0fe6" />
+      <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/hack-font/3.3.0/web/hack.min.css" />
+
+  
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-        <script src="_static/jquery.js"></script>
-        <script src="_static/underscore.js"></script>
-        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
-        <script src="_static/doctools.js"></script>
-        <script src="_static/sphinx_highlight.js"></script>
-        <script src="_static/clipboard.min.js"></script>
-        <script src="_static/copybutton.js"></script>
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="_static/documentation_options.js?v=51b770b3"></script>
+        <script src="_static/doctools.js?v=888ff710"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script src="_static/clipboard.min.js?v=a7894cd8"></script>
+        <script src="_static/copybutton.js?v=f281be69"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -41,7 +42,7 @@
             airflow-dbt-python
           </a>
               <div class="version">
-                1.0.5
+                2.0.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
@@ -92,17 +93,17 @@
            <div itemprop="articleBody">
              
   <section id="example-dags">
-<h1>Example DAGs<a class="headerlink" href="#example-dags" title="Permalink to this heading"></a></h1>
+<h1>Example DAGs<a class="headerlink" href="#example-dags" title="Link to this heading"></a></h1>
 <p>This section contains a few DAGs showing off some dbt pipelines to get you going.</p>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
 <p>All example DAGs are tested against against <code class="docutils literal notranslate"><span class="pre">apache-airflow==2.2.5</span></code>. Some changes, like modifying <code class="docutils literal notranslate"><span class="pre">import</span></code> statements or changing types, may be required for them to work in environments running other versions of Airflow.</p>
 </div>
 <section id="basic-dag">
-<h2>Basic DAG<a class="headerlink" href="#basic-dag" title="Permalink to this heading"></a></h2>
+<h2>Basic DAG<a class="headerlink" href="#basic-dag" title="Link to this heading"></a></h2>
 <p>This basic DAG shows off a single <code class="docutils literal notranslate"><span class="pre">DbtRunOperator</span></code> that executes daily:</p>
 <div class="literal-block-wrapper docutils container" id="id1">
-<div class="code-block-caption"><span class="caption-text">basic_dag.py</span><a class="headerlink" href="#id1" title="Permalink to this code"></a></div>
+<div class="code-block-caption"><span class="caption-text">basic_dag.py</span><a class="headerlink" href="#id1" title="Link to this code"></a></div>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="linenos"> 1</span><span class="sd">&quot;&quot;&quot;Sample basic DAG which dbt runs a project.&quot;&quot;&quot;</span>
 <span class="linenos"> 2</span><span class="kn">import</span> <span class="nn">datetime</span> <span class="k">as</span> <span class="nn">dt</span>
 <span class="linenos"> 3</span>
@@ -132,10 +133,10 @@
 </div>
 </section>
 <section id="run-and-docs-from-s3">
-<h2>Run and Docs from S3<a class="headerlink" href="#run-and-docs-from-s3" title="Permalink to this heading"></a></h2>
+<h2>Run and Docs from S3<a class="headerlink" href="#run-and-docs-from-s3" title="Link to this heading"></a></h2>
 <p>This DAG shows off a <code class="docutils literal notranslate"><span class="pre">DbtRunOperator</span></code> followed by a <code class="docutils literal notranslate"><span class="pre">DbtDocsGenerateOperator</span></code>. Both execute daily, and run from dbt project files available in an S3 URL:</p>
 <div class="literal-block-wrapper docutils container" id="id2">
-<div class="code-block-caption"><span class="caption-text">dbt_project_in_s3_dag.py</span><a class="headerlink" href="#id2" title="Permalink to this code"></a></div>
+<div class="code-block-caption"><span class="caption-text">dbt_project_in_s3_dag.py</span><a class="headerlink" href="#id2" title="Link to this code"></a></div>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="linenos"> 1</span><span class="sd">&quot;&quot;&quot;Sample basic DAG which showcases a dbt project being pulled from S3.&quot;&quot;&quot;</span>
 <span class="linenos"> 2</span><span class="kn">import</span> <span class="nn">datetime</span> <span class="k">as</span> <span class="nn">dt</span>
 <span class="linenos"> 3</span>
@@ -176,10 +177,10 @@
 </div>
 </section>
 <section id="complete-dbt-workflow">
-<h2>Complete dbt workflow<a class="headerlink" href="#complete-dbt-workflow" title="Permalink to this heading"></a></h2>
+<h2>Complete dbt workflow<a class="headerlink" href="#complete-dbt-workflow" title="Link to this heading"></a></h2>
 <p>This DAG shows off a (almost) complete dbt workflow as it would be run from the CLI: we begin by running <code class="docutils literal notranslate"><span class="pre">DbtSourceOperator</span></code> to test the freshness of our source tables, <code class="docutils literal notranslate"><span class="pre">DbtSeedOperator</span></code> follows to load up any static data. Then, two instances of <code class="docutils literal notranslate"><span class="pre">DbtRunOperator</span></code> are created: one to handle incremental data, and the other one to run any non-incremental models. Finally, we run our tests to ensure our models remain correct.</p>
 <div class="literal-block-wrapper docutils container" id="id3">
-<div class="code-block-caption"><span class="caption-text">complete_dbt_workflow_dag.py</span><a class="headerlink" href="#id3" title="Permalink to this code"></a></div>
+<div class="code-block-caption"><span class="caption-text">complete_dbt_workflow_dag.py</span><a class="headerlink" href="#id3" title="Link to this code"></a></div>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="linenos"> 1</span><span class="sd">&quot;&quot;&quot;Sample DAG showcasing a complete dbt workflow.</span>
 <span class="linenos"> 2</span>
 <span class="linenos"> 3</span><span class="sd">The complete workflow includes a sequence of source, seed, and several run commands.</span>
@@ -255,10 +256,10 @@
 </div>
 </section>
 <section id="using-dbt-artifacts">
-<h2>Using dbt artifacts<a class="headerlink" href="#using-dbt-artifacts" title="Permalink to this heading"></a></h2>
+<h2>Using dbt artifacts<a class="headerlink" href="#using-dbt-artifacts" title="Link to this heading"></a></h2>
 <p>The following DAG showcases how to use <a class="reference external" href="https://docs.getdbt.com/reference/artifacts/dbt-artifacts/">dbt artifacts</a> that are made available via XCom by airflow-dbt-python. A sample function calculates the longest running dbt model by pulling the artifacts that were generated after <code class="docutils literal notranslate"><span class="pre">DbtRunOperator</span></code> executes. We specify which dbt artifacts via the <code class="docutils literal notranslate"><span class="pre">do_xcom_push_artifacts</span></code> parameter.</p>
 <div class="literal-block-wrapper docutils container" id="id4">
-<div class="code-block-caption"><span class="caption-text">use_dbt_artifacts_dag.py</span><a class="headerlink" href="#id4" title="Permalink to this code"></a></div>
+<div class="code-block-caption"><span class="caption-text">use_dbt_artifacts_dag.py</span><a class="headerlink" href="#id4" title="Link to this code"></a></div>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="linenos"> 1</span><span class="sd">&quot;&quot;&quot;Sample DAG to showcase pulling dbt artifacts from XCOM.&quot;&quot;&quot;</span>
 <span class="linenos"> 2</span><span class="kn">import</span> <span class="nn">datetime</span> <span class="k">as</span> <span class="nn">dt</span>
 <span class="linenos"> 3</span>

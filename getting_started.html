@@ -1,27 +1,28 @@
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="en" data-content_root="./">
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Getting started &mdash; airflow-dbt-python 1.0.5 documentation</title>
-      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-      <link rel="stylesheet" href="_static/copybutton.css" type="text/css" />
-      <link rel="stylesheet" href="_static/graphviz.css" type="text/css" />
-      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/hack-font/3.3.0/web/hack.min.css" type="text/css" />
+  <title>Getting started &mdash; airflow-dbt-python 2.0.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="_static/graphviz.css?v=eafc0fe6" />
+      <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/hack-font/3.3.0/web/hack.min.css" />
+
+  
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-        <script src="_static/jquery.js"></script>
-        <script src="_static/underscore.js"></script>
-        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
-        <script src="_static/doctools.js"></script>
-        <script src="_static/sphinx_highlight.js"></script>
-        <script src="_static/clipboard.min.js"></script>
-        <script src="_static/copybutton.js"></script>
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="_static/documentation_options.js?v=51b770b3"></script>
+        <script src="_static/doctools.js?v=888ff710"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script src="_static/clipboard.min.js?v=a7894cd8"></script>
+        <script src="_static/copybutton.js?v=f281be69"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -41,7 +42,7 @@
             airflow-dbt-python
           </a>
               <div class="version">
-                1.0.5
+                2.0.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
@@ -100,10 +101,10 @@
            <div itemprop="articleBody">
              
   <section id="getting-started">
-<h1>Getting started<a class="headerlink" href="#getting-started" title="Permalink to this heading"></a></h1>
+<h1>Getting started<a class="headerlink" href="#getting-started" title="Link to this heading"></a></h1>
 <p>This section guides you on installing <em>airflow-dbt-python</em> and getting your first <em>dbt</em> workflow DAG running.</p>
 <section id="requirements">
-<span id="id1"></span><h2>Requirements<a class="headerlink" href="#requirements" title="Permalink to this heading"></a></h2>
+<span id="id1"></span><h2>Requirements<a class="headerlink" href="#requirements" title="Link to this heading"></a></h2>
 <p>Before using <em>airflow-dbt-python</em>, ensure you meet the following requirements:
 * A <em>dbt</em> project using <a class="reference external" href="https://pypi.org/project/dbt-core/">dbt-core</a> version 1.0.0 or later.
 * An Airflow environment using version 2.2 or later.</p>
@@ -126,10 +127,10 @@
 </div>
 </section>
 <section id="installation">
-<h2>Installation<a class="headerlink" href="#installation" title="Permalink to this heading"></a></h2>
+<h2>Installation<a class="headerlink" href="#installation" title="Link to this heading"></a></h2>
 <p>Your installation will vary according to your specific Airflow environment setup. These instructions cover a general approach by installing from PyPI or the GitHub repository, and how to install it in AWS MWAA. Other serviced offerings may require different steps, check the documentation of your managed service.</p>
 <section id="from-pypi">
-<h3>From PyPI<a class="headerlink" href="#from-pypi" title="Permalink to this heading"></a></h3>
+<h3>From PyPI<a class="headerlink" href="#from-pypi" title="Link to this heading"></a></h3>
 <p><em>airflow-dbt-python</em> is available in <a class="reference external" href="https://pypi.org/project/airflow-dbt-python/">PyPI</a> and can be installed with <em>pip</em>:</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>airflow-dbt-python
 </pre></div>
@@ -148,7 +149,7 @@
 </div>
 </section>
 <section id="building-from-source">
-<h3>Building from source<a class="headerlink" href="#building-from-source" title="Permalink to this heading"></a></h3>
+<h3>Building from source<a class="headerlink" href="#building-from-source" title="Link to this heading"></a></h3>
 <p><em>airflow-dbt-python</em> can also be built from source by cloning the GitHub repository:</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/tomasfarias/airflow-dbt-python.git
 <span class="nb">cd</span><span class="w"> </span>airflow-dbt-python
@@ -165,11 +166,11 @@ poetry<span class="w"> </span>install<span class="w"> </span>-E<span class="w"> 
 </div>
 </section>
 <section id="installing-in-mwaa">
-<h3>Installing in MWAA<a class="headerlink" href="#installing-in-mwaa" title="Permalink to this heading"></a></h3>
+<h3>Installing in MWAA<a class="headerlink" href="#installing-in-mwaa" title="Link to this heading"></a></h3>
 <p><em>airflow-dbt-python</em> can be installed in an Airflow environment managed by AWS via their <a class="reference external" href="https://aws.amazon.com/managed-workflows-for-apache-airflow/">Managed Workflows for Apache Airflow</a> service.</p>
 <p>To do so, include <em>airflow-dbt-python</em> in the <em>requirements.txt</em> file provided to MWAA, for example:</p>
 <div class="literal-block-wrapper docutils container" id="id2">
-<div class="code-block-caption"><span class="caption-text">requirements.txt</span><a class="headerlink" href="#id2" title="Permalink to this code"></a></div>
+<div class="code-block-caption"><span class="caption-text">requirements.txt</span><a class="headerlink" href="#id2" title="Link to this code"></a></div>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>airflow-dbt-python<span class="o">[</span>redshift,s3<span class="o">]</span>
 </pre></div>
 </div>
@@ -187,7 +188,7 @@ poetry<span class="w"> </span>install<span class="w"> </span>-E<span class="w"> 
 </div>
 <p>The wheel file can now be added to your <em>plugins.zip</em>, and the requirements can be updated to point to this wheel file:</p>
 <div class="literal-block-wrapper docutils container" id="id3">
-<div class="code-block-caption"><span class="caption-text">requirements.txt</span><a class="headerlink" href="#id3" title="Permalink to this code"></a></div>
+<div class="code-block-caption"><span class="caption-text">requirements.txt</span><a class="headerlink" href="#id3" title="Link to this code"></a></div>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>/usr/local/airflow/plugins/airflow_dbt_python-1.0.0-py3-none-any.whl
 </pre></div>
 </div>
@@ -195,14 +196,14 @@ poetry<span class="w"> </span>install<span class="w"> </span>-E<span class="w"> 
 </section>
 </section>
 <section id="accessing-a-dbt-project">
-<h2>Accessing a <em>dbt</em> project<a class="headerlink" href="#accessing-a-dbt-project" title="Permalink to this heading"></a></h2>
+<h2>Accessing a <em>dbt</em> project<a class="headerlink" href="#accessing-a-dbt-project" title="Link to this heading"></a></h2>
 <p><em>airflow-dbt-python</em> needs a way to access your <em>dbt</em> project to run. The requirements to grant this access will depend on how your Airflow environment is setup:</p>
 <ol class="arabic simple">
 <li><p>Using a <a class="reference external" href="https://airflow.apache.org/docs/apache-airflow/stable/executor/local.html">local executor</a> with a single-machine installation means we can rely on the local machine’s filesystem to store a <em>dbt</em> project. This also applies to <code class="docutils literal notranslate"><span class="pre">DebugExecutor</span></code> and <code class="docutils literal notranslate"><span class="pre">SequentialExecutor</span></code>, but these executors are generally only used for debugging/development so we will ignore them. If you are running a setup like this, then simply ensure your <em>dbt</em> project and <em>profiles.yml</em> exist somewhere in the <code class="docutils literal notranslate"><span class="pre">LocalExecutor</span></code>’s file system.</p></li>
 <li><p>Once your setup has evolved to a multi-machine/cloud installation with any remote executor, we must rely on a remote storage for <em>dbt</em> files. Currently, supported remote storages include AWS S3 and git remote repositories although more are in plans to be added. In this setup, your <em>dbt</em> project will need to be uploaded to a remote storage that Airflow can access. <em>airflow-dbt-python</em> can utilize Airflow connections to access these storages.</p></li>
 </ol>
 <section id="single-machine-installation">
-<h3>Single-machine installation<a class="headerlink" href="#single-machine-installation" title="Permalink to this heading"></a></h3>
+<h3>Single-machine installation<a class="headerlink" href="#single-machine-installation" title="Link to this heading"></a></h3>
 <p>As we can rely on the local machine’s filesystem, simply copy or move your <em>dbt</em> project <em>profiles.yml</em> to a path in the instance executing Airflow.</p>
 <p>Files may be laid out as:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>.
@@ -226,7 +227,7 @@ poetry<span class="w"> </span>install<span class="w"> </span>-E<span class="w"> 
 </div>
 <p>Then we can simply set <code class="docutils literal notranslate"><span class="pre">project_dir</span></code> and <code class="docutils literal notranslate"><span class="pre">profiles_dir</span></code> to <code class="docutils literal notranslate"><span class="pre">&quot;/path/to/project/&quot;</span></code> and <code class="docutils literal notranslate"><span class="pre">&quot;~/.dbt/&quot;</span></code> respectively:</p>
 <div class="literal-block-wrapper docutils container" id="id4">
-<div class="code-block-caption"><span class="caption-text">example_local_1_dag.py</span><a class="headerlink" href="#id4" title="Permalink to this code"></a></div>
+<div class="code-block-caption"><span class="caption-text">example_local_1_dag.py</span><a class="headerlink" href="#id4" title="Link to this code"></a></div>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="linenos"> 1</span><span class="kn">import</span> <span class="nn">datetime</span> <span class="k">as</span> <span class="nn">dt</span>
 <span class="linenos"> 2</span>
 <span class="linenos"> 3</span><span class="kn">import</span> <span class="nn">pendulum</span>
@@ -258,7 +259,7 @@ poetry<span class="w"> </span>install<span class="w"> </span>-E<span class="w"> 
 </div>
 <p>If we have multiple operators, we can also utilize default arguments and include other parameters like the profile and target to use:</p>
 <div class="literal-block-wrapper docutils container" id="id5">
-<div class="code-block-caption"><span class="caption-text">example_local_2_dag.py</span><a class="headerlink" href="#id5" title="Permalink to this code"></a></div>
+<div class="code-block-caption"><span class="caption-text">example_local_2_dag.py</span><a class="headerlink" href="#id5" title="Link to this code"></a></div>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="linenos"> 1</span><span class="kn">import</span> <span class="nn">datetime</span> <span class="k">as</span> <span class="nn">dt</span>
 <span class="linenos"> 2</span>
 <span class="linenos"> 3</span><span class="kn">import</span> <span class="nn">pendulum</span>
@@ -300,7 +301,7 @@ poetry<span class="w"> </span>install<span class="w"> </span>-E<span class="w"> 
 </div>
 </section>
 <section id="multi-machine-cloud-installation">
-<h3>Multi-machine/cloud installation<a class="headerlink" href="#multi-machine-cloud-installation" title="Permalink to this heading"></a></h3>
+<h3>Multi-machine/cloud installation<a class="headerlink" href="#multi-machine-cloud-installation" title="Link to this heading"></a></h3>
 <p>When Airflow is installed is running on a multi- machine or cloud installation, each individual worker does not have does not have access to a common filesystem that we can reliably use to store <em>dbt</em> project files (at least, assuming any deployment with more than one worker). This includes both self-hosted deployments as well as managed Airflow deployments like AWS MWAA or Astronomer.</p>
 <p>For these deployments we must rely on a <em>dbt</em> remote to download and, eventually, upload all required <em>dbt</em> files. The remote <em>dbt</em> URL may be used in place of a local <code class="docutils literal notranslate"><span class="pre">project_dir</span></code> or <code class="docutils literal notranslate"><span class="pre">profiles_dir</span></code> to have <em>airflow-dbt-python</em> download the <em>dbt</em> files in the remote into a temporary directory for execution.</p>
 <p>Interactions with storages are supported by subclasses of <code class="docutils literal notranslate"><span class="pre">DbtRemoteHook</span></code>. Read the documentation <a class="reference internal" href="how_does_it_work.html#dbt-remote-hooks"><span class="std std-ref">dbt remote hooks</span></a> to learn more about these hooks.</p>
@@ -327,7 +328,7 @@ poetry<span class="w"> </span>install<span class="w"> </span>-E<span class="w"> 
 </div>
 <p>Then, we can alter the previous example DAG to set <code class="docutils literal notranslate"><span class="pre">project_dir</span></code> and <code class="docutils literal notranslate"><span class="pre">profiles_dir</span></code> to <code class="docutils literal notranslate"><span class="pre">&quot;s3://my-bucket/project/&quot;</span></code> and <code class="docutils literal notranslate"><span class="pre">&quot;s3://my-bucket/profiles/&quot;</span></code> respectively:</p>
 <div class="literal-block-wrapper docutils container" id="id6">
-<div class="code-block-caption"><span class="caption-text">example_s3_remote_1_dag.py</span><a class="headerlink" href="#id6" title="Permalink to this code"></a></div>
+<div class="code-block-caption"><span class="caption-text">example_s3_remote_1_dag.py</span><a class="headerlink" href="#id6" title="Link to this code"></a></div>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="linenos"> 1</span><span class="kn">import</span> <span class="nn">datetime</span> <span class="k">as</span> <span class="nn">dt</span>
 <span class="linenos"> 2</span>
 <span class="linenos"> 3</span><span class="kn">import</span> <span class="nn">pendulum</span>
@@ -358,7 +359,7 @@ poetry<span class="w"> </span>install<span class="w"> </span>-E<span class="w"> 
 <p>Let’s do another example where we upload our <em>dbt</em> project to a GitHub repository. For this example, let’s use dbt-labs’ own <a class="reference external" href="https://github.com/dbt-labs/jaffle_shop">jaffle_shop</a>.</p>
 <p>The DAG looks the same as the AWS S3 example, except that now we use the GitHub repository’s SSH URL as the <code class="docutils literal notranslate"><span class="pre">project_dir</span></code> argument:</p>
 <div class="literal-block-wrapper docutils container" id="id7">
-<div class="code-block-caption"><span class="caption-text">example_git_remote_1_dag.py</span><a class="headerlink" href="#id7" title="Permalink to this code"></a></div>
+<div class="code-block-caption"><span class="caption-text">example_git_remote_1_dag.py</span><a class="headerlink" href="#id7" title="Link to this code"></a></div>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="linenos"> 1</span><span class="kn">import</span> <span class="nn">datetime</span> <span class="k">as</span> <span class="nn">dt</span>
 <span class="linenos"> 2</span>
 <span class="linenos"> 3</span><span class="kn">import</span> <span class="nn">pendulum</span>
@@ -395,7 +396,7 @@ poetry<span class="w"> </span>install<span class="w"> </span>-E<span class="w"> 
 </ol>
 <p>Airflow Connections are generally created in the UI, but for illustration purposes we can create one also in our DAG with:</p>
 <div class="literal-block-wrapper docutils container" id="id8">
-<div class="code-block-caption"><span class="caption-text">example_git_remote_1_dag.py</span><a class="headerlink" href="#id8" title="Permalink to this code"></a></div>
+<div class="code-block-caption"><span class="caption-text">example_git_remote_1_dag.py</span><a class="headerlink" href="#id8" title="Link to this code"></a></div>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="linenos"> 1</span><span class="kn">from</span> <span class="nn">airflow</span> <span class="kn">import</span> <span class="n">DAG</span><span class="p">,</span> <span class="n">settings</span>
 <span class="linenos"> 2</span><span class="kn">from</span> <span class="nn">airflow.models.connection</span> <span class="kn">import</span> <span class="n">Connection</span>
 <span class="linenos"> 3</span>

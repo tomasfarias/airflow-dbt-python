@@ -1,26 +1,27 @@
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="en" data-content_root="../../../">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>airflow_dbt_python.hooks.remote &mdash; airflow-dbt-python 1.0.5 documentation</title>
-      <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
-      <link rel="stylesheet" href="../../../_static/copybutton.css" type="text/css" />
-      <link rel="stylesheet" href="../../../_static/graphviz.css" type="text/css" />
-      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/hack-font/3.3.0/web/hack.min.css" type="text/css" />
+  <title>airflow_dbt_python.hooks.remote &mdash; airflow-dbt-python 2.0.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/graphviz.css?v=eafc0fe6" />
+      <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/hack-font/3.3.0/web/hack.min.css" />
+
+  
   <!--[if lt IE 9]>
     <script src="../../../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
-        <script src="../../../_static/jquery.js"></script>
-        <script src="../../../_static/underscore.js"></script>
-        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
-        <script src="../../../_static/doctools.js"></script>
-        <script src="../../../_static/sphinx_highlight.js"></script>
-        <script src="../../../_static/clipboard.min.js"></script>
-        <script src="../../../_static/copybutton.js"></script>
+        <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../../_static/documentation_options.js?v=51b770b3"></script>
+        <script src="../../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
+        <script src="../../../_static/copybutton.js?v=f281be69"></script>
     <script src="../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" /> 
@@ -38,7 +39,7 @@
             airflow-dbt-python
           </a>
               <div class="version">
-                1.0.5
+                2.0.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
@@ -100,7 +101,9 @@
 <span class="n">StrPath</span> <span class="o">=</span> <span class="nb">str</span>
 
 
-<div class="viewcode-block" id="DbtRemoteHook"><a class="viewcode-back" href="../../../reference/hooks.html#airflow_dbt_python.hooks.remote.DbtRemoteHook">[docs]</a><span class="k">class</span> <span class="nc">DbtRemoteHook</span><span class="p">(</span><span class="n">ABC</span><span class="p">,</span> <span class="n">LoggingMixin</span><span class="p">):</span>
+<div class="viewcode-block" id="DbtRemoteHook">
+<a class="viewcode-back" href="../../../reference/hooks.html#airflow_dbt_python.hooks.remote.DbtRemoteHook">[docs]</a>
+<span class="k">class</span> <span class="nc">DbtRemoteHook</span><span class="p">(</span><span class="n">ABC</span><span class="p">,</span> <span class="n">LoggingMixin</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Represents a dbt project storing any dbt files.</span>
 
 <span class="sd">    A concrete backend class should implement the push and pull methods to fetch one</span>
@@ -115,7 +118,9 @@
 <span class="sd">            instantiate a hook for this backend.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-<div class="viewcode-block" id="DbtRemoteHook.download"><a class="viewcode-back" href="../../../reference/hooks.html#airflow_dbt_python.hooks.remote.DbtRemoteHook.download">[docs]</a>    <span class="nd">@abstractmethod</span>
+<div class="viewcode-block" id="DbtRemoteHook.download">
+<a class="viewcode-back" href="../../../reference/hooks.html#airflow_dbt_python.hooks.remote.DbtRemoteHook.download">[docs]</a>
+    <span class="nd">@abstractmethod</span>
     <span class="k">def</span> <span class="nf">download</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">source</span><span class="p">:</span> <span class="n">URL</span><span class="p">,</span>
@@ -126,7 +131,10 @@
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Download source URL into local destination URL.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">NotImplemented</span></div>
 
-<div class="viewcode-block" id="DbtRemoteHook.upload"><a class="viewcode-back" href="../../../reference/hooks.html#airflow_dbt_python.hooks.remote.DbtRemoteHook.upload">[docs]</a>    <span class="nd">@abstractmethod</span>
+
+<div class="viewcode-block" id="DbtRemoteHook.upload">
+<a class="viewcode-back" href="../../../reference/hooks.html#airflow_dbt_python.hooks.remote.DbtRemoteHook.upload">[docs]</a>
+    <span class="nd">@abstractmethod</span>
     <span class="k">def</span> <span class="nf">upload</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">source</span><span class="p">:</span> <span class="n">URL</span><span class="p">,</span>
@@ -137,7 +145,10 @@
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Upload a local source URL into destination URL.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">NotImplemented</span></div>
 
-<div class="viewcode-block" id="DbtRemoteHook.download_dbt_project"><a class="viewcode-back" href="../../../reference/hooks.html#airflow_dbt_python.hooks.remote.DbtRemoteHook.download_dbt_project">[docs]</a>    <span class="k">def</span> <span class="nf">download_dbt_project</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source</span><span class="p">:</span> <span class="n">URLLike</span><span class="p">,</span> <span class="n">destination</span><span class="p">:</span> <span class="n">URLLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
+
+<div class="viewcode-block" id="DbtRemoteHook.download_dbt_project">
+<a class="viewcode-back" href="../../../reference/hooks.html#airflow_dbt_python.hooks.remote.DbtRemoteHook.download_dbt_project">[docs]</a>
+    <span class="k">def</span> <span class="nf">download_dbt_project</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source</span><span class="p">:</span> <span class="n">URLLike</span><span class="p">,</span> <span class="n">destination</span><span class="p">:</span> <span class="n">URLLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Download all dbt project files from a given source.</span>
 
 <span class="sd">        Args:</span>
@@ -166,7 +177,10 @@
 
         <span class="k">return</span> <span class="n">destination_path</span></div>
 
-<div class="viewcode-block" id="DbtRemoteHook.download_dbt_profiles"><a class="viewcode-back" href="../../../reference/hooks.html#airflow_dbt_python.hooks.remote.DbtRemoteHook.download_dbt_profiles">[docs]</a>    <span class="k">def</span> <span class="nf">download_dbt_profiles</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source</span><span class="p">:</span> <span class="n">URLLike</span><span class="p">,</span> <span class="n">destination</span><span class="p">:</span> <span class="n">URLLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
+
+<div class="viewcode-block" id="DbtRemoteHook.download_dbt_profiles">
+<a class="viewcode-back" href="../../../reference/hooks.html#airflow_dbt_python.hooks.remote.DbtRemoteHook.download_dbt_profiles">[docs]</a>
+    <span class="k">def</span> <span class="nf">download_dbt_profiles</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source</span><span class="p">:</span> <span class="n">URLLike</span><span class="p">,</span> <span class="n">destination</span><span class="p">:</span> <span class="n">URLLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Download a dbt profiles.yml file from a given source.</span>
 
 <span class="sd">        Args:</span>
@@ -191,7 +205,10 @@
 
         <span class="k">return</span> <span class="n">destination_url</span><span class="o">.</span><span class="n">path</span></div>
 
-<div class="viewcode-block" id="DbtRemoteHook.upload_dbt_project"><a class="viewcode-back" href="../../../reference/hooks.html#airflow_dbt_python.hooks.remote.DbtRemoteHook.upload_dbt_project">[docs]</a>    <span class="k">def</span> <span class="nf">upload_dbt_project</span><span class="p">(</span>
+
+<div class="viewcode-block" id="DbtRemoteHook.upload_dbt_project">
+<a class="viewcode-back" href="../../../reference/hooks.html#airflow_dbt_python.hooks.remote.DbtRemoteHook.upload_dbt_project">[docs]</a>
+    <span class="k">def</span> <span class="nf">upload_dbt_project</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">source</span><span class="p">:</span> <span class="n">URLLike</span><span class="p">,</span>
         <span class="n">destination</span><span class="p">:</span> <span class="n">URLLike</span><span class="p">,</span>
@@ -220,10 +237,14 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">upload</span><span class="p">(</span><span class="n">source_url</span><span class="p">,</span> <span class="n">destination_url</span><span class="p">,</span> <span class="n">replace</span><span class="p">,</span> <span class="n">delete_before</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">destination_url</span><span class="o">.</span><span class="n">is_archive</span><span class="p">():</span>
-            <span class="n">source_url</span><span class="o">.</span><span class="n">unlink</span><span class="p">()</span></div></div>
+            <span class="n">source_url</span><span class="o">.</span><span class="n">unlink</span><span class="p">()</span></div>
+</div>
 
 
-<div class="viewcode-block" id="get_remote"><a class="viewcode-back" href="../../../reference/hooks.html#airflow_dbt_python.hooks.remote.get_remote">[docs]</a><span class="k">def</span> <span class="nf">get_remote</span><span class="p">(</span><span class="n">scheme</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">conn_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DbtRemoteHook</span><span class="p">:</span>
+
+<div class="viewcode-block" id="get_remote">
+<a class="viewcode-back" href="../../../reference/hooks.html#airflow_dbt_python.hooks.remote.get_remote">[docs]</a>
+<span class="k">def</span> <span class="nf">get_remote</span><span class="p">(</span><span class="n">scheme</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">conn_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DbtRemoteHook</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Get a DbtRemoteHook as long as the scheme is supported.</span>
 
 <span class="sd">    In the future we should make our hooks discoverable and package ourselves as a</span>
@@ -249,6 +270,7 @@
     <span class="k">else</span><span class="p">:</span>
         <span class="n">remote</span> <span class="o">=</span> <span class="n">remote_cls</span><span class="p">()</span>
     <span class="k">return</span> <span class="n">remote</span></div>
+
 </pre></div>
 
            </div>
