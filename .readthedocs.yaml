@@ -10,4 +10,4 @@ build:
     post_install:
       - pip install poetry==1.3.2
       - poetry config virtualenvs.create false
-      - poetry install -E airflow -E git -E s3 --with docs
+      - poetry install -E git -E s3 --with docs

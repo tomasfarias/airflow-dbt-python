@@ -24,6 +24,14 @@ from airflow.exceptions import AirflowException
 from airflow.hooks.base import BaseHook
 from airflow.models.connection import Connection
 
+from airflow_dbt_python.utils.version import DBT_INSTALLED_LESS_THAN_1_5
+
+if sys.version_info >= (3, 11):
+    from contextlib import chdir as chdir_ctx
+else:
+    from contextlib_chdir import chdir as chdir_ctx
+
+
 if TYPE_CHECKING:
     from dbt.contracts.results import RunResult
     from dbt.task.base import BaseTask
@@ -208,6 +216,7 @@ class DbtHook(BaseHook):
         replace_on_upload: bool = False,
         artifacts: Optional[Iterable[str]] = None,
         env_vars: Optional[Dict[str, Any]] = None,
+        write_perf_info: bool = False,
         **kwargs,
     ) -> DbtTaskResult:
         """Run a dbt task with a given configuration and return the results.
@@ -219,9 +228,17 @@ class DbtHook(BaseHook):
                 of running the dbt command.
         """
         from dbt.adapters.factory import register_adapter
-        from dbt.config.runtime import UnsetProfileConfig
-        from dbt.main import adapter_management, track_run
-        from dbt.task.base import move_to_nearest_project_dir
+        from dbt.task.base import get_nearest_project_dir
+        from dbt.task.clean import CleanTask
+        from dbt.task.deps import DepsTask
+
+        from airflow_dbt_python.utils.version import DBT_INSTALLED_LESS_THAN_1_5
+
+        if DBT_INSTALLED_LESS_THAN_1_5:
+            from dbt.main import adapter_management, track_run  # type: ignore
+        else:
+            from dbt.adapters.factory import adapter_management
+            from dbt.tracking import track_run
 
         config = self.get_dbt_task_config(command, **kwargs)
         extra_target = self.get_dbt_target_from_connection(config.target)
@@ -233,53 +250,62 @@ class DbtHook(BaseHook):
             replace_on_upload=replace_on_upload,
             env_vars=env_vars,
         ) as dbt_dir:
-            config.dbt_task.pre_init_hook(config)
-            self.ensure_profiles(config.profiles_dir)
-
-            task, runtime_config = config.create_dbt_task(extra_target)
-
             # When creating tasks via from_args, dbt switches to the project directory.
             # We have to do that here as we are not using from_args.
-            move_to_nearest_project_dir(config)
+            if DBT_INSTALLED_LESS_THAN_1_5:
+                # For compatibility with older versions of dbt, as the signature
+                # of move_to_nearest_project_dir changed in dbt-core 1.5 to take
+                # just the project_dir.
+                nearest_project_dir = get_nearest_project_dir(config)  # type: ignore
+            else:
+                nearest_project_dir = get_nearest_project_dir(config.project_dir)
 
-            self.setup_dbt_logging(task, config.debug)
+            with chdir_ctx(nearest_project_dir):
+                config.dbt_task.pre_init_hook(config)
+                self.ensure_profiles(config)
 
-            if not isinstance(runtime_config, UnsetProfileConfig):
-                if runtime_config is not None:
+                task, runtime_config = config.create_dbt_task(
+                    extra_target, write_perf_info
+                )
+                requires_profile = isinstance(task, (CleanTask, DepsTask))
+
+                self.setup_dbt_logging(task, config.debug)
+
+                if runtime_config is not None and not requires_profile:
                     # The deps command installs the dependencies, which means they may
                     # not exist before deps runs and the following would raise a
                     # CompilationError.
                     runtime_config.load_dependencies()
 
-            results = None
-            with adapter_management():
-                if not isinstance(runtime_config, UnsetProfileConfig):
-                    if runtime_config is not None:
-                        register_adapter(runtime_config)
+                results = None
+                with adapter_management():
+                    if not requires_profile:
+                        if runtime_config is not None:
+                            register_adapter(runtime_config)
 
-                with track_run(task):
-                    results = task.run()
-                success = task.interpret_results(results)
+                    with track_run(task):
+                        results = task.run()
+                    success = task.interpret_results(results)
 
-            if artifacts is None:
-                return DbtTaskResult(success, results, {})
+                if artifacts is None:
+                    return DbtTaskResult(success, results, {})
 
-            saved_artifacts = {}
-            for artifact in artifacts:
-                artifact_path = Path(dbt_dir) / "target" / artifact
+                saved_artifacts = {}
+                for artifact in artifacts:
+                    artifact_path = Path(dbt_dir) / "target" / artifact
 
-                if not artifact_path.exists():
-                    self.log.warn(
-                        "Required dbt artifact %s was not found. "
-                        "Perhaps dbt failed and couldn't generate it.",
-                        artifact,
-                    )
-                    continue
+                    if not artifact_path.exists():
+                        self.log.warning(
+                            "Required dbt artifact %s was not found. "
+                            "Perhaps dbt failed and couldn't generate it.",
+                            artifact,
+                        )
+                        continue
 
-                with open(artifact_path) as artifact_file:
-                    json_artifact = json.load(artifact_file)
+                    with open(artifact_path) as artifact_file:
+                        json_artifact = json.load(artifact_file)
 
-                saved_artifacts[artifact] = json_artifact
+                    saved_artifacts[artifact] = json_artifact
 
         return DbtTaskResult(success, results, saved_artifacts)
 
@@ -373,7 +399,7 @@ class DbtHook(BaseHook):
         if (project_dir_path / "profiles.yml").exists():
             # We may have downloaded the profiles.yml file together
             # with the project.
-            return (new_project_dir, new_project_dir)
+            return new_project_dir, new_project_dir
 
         if profiles_dir is not None:
             profiles_file_path = self.download_dbt_profiles(
@@ -384,7 +410,7 @@ class DbtHook(BaseHook):
         else:
             new_profiles_dir = None
 
-        return (new_project_dir, new_profiles_dir)
+        return new_project_dir, new_profiles_dir
 
     def setup_dbt_logging(self, task: BaseTask, debug: Optional[bool]):
         """Setup dbt logging.
@@ -399,10 +425,18 @@ class DbtHook(BaseHook):
         if task.config is not None:
             log_path = getattr(task.config, "log_path", None)
 
-        setup_event_logger(log_path or "logs")
+        if DBT_INSTALLED_LESS_THAN_1_5:
+            setup_event_logger(log_path or "logs")
+        else:
+            from dbt.flags import get_flags
+
+            flags = get_flags()
+            setup_event_logger(flags)
 
         configured_file = logging.getLogger("configured_file")
         file_log = logging.getLogger("file_log")
+        stdout_log = logging.getLogger("stdout_log")
+        stdout_log.propagate = True
 
         if not debug:
             # We have to do this after setting logs up as dbt hasn't
@@ -413,16 +447,18 @@ class DbtHook(BaseHook):
             configured_file.setLevel("INFO")
             configured_file.propagate = False
 
-    def ensure_profiles(self, profiles_dir: Optional[str]):
+    def ensure_profiles(self, config: BaseConfig):
         """Ensure a profiles file exists."""
-        if profiles_dir is not None:
-            # We expect one to exist given that we have passsed a profiles_dir.
+        if config.profiles_dir is not None:
+            # We expect one to exist given that we have passed a profiles_dir.
             return
 
         profiles_path = Path.home() / ".dbt/profiles.yml"
+        config.profiles_dir = str(profiles_path.parent)
         if not profiles_path.exists():
             profiles_path.parent.mkdir(exist_ok=True)
-            profiles_path.touch()
+            with profiles_path.open("w", encoding="utf-8") as f:
+                f.write("config:\n  send_anonymous_usage_stats: false\n")
 
     def get_dbt_target_from_connection(
         self, target: Optional[str]

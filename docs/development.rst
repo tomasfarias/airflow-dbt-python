@@ -28,7 +28,7 @@ And install it with *Poetry*:
 
 .. code-block:: shell
 
-   poetry install --with dev -E airflow-providers -E postgres -E airflow
+   poetry install --with dev -E airflow-providers -E postgres
 
 The *dev* dependency group includes development tools for code formatting, type checking, and testing.
 

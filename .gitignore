@@ -16,4 +16,6 @@ dbt.log
 models/
 data/
 dbt_packages/
+webserver_config.py
 .env/
+.idea/

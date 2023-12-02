@@ -108,16 +108,18 @@ def test_dbt_seed_models_logging(profiles_file, dbt_project_file, seed_files, ca
 
     # Check for duplicate lines
     line_1 = "1 of 2 START seed file public.seed_1"
-    assert sum((line_1 in line for line in log_messages)) == 1
+    assert sum(line_1 in line for line in log_messages) == 1
 
     line_2 = "Finished running 2 seeds"
-    assert sum((line_2 in line for line in log_messages)) == 1
+    assert sum(line_2 in line for line in log_messages) == 1
 
 
 def test_dbt_seed_models_debug_logging(
     profiles_file, dbt_project_file, seed_files, caplog
 ):
     """Test the dbt seed operator debug logs to a stdout without duplicates."""
+    caplog.clear()
+
     op = DbtSeedOperator(
         task_id="dbt_task",
         project_dir=dbt_project_file.parent,
@@ -132,11 +134,11 @@ def test_dbt_seed_models_debug_logging(
     log_messages = [rec.message for rec in caplog.records]
 
     # Check for duplicate lines
-    line_1 = "]: 1 of 2 START seed file public.seed_1"
-    assert sum((line_1 in line for line in log_messages)) == 1
+    line_1 = "1 of 2 START seed file public.seed_1"
+    assert sum(line_1 in line for line in log_messages) == 1
 
-    line_2 = "[info ] [MainThread]: Finished running 2 seeds"
-    assert sum((line_2 in line for line in log_messages)) == 1
+    line_2 = "Finished running node seed.test.seed_1"
+    assert sum(line_2 in line for line in log_messages) == 1
 
 
 def test_dbt_seed_models_full_refresh(profiles_file, dbt_project_file, seed_files):

@@ -17,42 +17,72 @@ on:
 
 jobs:
   test:
-    name: Test on Python ${{ matrix.python-version }} and Airflow ${{ matrix.airflow-version }}
+    name: Test on Python ${{ matrix.python-version }} and Airflow ${{ matrix.airflow-version }} and dbt ${{ matrix.dbt-version }}
     strategy:
       fail-fast: false
       matrix:
-        python-version: [3.7, 3.8, 3.9, '3.10', '3.11']
-        airflow-version: ['2.5.1', '2.4.3']
+        python-version:
+          - '3.11'
+          - '3.10'
+          - '3.9'
+          - '3.8'
+        airflow-version:
+          - '2.7.2'
+          - '2.6.3'
+          - '2.5.3'
+          - '2.4.3'
+        dbt-version:
+          - 1.7
+          - 1.6
+          - 1.5
+          - 1.4
         exclude:
-          # No constraints available
-          - python-version: '3.11'
+          # Incompatible combinations
+          - python-version: 3.11
             airflow-version: '2.4.3'
+
+          - python-version: 3.11
+            airflow-version: '2.5.3'
 
     runs-on: ubuntu-latest
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@v1
+        uses: step-security/harden-runner@v2.6.1
         with:
           egress-policy: block
           allowed-endpoints: >
             api.github.com:443
             files.pythonhosted.org:443
             hub.getdbt.com:443
+            github.com:80
             github.com:443
+            gitlab.com:80
+            gitlab.com:443
             objects.githubusercontent.com:443
             raw.githubusercontent.com:443
             pypi.org:443
+            archive.ubuntu.com:80
+            azure.archive.ubuntu.com:80
+            esm.ubuntu.com:443
+            motd.ubuntu.com:443
+            packages.microsoft.com:80
+            ppa.launchpadcontent.net:443
+            security.ubuntu.com:80
 
-      - uses: actions/checkout@v3
+      - run: |
+          sudo apt-get update
+          sudo apt-get install --yes --no-install-recommends postgresql
+
+      - uses: actions/checkout@v4.1.1
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v4.7.1
         with:
           python-version: ${{ matrix.python-version }}
 
       - name: Install Poetry
-        uses: abatilo/actions-poetry@v2.1.4
+        uses: abatilo/actions-poetry@v2.3.0
         with:
-          poetry-version: 1.3.2
+          poetry-version: 1.7.0
 
       - name: Install airflow-dbt-python with Poetry
         run: poetry install -E postgres --with dev
@@ -61,12 +91,16 @@ jobs:
         run: |
           wget https://raw.githubusercontent.com/apache/airflow/constraints-${{ matrix.airflow-version }}/constraints-${{ matrix.python-version }}.txt -O constraints.txt
           poetry run pip install apache-airflow==${{ matrix.airflow-version }} apache-airflow-providers-amazon apache-airflow-providers-ssh -c constraints.txt
+          poetry run pip install "dbt-core~=${{ matrix.dbt-version }}.0" "dbt-postgres~=${{ matrix.dbt-version }}.0"
           poetry run airflow db init
 
       - name: Linting with ruff
         run: poetry run ruff .
 
       - name: Static type checking with mypy
+        # We only run mypy on the latest supported versions of Airflow & dbt,
+        # so it is currently impossible to write conditions for that depend on package versions.
+        if: matrix.airflow-version == '2.7.2' && matrix.dbt-version == '1.7'
         run: poetry run mypy .
 
       - name: Code formatting with black
@@ -97,7 +131,7 @@ jobs:
 
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@v1
+        uses: step-security/harden-runner@v2.6.0
         with:
           egress-policy: block
           allowed-endpoints: >
@@ -106,18 +140,18 @@ jobs:
             api.github.com:443
             pypi.org:443
 
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
+      - uses: actions/checkout@v4.1.1
+      - uses: actions/setup-python@v4.7.1
         with:
-          python-version: '3.10'
+          python-version: '3.11'
 
       - name: Install Poetry
-        uses: abatilo/actions-poetry@v2.1.4
+        uses: abatilo/actions-poetry@v2.3.0
         with:
-          poetry-version: 1.3.2
+          poetry-version: 1.7.0
 
       - name: Install airflow-dbt-python with Poetry
-        run: poetry install --with dev -E airflow -E airflow-providers
+        run: poetry install --with dev -E airflow-providers
 
       - name: Download coverage data.
         uses: actions/download-artifact@v3

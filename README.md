@@ -15,13 +15,13 @@ Read the [documentation](https://airflow-dbt-python.readthedocs.io) for examples
 ## Requirements
 
 Before using *airflow-dbt-python*, ensure you meet the following requirements:
-* A *dbt* project using [dbt-core](https://pypi.org/project/dbt-core/) version 1.0.0 or later.
+* A *dbt* project using [dbt-core](https://pypi.org/project/dbt-core/) version 1.4.0 or later.
 * An Airflow environment using version 2.2 or later.
 
   * If using any managed service, like AWS MWAA, ensure your environment is created with a supported version of Airflow.
   * If self-hosting, Airflow installation instructions can be found in their [official documentation](https://airflow.apache.org/docs/apache-airflow/stable/installation/index.html).
 
-* Running Python 3.7 or later in your Airflow environment.
+* Running Python 3.8 or later in your Airflow environment.
 
 > **Warning**
 >

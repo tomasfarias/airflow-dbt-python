@@ -8,6 +8,7 @@ from dbt.contracts.results import RunStatus
 
 from airflow_dbt_python.operators.dbt import DbtRunOperator
 from airflow_dbt_python.utils.configs import RunTaskConfig
+from airflow_dbt_python.utils.version import DBT_INSTALLED_LESS_THAN_1_5
 
 condition = False
 try:
@@ -111,6 +112,10 @@ def test_dbt_run_models(profiles_file, dbt_project_file, model_files, logs_dir):
         profiles_dir=profiles_file.parent,
         models=[str(m.stem) for m in model_files],
         do_xcom_push=True,
+        # Starting with the dbt 1.5, the `log-path` configuration in `dbt_project.yml`
+        # was deprecated, so we added the ability to specify it in the operator
+        log_path=None if DBT_INSTALLED_LESS_THAN_1_5 else logs_dir,
+        log_level_file="info",
         debug=True,
     )
 
@@ -149,6 +154,10 @@ def test_dbt_run_models_with_env_vars(
         profiles_dir=profiles_file_with_env.parent,
         models=[str(m.stem) for m in model_files],
         do_xcom_push=True,
+        # Starting with the dbt 1.5, the `log-path` configuration in `dbt_project.yml`
+        # was deprecated, so we added the ability to specify it in the operator
+        log_path=None if DBT_INSTALLED_LESS_THAN_1_5 else logs_dir,
+        log_level_file="info",
         debug=True,
         env_vars=env,
     )

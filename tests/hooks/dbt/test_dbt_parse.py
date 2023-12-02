@@ -13,6 +13,7 @@ def test_dbt_parse_task(hook, profiles_file, dbt_project_file):
         project_dir=dbt_project_file.parent,
         profiles_dir=profiles_file.parent,
         upload_dbt_project=True,
+        write_perf_info=True,
     )
 
     assert result.success is True

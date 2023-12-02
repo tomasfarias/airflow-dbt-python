@@ -77,15 +77,15 @@ class FakeRemote:
 
     def download_dbt_profiles(self, *args, **kwargs):
         """Fakes the download_dbt_profiles method."""
-        return (args, kwargs)
+        return args, kwargs
 
     def upload_dbt_project(self, *args, **kwargs):
         """Fakes the upload_dbt_project method."""
-        return (args, kwargs)
+        return args, kwargs
 
     def download_dbt_project(self, *args, **kwargs):
         """Fakes the download_dbt_project method."""
-        return (args, kwargs)
+        return args, kwargs
 
 
 def test_dbt_hook_download_dbt_profiles():

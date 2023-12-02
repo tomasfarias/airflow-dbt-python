@@ -1,13 +1,19 @@
 """Unit test module for DbtRunOperationOperator."""
 import pytest
 from airflow import AirflowException
+from dbt.contracts.results import RunStatus
 
 from airflow_dbt_python.operators.dbt import DbtRunOperationOperator
 from airflow_dbt_python.utils.configs import RunOperationTaskConfig
+from airflow_dbt_python.utils.version import (
+    DBT_INSTALLED_GTE_1_6,
+    DBT_INSTALLED_LESS_THAN_1_5,
+)
 
 
 def test_dbt_run_operation_mocked_all_args():
     """Test a dbt run-operation operator execution with all mocked arguments."""
+    args = {"a_var": "a_value", "another_var": 2}
     op = DbtRunOperationOperator(
         task_id="dbt_task",
         project_dir="/path/to/project/",
@@ -32,7 +38,10 @@ def test_dbt_run_operation_mocked_all_args():
     assert config.parsed_vars == {"target": "override"}
     assert config.log_cache_events is True
     assert config.macro == "my_macro"
-    assert config.args == "{'a_var': 'a_value', 'another_var': 2}"
+    if DBT_INSTALLED_LESS_THAN_1_5:
+        assert config.args == str(args)
+    else:
+        assert config.args == args
 
 
 def test_dbt_run_operation_non_existent_macro(
@@ -75,7 +84,11 @@ def test_dbt_run_operation_run_macro(profiles_file, dbt_project_file, macro_name
         args={"an_arg": 123},
     )
     execution_results = op.execute({})
-    assert execution_results["success"] is True
+    if DBT_INSTALLED_GTE_1_6:
+        run_result = execution_results["results"][0]
+        assert run_result["status"] == RunStatus.Success
+    else:
+        assert execution_results["success"] is True
 
 
 def test_dbt_run_operation_run_non_arg_macro(
@@ -89,7 +102,11 @@ def test_dbt_run_operation_run_non_arg_macro(
         macro=non_arg_macro_name,
     )
     execution_results = op.execute({})
-    assert execution_results["success"] is True
+    if DBT_INSTALLED_GTE_1_6:
+        run_result = execution_results["results"][0]
+        assert run_result["status"] == RunStatus.Success
+    else:
+        assert execution_results["success"] is True
 
 
 BROKEN_MACRO1 = """

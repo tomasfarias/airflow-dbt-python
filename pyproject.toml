@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "airflow-dbt-python"
-version = "1.0.5"
+version = "1.1.0"
 description = "A collection of Airflow operators, hooks, and utilities to execute dbt commands"
 authors = ["Tomás Farías Santana <tomas@tomasfarias.dev>"]
 license = "MIT"
@@ -13,7 +13,6 @@ classifiers = [
 
     "License :: OSI Approved :: MIT License",
 
-    "Programming Language :: Python :: 3.7",
     "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
@@ -21,19 +20,39 @@ classifiers = [
 ]
 
 [tool.poetry.dependencies]
-python = ">=3.7.2,<4.0"  # Airflow providers require this upper boundary
+python = ">=3.8,<3.12"  # Airflow providers require this upper boundary
 
-apache-airflow = { version = ">=2.0", optional = true }
+apache-airflow = { version = ">=2.2" }
 apache-airflow-providers-amazon = { version = ">=3.0.0", optional = true }
 apache-airflow-providers-ssh = { version = ">=3.0.0", optional = true }
+connexion = { version = "<3.0" }  # https://github.com/apache/airflow/issues/35217
 dulwich = { version = ">=0.21", optional = true }
+contextlib-chdir = { version = "==1.0.2", python = "<3.11" }
 
-dbt-core = ">=1.0.0"
-dbt-bigquery = { version = ">=1.0.0", optional = true }
-dbt-postgres = { version = ">=1.0.0", optional = true }
-dbt-redshift = { version = ">=1.0.0", optional = true }
-dbt-snowflake = { version = ">=1.0.0", optional = true }
-dbt-spark = { version = ">=1.0.0", optional = true }
+dbt-core = [
+    { python = "<3.8", version = ">=1.4.0,<1.6.0", optional = true },
+    { python = ">=3.11", version = ">=1.4.0,<1.8.0", optional = true },
+]
+dbt-bigquery = [
+    { python = "<3.8", version = ">=1.4.0,<1.6.0", optional = true },
+    { python = ">=3.11", version = ">=1.4.0,<1.8.0", optional = true },
+]
+dbt-postgres = [
+    { python = "<3.8", version = ">=1.4.0,<1.6.0", optional = true },
+    { python = ">=3.11", version = ">=1.4.0,<1.8.0", optional = true },
+]
+dbt-redshift = [
+    { python = "<3.8", version = ">=1.4.0,<1.6.0", optional = true },
+    { python = ">=3.11", version = ">=1.4.0,<1.8.0", optional = true },
+]
+dbt-snowflake = [
+    { python = "<3.8", version = ">=1.4.0,<1.6.0", optional = true },
+    { python = ">=3.11", version = ">=1.4.0,<1.8.0", optional = true },
+]
+dbt-spark = [
+    { python = "<3.8", version = ">=1.4.0,<1.6.0", optional = true },
+    { python = ">=3.11", version = ">=1.4.0,<1.8.0", optional = true },
+]
 
 [tool.poetry.group.dev]
 optional = true
@@ -44,8 +63,8 @@ apache-airflow-providers-ssh = ">=3.0.0"
 black = ">=22"
 boto3-stubs = { extras = ["s3"], version = ">=1.26.8" }
 coverage = { extras = ["toml"], version = ">=7.2" }
-dbt-postgres = ">=1.0.0"
-dulwich = ">=0.21"
+dbt-postgres = ">=1.0.0,<1.8.0"
+dulwich = ">=0.21,!=0.21.6"
 moto = ">=4.0.3"
 mypy = ">=1"
 freezegun = ">=1.1.0"
@@ -61,7 +80,11 @@ types-PyYAML = ">=6.0.7"
 optional = true
 
 [tool.poetry.group.docs.dependencies]
-Sphinx = ">=5.3"
+Sphinx = [
+    { python = "<3.8", version = "<6.0" },
+    { python = ">=3.8,<3.9", version = "<7.2" },
+    { python = ">=3.9", version = ">=7.2" },
+]
 sphinx-rtd-theme = ">=1.1"
 sphinx-copybutton = ">=0.5"
 attrs = ">=22"
@@ -70,14 +93,28 @@ attrs = ">=22"
 optional = true
 
 [tool.poetry.group.adapters.dependencies]
-dbt-bigquery = ">=1.0.0"
-dbt-postgres = ">=1.0.0"
-dbt-redshift = ">=1.0.0"
-dbt-snowflake = ">=1.0.0"
-dbt-spark = ">=1.0.0"
+dbt-bigquery = [
+    { python = "<3.8", version = ">=1.4.0,<1.6.0", optional = true },
+    { python = ">=3.11", version = ">=1.4.0,<1.8.0", optional = true },
+]
+dbt-postgres = [
+    { python = "<3.8", version = ">=1.4.0,<1.6.0", optional = true },
+    { python = ">=3.11", version = ">=1.4.0,<1.8.0", optional = true },
+]
+dbt-redshift = [
+    { python = "<3.8", version = ">=1.4.0,<1.6.0", optional = true },
+    { python = ">=3.11", version = ">=1.4.0,<1.8.0", optional = true },
+]
+dbt-snowflake = [
+    { python = "<3.8", version = ">=1.4.0,<1.6.0", optional = true },
+    { python = ">=3.11", version = ">=1.4.0,<1.8.0", optional = true },
+]
+dbt-spark = [
+    { python = "<3.8", version = ">=1.4.0,<1.6.0", optional = true },
+    { python = ">=3.11", version = ">=1.4.0,<1.8.0", optional = true },
+]
 
 [tool.poetry.extras]
-airflow = ["apache-airflow"]
 airflow-providers = ["apache-airflow-providers-amazon", "apache-airflow-providers-ssh"]
 adapters = ["dbt-bigquery", "dbt-redshift", "dbt-postgres", "dbt-snowflake", "dbt-spark"]
 bigquery = ["dbt-bigquery"]

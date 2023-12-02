@@ -1,8 +1,8 @@
 """Unit test module for DbtGitRemoteHook."""
 import multiprocessing
 import os
+import platform
 import shutil
-from urllib.parse import quote
 
 import pytest
 from dulwich.repo import Repo
@@ -17,6 +17,11 @@ JAFFLE_SHOP_PRIVATE = os.getenv(
 )
 GITHUB = "github.com"
 GITLAB = "gitlab.com"
+
+no_git_local_server = pytest.mark.skipif(
+    platform.system() != "Linux",
+    reason="Git local server may not work on platforms other than Linux",
+)
 
 
 @pytest.mark.parametrize(
@@ -121,7 +126,7 @@ def test_download_dbt_project_from_http_public_gitlab_repo(
 
 
 @pytest.mark.skipif(
-    "GITHUB_READ_TOKEN" not in os.environ,
+    not os.environ.get("GITHUB_READ_TOKEN"),
     reason="Missing Github read token in environment.",
 )
 @pytest.mark.parametrize(
@@ -199,7 +204,7 @@ def test_download_dbt_project_from_ssh_public_gitlab_repo(
 
 
 @pytest.mark.skipif(
-    "GITLAB_READ_TOKEN" not in os.environ,
+    not os.environ.get("GITLAB_READ_TOKEN"),
     reason="Missing GitLab read token in environment.",
 )
 @pytest.mark.parametrize(
@@ -336,6 +341,7 @@ def git_server(repo, repo_name):
     proc.terminate()
 
 
+@no_git_local_server
 def test_download_dbt_project_with_local_server(
     tmp_path, git_server, repo_name, assert_dir_contents
 ):
@@ -375,6 +381,7 @@ def pre_run(hook, repo_dir):
     shutil.rmtree(target_dir, ignore_errors=True)
 
 
+@no_git_local_server
 def test_upload_dbt_project_with_local_server(
     git_server, repo_dir, assert_dir_contents, pre_run, tmp_path, repo_name
 ):
