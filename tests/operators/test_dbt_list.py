@@ -86,3 +86,41 @@ def test_dbt_ls_all(
     ]
 
     assert all_files == expected
+
+
+def test_dbt_ls_all_with_default(
+    profiles_file,
+    dbt_project_file,
+    seed_files,
+    model_files,
+    singular_tests_files,
+    generic_tests_files,
+    snapshot_files,
+):
+    """Test dbt list operator by listing all resources."""
+    op = DbtLsOperator(
+        task_id="dbt_task",
+        project_dir=dbt_project_file.parent,
+        profiles_dir=profiles_file.parent,
+        do_xcom_push=True,
+    )
+    all_files = op.execute({})
+
+    expected = [
+        "test.model_1",
+        "test.model_2",
+        "test.model_3",
+        "test.model_4",
+        "test.seed_1",
+        "test.seed_2",
+        "test.snapshot_1.test_snapshot",
+        "test.accepted_values_model_2_field1__123__456",
+        "test.not_null_model_2_field1",
+        "test.not_null_model_2_field2",
+        "test.singular_test_1",
+        "test.singular_test_2",
+        "test.unique_model_2_field1",
+        "test.unique_model_2_field2",
+    ]
+
+    assert all_files == expected

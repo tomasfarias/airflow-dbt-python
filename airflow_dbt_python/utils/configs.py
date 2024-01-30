@@ -686,7 +686,7 @@ class RunTaskConfig(TableMutabilityConfig):
 class RunOperationTaskConfig(BaseConfig):
     """Dbt run-operation task arguments."""
 
-    args: dict[str, Any] | str = dataclasses.field(default_factory=dict)
+    args: dict[str, Any] | str = dataclasses.field(default_factory=dict)  # type: ignore
     cls: Type[BaseTask] = dataclasses.field(default=RunOperationTask, init=False)
     macro: Optional[str] = None
     which: str = dataclasses.field(default="run-operation", init=False)
