@@ -124,7 +124,7 @@ class BaseConfig:
     debug: Optional[bool] = None
     quiet: Optional[bool] = None
     no_print: Optional[bool] = None
-    printer_width: Optional[int] = None
+    printer_width: int = 80
 
     # Mutually exclusive attributes
     defer: Optional[bool] = None
@@ -686,7 +686,7 @@ class RunTaskConfig(TableMutabilityConfig):
 class RunOperationTaskConfig(BaseConfig):
     """Dbt run-operation task arguments."""
 
-    args: dict[str, Any] | str = dataclasses.field(default_factory=dict)
+    args: dict[str, Any] | str = dataclasses.field(default_factory=dict)  # type: ignore
     cls: Type[BaseTask] = dataclasses.field(default=RunOperationTask, init=False)
     macro: Optional[str] = None
     which: str = dataclasses.field(default="run-operation", init=False)
