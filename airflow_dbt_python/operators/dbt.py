@@ -519,7 +519,7 @@ class DbtLsOperator(DbtBaseOperator):
     """
 
     template_fields = (
-        base_template_fields + selection_template_fields + ["resource_type"]
+        base_template_fields + selection_template_fields + ["resource_types"]
     )
 
     def __init__(
