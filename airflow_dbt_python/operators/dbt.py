@@ -11,6 +11,8 @@ from airflow.exceptions import AirflowException
 from airflow.models.baseoperator import BaseOperator
 from airflow.models.xcom import XCOM_RETURN_KEY
 
+from airflow_dbt_python.utils.url import URLLike
+
 if TYPE_CHECKING:
     from dbt.contracts.results import RunResult
 
@@ -47,6 +49,9 @@ class DbtBaseOperator(BaseOperator):
         log_cache_events: Flag to enable logging of cache events.
         s3_conn_id: An s3 Airflow connection ID to use when pulling dbt files from s3.
         do_xcom_push_artifacts: A list of dbt artifacts to XCom push.
+        upload_dbt_artifacts: A list of dbt artifacts to upload.
+        upload_dbt_artifacts_destination: Destination to upload dbt artifacts to.
+            This value also determines the remote to use when uploading the artifacts.
     """
 
     template_fields = base_template_fields
@@ -100,6 +105,8 @@ class DbtBaseOperator(BaseOperator):
         profiles_conn_id: Optional[str] = None,
         project_conn_id: Optional[str] = None,
         do_xcom_push_artifacts: Optional[list[str]] = None,
+        upload_artifacts: Optional[list[str]] = None,
+        upload_artifacts_destination: Optional[URLLike] = None,
         upload_dbt_project: bool = False,
         delete_before_upload: bool = False,
         replace_on_upload: bool = False,
@@ -163,6 +170,8 @@ class DbtBaseOperator(BaseOperator):
         self.profiles_conn_id = profiles_conn_id
         self.project_conn_id = project_conn_id
         self.do_xcom_push_artifacts = do_xcom_push_artifacts
+        self.upload_dbt_artifacts = upload_artifacts
+        self.upload_dbt_artifacts_destination = upload_artifacts_destination
         self.upload_dbt_project = upload_dbt_project
         self.delete_before_upload = delete_before_upload
         self.replace_on_upload = replace_on_upload
