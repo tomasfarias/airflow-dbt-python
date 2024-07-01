@@ -1,4 +1,5 @@
 """Test dbt operators with multiple testing DAGs."""
+
 from __future__ import annotations
 
 import datetime as dt
@@ -475,7 +476,9 @@ def test_example_dbt_project_in_github_dag(dagbag, connection, clear_dagruns):
 
         if isinstance(ti.task, DbtBaseOperator):
             assert ti.task.target == "integration_test_conn"
-            assert ti.task.project_dir == "https://github.com/dbt-labs/jaffle_shop"
+            assert (
+                ti.task.project_dir == "https://github.com/dbt-labs/jaffle-shop-classic"
+            )
 
             results = ti.xcom_pull(
                 task_ids=task_id,
