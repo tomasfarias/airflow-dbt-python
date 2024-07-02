@@ -178,6 +178,9 @@ def no_user_airflow_conn(database):
 
     yield conn_id
 
+    session.delete(connection)
+    session.commit()
+
     session.close()
 
 

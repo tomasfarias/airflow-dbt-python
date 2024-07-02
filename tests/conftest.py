@@ -233,6 +233,10 @@ def airflow_conns(database):
 
     yield ids
 
+    for conn in connections:
+        session.delete(conn)
+
+    session.commit()
     session.close()
 
 

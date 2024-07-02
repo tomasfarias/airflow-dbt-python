@@ -292,6 +292,9 @@ def connection(database):
 
     yield conn_id
 
+    session.delete(integration_test_conn)
+    session.commit()
+
     session.close()
 
 
