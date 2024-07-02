@@ -458,7 +458,7 @@ class DbtHook(BaseHook):
         if not profiles_path.exists():
             profiles_path.parent.mkdir(exist_ok=True)
             with profiles_path.open("w", encoding="utf-8") as f:
-                f.write("config:\n  send_anonymous_usage_stats: false\n")
+                f.write("flags:\n  send_anonymous_usage_stats: false\n")
 
     def get_dbt_target_from_connection(
         self, target: Optional[str]

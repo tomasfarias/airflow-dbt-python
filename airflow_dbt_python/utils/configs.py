@@ -426,7 +426,7 @@ class BaseConfig:
         """
         initialize_from_flags(self.send_anonymous_usage_stats, self.profiles_dir)
         self.cls.set_log_format()
-        flags.set_from_args(self, profile.user_config)  # type: ignore
+        flags.set_from_args(self, {})  # type: ignore
 
         cfg_type = self.dbt_task.ConfigType
 
@@ -524,15 +524,12 @@ class BaseConfig:
             outputs.setdefault("target", self.target)
             profile["outputs"] = {**outputs, **extra_targets}
 
-        user_config = raw_profiles.get("config", {})
-
         profile = Profile.from_raw_profile_info(
             raw_profile=raw_profiles.get(
                 self.profile_name, {}
             ),  # Let dbt handle missing profile errors.
             profile_name=self.profile_name,
             renderer=self.profile_renderer,
-            user_config=user_config,
             target_override=self.target,
             threads_override=self.threads,
         )

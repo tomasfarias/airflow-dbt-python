@@ -17,7 +17,7 @@ from airflow_dbt_python.hooks.dbt import DbtHook
 from airflow_dbt_python.utils.version import DBT_INSTALLED_LESS_THAN_1_5
 
 PROFILES = """
-config:
+flags:
   send_anonymous_usage_stats: false
 
 default:
