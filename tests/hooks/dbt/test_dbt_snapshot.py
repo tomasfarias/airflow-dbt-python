@@ -1,4 +1,5 @@
 """Unit test the dbt hook for the dbt snapshot task."""
+
 from dbt.contracts.results import RunStatus
 
 

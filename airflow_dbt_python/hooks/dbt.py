@@ -1,4 +1,5 @@
 """Provides a hook to interact with a dbt project."""
+
 from __future__ import annotations
 
 import json

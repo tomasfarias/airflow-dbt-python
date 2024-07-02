@@ -2,6 +2,7 @@
 
 Intended to be used only when running Airflow with a LocalExceutor.
 """
+
 from __future__ import annotations
 
 import shutil

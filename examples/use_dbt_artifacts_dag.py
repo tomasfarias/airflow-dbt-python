@@ -1,4 +1,5 @@
 """Sample DAG to showcase pulling dbt artifacts from XCOM."""
+
 import datetime as dt
 
 import pendulum

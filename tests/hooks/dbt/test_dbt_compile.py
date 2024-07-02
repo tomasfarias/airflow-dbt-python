@@ -1,4 +1,5 @@
 """Unit test module for running dbt compile with the DbtHook."""
+
 import pytest
 
 

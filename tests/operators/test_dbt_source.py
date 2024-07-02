@@ -1,4 +1,5 @@
 """Unit test module for DbtSourceFreshnessOperator."""
+
 from pathlib import Path
 
 from airflow_dbt_python.operators.dbt import DbtSourceFreshnessOperator

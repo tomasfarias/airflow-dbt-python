@@ -1,4 +1,5 @@
 """A collection of configurations to interact with dbt-core."""
+
 from __future__ import annotations
 
 import argparse

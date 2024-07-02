@@ -1,4 +1,5 @@
 """Unit test module for enumeration utilities."""
+
 from airflow_dbt_python.utils.enums import FromStrEnum, LogFormat, Output
 
 

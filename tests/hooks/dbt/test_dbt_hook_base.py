@@ -1,4 +1,5 @@
 """Unit test module for the dbt hook base class."""
+
 import os
 from pathlib import Path
 

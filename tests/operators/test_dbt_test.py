@@ -1,4 +1,5 @@
 """Unit test module for DbtTestOperator."""
+
 from pathlib import Path
 
 import pytest

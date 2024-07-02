@@ -3,6 +3,7 @@
 Common fixtures include a connection to a postgres database, a set of sample model and
  seed files, dbt configuration files, and temporary directories for everything.
 """
+
 import shutil
 from typing import List
 

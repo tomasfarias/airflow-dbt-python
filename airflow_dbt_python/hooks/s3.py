@@ -1,4 +1,5 @@
 """An implementation for an S3 remote for dbt."""
+
 from __future__ import annotations
 
 from typing import Iterable, Optional

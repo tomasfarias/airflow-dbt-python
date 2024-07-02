@@ -1,4 +1,5 @@
 """Unit test module for DbtBuildOperator."""
+
 import json
 from pathlib import Path
 

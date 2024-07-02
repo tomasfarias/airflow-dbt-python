@@ -1,4 +1,5 @@
 """Unit test module for running dbt source with the DbtHook."""
+
 from pathlib import Path
 
 

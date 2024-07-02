@@ -1,4 +1,5 @@
 """Unit test module for DbtCompileOperator."""
+
 from pathlib import Path
 from textwrap import dedent
 

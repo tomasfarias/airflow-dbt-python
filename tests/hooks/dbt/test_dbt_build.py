@@ -1,4 +1,5 @@
 """Unit test module for running dbt build with the DbtHook."""
+
 from dbt.contracts.results import RunStatus, TestStatus
 
 

@@ -1,4 +1,5 @@
 """Unit test module for dbt task configuration utilities."""
+
 import os
 from unittest.mock import patch
 

@@ -1,4 +1,5 @@
 """Sample DAG which showcases dbt-lab's very own Jaffle Shop GitHub repo."""
+
 import datetime as dt
 
 import pendulum

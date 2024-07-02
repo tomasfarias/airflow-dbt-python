@@ -1,4 +1,5 @@
 """Unit test module for URL utility."""
+
 from tarfile import TarFile
 from typing import Dict
 from zipfile import ZipFile

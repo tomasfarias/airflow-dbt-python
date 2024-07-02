@@ -1,4 +1,5 @@
 """A concrete DbtRemoteHook for git repositories with dulwich."""
+
 import datetime as dt
 from typing import Callable, Optional, Tuple, Union
 

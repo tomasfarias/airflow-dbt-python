@@ -1,4 +1,5 @@
 """Unit test module for DbtDebugOperator."""
+
 from airflow_dbt_python.operators.dbt import DbtDebugOperator
 from airflow_dbt_python.utils.configs import DebugTaskConfig
 

@@ -1,4 +1,5 @@
 """Unit test module for DbtRunOperationOperator."""
+
 import pytest
 from airflow import AirflowException
 from dbt.contracts.results import RunStatus

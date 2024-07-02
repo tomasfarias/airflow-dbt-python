@@ -1,4 +1,5 @@
 """Sample basic DAG which showcases using an Airflow Connection as target."""
+
 import datetime as dt
 import json
 
