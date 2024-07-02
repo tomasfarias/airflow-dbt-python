@@ -3,7 +3,7 @@
 from pathlib import Path
 
 import pytest
-from airflow import AirflowException
+from airflow.exceptions import AirflowException
 from dbt.contracts.results import RunStatus
 
 from airflow_dbt_python.operators.dbt import DbtSnapshotOperator
