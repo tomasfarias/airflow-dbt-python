@@ -15,7 +15,6 @@ from moto import mock_aws
 from pytest_postgresql.janitor import DatabaseJanitor
 
 from airflow_dbt_python.hooks.dbt import DbtHook
-from airflow_dbt_python.utils.version import DBT_INSTALLED_LESS_THAN_1_5
 
 PROFILES = """
 flags:
@@ -258,9 +257,6 @@ def dbt_project_file(dbt_project_dir, logs_dir, request):
     """Create a test dbt_project.yml file."""
     p = dbt_project_dir / "dbt_project.yml"
     PROJECT_CONTENT = PROJECT
-
-    if DBT_INSTALLED_LESS_THAN_1_5:
-        PROJECT_CONTENT += LOG_PATH_CONFIG.format(log_path=str(logs_dir))
 
     p.write_text(PROJECT_CONTENT)
 

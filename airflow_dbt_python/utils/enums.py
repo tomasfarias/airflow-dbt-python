@@ -25,6 +25,7 @@ class LogFormat(str, Enum):
     """Allowed dbt log formats."""
 
     DEFAULT = "default"
+    DEBUG = "debug"
     JSON = "json"
     TEXT = "text"
 

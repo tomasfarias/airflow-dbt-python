@@ -91,7 +91,7 @@ class DbtGitRemoteHook(SSHHook, DbtRemoteHook):
 
             repo.stage(str(f.relative_to(source)))
 
-        ts = dt.datetime.utcnow()
+        ts = dt.datetime.now(dt.UTC)
         repo.do_commit(
             self.commit_msg.format(ts=ts).encode(), self.commit_author.encode()
         )

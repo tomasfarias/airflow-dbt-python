@@ -7,7 +7,6 @@ from dbt.contracts.results import RunStatus
 
 from airflow_dbt_python.operators.dbt import DbtCompileOperator
 from airflow_dbt_python.utils.configs import CompileTaskConfig
-from airflow_dbt_python.utils.version import DBT_INSTALLED_GTE_1_6
 
 
 def test_dbt_compile_mocked_all_args():
@@ -39,7 +38,7 @@ def test_dbt_compile_mocked_all_args():
     assert config.profiles_dir == "/path/to/profiles/"
     assert config.profile == "dbt-profile"
     assert config.target == "dbt-target"
-    assert config.parsed_vars == {"target": "override"}
+    assert config.vars == {"target": "override"}
     assert config.log_cache_events is True
     assert config.parse_only is True
     assert config.full_refresh is True
@@ -87,40 +86,22 @@ SELECT
   NOW() AS field2
 """
 
-if DBT_INSTALLED_GTE_1_6:
-    COMPILED_MODEL_4 = dedent(
-        """
-        with __dbt__cte__model_1 as (
-        SELECT
-          123 AS field1,
-          'abc' AS field2
-        ) SELECT
-          field1 AS field1,
-          field2 AS field2,
-          SUM(CASE WHEN 'd' IN ('a', 'b', 'c') THEN 1 ELSE 0 END) AS field3
-        FROM
-          __dbt__cte__model_1
-        GROUP BY
-          field1, field2
-        """
-    )
-else:
-    COMPILED_MODEL_4 = dedent(
-        """
-        with __dbt__cte__model_1 as (
-        SELECT
-          123 AS field1,
-          'abc' AS field2
-        )SELECT
-          field1 AS field1,
-          field2 AS field2,
-          SUM(CASE WHEN 'd' IN ('a', 'b', 'c') THEN 1 ELSE 0 END) AS field3
-        FROM
-          __dbt__cte__model_1
-        GROUP BY
-          field1, field2
-        """
-    )
+COMPILED_MODEL_4 = dedent(
+    """
+    with __dbt__cte__model_1 as (
+    SELECT
+      123 AS field1,
+      'abc' AS field2
+    ) SELECT
+      field1 AS field1,
+      field2 AS field2,
+      SUM(CASE WHEN 'd' IN ('a', 'b', 'c') THEN 1 ELSE 0 END) AS field3
+    FROM
+      __dbt__cte__model_1
+    GROUP BY
+      field1, field2
+    """
+)
 
 
 def clean_lines(s):
