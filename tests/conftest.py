@@ -10,7 +10,7 @@ import boto3
 import pytest
 from airflow import settings
 from airflow.models.connection import Connection
-from moto import mock_s3
+from moto import mock_aws
 from pytest_postgresql.janitor import DatabaseJanitor
 
 from airflow_dbt_python.hooks.dbt import DbtHook
@@ -150,12 +150,12 @@ id,name
 def database(postgresql_proc):
     """Initialize a test postgres database."""
     janitor = DatabaseJanitor(
-        postgresql_proc.user,
-        postgresql_proc.host,
-        postgresql_proc.port,
-        postgresql_proc.dbname,
-        postgresql_proc.version,
-        postgresql_proc.password,
+        user=postgresql_proc.user,
+        host=postgresql_proc.host,
+        port=postgresql_proc.port,
+        dbname=postgresql_proc.dbname,
+        version=postgresql_proc.version,
+        password=postgresql_proc.password,
     )
     janitor.init()
 
@@ -310,7 +310,7 @@ def compile_dir(dbt_project_file):
 @pytest.fixture
 def mocked_s3_res():
     """Return a mocked s3 resource."""
-    with mock_s3():
+    with mock_aws():
         yield boto3.resource("s3")
 
 
