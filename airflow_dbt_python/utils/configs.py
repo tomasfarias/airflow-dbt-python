@@ -88,7 +88,7 @@ class BaseConfig:
     threads: Optional[int] = None
     use_experimental_parser: Optional[bool] = None
     store_failures: Optional[bool] = None
-    vars: Optional[Union[str, dict[str, Any]]] = None
+    vars: Union[dict[str, Any]] = dataclasses.field(default_factory=dict)
     macro_debugging: Optional[bool] = None
     warn_error: Optional[bool] = None
     warn_error_options: dict[str, Any] = dataclasses.field(default_factory=dict)
@@ -341,7 +341,7 @@ class BaseConfig:
             elif issubclass(self.dbt_task, DebugTask):
                 task = self.dbt_task(args=local_flags)
             elif issubclass(self.dbt_task, CleanTask):
-                task = self.dbt_task(args=local_flags, config=runtime_config)
+                task = self.dbt_task(args=local_flags, config=project)
             else:
                 task = self.dbt_task(args=local_flags)
         else:
