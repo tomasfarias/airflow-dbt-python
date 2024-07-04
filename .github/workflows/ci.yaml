@@ -145,15 +145,15 @@ jobs:
           python-version: '3.12'
 
       - name: Install Poetry
-        uses: abatilo/actions-poetry@v3.0.0
+        uses: abatilo/actions-poetry@v2.3.0
         with:
-          poetry-version: 1.7.8
+          poetry-version: 1.8.3
 
       - name: Install airflow-dbt-python with Poetry
         run: poetry install --with dev -E airflow-providers
 
       - name: Download coverage data.
-        uses: actions/download-artifact@v4.1.7
+        uses: actions/download-artifact@v3
         with:
           name: coverage-data
 
