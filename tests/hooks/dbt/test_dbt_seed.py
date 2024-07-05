@@ -1,4 +1,5 @@
 """Unit test module for running dbt seed with the DbtHook."""
+
 import pytest
 from dbt.contracts.results import RunStatus
 from dbt.exceptions import DbtProfileError

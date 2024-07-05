@@ -1,4 +1,5 @@
 """A concrete DbtRemoteHook for git repositories with dulwich."""
+
 import datetime as dt
 from typing import Callable, Optional, Tuple, Union
 
@@ -90,7 +91,7 @@ class DbtGitRemoteHook(SSHHook, DbtRemoteHook):
 
             repo.stage(str(f.relative_to(source)))
 
-        ts = dt.datetime.utcnow()
+        ts = dt.datetime.now(dt.timezone.utc)
         repo.do_commit(
             self.commit_msg.format(ts=ts).encode(), self.commit_author.encode()
         )

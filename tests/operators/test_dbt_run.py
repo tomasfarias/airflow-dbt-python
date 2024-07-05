@@ -1,14 +1,14 @@
 """Unit test module for DbtRunOperator."""
+
 import json
 from pathlib import Path
 
 import pytest
-from airflow import AirflowException
+from airflow.exceptions import AirflowException
 from dbt.contracts.results import RunStatus
 
 from airflow_dbt_python.operators.dbt import DbtRunOperator
 from airflow_dbt_python.utils.configs import RunTaskConfig
-from airflow_dbt_python.utils.version import DBT_INSTALLED_LESS_THAN_1_5
 
 condition = False
 try:
@@ -47,7 +47,7 @@ def test_dbt_run_mocked_all_args():
     assert config.profiles_dir == "/path/to/profiles/"
     assert config.profile == "dbt-profile"
     assert config.target == "dbt-target"
-    assert config.parsed_vars == {"target": "override"}
+    assert config.vars == {"target": "override"}
     assert config.log_cache_events is True
     assert config.full_refresh is True
     assert config.fail_fast is True
@@ -114,7 +114,7 @@ def test_dbt_run_models(profiles_file, dbt_project_file, model_files, logs_dir):
         do_xcom_push=True,
         # Starting with the dbt 1.5, the `log-path` configuration in `dbt_project.yml`
         # was deprecated, so we added the ability to specify it in the operator
-        log_path=None if DBT_INSTALLED_LESS_THAN_1_5 else logs_dir,
+        log_path=logs_dir,
         log_level_file="info",
         debug=True,
     )
@@ -156,7 +156,7 @@ def test_dbt_run_models_with_env_vars(
         do_xcom_push=True,
         # Starting with the dbt 1.5, the `log-path` configuration in `dbt_project.yml`
         # was deprecated, so we added the ability to specify it in the operator
-        log_path=None if DBT_INSTALLED_LESS_THAN_1_5 else logs_dir,
+        log_path=logs_dir,
         log_level_file="info",
         debug=True,
         env_vars=env,

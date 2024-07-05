@@ -1,4 +1,5 @@
 """Unit test module for DbtDepsOperator."""
+
 import datetime as dt
 import os
 from pathlib import Path
@@ -39,7 +40,7 @@ def test_dbt_deps_mocked_all_args():
     assert config.profiles_dir == "/path/to/profiles/"
     assert config.profile == "dbt-profile"
     assert config.target == "dbt-target"
-    assert config.parsed_vars == {"target": "override"}
+    assert config.vars == {"target": "override"}
     assert config.log_cache_events is True
 
 

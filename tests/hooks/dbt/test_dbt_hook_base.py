@@ -1,4 +1,5 @@
 """Unit test module for the dbt hook base class."""
+
 import os
 from pathlib import Path
 
@@ -176,6 +177,9 @@ def no_user_airflow_conn(database):
     session.commit()
 
     yield conn_id
+
+    session.delete(connection)
+    session.commit()
 
     session.close()
 

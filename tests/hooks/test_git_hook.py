@@ -1,4 +1,5 @@
 """Unit test module for DbtGitRemoteHook."""
+
 import multiprocessing
 import os
 import platform

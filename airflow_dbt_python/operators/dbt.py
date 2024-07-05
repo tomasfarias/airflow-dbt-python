@@ -1,4 +1,5 @@
 """Airflow operators for all dbt commands."""
+
 from __future__ import annotations
 
 import datetime as dt
@@ -11,11 +12,13 @@ from airflow.exceptions import AirflowException
 from airflow.models.baseoperator import BaseOperator
 from airflow.models.xcom import XCOM_RETURN_KEY
 
+from airflow_dbt_python.utils.enums import LogFormat
+
 if TYPE_CHECKING:
     from dbt.contracts.results import RunResult
 
     from airflow_dbt_python.hooks.dbt import DbtHook, DbtTaskResult
-    from airflow_dbt_python.utils.enums import LogFormat, Output
+    from airflow_dbt_python.utils.enums import Output
 
 base_template_fields = [
     "project_dir",
@@ -73,7 +76,7 @@ class DbtBaseOperator(BaseOperator):
         log_path: Optional[str] = None,
         log_level: Optional[str] = None,
         log_level_file: Optional[str] = None,
-        log_format: Optional[LogFormat] = None,
+        log_format: LogFormat = LogFormat.DEFAULT,
         log_cache_events: Optional[bool] = False,
         quiet: Optional[bool] = None,
         no_print: Optional[bool] = None,
@@ -93,8 +96,8 @@ class DbtBaseOperator(BaseOperator):
         no_version_check: Optional[bool] = None,
         write_json: Optional[bool] = None,
         write_perf_info: Optional[bool] = None,
-        anonymous_usage_stats: Optional[bool] = None,
-        no_anonymous_usage_stats: Optional[bool] = None,
+        send_anonymous_usage_stats: Optional[bool] = None,
+        no_send_anonymous_usage_stats: Optional[bool] = None,
         # Extra features configuration
         dbt_conn_id: Optional[str] = "dbt_conn_id",
         profiles_conn_id: Optional[str] = None,
@@ -138,8 +141,8 @@ class DbtBaseOperator(BaseOperator):
         self.static_parser = static_parser
         self.no_static_parser = no_static_parser
 
-        self.anonymous_usage_stats = anonymous_usage_stats
-        self.no_anonymous_usage_stats = no_anonymous_usage_stats
+        self.send_anonymous_usage_stats = send_anonymous_usage_stats
+        self.no_send_anonymous_usage_stats = no_send_anonymous_usage_stats
 
         self.partial_parse = partial_parse
         self.no_partial_parse = no_partial_parse
@@ -671,13 +674,13 @@ def run_result_factory(data: list[tuple[Any, Any]]):
     We need to handle dt.datetime and agate.table.Table.
     The rest of the types should already be JSON-serializable.
     """
-    from dbt.contracts.results import agate
+    from agate.table import Table
 
     d = {}
     for key, val in data:
         if isinstance(val, dt.datetime):
             val = val.isoformat()
-        elif isinstance(val, agate.table.Table):
+        elif isinstance(val, Table):
             # agate Tables have a few print methods but they offer plain
             # text representations of the table which are not very JSON
             # friendly. There is a to_json method, but I don't think

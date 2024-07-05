@@ -1,4 +1,5 @@
 """Unit test module for DbtDocsGenerateOperator."""
+
 import pytest
 
 from airflow_dbt_python.operators.dbt import DbtDocsGenerateOperator

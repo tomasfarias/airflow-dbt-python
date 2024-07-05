@@ -1,4 +1,5 @@
 """Unit test module for DbtDebugOperator."""
+
 from airflow_dbt_python.operators.dbt import DbtDebugOperator
 from airflow_dbt_python.utils.configs import DebugTaskConfig
 
@@ -25,7 +26,7 @@ def test_dbt_debug_mocked_all_args():
     assert config.profiles_dir == "/path/to/profiles/"
     assert config.profile == "dbt-profile"
     assert config.target == "dbt-target"
-    assert config.parsed_vars == {"target": "override"}
+    assert config.vars == {"target": "override"}
     assert config.log_cache_events is True
     assert config.config_dir is True
     assert config.no_version_check is True

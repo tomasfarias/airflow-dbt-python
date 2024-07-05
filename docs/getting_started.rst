@@ -289,7 +289,7 @@ Then, we can alter the previous example DAG to set ``project_dir`` and ``profile
 
 *airflow-dbt-python* takes care of adjusting any path-like arguments so that they are pointing to files in a local temporary directory once all the *dbt* files are download from the remote storage.
 
-Let's do another example where we upload our *dbt* project to a GitHub repository. For this example, let's use dbt-labs' own `jaffle_shop <https://github.com/dbt-labs/jaffle_shop>`_.
+Let's do another example where we upload our *dbt* project to a GitHub repository. For this example, let's use dbt-labs' own `jaffle_shop <https://github.com/dbt-labs/jaffle-shop-classic>`_.
 
 The DAG looks the same as the AWS S3 example, except that now we use the GitHub repository's SSH URL as the ``project_dir`` argument:
 
@@ -313,7 +313,7 @@ The DAG looks the same as the AWS S3 example, except that now we use the GitHub 
    ) as dag:
        dbt_run = DbtRunOperator(
            task_id="dbt_run_daily",
-           project_dir="git+ssh://github.com:dbt-labs/jaffle_shop",
+           project_dir="git+ssh://github.com:dbt-labs/jaffle-shop-classic",
            select=["+tag:daily"],
            exclude=["tag:deprecated"],
            target="my_warehouse_connection",

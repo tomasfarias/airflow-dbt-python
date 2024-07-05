@@ -3,6 +3,7 @@
 Common fixtures include a connection to a postgres database, a set of sample model and
  seed files, dbt configuration files, and temporary directories for everything.
 """
+
 import shutil
 from typing import List
 
@@ -10,14 +11,13 @@ import boto3
 import pytest
 from airflow import settings
 from airflow.models.connection import Connection
-from moto import mock_s3
+from moto import mock_aws
 from pytest_postgresql.janitor import DatabaseJanitor
 
 from airflow_dbt_python.hooks.dbt import DbtHook
-from airflow_dbt_python.utils.version import DBT_INSTALLED_LESS_THAN_1_5
 
 PROFILES = """
-config:
+flags:
   send_anonymous_usage_stats: false
 
 default:
@@ -150,12 +150,12 @@ id,name
 def database(postgresql_proc):
     """Initialize a test postgres database."""
     janitor = DatabaseJanitor(
-        postgresql_proc.user,
-        postgresql_proc.host,
-        postgresql_proc.port,
-        postgresql_proc.dbname,
-        postgresql_proc.version,
-        postgresql_proc.password,
+        user=postgresql_proc.user,
+        host=postgresql_proc.host,
+        port=postgresql_proc.port,
+        dbname=postgresql_proc.dbname,
+        version=postgresql_proc.version,
+        password=postgresql_proc.password,
     )
     janitor.init()
 
@@ -233,6 +233,10 @@ def airflow_conns(database):
 
     yield ids
 
+    for conn in connections:
+        session.delete(conn)
+
+    session.commit()
     session.close()
 
 
@@ -257,9 +261,6 @@ def dbt_project_file(dbt_project_dir, logs_dir, request):
     """Create a test dbt_project.yml file."""
     p = dbt_project_dir / "dbt_project.yml"
     PROJECT_CONTENT = PROJECT
-
-    if DBT_INSTALLED_LESS_THAN_1_5:
-        PROJECT_CONTENT += LOG_PATH_CONFIG.format(log_path=str(logs_dir))
 
     p.write_text(PROJECT_CONTENT)
 
@@ -310,7 +311,7 @@ def compile_dir(dbt_project_file):
 @pytest.fixture
 def mocked_s3_res():
     """Return a mocked s3 resource."""
-    with mock_s3():
+    with mock_aws():
         yield boto3.resource("s3")
 
 

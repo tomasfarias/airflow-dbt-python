@@ -4,6 +4,7 @@ Internally, DbtRemoteHooks can use Airflow hooks to execute the actual operation
 
 Currently, only AWS S3 and the local filesystem are supported as remotes.
 """
+
 from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import Optional, Type

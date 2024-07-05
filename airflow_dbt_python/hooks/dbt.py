@@ -1,4 +1,5 @@
 """Provides a hook to interact with a dbt project."""
+
 from __future__ import annotations
 
 import json
@@ -24,13 +25,12 @@ from airflow.exceptions import AirflowException
 from airflow.hooks.base import BaseHook
 from airflow.models.connection import Connection
 
-from airflow_dbt_python.utils.version import DBT_INSTALLED_LESS_THAN_1_5
+from airflow_dbt_python.utils.version import DBT_INSTALLED_GTE_1_8
 
 if sys.version_info >= (3, 11):
     from contextlib import chdir as chdir_ctx
 else:
     from contextlib_chdir import chdir as chdir_ctx
-
 
 if TYPE_CHECKING:
     from dbt.contracts.results import RunResult
@@ -227,18 +227,11 @@ class DbtHook(BaseHook):
             A tuple containing a boolean indicating success and optionally the results
                 of running the dbt command.
         """
-        from dbt.adapters.factory import register_adapter
+        from dbt.adapters.factory import adapter_management
         from dbt.task.base import get_nearest_project_dir
         from dbt.task.clean import CleanTask
         from dbt.task.deps import DepsTask
-
-        from airflow_dbt_python.utils.version import DBT_INSTALLED_LESS_THAN_1_5
-
-        if DBT_INSTALLED_LESS_THAN_1_5:
-            from dbt.main import adapter_management, track_run  # type: ignore
-        else:
-            from dbt.adapters.factory import adapter_management
-            from dbt.tracking import track_run
+        from dbt.tracking import track_run
 
         config = self.get_dbt_task_config(command, **kwargs)
         extra_target = self.get_dbt_target_from_connection(config.target)
@@ -252,36 +245,24 @@ class DbtHook(BaseHook):
         ) as dbt_dir:
             # When creating tasks via from_args, dbt switches to the project directory.
             # We have to do that here as we are not using from_args.
-            if DBT_INSTALLED_LESS_THAN_1_5:
-                # For compatibility with older versions of dbt, as the signature
-                # of move_to_nearest_project_dir changed in dbt-core 1.5 to take
-                # just the project_dir.
-                nearest_project_dir = get_nearest_project_dir(config)  # type: ignore
-            else:
-                nearest_project_dir = get_nearest_project_dir(config.project_dir)
+            nearest_project_dir = get_nearest_project_dir(config.project_dir)
 
             with chdir_ctx(nearest_project_dir):
-                config.dbt_task.pre_init_hook(config)
                 self.ensure_profiles(config)
 
-                task, runtime_config = config.create_dbt_task(
-                    extra_target, write_perf_info
-                )
-                requires_profile = isinstance(task, (CleanTask, DepsTask))
-
-                self.setup_dbt_logging(task, config.debug)
-
-                if runtime_config is not None and not requires_profile:
-                    # The deps command installs the dependencies, which means they may
-                    # not exist before deps runs and the following would raise a
-                    # CompilationError.
-                    runtime_config.load_dependencies()
-
-                results = None
                 with adapter_management():
-                    if not requires_profile:
-                        if runtime_config is not None:
-                            register_adapter(runtime_config)
+                    task, runtime_config = config.create_dbt_task(
+                        extra_target, write_perf_info
+                    )
+                    requires_profile = isinstance(task, (CleanTask, DepsTask))
+
+                    self.setup_dbt_logging(task, config.debug)
+
+                    if runtime_config is not None and not requires_profile:
+                        # The deps command installs the dependencies, which means they
+                        # may not exist before deps runs and the following would raise a
+                        # CompilationError.
+                        runtime_config.load_dependencies()
 
                     with track_run(task):
                         results = task.run()
@@ -419,19 +400,17 @@ class DbtHook(BaseHook):
         default_stdout. As these are initialized by the CLI app, we need to
         initialize them here.
         """
-        from dbt.events.functions import setup_event_logger
-
-        log_path = None
-        if task.config is not None:
-            log_path = getattr(task.config, "log_path", None)
-
-        if DBT_INSTALLED_LESS_THAN_1_5:
-            setup_event_logger(log_path or "logs")
+        if DBT_INSTALLED_GTE_1_8:
+            from dbt.events.logging import setup_event_logger
         else:
-            from dbt.flags import get_flags
+            from dbt.events.functions import (  # type: ignore[no-redef]
+                setup_event_logger,
+            )
 
-            flags = get_flags()
-            setup_event_logger(flags)
+        from dbt.flags import get_flags
+
+        flags = get_flags()
+        setup_event_logger(flags)
 
         configured_file = logging.getLogger("configured_file")
         file_log = logging.getLogger("file_log")
@@ -458,7 +437,7 @@ class DbtHook(BaseHook):
         if not profiles_path.exists():
             profiles_path.parent.mkdir(exist_ok=True)
             with profiles_path.open("w", encoding="utf-8") as f:
-                f.write("config:\n  send_anonymous_usage_stats: false\n")
+                f.write("flags:\n  send_anonymous_usage_stats: false\n")
 
     def get_dbt_target_from_connection(
         self, target: Optional[str]

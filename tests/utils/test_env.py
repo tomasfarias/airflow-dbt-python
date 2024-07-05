@@ -1,4 +1,5 @@
 """Unit tests for environment utilities."""
+
 import os
 
 from airflow_dbt_python.utils.env import update_environment

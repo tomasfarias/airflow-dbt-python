@@ -1,4 +1,5 @@
 """Enumeration subclasses used in dbt configurations."""
+
 from enum import Enum
 from typing import Type, TypeVar
 
@@ -24,6 +25,7 @@ class LogFormat(str, Enum):
     """Allowed dbt log formats."""
 
     DEFAULT = "default"
+    DEBUG = "debug"
     JSON = "json"
     TEXT = "text"
 

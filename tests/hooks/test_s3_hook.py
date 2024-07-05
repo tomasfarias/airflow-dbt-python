@@ -1,4 +1,5 @@
 """Unit test module for DbtS3RemoteHook."""
+
 import io
 from zipfile import ZipFile
 

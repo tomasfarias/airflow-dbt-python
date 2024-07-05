@@ -1,4 +1,5 @@
 """Unit test module for dbt task configuration utilities."""
+
 import os
 from unittest.mock import patch
 
@@ -88,11 +89,11 @@ def test_base_config():
         defer=False,
         no_version_check=True,
         static_parser=False,
-        no_anonymous_usage_stats=False,
+        no_send_anonymous_usage_stats=False,
         vars={"a_var": 2, "another_var": "abc"},
     )
 
-    assert config.parsed_vars == {"a_var": 2, "another_var": "abc"}
+    assert config.vars == {"a_var": 2, "another_var": "abc"}
     assert config.defer is False
     assert config.version_check is False
     assert config.static_parser is False
@@ -138,7 +139,7 @@ def test_config_vars(vars, expected):
         vars=vars,
     )
 
-    assert config.parsed_vars == expected
+    assert config.vars == expected
 
 
 def test_build_task_minimal_config(hook, profiles_file, dbt_project_file):
