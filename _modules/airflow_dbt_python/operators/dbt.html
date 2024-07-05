@@ -3,11 +3,11 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>airflow_dbt_python.operators.dbt &mdash; airflow-dbt-python 2.0.1 documentation</title>
+  <title>airflow_dbt_python.operators.dbt &mdash; airflow-dbt-python 2.1.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=80d5e7a1" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=19f00094" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
-      <link rel="stylesheet" type="text/css" href="../../../_static/graphviz.css?v=eafc0fe6" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/graphviz.css?v=fd3f3429" />
       <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/hack-font/3.3.0/web/hack.min.css" />
 
   
@@ -17,8 +17,8 @@
   
         <script src="../../../_static/jquery.js?v=5d32c60e"></script>
         <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="../../../_static/documentation_options.js?v=f5cff4aa"></script>
-        <script src="../../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../../_static/documentation_options.js?v=20623aea"></script>
+        <script src="../../../_static/doctools.js?v=9a2dae69"></script>
         <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
         <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
         <script src="../../../_static/copybutton.js?v=f281be69"></script>
@@ -39,7 +39,7 @@
             airflow-dbt-python
           </a>
               <div class="version">
-                2.0.1
+                2.1.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
@@ -85,6 +85,7 @@
              
   <h1>Source code for airflow_dbt_python.operators.dbt</h1><div class="highlight"><pre>
 <span></span><span class="sd">&quot;&quot;&quot;Airflow operators for all dbt commands.&quot;&quot;&quot;</span>
+
 <span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
 
 <span class="kn">import</span> <span class="nn">datetime</span> <span class="k">as</span> <span class="nn">dt</span>
@@ -97,11 +98,13 @@
 <span class="kn">from</span> <span class="nn">airflow.models.baseoperator</span> <span class="kn">import</span> <span class="n">BaseOperator</span>
 <span class="kn">from</span> <span class="nn">airflow.models.xcom</span> <span class="kn">import</span> <span class="n">XCOM_RETURN_KEY</span>
 
+<span class="kn">from</span> <span class="nn">airflow_dbt_python.utils.enums</span> <span class="kn">import</span> <span class="n">LogFormat</span>
+
 <span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
     <span class="kn">from</span> <span class="nn">dbt.contracts.results</span> <span class="kn">import</span> <span class="n">RunResult</span>
 
     <span class="kn">from</span> <span class="nn">airflow_dbt_python.hooks.dbt</span> <span class="kn">import</span> <span class="n">DbtHook</span><span class="p">,</span> <span class="n">DbtTaskResult</span>
-    <span class="kn">from</span> <span class="nn">airflow_dbt_python.utils.enums</span> <span class="kn">import</span> <span class="n">LogFormat</span><span class="p">,</span> <span class="n">Output</span>
+    <span class="kn">from</span> <span class="nn">airflow_dbt_python.utils.enums</span> <span class="kn">import</span> <span class="n">Output</span>
 
 <span class="n">base_template_fields</span> <span class="o">=</span> <span class="p">[</span>
     <span class="s2">&quot;project_dir&quot;</span><span class="p">,</span>
@@ -161,7 +164,7 @@
         <span class="n">log_path</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">log_level</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">log_level_file</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">log_format</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">LogFormat</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">log_format</span><span class="p">:</span> <span class="n">LogFormat</span> <span class="o">=</span> <span class="n">LogFormat</span><span class="o">.</span><span class="n">DEFAULT</span><span class="p">,</span>
         <span class="n">log_cache_events</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="n">quiet</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">no_print</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -181,8 +184,8 @@
         <span class="n">no_version_check</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">write_json</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">write_perf_info</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">anonymous_usage_stats</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">no_anonymous_usage_stats</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">send_anonymous_usage_stats</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">no_send_anonymous_usage_stats</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="c1"># Extra features configuration</span>
         <span class="n">dbt_conn_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;dbt_conn_id&quot;</span><span class="p">,</span>
         <span class="n">profiles_conn_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -226,8 +229,8 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">static_parser</span> <span class="o">=</span> <span class="n">static_parser</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">no_static_parser</span> <span class="o">=</span> <span class="n">no_static_parser</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">anonymous_usage_stats</span> <span class="o">=</span> <span class="n">anonymous_usage_stats</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">no_anonymous_usage_stats</span> <span class="o">=</span> <span class="n">no_anonymous_usage_stats</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">send_anonymous_usage_stats</span> <span class="o">=</span> <span class="n">send_anonymous_usage_stats</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">no_send_anonymous_usage_stats</span> <span class="o">=</span> <span class="n">no_send_anonymous_usage_stats</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">partial_parse</span> <span class="o">=</span> <span class="n">partial_parse</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">no_partial_parse</span> <span class="o">=</span> <span class="n">no_partial_parse</span>
@@ -813,13 +816,13 @@
 <span class="sd">    We need to handle dt.datetime and agate.table.Table.</span>
 <span class="sd">    The rest of the types should already be JSON-serializable.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="kn">from</span> <span class="nn">dbt.contracts.results</span> <span class="kn">import</span> <span class="n">agate</span>
+    <span class="kn">from</span> <span class="nn">agate.table</span> <span class="kn">import</span> <span class="n">Table</span>
 
     <span class="n">d</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="n">dt</span><span class="o">.</span><span class="n">datetime</span><span class="p">):</span>
             <span class="n">val</span> <span class="o">=</span> <span class="n">val</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span>
-        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="n">agate</span><span class="o">.</span><span class="n">table</span><span class="o">.</span><span class="n">Table</span><span class="p">):</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="n">Table</span><span class="p">):</span>
             <span class="c1"># agate Tables have a few print methods but they offer plain</span>
             <span class="c1"># text representations of the table which are not very JSON</span>
             <span class="c1"># friendly. There is a to_json method, but I don&#39;t think</span>

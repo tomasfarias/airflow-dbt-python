@@ -4,11 +4,11 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Getting started &mdash; airflow-dbt-python 2.0.1 documentation</title>
+  <title>Getting started &mdash; airflow-dbt-python 2.1.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
       <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
-      <link rel="stylesheet" type="text/css" href="_static/graphviz.css?v=eafc0fe6" />
+      <link rel="stylesheet" type="text/css" href="_static/graphviz.css?v=fd3f3429" />
       <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/hack-font/3.3.0/web/hack.min.css" />
 
   
@@ -18,8 +18,8 @@
   
         <script src="_static/jquery.js?v=5d32c60e"></script>
         <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="_static/documentation_options.js?v=f5cff4aa"></script>
-        <script src="_static/doctools.js?v=888ff710"></script>
+        <script src="_static/documentation_options.js?v=20623aea"></script>
+        <script src="_static/doctools.js?v=9a2dae69"></script>
         <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
         <script src="_static/clipboard.min.js?v=a7894cd8"></script>
         <script src="_static/copybutton.js?v=f281be69"></script>
@@ -42,7 +42,7 @@
             airflow-dbt-python
           </a>
               <div class="version">
-                2.0.1
+                2.1.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
@@ -356,7 +356,7 @@ poetry<span class="w"> </span>install<span class="w"> </span>-E<span class="w"> 
 </div>
 <p><em>airflow-dbt-python</em> uses the URL scheme (in this example, <code class="docutils literal notranslate"><span class="pre">&quot;s3&quot;</span></code>) to figure out the type of remote, and the corresponding <code class="docutils literal notranslate"><span class="pre">DbtRemoteHook</span></code> to download all required files. An exception would be raised if the scheme does not point to a supported remote.</p>
 <p><em>airflow-dbt-python</em> takes care of adjusting any path-like arguments so that they are pointing to files in a local temporary directory once all the <em>dbt</em> files are download from the remote storage.</p>
-<p>Let’s do another example where we upload our <em>dbt</em> project to a GitHub repository. For this example, let’s use dbt-labs’ own <a class="reference external" href="https://github.com/dbt-labs/jaffle_shop">jaffle_shop</a>.</p>
+<p>Let’s do another example where we upload our <em>dbt</em> project to a GitHub repository. For this example, let’s use dbt-labs’ own <a class="reference external" href="https://github.com/dbt-labs/jaffle-shop-classic">jaffle_shop</a>.</p>
 <p>The DAG looks the same as the AWS S3 example, except that now we use the GitHub repository’s SSH URL as the <code class="docutils literal notranslate"><span class="pre">project_dir</span></code> argument:</p>
 <div class="literal-block-wrapper docutils container" id="id7">
 <div class="code-block-caption"><span class="caption-text">example_git_remote_1_dag.py</span><a class="headerlink" href="#id7" title="Link to this code"></a></div>
@@ -375,7 +375,7 @@ poetry<span class="w"> </span>install<span class="w"> </span>-E<span class="w"> 
 <span class="linenos">13</span><span class="p">)</span> <span class="k">as</span> <span class="n">dag</span><span class="p">:</span>
 <span class="linenos">14</span>    <span class="n">dbt_run</span> <span class="o">=</span> <span class="n">DbtRunOperator</span><span class="p">(</span>
 <span class="linenos">15</span>        <span class="n">task_id</span><span class="o">=</span><span class="s2">&quot;dbt_run_daily&quot;</span><span class="p">,</span>
-<span class="hll"><span class="linenos">16</span>        <span class="n">project_dir</span><span class="o">=</span><span class="s2">&quot;git+ssh://github.com:dbt-labs/jaffle_shop&quot;</span><span class="p">,</span>
+<span class="hll"><span class="linenos">16</span>        <span class="n">project_dir</span><span class="o">=</span><span class="s2">&quot;git+ssh://github.com:dbt-labs/jaffle-shop-classic&quot;</span><span class="p">,</span>
 </span><span class="linenos">17</span>        <span class="n">select</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;+tag:daily&quot;</span><span class="p">],</span>
 <span class="linenos">18</span>        <span class="n">exclude</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;tag:deprecated&quot;</span><span class="p">],</span>
 <span class="linenos">19</span>        <span class="n">target</span><span class="o">=</span><span class="s2">&quot;my_warehouse_connection&quot;</span><span class="p">,</span>

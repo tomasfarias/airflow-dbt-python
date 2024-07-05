@@ -97,7 +97,7 @@ An Airflow database needs to be initialized in your local environment. This requ
 .. code-block:: shell
 
     export AIRFLOW_HOME=$PWD
-    poetry run airflow db init
+    poetry run airflow db migrate
 
 The ``AIRFLOW_HOME`` environment variable has to be set to the same value used when initializing the database for most testing commands, so it's recommended to ``export`` it.
 
