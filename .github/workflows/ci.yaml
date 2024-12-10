@@ -26,26 +26,22 @@ jobs:
           - '3.11'
           - '3.10'
           - '3.9'
-          - '3.8'
         airflow-version:
+          - '2.10.4'
           - '2.9.2'
           - '2.8.4'
-          - '2.7.3'
         dbt-version:
+          - 1.9
           - 1.8
-          - 1.7
         exclude:
           # Incompatible combinations
           - python-version: 3.12
             airflow-version: '2.8.4'
 
-          - python-version: 3.12
-            airflow-version: '2.7.3'
-
     runs-on: ubuntu-latest
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@v2.8.1
+        uses: step-security/harden-runner@v2.10.4
         with:
           egress-policy: block
           allowed-endpoints: >
@@ -71,16 +67,16 @@ jobs:
           sudo apt-get update
           sudo apt-get install --yes --no-install-recommends postgresql
 
-      - uses: actions/checkout@v4.1.7
+      - uses: actions/checkout@v4.2.2
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v5.1.0
+        uses: actions/setup-python@v5.4.0
         with:
           python-version: ${{ matrix.python-version }}
 
       - name: Install Poetry
-        uses: abatilo/actions-poetry@v2.3.0
+        uses: abatilo/actions-poetry@v2.4.0
         with:
-          poetry-version: 1.8.3
+          poetry-version: 2.0.1
 
       - name: Install Airflow & dbt
         run: |
@@ -130,7 +126,7 @@ jobs:
 
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@v2.8.1
+        uses: step-security/harden-runner@v2.10.4
         with:
           egress-policy: block
           allowed-endpoints: >
@@ -139,15 +135,15 @@ jobs:
             api.github.com:443
             pypi.org:443
 
-      - uses: actions/checkout@v4.1.7
-      - uses: actions/setup-python@v5.1.0
+      - uses: actions/checkout@v4.2.2
+      - uses: actions/setup-python@v5.4.0
         with:
           python-version: '3.12'
 
       - name: Install Poetry
-        uses: abatilo/actions-poetry@v2.3.0
+        uses: abatilo/actions-poetry@v2.4.0
         with:
-          poetry-version: 1.8.3
+          poetry-version: 2.0.1
 
       - name: Install airflow-dbt-python with Poetry
         run: poetry install --with dev -E airflow-providers

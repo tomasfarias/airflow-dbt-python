@@ -12,6 +12,7 @@ from typing import Any, Optional, Type, Union
 import dbt.flags as flags
 import yaml
 from dbt.adapters.factory import register_adapter
+from dbt.cli.option_types import Package
 from dbt.clients import yaml_helper  # type: ignore
 from dbt.config.profile import Profile, read_profile
 from dbt.config.project import PartialProject, Project
@@ -39,7 +40,6 @@ from dbt.tracking import initialize_from_flags
 
 from airflow_dbt_python.utils.enums import FromStrEnum, LogFormat, Output
 from airflow_dbt_python.utils.version import (
-    DBT_INSTALLED_GTE_1_7,
     DBT_INSTALLED_GTE_1_8,
 )
 
@@ -139,27 +139,21 @@ class BaseConfig:
         default=None, repr=False
     )
 
-    # dbt >= 1.7
-    if DBT_INSTALLED_GTE_1_7:
-        from dbt.cli.option_types import Package
+    include_saved_query: Optional[bool] = None
+    no_include_saved_query: Optional[bool] = dataclasses.field(default=None, repr=False)
 
-        include_saved_query: Optional[bool] = None
-        no_include_saved_query: Optional[bool] = dataclasses.field(
-            default=None, repr=False
-        )
+    clean_project_files_only: Optional[bool] = None
+    no_clean_project_files_only: Optional[bool] = dataclasses.field(
+        default=None, repr=False
+    )
 
-        clean_project_files_only: Optional[bool] = None
-        no_clean_project_files_only: Optional[bool] = dataclasses.field(
-            default=None, repr=False
-        )
+    require_resource_names_without_spaces: bool = False
 
-        require_resource_names_without_spaces: bool = False
-
-        add_package: Optional[Package] = None
-        dry_run: bool = False
-        lock: bool = False
-        static: bool = False
-        upgrade: bool = False
+    add_package: Optional[Package] = None
+    dry_run: bool = False
+    lock: bool = False
+    static: bool = False
+    upgrade: bool = False
 
     if DBT_INSTALLED_GTE_1_8:
         require_model_names_without_spaces: bool = False
