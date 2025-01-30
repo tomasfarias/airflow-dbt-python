@@ -20,7 +20,6 @@ DBT_2_0 = VersionSpecifier(
     major="2", minor="0", patch="0", matcher=Matchers.GREATER_THAN_OR_EQUAL
 )
 
-DBT_INSTALLED_GTE_1_8 = installed.compare(DBT_1_8) == 1
 DBT_INSTALLED_GTE_1_9 = installed.compare(DBT_1_9) == 1
 
 DBT_INSTALLED_1_8 = DBT_1_8 < installed < DBT_1_9
