@@ -113,7 +113,7 @@ jobs:
           GITHUB_USERNAME: ${{ secrets.GH_USERNAME }}
 
       - name: Upload code coverage
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: coverage-data
           path: ".coverage.*"
@@ -149,7 +149,7 @@ jobs:
         run: poetry install --with dev -E airflow-providers
 
       - name: Download coverage data.
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: coverage-data
 
@@ -167,7 +167,7 @@ jobs:
           poetry run coverage report --fail-under=95
 
       - name: Upload HTML report if check failed.
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: ${{ failure() }}
         with:
           name: html-report
