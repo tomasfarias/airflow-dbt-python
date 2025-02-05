@@ -102,7 +102,7 @@ jobs:
         run: poetry run black --check .
 
       - name: Set COVERAGE_FILE in environment
-        run: echo "COVERAGE_FILE=.coverage.${{ matrix.python-version }}.${{ matrix.airflow-version }}" >> $GITHUB_ENV
+        run: echo "COVERAGE_FILE=.coverage.${{ matrix.python-version }}-${{ matrix.airflow-version }}-${{ matrix.dbt-version }}" >> $GITHUB_ENV
 
       - name: Run tests with pytest
         run: poetry run coverage run -m pytest -v tests/ airflow_dbt_python/utils/
@@ -115,7 +115,7 @@ jobs:
       - name: Upload code coverage
         uses: actions/upload-artifact@v4
         with:
-          name: coverage-data
+          name: coverage-data-${{ matrix.python-version }}-${{ matrix.airflow-version }}-${{ matrix.dbt-version }}
           path: ".coverage.*"
           if-no-files-found: ignore
 
@@ -150,8 +150,6 @@ jobs:
 
       - name: Download coverage data.
         uses: actions/download-artifact@v4
-        with:
-          name: coverage-data
 
       - name: Combine coverage & fail if it's <95%.
         run: |
