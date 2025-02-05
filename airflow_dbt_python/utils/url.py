@@ -465,7 +465,7 @@ def tar_dir_from_url(url: URL, tar_url: URL) -> None:
     except IndexError:
         compression = ""
 
-    with tarfile.open(tar_url, f"w:{compression}") as tf:
+    with tarfile.open(tar_url, f"w:{compression}") as tf:  # type: ignore[call-overload]
         for _file in url:
             tf.add(_file)
 
@@ -473,6 +473,6 @@ def tar_dir_from_url(url: URL, tar_url: URL) -> None:
 if __name__ == "__main__":
     import doctest
 
-    import airflow_dbt_python.utils.url as url
+    import airflow_dbt_python.utils.url as url_utils
 
-    doctest.testmod(url)
+    doctest.testmod(url_utils)

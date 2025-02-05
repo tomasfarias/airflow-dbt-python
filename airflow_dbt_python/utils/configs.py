@@ -305,7 +305,7 @@ class BaseConfig:
         project, profile = self.create_dbt_project_and_profile(extra_targets)
 
         if not DBT_INSTALLED_GTE_1_9:
-            self.cls.set_log_format()
+            self.cls.set_log_format()  # type: ignore[attr-defined]
 
         initialize_from_flags(self.send_anonymous_usage_stats, self.profiles_dir)
 

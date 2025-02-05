@@ -95,7 +95,7 @@ jobs:
       - name: Static type checking with mypy
         # We only run mypy on the latest supported versions of Airflow & dbt,
         # so it is currently impossible to write conditions for that depend on package versions.
-        if: matrix.python-version == '3.12' && matrix.airflow-version == '2.9.2' && matrix.dbt-version == '1.8'
+        if: matrix.python-version == '3.12' && matrix.airflow-version == '2.10.4' && matrix.dbt-version == '1.9'
         run: poetry run mypy .
 
       - name: Code formatting with black
