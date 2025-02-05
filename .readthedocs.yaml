@@ -1,13 +1,17 @@
 version: 2
 
 build:
-  os: "ubuntu-22.04"
+  os: "ubuntu-lts-latest"
   tools:
-    python: "3.11"
+    python: "3.12"
   apt_packages:
     - graphviz
   jobs:
     post_install:
-      - pip install poetry==1.3.2
+      - pip install poetry==2.0.1
       - poetry config virtualenvs.create false
       - poetry install -E git -E s3 --with docs
+
+sphinx:
+  builder: dirhtml
+  configuration: docs/conf.py
