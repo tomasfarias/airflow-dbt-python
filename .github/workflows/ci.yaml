@@ -152,6 +152,8 @@ jobs:
 
       - name: Download coverage data.
         uses: actions/download-artifact@v4
+        with:
+          merge-multiple: true
 
       - name: Combine coverage & fail if it's <95%.
         run: |
