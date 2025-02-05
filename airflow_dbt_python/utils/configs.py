@@ -660,6 +660,7 @@ class TestTaskConfig(SelectionConfig):
     singular: Optional[bool] = None
     store_failures: Optional[bool] = None
     which: str = dataclasses.field(default="test", init=False)
+    resource_types: Optional[list[str]] = None
 
     def __post_init__(self):
         """Support for type casting arguments."""
