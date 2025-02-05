@@ -27,16 +27,16 @@ jobs:
           - '3.10'
           - '3.9'
         airflow-version:
-          - '2.10.4'
-          - '2.9.2'
-          - '2.8.4'
+          - '2.10'
+          - '2.9'
+          - '2.8'
         dbt-version:
           - 1.9
           - 1.8
         exclude:
           # Incompatible combinations
           - python-version: 3.12
-            airflow-version: '2.8.4'
+            airflow-version: '2.8'
 
     runs-on: ubuntu-latest
     steps:
@@ -50,6 +50,7 @@ jobs:
             hub.getdbt.com:443
             github.com:80
             github.com:443
+            gitlab.com:22
             gitlab.com:80
             gitlab.com:443
             objects.githubusercontent.com:443
@@ -60,6 +61,7 @@ jobs:
             esm.ubuntu.com:443
             motd.ubuntu.com:443
             packages.microsoft.com:80
+            packages.microsoft.com:443
             ppa.launchpadcontent.net:443
             security.ubuntu.com:80
 
@@ -81,7 +83,7 @@ jobs:
       - name: Install Airflow & dbt
         run: |
           poetry env use ${{ matrix.python-version }}
-          poetry add "apache-airflow==${{ matrix.airflow-version }}" \
+          poetry add "apache-airflow~=${{ matrix.airflow-version }}.0" \
                      "dbt-core~=${{ matrix.dbt-version }}.0" \
                      "dbt-postgres~=${{ matrix.dbt-version }}.0" \
                  --python ${{ matrix.python-version }}
@@ -95,7 +97,7 @@ jobs:
       - name: Static type checking with mypy
         # We only run mypy on the latest supported versions of Airflow & dbt,
         # so it is currently impossible to write conditions for that depend on package versions.
-        if: matrix.python-version == '3.12' && matrix.airflow-version == '2.10.4' && matrix.dbt-version == '1.9'
+        if: matrix.python-version == '3.12' && matrix.airflow-version == '2.10' && matrix.dbt-version == '1.9'
         run: poetry run mypy .
 
       - name: Code formatting with black
@@ -117,7 +119,7 @@ jobs:
         with:
           name: coverage-data-${{ matrix.python-version }}-${{ matrix.airflow-version }}-${{ matrix.dbt-version }}
           path: ".coverage.*"
-          if-no-files-found: ignore
+          include-hidden-files: true
 
   coverage:
     name: Combine and check coverage
