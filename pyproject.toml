@@ -68,6 +68,7 @@ Sphinx = [
 sphinx-rtd-theme = "3.0.2"
 sphinx-copybutton = "0.5.2"
 attrs = ">=22"
+zipp = ">=3.19.1"
 
 [tool.poetry.group.adapters]
 optional = true

@@ -7871,11 +7871,11 @@ description = "Backport of pathlib-compatible object wrapper for zip files"
 optional = false
 python-versions = ">=3.9"
 groups = ["main", "adapters", "dev", "docs"]
+markers = "python_version <= \"3.11\" or python_version >= \"3.12\""
 files = [
     {file = "zipp-3.21.0-py3-none-any.whl", hash = "sha256:ac1bbe05fd2991f160ebce24ffbac5f6d11d83dc90891255885223d42b3cd931"},
     {file = "zipp-3.21.0.tar.gz", hash = "sha256:2c9958f6430a2040341a52eb608ed6dd93ef4392e02ffe219417c1b28b5dd1f4"},
 ]
-markers = {main = "python_version <= \"3.11\" or python_version >= \"3.12\"", adapters = "python_version <= \"3.11\" or python_version >= \"3.12\"", dev = "python_version <= \"3.11\" or python_version >= \"3.12\"", docs = "python_version < \"3.10\""}
 
 [package.extras]
 check = ["pytest-checkdocs (>=2.4)", "pytest-ruff (>=0.2.1)"]
@@ -7900,4 +7900,4 @@ spark = ["dbt-spark"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.9,<3.13"
-content-hash = "70463ac64098552f7fe8cf8430e1a73ef3862794bc204df6f89e2927aa0e5dee"
+content-hash = "a52993521708ab7f66cdc8215c8bf38b572b2a605fb26ff3f30de5c1b6cd4cca"
