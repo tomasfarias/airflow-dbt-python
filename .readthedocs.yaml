@@ -7,10 +7,15 @@ build:
   apt_packages:
     - graphviz
   jobs:
-    post_install:
-      - pip install poetry==2.0.1
-      - poetry config virtualenvs.create false
+    pre_install:
+      - python -m pip install poetry==2.0.1
+      - poetry config virtualenvs.create false --local
       - poetry install -E git -E s3 --with docs
+      - poetry export -E git -E s3 --with docs -f requirements.txt --without-hashes --output docs/requirements.txt
+
+python:
+  install:
+    - requirements: docs/requirements.txt
 
 sphinx:
   builder: dirhtml
