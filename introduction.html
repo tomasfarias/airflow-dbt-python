@@ -1,28 +1,26 @@
+
+
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" data-content_root="./">
 <head>
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Introduction &mdash; airflow-dbt-python 2.1.0 documentation</title>
-      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
-      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
+  <title>Introduction &mdash; airflow-dbt-python 2.2.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
       <link rel="stylesheet" type="text/css" href="_static/graphviz.css?v=fd3f3429" />
       <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/hack-font/3.3.0/web/hack.min.css" />
 
   
-  <!--[if lt IE 9]>
-    <script src="_static/js/html5shiv.min.js"></script>
-  <![endif]-->
-  
-        <script src="_static/jquery.js?v=5d32c60e"></script>
-        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="_static/documentation_options.js?v=20623aea"></script>
-        <script src="_static/doctools.js?v=9a2dae69"></script>
-        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
-        <script src="_static/clipboard.min.js?v=a7894cd8"></script>
-        <script src="_static/copybutton.js?v=f281be69"></script>
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=b21de401"></script>
+      <script src="_static/doctools.js?v=9a2dae69"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="_static/copybutton.js?v=f281be69"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -41,9 +39,6 @@
           <a href="index.html" class="icon icon-home">
             airflow-dbt-python
           </a>
-              <div class="version">
-                2.1.0
-              </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
@@ -128,11 +123,11 @@
 <p>This way, artifacts may be pulled and operated on by downstream tasks. For example:</p>
 <div class="literal-block-wrapper docutils container" id="id4">
 <div class="code-block-caption"><span class="caption-text">example_dbt_artifacts_dag.py</span><a class="headerlink" href="#id4" title="Link to this code"></a></div>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="linenos"> 1</span><span class="kn">import</span> <span class="nn">datetime</span> <span class="k">as</span> <span class="nn">dt</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="linenos"> 1</span><span class="kn">import</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">dt</span>
 <span class="linenos"> 2</span>
-<span class="linenos"> 3</span><span class="kn">from</span> <span class="nn">airflow.operators.python</span> <span class="kn">import</span> <span class="n">PythonOperator</span>
-<span class="linenos"> 4</span><span class="kn">from</span> <span class="nn">airflow.utils.dates</span> <span class="kn">import</span> <span class="n">days_ago</span>
-<span class="linenos"> 5</span><span class="kn">from</span> <span class="nn">airflow_dbt_python.operators.dbt</span> <span class="kn">import</span> <span class="n">DbtRunOperator</span>
+<span class="linenos"> 3</span><span class="kn">from</span><span class="w"> </span><span class="nn">airflow.operators.python</span><span class="w"> </span><span class="kn">import</span> <span class="n">PythonOperator</span>
+<span class="linenos"> 4</span><span class="kn">from</span><span class="w"> </span><span class="nn">airflow.utils.dates</span><span class="w"> </span><span class="kn">import</span> <span class="n">days_ago</span>
+<span class="linenos"> 5</span><span class="kn">from</span><span class="w"> </span><span class="nn">airflow_dbt_python.operators.dbt</span><span class="w"> </span><span class="kn">import</span> <span class="n">DbtRunOperator</span>
 <span class="linenos"> 6</span>
 <span class="linenos"> 7</span><span class="k">with</span> <span class="n">DAG</span><span class="p">(</span>
 <span class="linenos"> 8</span>    <span class="n">dag_id</span><span class="o">=</span><span class="s2">&quot;example_dbt_artifacts&quot;</span><span class="p">,</span>
@@ -153,7 +148,7 @@
 <span class="linenos">23</span>        <span class="n">do_xcom_push_artifacts</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;manifest.json&quot;</span><span class="p">,</span> <span class="s2">&quot;run_results.json&quot;</span><span class="p">],</span>
 <span class="linenos">24</span>   <span class="p">)</span>
 <span class="linenos">25</span>
-<span class="linenos">26</span>   <span class="k">def</span> <span class="nf">process_dbt_artifacts</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="linenos">26</span>   <span class="k">def</span><span class="w"> </span><span class="nf">process_dbt_artifacts</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="linenos">27</span>       <span class="c1"># Do processing</span>
 <span class="linenos">28</span>       <span class="k">pass</span>
 <span class="linenos">29</span>
@@ -174,14 +169,14 @@
 <p><code class="docutils literal notranslate"><span class="pre">airflow-dbt-python</span></code> bridges the gap between the two and allows you to use connection information stored as an Airflow connection by specifying the connection id as the <code class="docutils literal notranslate"><span class="pre">target</span></code> parameter of any of the dbt operators it provides. What’s more, if using an Airflow connection, the <code class="docutils literal notranslate"><span class="pre">profiles.yml</span></code> file may be entirely omitted (although keep in mind a <code class="docutils literal notranslate"><span class="pre">profiles.yml</span></code> file contains a configuration block besides target connection information).</p>
 <div class="literal-block-wrapper docutils container" id="id5">
 <div class="code-block-caption"><span class="caption-text">airflow_connection_target_dag.py</span><a class="headerlink" href="#id5" title="Link to this code"></a></div>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="linenos"> 1</span><span class="kn">import</span> <span class="nn">datetime</span> <span class="k">as</span> <span class="nn">dt</span>
-<span class="linenos"> 2</span><span class="kn">import</span> <span class="nn">json</span>
-<span class="linenos"> 3</span><span class="kn">import</span> <span class="nn">os</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="linenos"> 1</span><span class="kn">import</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">dt</span>
+<span class="linenos"> 2</span><span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
+<span class="linenos"> 3</span><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
 <span class="linenos"> 4</span>
-<span class="linenos"> 5</span><span class="kn">from</span> <span class="nn">airflow</span> <span class="kn">import</span> <span class="n">DAG</span><span class="p">,</span> <span class="n">settings</span>
-<span class="linenos"> 6</span><span class="kn">from</span> <span class="nn">airflow.models.connection</span> <span class="kn">import</span> <span class="n">Connection</span>
-<span class="linenos"> 7</span><span class="kn">from</span> <span class="nn">airflow.utils.dates</span> <span class="kn">import</span> <span class="n">days_ago</span>
-<span class="linenos"> 8</span><span class="kn">from</span> <span class="nn">airflow_dbt_python.dbt.operators</span> <span class="kn">import</span> <span class="n">DbtRunOperator</span>
+<span class="linenos"> 5</span><span class="kn">from</span><span class="w"> </span><span class="nn">airflow</span><span class="w"> </span><span class="kn">import</span> <span class="n">DAG</span><span class="p">,</span> <span class="n">settings</span>
+<span class="linenos"> 6</span><span class="kn">from</span><span class="w"> </span><span class="nn">airflow.models.connection</span><span class="w"> </span><span class="kn">import</span> <span class="n">Connection</span>
+<span class="linenos"> 7</span><span class="kn">from</span><span class="w"> </span><span class="nn">airflow.utils.dates</span><span class="w"> </span><span class="kn">import</span> <span class="n">days_ago</span>
+<span class="linenos"> 8</span><span class="kn">from</span><span class="w"> </span><span class="nn">airflow_dbt_python.dbt.operators</span><span class="w"> </span><span class="kn">import</span> <span class="n">DbtRunOperator</span>
 <span class="linenos"> 9</span>
 <span class="linenos">10</span><span class="c1"># For illustration purposes, and to keep the example self-contained, we create</span>
 <span class="linenos">11</span><span class="c1"># a Connection using Airflow&#39;s ORM. However, any method of loading connections would</span>

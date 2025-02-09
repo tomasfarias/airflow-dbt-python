@@ -1,28 +1,26 @@
+
+
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" data-content_root="../">
 <head>
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>airflow_dbt_python.hooks &mdash; airflow-dbt-python 2.1.0 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
-      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=19f00094" />
+  <title>airflow_dbt_python.hooks &mdash; airflow-dbt-python 2.2.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
       <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=fd3f3429" />
       <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/hack-font/3.3.0/web/hack.min.css" />
 
   
-  <!--[if lt IE 9]>
-    <script src="../_static/js/html5shiv.min.js"></script>
-  <![endif]-->
-  
-        <script src="../_static/jquery.js?v=5d32c60e"></script>
-        <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="../_static/documentation_options.js?v=20623aea"></script>
-        <script src="../_static/doctools.js?v=9a2dae69"></script>
-        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
-        <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
-        <script src="../_static/copybutton.js?v=f281be69"></script>
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=b21de401"></script>
+      <script src="../_static/doctools.js?v=9a2dae69"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../_static/copybutton.js?v=f281be69"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -41,9 +39,6 @@
           <a href="../index.html" class="icon icon-home">
             airflow-dbt-python
           </a>
-              <div class="version">
-                2.1.0
-              </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
@@ -61,7 +56,16 @@
 <li class="toctree-l1"><a class="reference internal" href="../development.html">Development</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="../reference.html">Reference</a><ul class="current">
 <li class="toctree-l2 current"><a class="current reference internal" href="#">airflow_dbt_python.hooks</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#core-dbt-hooks">Core <em>dbt</em> hooks</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-airflow_dbt_python.hooks.dbt">Core <em>dbt</em> hooks</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#airflow_dbt_python.hooks.dbt.DbtConnectionParam"><code class="docutils literal notranslate"><span class="pre">DbtConnectionParam</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#airflow_dbt_python.hooks.dbt.DbtHook"><code class="docutils literal notranslate"><span class="pre">DbtHook</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#airflow_dbt_python.hooks.dbt.DbtPostgresHook"><code class="docutils literal notranslate"><span class="pre">DbtPostgresHook</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#airflow_dbt_python.hooks.dbt.DbtRedshiftHook"><code class="docutils literal notranslate"><span class="pre">DbtRedshiftHook</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#airflow_dbt_python.hooks.dbt.DbtSnowflakeHook"><code class="docutils literal notranslate"><span class="pre">DbtSnowflakeHook</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#airflow_dbt_python.hooks.dbt.DbtTaskResult"><code class="docutils literal notranslate"><span class="pre">DbtTaskResult</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#airflow_dbt_python.hooks.dbt.DbtTemporaryDirectory"><code class="docutils literal notranslate"><span class="pre">DbtTemporaryDirectory</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l3"><a class="reference internal" href="#supported-dbt-remote-hooks">Supported <em>dbt</em> remote hooks</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#module-airflow_dbt_python.hooks.remote">The DbtRemoteHook interface</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#dbt-git-remote"><em>dbt</em> git remote</a></li>
@@ -104,8 +108,471 @@
              
   <section id="airflow-dbt-python-hooks">
 <h1>airflow_dbt_python.hooks<a class="headerlink" href="#airflow-dbt-python-hooks" title="Link to this heading"></a></h1>
-<section id="core-dbt-hooks">
-<h2>Core <em>dbt</em> hooks<a class="headerlink" href="#core-dbt-hooks" title="Link to this heading"></a></h2>
+<section id="module-airflow_dbt_python.hooks.dbt">
+<span id="core-dbt-hooks"></span><h2>Core <em>dbt</em> hooks<a class="headerlink" href="#module-airflow_dbt_python.hooks.dbt" title="Link to this heading"></a></h2>
+<p>Provides a hook to interact with a dbt project.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="airflow_dbt_python.hooks.dbt.DbtConnectionParam">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">airflow_dbt_python.hooks.dbt.</span></span><span class="sig-name descname"><span class="pre">DbtConnectionParam</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">store_override_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/airflow_dbt_python/hooks/dbt.html#DbtConnectionParam"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#airflow_dbt_python.hooks.dbt.DbtConnectionParam" title="Link to this definition"></a></dt>
+<dd><p>A tuple indicating connection parameters relevant to dbt.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>name</strong> (<em>str</em>)</p></li>
+<li><p><strong>store_override_name</strong> (<em>str</em><em> | </em><em>None</em>)</p></li>
+<li><p><strong>default</strong> (<em>Any</em><em> | </em><em>None</em>)</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="airflow_dbt_python.hooks.dbt.DbtConnectionParam.name">
+<span class="sig-name descname"><span class="pre">name</span></span><a class="headerlink" href="#airflow_dbt_python.hooks.dbt.DbtConnectionParam.name" title="Link to this definition"></a></dt>
+<dd><p>The name of the connection parameter. This name will be used to get the
+parameter from an Airflow Connection or its extras.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="airflow_dbt_python.hooks.dbt.DbtConnectionParam.store_override_name">
+<span class="sig-name descname"><span class="pre">store_override_name</span></span><a class="headerlink" href="#airflow_dbt_python.hooks.dbt.DbtConnectionParam.store_override_name" title="Link to this definition"></a></dt>
+<dd><p>A new name for the connection parameter. If not None, this
+is the name used in a dbt profiles.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str | None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="airflow_dbt_python.hooks.dbt.DbtConnectionParam.default">
+<span class="sig-name descname"><span class="pre">default</span></span><a class="headerlink" href="#airflow_dbt_python.hooks.dbt.DbtConnectionParam.default" title="Link to this definition"></a></dt>
+<dd><p>A default value if the parameter is not found.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Any | None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id0">
+<span class="sig-name descname"><span class="pre">default</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Any</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#id0" title="Link to this definition"></a></dt>
+<dd><p>Alias for field number 2</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id1">
+<span class="sig-name descname"><span class="pre">name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#id1" title="Link to this definition"></a></dt>
+<dd><p>Alias for field number 0</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="airflow_dbt_python.hooks.dbt.DbtConnectionParam.override_name">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">override_name</span></span><a class="headerlink" href="#airflow_dbt_python.hooks.dbt.DbtConnectionParam.override_name" title="Link to this definition"></a></dt>
+<dd><p>Returns the override_name if defined, otherwise defaults to name.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">DbtConnectionParam</span><span class="p">(</span><span class="s2">&quot;login&quot;</span><span class="p">,</span> <span class="s2">&quot;user&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">override_name</span>
+<span class="go">&#39;user&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">DbtConnectionParam</span><span class="p">(</span><span class="s2">&quot;port&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">override_name</span>
+<span class="go">&#39;port&#39;</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id2">
+<span class="sig-name descname"><span class="pre">store_override_name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#id2" title="Link to this definition"></a></dt>
+<dd><p>Alias for field number 1</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="airflow_dbt_python.hooks.dbt.DbtHook">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">airflow_dbt_python.hooks.dbt.</span></span><span class="sig-name descname"><span class="pre">DbtHook</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dbt_conn_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'dbt_default'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">project_conn_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">profiles_conn_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/airflow_dbt_python/hooks/dbt.html#DbtHook"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#airflow_dbt_python.hooks.dbt.DbtHook" title="Link to this definition"></a></dt>
+<dd><p>A hook to interact with dbt.</p>
+<p>Allows for running dbt tasks and provides required configurations for each task.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dbt_conn_id</strong> (<em>Optional</em><em>[</em><em>str</em><em>]</em>)</p></li>
+<li><p><strong>project_conn_id</strong> (<em>Optional</em><em>[</em><em>str</em><em>]</em>)</p></li>
+<li><p><strong>profiles_conn_id</strong> (<em>Optional</em><em>[</em><em>str</em><em>]</em>)</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="airflow_dbt_python.hooks.dbt.DbtHook.dbt_directory">
+<span class="sig-name descname"><span class="pre">dbt_directory</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">upload_dbt_project</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">delete_before_upload</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">replace_on_upload</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">env_vars</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/airflow_dbt_python/hooks/dbt.html#DbtHook.dbt_directory"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#airflow_dbt_python.hooks.dbt.DbtHook.dbt_directory" title="Link to this definition"></a></dt>
+<dd><p>Provides a temporary directory to execute dbt.</p>
+<p>Creates a temporary directory for dbt to run in and prepares the dbt files
+if they need to be pulled from S3. If a S3 backend is being used, and
+self.upload_dbt_project is True, before leaving the temporary directory, we push
+back the project to S3. Pushing back a project enables commands like deps or
+docs generate.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Yields<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The temporary directory’s name.</p>
+</dd>
+<dt class="field-even">Parameters<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>upload_dbt_project</strong> (<em>bool</em>)</p></li>
+<li><p><strong>delete_before_upload</strong> (<em>bool</em>)</p></li>
+<li><p><strong>replace_on_upload</strong> (<em>bool</em>)</p></li>
+<li><p><strong>env_vars</strong> (<em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>] </em><em>| </em><em>None</em>)</p></li>
+</ul>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>Iterator</em>[str]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="airflow_dbt_python.hooks.dbt.DbtHook.download_dbt_profiles">
+<span class="sig-name descname"><span class="pre">download_dbt_profiles</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">profiles_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">destination</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/airflow_dbt_python/hooks/dbt.html#DbtHook.download_dbt_profiles"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#airflow_dbt_python.hooks.dbt.DbtHook.download_dbt_profiles" title="Link to this definition"></a></dt>
+<dd><p>Pull a dbt profiles.yml file from a given profiles_dir.</p>
+<p>This operation is delegated to a DbtRemoteHook. An optional connection id is
+supported for remotes that require it.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>profiles_dir</strong> (<em>URLLike</em>)</p></li>
+<li><p><strong>destination</strong> (<em>URLLike</em>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>Path</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="airflow_dbt_python.hooks.dbt.DbtHook.download_dbt_project">
+<span class="sig-name descname"><span class="pre">download_dbt_project</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">project_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">destination</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/airflow_dbt_python/hooks/dbt.html#DbtHook.download_dbt_project"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#airflow_dbt_python.hooks.dbt.DbtHook.download_dbt_project" title="Link to this definition"></a></dt>
+<dd><p>Pull a dbt project from a given project_dir.</p>
+<p>This operation is delegated to a DbtRemoteHook. An optional connection id is
+supported for remotes that require it.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>project_dir</strong> (<em>URLLike</em>)</p></li>
+<li><p><strong>destination</strong> (<em>URLLike</em>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>Path</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="airflow_dbt_python.hooks.dbt.DbtHook.ensure_profiles">
+<span class="sig-name descname"><span class="pre">ensure_profiles</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/airflow_dbt_python/hooks/dbt.html#DbtHook.ensure_profiles"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#airflow_dbt_python.hooks.dbt.DbtHook.ensure_profiles" title="Link to this definition"></a></dt>
+<dd><p>Ensure a profiles file exists.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>config</strong> (<em>BaseConfig</em>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="airflow_dbt_python.hooks.dbt.DbtHook.get_dbt_details_from_connection">
+<span class="sig-name descname"><span class="pre">get_dbt_details_from_connection</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">conn</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/airflow_dbt_python/hooks/dbt.html#DbtHook.get_dbt_details_from_connection"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#airflow_dbt_python.hooks.dbt.DbtHook.get_dbt_details_from_connection" title="Link to this definition"></a></dt>
+<dd><p>Extract dbt connection details from Airflow Connection.</p>
+<p>dbt connection details may be present as Airflow Connection attributes or in the
+Connection’s extras. This class’ conn_params and conn_extra_params will be used
+to fetch required attributes from attributes and extras respectively. If
+conn_extra_params is empty, we merge parameters with all extras.</p>
+<p>Subclasses may override this class attributes to narrow down the connection
+details for a specific dbt target (like Postgres, or Redshift).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>conn</strong> (<em>Connection</em>) – The Airflow Connection to extract dbt connection details from.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A dictionary of dbt connection details.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict[str, <em>Any</em>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="airflow_dbt_python.hooks.dbt.DbtHook.get_dbt_target_from_connection">
+<span class="sig-name descname"><span class="pre">get_dbt_target_from_connection</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">target</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/airflow_dbt_python/hooks/dbt.html#DbtHook.get_dbt_target_from_connection"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#airflow_dbt_python.hooks.dbt.DbtHook.get_dbt_target_from_connection" title="Link to this definition"></a></dt>
+<dd><p>Return a dictionary of connection details to use as a dbt target.</p>
+<p>The connection details are fetched from an Airflow connection identified by
+target or self.dbt_conn_id.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>target</strong> (<em>str</em><em> | </em><em>None</em>) – The target name to use as an Airflow connection ID. If ommitted, we
+will use self.dbt_conn_id.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>A dictionary with a configuration for a dbt target, or None if a matching</dt><dd><p>Airflow connection is not found for given dbt target.</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict[str, <em>Any</em>] | None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="airflow_dbt_python.hooks.dbt.DbtHook.get_dbt_task_config">
+<span class="sig-name descname"><span class="pre">get_dbt_task_config</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">command</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">config_kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/airflow_dbt_python/hooks/dbt.html#DbtHook.get_dbt_task_config"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#airflow_dbt_python.hooks.dbt.DbtHook.get_dbt_task_config" title="Link to this definition"></a></dt>
+<dd><p>Initialize a configuration for given dbt command with given kwargs.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>command</strong> (<em>str</em>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>BaseConfig</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="airflow_dbt_python.hooks.dbt.DbtHook.get_remote">
+<span class="sig-name descname"><span class="pre">get_remote</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scheme</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">conn_id</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/airflow_dbt_python/hooks/dbt.html#DbtHook.get_remote"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#airflow_dbt_python.hooks.dbt.DbtHook.get_remote" title="Link to this definition"></a></dt>
+<dd><p>Get a remote to interact with dbt files.</p>
+<p>RemoteHooks are defined by the scheme we are looking for and an optional
+connection id if we are looking to interface with any Airflow hook that
+uses a connection.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>scheme</strong> (<em>str</em>)</p></li>
+<li><p><strong>conn_id</strong> (<em>Optional</em><em>[</em><em>str</em><em>]</em>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#airflow_dbt_python.hooks.remote.DbtRemoteHook" title="airflow_dbt_python.hooks.remote.DbtRemoteHook">DbtRemoteHook</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="airflow_dbt_python.hooks.dbt.DbtHook.prepare_directory">
+<span class="sig-name descname"><span class="pre">prepare_directory</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tmp_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">project_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">profiles_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/airflow_dbt_python/hooks/dbt.html#DbtHook.prepare_directory"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#airflow_dbt_python.hooks.dbt.DbtHook.prepare_directory" title="Link to this definition"></a></dt>
+<dd><p>Prepares a dbt directory for execution of a dbt task.</p>
+<p>Preparation involves downloading the required dbt project files and
+profiles.yml.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tmp_dir</strong> (<em>str</em>)</p></li>
+<li><p><strong>project_dir</strong> (<em>URLLike</em>)</p></li>
+<li><p><strong>profiles_dir</strong> (<em>Optional</em><em>[</em><em>URLLike</em><em>]</em>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>tuple[str, Optional[str]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="airflow_dbt_python.hooks.dbt.DbtHook.run_dbt_task">
+<span class="sig-name descname"><span class="pre">run_dbt_task</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">command</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">upload_dbt_project</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">delete_before_upload</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">replace_on_upload</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">artifacts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">env_vars</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">write_perf_info</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/airflow_dbt_python/hooks/dbt.html#DbtHook.run_dbt_task"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#airflow_dbt_python.hooks.dbt.DbtHook.run_dbt_task" title="Link to this definition"></a></dt>
+<dd><p>Run a dbt task with a given configuration and return the results.</p>
+<p>The configuration used determines the task that will be ran.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><dl class="simple">
+<dt>A tuple containing a boolean indicating success and optionally the results</dt><dd><p>of running the dbt command.</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-even">Parameters<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>command</strong> (<em>str</em>)</p></li>
+<li><p><strong>upload_dbt_project</strong> (<em>bool</em>)</p></li>
+<li><p><strong>delete_before_upload</strong> (<em>bool</em>)</p></li>
+<li><p><strong>replace_on_upload</strong> (<em>bool</em>)</p></li>
+<li><p><strong>artifacts</strong> (<em>Iterable</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>)</p></li>
+<li><p><strong>env_vars</strong> (<em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>] </em><em>| </em><em>None</em>)</p></li>
+<li><p><strong>write_perf_info</strong> (<em>bool</em>)</p></li>
+</ul>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#airflow_dbt_python.hooks.dbt.DbtTaskResult" title="airflow_dbt_python.hooks.dbt.DbtTaskResult"><em>DbtTaskResult</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="airflow_dbt_python.hooks.dbt.DbtHook.setup_dbt_logging">
+<span class="sig-name descname"><span class="pre">setup_dbt_logging</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">task</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">debug</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/airflow_dbt_python/hooks/dbt.html#DbtHook.setup_dbt_logging"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#airflow_dbt_python.hooks.dbt.DbtHook.setup_dbt_logging" title="Link to this definition"></a></dt>
+<dd><p>Setup dbt logging.</p>
+<p>Starting with dbt v1, dbt initializes two loggers: default_file and
+default_stdout. As these are initialized by the CLI app, we need to
+initialize them here.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>task</strong> (<em>BaseTask</em>)</p></li>
+<li><p><strong>debug</strong> (<em>Optional</em><em>[</em><em>bool</em><em>]</em>)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="airflow_dbt_python.hooks.dbt.DbtHook.upload_dbt_project">
+<span class="sig-name descname"><span class="pre">upload_dbt_project</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">project_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">destination</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">replace</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">delete_before</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/airflow_dbt_python/hooks/dbt.html#DbtHook.upload_dbt_project"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#airflow_dbt_python.hooks.dbt.DbtHook.upload_dbt_project" title="Link to this definition"></a></dt>
+<dd><p>Push a dbt project from a given project_dir.</p>
+<p>This operation is delegated to a DbtRemoteHook. An optional connection id is
+supported for remotes that require it.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>project_dir</strong> (<em>URLLike</em>)</p></li>
+<li><p><strong>destination</strong> (<em>URLLike</em>)</p></li>
+<li><p><strong>replace</strong> (<em>bool</em>)</p></li>
+<li><p><strong>delete_before</strong> (<em>bool</em>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="airflow_dbt_python.hooks.dbt.DbtPostgresHook">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">airflow_dbt_python.hooks.dbt.</span></span><span class="sig-name descname"><span class="pre">DbtPostgresHook</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dbt_conn_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'dbt_default'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">project_conn_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">profiles_conn_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/airflow_dbt_python/hooks/dbt.html#DbtPostgresHook"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#airflow_dbt_python.hooks.dbt.DbtPostgresHook" title="Link to this definition"></a></dt>
+<dd><p>A hook to interact with dbt using a Postgres connection.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dbt_conn_id</strong> (<em>Optional</em><em>[</em><em>str</em><em>]</em>)</p></li>
+<li><p><strong>project_conn_id</strong> (<em>Optional</em><em>[</em><em>str</em><em>]</em>)</p></li>
+<li><p><strong>profiles_conn_id</strong> (<em>Optional</em><em>[</em><em>str</em><em>]</em>)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="airflow_dbt_python.hooks.dbt.DbtRedshiftHook">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">airflow_dbt_python.hooks.dbt.</span></span><span class="sig-name descname"><span class="pre">DbtRedshiftHook</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dbt_conn_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'dbt_default'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">project_conn_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">profiles_conn_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/airflow_dbt_python/hooks/dbt.html#DbtRedshiftHook"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#airflow_dbt_python.hooks.dbt.DbtRedshiftHook" title="Link to this definition"></a></dt>
+<dd><p>A hook to interact with dbt using a Redshift connection.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dbt_conn_id</strong> (<em>Optional</em><em>[</em><em>str</em><em>]</em>)</p></li>
+<li><p><strong>project_conn_id</strong> (<em>Optional</em><em>[</em><em>str</em><em>]</em>)</p></li>
+<li><p><strong>profiles_conn_id</strong> (<em>Optional</em><em>[</em><em>str</em><em>]</em>)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="airflow_dbt_python.hooks.dbt.DbtSnowflakeHook">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">airflow_dbt_python.hooks.dbt.</span></span><span class="sig-name descname"><span class="pre">DbtSnowflakeHook</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dbt_conn_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'dbt_default'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">project_conn_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">profiles_conn_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/airflow_dbt_python/hooks/dbt.html#DbtSnowflakeHook"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#airflow_dbt_python.hooks.dbt.DbtSnowflakeHook" title="Link to this definition"></a></dt>
+<dd><p>A hook to interact with dbt using a Snowflake connection.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dbt_conn_id</strong> (<em>Optional</em><em>[</em><em>str</em><em>]</em>)</p></li>
+<li><p><strong>project_conn_id</strong> (<em>Optional</em><em>[</em><em>str</em><em>]</em>)</p></li>
+<li><p><strong>profiles_conn_id</strong> (<em>Optional</em><em>[</em><em>str</em><em>]</em>)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="airflow_dbt_python.hooks.dbt.DbtTaskResult">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">airflow_dbt_python.hooks.dbt.</span></span><span class="sig-name descname"><span class="pre">DbtTaskResult</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">success</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">run_results</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">artifacts</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/airflow_dbt_python/hooks/dbt.html#DbtTaskResult"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#airflow_dbt_python.hooks.dbt.DbtTaskResult" title="Link to this definition"></a></dt>
+<dd><p>A tuple returned after a dbt task executes.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>success</strong> (<em>bool</em>)</p></li>
+<li><p><strong>run_results</strong> (<em>Optional</em><em>[</em><em>RunResult</em><em>]</em>)</p></li>
+<li><p><strong>artifacts</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em>)</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="airflow_dbt_python.hooks.dbt.DbtTaskResult.success">
+<span class="sig-name descname"><span class="pre">success</span></span><a class="headerlink" href="#airflow_dbt_python.hooks.dbt.DbtTaskResult.success" title="Link to this definition"></a></dt>
+<dd><p>Whether the task succeeded or not.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="airflow_dbt_python.hooks.dbt.DbtTaskResult.run_results">
+<span class="sig-name descname"><span class="pre">run_results</span></span><a class="headerlink" href="#airflow_dbt_python.hooks.dbt.DbtTaskResult.run_results" title="Link to this definition"></a></dt>
+<dd><p>Results from the dbt task, if available.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Optional[RunResult]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="airflow_dbt_python.hooks.dbt.DbtTaskResult.artifacts">
+<span class="sig-name descname"><span class="pre">artifacts</span></span><a class="headerlink" href="#airflow_dbt_python.hooks.dbt.DbtTaskResult.artifacts" title="Link to this definition"></a></dt>
+<dd><p>A dictionary of saved dbt artifacts. It may be empty.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict[str, Any]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id3">
+<span class="sig-name descname"><span class="pre">artifacts</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#id3" title="Link to this definition"></a></dt>
+<dd><p>Alias for field number 2</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id4">
+<span class="sig-name descname"><span class="pre">run_results</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">RunResult</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#id4" title="Link to this definition"></a></dt>
+<dd><p>Alias for field number 1</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id5">
+<span class="sig-name descname"><span class="pre">success</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#id5" title="Link to this definition"></a></dt>
+<dd><p>Alias for field number 0</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="airflow_dbt_python.hooks.dbt.DbtTemporaryDirectory">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">airflow_dbt_python.hooks.dbt.</span></span><span class="sig-name descname"><span class="pre">DbtTemporaryDirectory</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">suffix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ignore_cleanup_errors</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/airflow_dbt_python/hooks/dbt.html#DbtTemporaryDirectory"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#airflow_dbt_python.hooks.dbt.DbtTemporaryDirectory" title="Link to this definition"></a></dt>
+<dd><p>A wrapper on TemporaryDirectory for older versions of Python.</p>
+<p>Support for ignore_cleanup_errors was added in Python 3.10. There is a very obscure
+error that can happen when cleaning up a directory, even though everything should
+be cleaned. We would like to use ignore_cleanup_errors to provide clean up on a
+best-effort basis. For the time being, we are addressing this only for Python&gt;=3.10.</p>
+</dd></dl>
+
 </section>
 <section id="supported-dbt-remote-hooks">
 <h2>Supported <em>dbt</em> remote hooks<a class="headerlink" href="#supported-dbt-remote-hooks" title="Link to this heading"></a></h2>

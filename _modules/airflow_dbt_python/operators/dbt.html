@@ -1,27 +1,25 @@
+
+
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" data-content_root="../../../">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>airflow_dbt_python.operators.dbt &mdash; airflow-dbt-python 2.1.0 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=80d5e7a1" />
-      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=19f00094" />
+  <title>airflow_dbt_python.operators.dbt &mdash; airflow-dbt-python 2.2.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
       <link rel="stylesheet" type="text/css" href="../../../_static/graphviz.css?v=fd3f3429" />
       <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/hack-font/3.3.0/web/hack.min.css" />
 
   
-  <!--[if lt IE 9]>
-    <script src="../../../_static/js/html5shiv.min.js"></script>
-  <![endif]-->
-  
-        <script src="../../../_static/jquery.js?v=5d32c60e"></script>
-        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="../../../_static/documentation_options.js?v=20623aea"></script>
-        <script src="../../../_static/doctools.js?v=9a2dae69"></script>
-        <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
-        <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
-        <script src="../../../_static/copybutton.js?v=f281be69"></script>
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=b21de401"></script>
+      <script src="../../../_static/doctools.js?v=9a2dae69"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../../_static/copybutton.js?v=f281be69"></script>
     <script src="../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" /> 
@@ -38,9 +36,6 @@
           <a href="../../../index.html" class="icon icon-home">
             airflow-dbt-python
           </a>
-              <div class="version">
-                2.1.0
-              </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
@@ -86,25 +81,25 @@
   <h1>Source code for airflow_dbt_python.operators.dbt</h1><div class="highlight"><pre>
 <span></span><span class="sd">&quot;&quot;&quot;Airflow operators for all dbt commands.&quot;&quot;&quot;</span>
 
-<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
-<span class="kn">import</span> <span class="nn">datetime</span> <span class="k">as</span> <span class="nn">dt</span>
-<span class="kn">import</span> <span class="nn">os</span>
-<span class="kn">from</span> <span class="nn">dataclasses</span> <span class="kn">import</span> <span class="n">asdict</span><span class="p">,</span> <span class="n">is_dataclass</span>
-<span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Union</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">dt</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">asdict</span><span class="p">,</span> <span class="n">is_dataclass</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Union</span>
 
-<span class="kn">from</span> <span class="nn">airflow.exceptions</span> <span class="kn">import</span> <span class="n">AirflowException</span>
-<span class="kn">from</span> <span class="nn">airflow.models.baseoperator</span> <span class="kn">import</span> <span class="n">BaseOperator</span>
-<span class="kn">from</span> <span class="nn">airflow.models.xcom</span> <span class="kn">import</span> <span class="n">XCOM_RETURN_KEY</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">airflow.exceptions</span><span class="w"> </span><span class="kn">import</span> <span class="n">AirflowException</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">airflow.models.baseoperator</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseOperator</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">airflow.models.xcom</span><span class="w"> </span><span class="kn">import</span> <span class="n">XCOM_RETURN_KEY</span>
 
-<span class="kn">from</span> <span class="nn">airflow_dbt_python.utils.enums</span> <span class="kn">import</span> <span class="n">LogFormat</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">airflow_dbt_python.utils.enums</span><span class="w"> </span><span class="kn">import</span> <span class="n">LogFormat</span>
 
 <span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
-    <span class="kn">from</span> <span class="nn">dbt.contracts.results</span> <span class="kn">import</span> <span class="n">RunResult</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">dbt.contracts.results</span><span class="w"> </span><span class="kn">import</span> <span class="n">RunResult</span>
 
-    <span class="kn">from</span> <span class="nn">airflow_dbt_python.hooks.dbt</span> <span class="kn">import</span> <span class="n">DbtHook</span><span class="p">,</span> <span class="n">DbtTaskResult</span>
-    <span class="kn">from</span> <span class="nn">airflow_dbt_python.utils.enums</span> <span class="kn">import</span> <span class="n">Output</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">airflow_dbt_python.hooks.dbt</span><span class="w"> </span><span class="kn">import</span> <span class="n">DbtHook</span><span class="p">,</span> <span class="n">DbtTaskResult</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">airflow_dbt_python.utils.enums</span><span class="w"> </span><span class="kn">import</span> <span class="n">Output</span>
 
 <span class="n">base_template_fields</span> <span class="o">=</span> <span class="p">[</span>
     <span class="s2">&quot;project_dir&quot;</span><span class="p">,</span>
@@ -119,7 +114,7 @@
 
 <div class="viewcode-block" id="DbtBaseOperator">
 <a class="viewcode-back" href="../../../reference/operators.html#airflow_dbt_python.operators.dbt.DbtBaseOperator">[docs]</a>
-<span class="k">class</span> <span class="nc">DbtBaseOperator</span><span class="p">(</span><span class="n">BaseOperator</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">DbtBaseOperator</span><span class="p">(</span><span class="n">BaseOperator</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;The basic Airflow dbt operator.</span>
 
 <span class="sd">    Defines how to build an argument list and execute a dbt command. Does not set a</span>
@@ -142,7 +137,7 @@
 
     <span class="n">template_fields</span> <span class="o">=</span> <span class="n">base_template_fields</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="c1"># dbt project configuration</span>
         <span class="n">project_dir</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Path</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -263,7 +258,7 @@
 
 <div class="viewcode-block" id="DbtBaseOperator.execute">
 <a class="viewcode-back" href="../../../reference/operators.html#airflow_dbt_python.operators.dbt.DbtBaseOperator.execute">[docs]</a>
-    <span class="k">def</span> <span class="nf">execute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">execute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Execute dbt command with prepared arguments.</span>
 
 <span class="sd">        Execution requires setting up a directory with the dbt project files and</span>
@@ -272,7 +267,7 @@
 <span class="sd">        Args:</span>
 <span class="sd">            context: The Airflow&#39;s task context</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="kn">from</span> <span class="nn">airflow_dbt_python.hooks.dbt</span> <span class="kn">import</span> <span class="n">DbtTaskResult</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">airflow_dbt_python.hooks.dbt</span><span class="w"> </span><span class="kn">import</span> <span class="n">DbtTaskResult</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Running dbt task: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">command</span><span class="p">)</span>
 
@@ -290,7 +285,7 @@
             <span class="p">)</span>
             <span class="k">raise</span> <span class="n">AirflowException</span><span class="p">(</span>
                 <span class="sa">f</span><span class="s2">&quot;An error has occurred while executing dbt </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">command</span><span class="si">}</span><span class="s2">&quot;</span>
-            <span class="p">)</span> <span class="kn">from</span> <span class="nn">e</span>
+            <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">e</span>
 
         <span class="k">finally</span><span class="p">:</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">do_xcom_push</span> <span class="ow">is</span> <span class="kc">True</span> <span class="ow">and</span> <span class="n">context</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;ti&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
@@ -306,7 +301,7 @@
 
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">command</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">command</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the current dbt command.</span>
 
 <span class="sd">        Each subclass of DbtBaseOperator should return its corresponding command.</span>
@@ -314,10 +309,10 @@
         <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">dbt_hook</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DbtHook</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">dbt_hook</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DbtHook</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Provides an existing DbtHook or creates one.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dbt_hook</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="kn">from</span> <span class="nn">airflow_dbt_python.hooks.dbt</span> <span class="kn">import</span> <span class="n">DbtHook</span>
+            <span class="kn">from</span><span class="w"> </span><span class="nn">airflow_dbt_python.hooks.dbt</span><span class="w"> </span><span class="kn">import</span> <span class="n">DbtHook</span>
 
             <span class="bp">self</span><span class="o">.</span><span class="n">_dbt_hook</span> <span class="o">=</span> <span class="n">DbtHook</span><span class="p">(</span>
                 <span class="n">dbt_conn_id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dbt_conn_id</span><span class="p">,</span>
@@ -328,7 +323,7 @@
 
 <div class="viewcode-block" id="DbtBaseOperator.xcom_push_dbt_results">
 <a class="viewcode-back" href="../../../reference/operators.html#airflow_dbt_python.operators.dbt.DbtBaseOperator.xcom_push_dbt_results">[docs]</a>
-    <span class="k">def</span> <span class="nf">xcom_push_dbt_results</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">context</span><span class="p">,</span> <span class="n">dbt_results</span><span class="p">:</span> <span class="n">DbtTaskResult</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">xcom_push_dbt_results</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">context</span><span class="p">,</span> <span class="n">dbt_results</span><span class="p">:</span> <span class="n">DbtTaskResult</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Push any dbt results to XCom.</span>
 
 <span class="sd">        Args:</span>
@@ -347,7 +342,7 @@
 
 <div class="viewcode-block" id="DbtBaseOperator.make_run_results_serializable">
 <a class="viewcode-back" href="../../../reference/operators.html#airflow_dbt_python.operators.dbt.DbtBaseOperator.make_run_results_serializable">[docs]</a>
-    <span class="k">def</span> <span class="nf">make_run_results_serializable</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">make_run_results_serializable</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">result</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">RunResult</span><span class="p">]</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Makes dbt&#39;s run result JSON-serializable.</span>
@@ -371,7 +366,7 @@
 
 <div class="viewcode-block" id="DbtRunOperator">
 <a class="viewcode-back" href="../../../reference/operators.html#airflow_dbt_python.operators.dbt.DbtRunOperator">[docs]</a>
-<span class="k">class</span> <span class="nc">DbtRunOperator</span><span class="p">(</span><span class="n">DbtBaseOperator</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">DbtRunOperator</span><span class="p">(</span><span class="n">DbtBaseOperator</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Executes a dbt run command.</span>
 
 <span class="sd">    The run command executes SQL model files against the given target. The</span>
@@ -381,7 +376,7 @@
 
     <span class="n">template_fields</span> <span class="o">=</span> <span class="n">base_template_fields</span> <span class="o">+</span> <span class="n">selection_template_fields</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">full_refresh</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">models</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -397,7 +392,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">select</span> <span class="o">=</span> <span class="n">select</span> <span class="ow">or</span> <span class="n">models</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">command</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">command</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the run command.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="s2">&quot;run&quot;</span></div>
 
@@ -405,7 +400,7 @@
 
 <div class="viewcode-block" id="DbtSeedOperator">
 <a class="viewcode-back" href="../../../reference/operators.html#airflow_dbt_python.operators.dbt.DbtSeedOperator">[docs]</a>
-<span class="k">class</span> <span class="nc">DbtSeedOperator</span><span class="p">(</span><span class="n">DbtBaseOperator</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">DbtSeedOperator</span><span class="p">(</span><span class="n">DbtBaseOperator</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Executes a dbt seed command.</span>
 
 <span class="sd">    The seed command loads csv files into the  the given target. The</span>
@@ -415,7 +410,7 @@
 
     <span class="n">template_fields</span> <span class="o">=</span> <span class="n">base_template_fields</span> <span class="o">+</span> <span class="n">selection_template_fields</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">full_refresh</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">select</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -432,7 +427,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">selector_name</span> <span class="o">=</span> <span class="n">selector_name</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">command</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">command</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the seed command.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="s2">&quot;seed&quot;</span></div>
 
@@ -440,7 +435,7 @@
 
 <div class="viewcode-block" id="DbtTestOperator">
 <a class="viewcode-back" href="../../../reference/operators.html#airflow_dbt_python.operators.dbt.DbtTestOperator">[docs]</a>
-<span class="k">class</span> <span class="nc">DbtTestOperator</span><span class="p">(</span><span class="n">DbtBaseOperator</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">DbtTestOperator</span><span class="p">(</span><span class="n">DbtBaseOperator</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Executes a dbt test command.</span>
 
 <span class="sd">    The test command runs data and/or schema tests. The</span>
@@ -450,7 +445,7 @@
 
     <span class="n">template_fields</span> <span class="o">=</span> <span class="n">base_template_fields</span> <span class="o">+</span> <span class="n">selection_template_fields</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">singular</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">generic</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -470,7 +465,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">indirect_selection</span> <span class="o">=</span> <span class="n">indirect_selection</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">command</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">command</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the test command.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="s2">&quot;test&quot;</span></div>
 
@@ -478,7 +473,7 @@
 
 <div class="viewcode-block" id="DbtCompileOperator">
 <a class="viewcode-back" href="../../../reference/operators.html#airflow_dbt_python.operators.dbt.DbtCompileOperator">[docs]</a>
-<span class="k">class</span> <span class="nc">DbtCompileOperator</span><span class="p">(</span><span class="n">DbtBaseOperator</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">DbtCompileOperator</span><span class="p">(</span><span class="n">DbtBaseOperator</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Executes a dbt compile command.</span>
 
 <span class="sd">    The compile command generates SQL files. The</span>
@@ -488,7 +483,7 @@
 
     <span class="n">template_fields</span> <span class="o">=</span> <span class="n">base_template_fields</span> <span class="o">+</span> <span class="n">selection_template_fields</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">parse_only</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">full_refresh</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -508,7 +503,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">upload_dbt_project</span> <span class="o">=</span> <span class="n">upload_dbt_project</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">command</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">command</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the compile command.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="s2">&quot;compile&quot;</span></div>
 
@@ -516,19 +511,19 @@
 
 <div class="viewcode-block" id="DbtDepsOperator">
 <a class="viewcode-back" href="../../../reference/operators.html#airflow_dbt_python.operators.dbt.DbtDepsOperator">[docs]</a>
-<span class="k">class</span> <span class="nc">DbtDepsOperator</span><span class="p">(</span><span class="n">DbtBaseOperator</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">DbtDepsOperator</span><span class="p">(</span><span class="n">DbtBaseOperator</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Executes a dbt deps command.</span>
 
 <span class="sd">    The documentation for the dbt command can be found here:</span>
 <span class="sd">    https://docs.getdbt.com/reference/commands/deps.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">upload_dbt_project</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">upload_dbt_project</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">upload_dbt_project</span> <span class="o">=</span> <span class="n">upload_dbt_project</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">command</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">command</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the deps command.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="s2">&quot;deps&quot;</span></div>
 
@@ -536,20 +531,20 @@
 
 <div class="viewcode-block" id="DbtDocsGenerateOperator">
 <a class="viewcode-back" href="../../../reference/operators.html#airflow_dbt_python.operators.dbt.DbtDocsGenerateOperator">[docs]</a>
-<span class="k">class</span> <span class="nc">DbtDocsGenerateOperator</span><span class="p">(</span><span class="n">DbtBaseOperator</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">DbtDocsGenerateOperator</span><span class="p">(</span><span class="n">DbtBaseOperator</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Executes a dbt docs generate command.</span>
 
 <span class="sd">    The documentation for the dbt command can be found here:</span>
 <span class="sd">    https://docs.getdbt.com/reference/commands/cmd-docs.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">compile</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">upload_dbt_project</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">compile</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">upload_dbt_project</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">compile</span> <span class="o">=</span> <span class="nb">compile</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">upload_dbt_project</span> <span class="o">=</span> <span class="n">upload_dbt_project</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">command</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">command</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the generate command.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="s2">&quot;generate&quot;</span></div>
 
@@ -557,14 +552,14 @@
 
 <div class="viewcode-block" id="DbtCleanOperator">
 <a class="viewcode-back" href="../../../reference/operators.html#airflow_dbt_python.operators.dbt.DbtCleanOperator">[docs]</a>
-<span class="k">class</span> <span class="nc">DbtCleanOperator</span><span class="p">(</span><span class="n">DbtBaseOperator</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">DbtCleanOperator</span><span class="p">(</span><span class="n">DbtBaseOperator</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Executes a dbt clean command.</span>
 
 <span class="sd">    The documentation for the dbt command can be found here:</span>
 <span class="sd">    https://docs.getdbt.com/reference/commands/debug.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">upload_dbt_project</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
         <span class="n">delete_before_upload</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
@@ -577,7 +572,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">clean_project_files_only</span> <span class="o">=</span> <span class="n">clean_project_files_only</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">command</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">command</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the clean command.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="s2">&quot;clean&quot;</span></div>
 
@@ -585,14 +580,14 @@
 
 <div class="viewcode-block" id="DbtDebugOperator">
 <a class="viewcode-back" href="../../../reference/operators.html#airflow_dbt_python.operators.dbt.DbtDebugOperator">[docs]</a>
-<span class="k">class</span> <span class="nc">DbtDebugOperator</span><span class="p">(</span><span class="n">DbtBaseOperator</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">DbtDebugOperator</span><span class="p">(</span><span class="n">DbtBaseOperator</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Executes a dbt debug command.</span>
 
 <span class="sd">    The documentation for the dbt command can be found here:</span>
 <span class="sd">    https://docs.getdbt.com/reference/commands/debug.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">config_dir</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">no_version_check</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -603,7 +598,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">no_version_check</span> <span class="o">=</span> <span class="n">no_version_check</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">command</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">command</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the debug command.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="s2">&quot;debug&quot;</span></div>
 
@@ -611,7 +606,7 @@
 
 <div class="viewcode-block" id="DbtSnapshotOperator">
 <a class="viewcode-back" href="../../../reference/operators.html#airflow_dbt_python.operators.dbt.DbtSnapshotOperator">[docs]</a>
-<span class="k">class</span> <span class="nc">DbtSnapshotOperator</span><span class="p">(</span><span class="n">DbtBaseOperator</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">DbtSnapshotOperator</span><span class="p">(</span><span class="n">DbtBaseOperator</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Executes a dbt snapshot command.</span>
 
 <span class="sd">    The documentation for the dbt command can be found here:</span>
@@ -620,7 +615,7 @@
 
     <span class="n">template_fields</span> <span class="o">=</span> <span class="n">base_template_fields</span> <span class="o">+</span> <span class="n">selection_template_fields</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">select</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">exclude</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -633,7 +628,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">selector_name</span> <span class="o">=</span> <span class="n">selector_name</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">command</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">command</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the snapshot command.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="s2">&quot;snapshot&quot;</span></div>
 
@@ -641,7 +636,7 @@
 
 <div class="viewcode-block" id="DbtLsOperator">
 <a class="viewcode-back" href="../../../reference/operators.html#airflow_dbt_python.operators.dbt.DbtLsOperator">[docs]</a>
-<span class="k">class</span> <span class="nc">DbtLsOperator</span><span class="p">(</span><span class="n">DbtBaseOperator</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">DbtLsOperator</span><span class="p">(</span><span class="n">DbtBaseOperator</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Executes a dbt list (or ls) command.</span>
 
 <span class="sd">    The documentation for the dbt command can be found here:</span>
@@ -652,7 +647,7 @@
         <span class="n">base_template_fields</span> <span class="o">+</span> <span class="n">selection_template_fields</span> <span class="o">+</span> <span class="p">[</span><span class="s2">&quot;resource_types&quot;</span><span class="p">]</span>
     <span class="p">)</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">resource_types</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">select</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -673,7 +668,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">indirect_selection</span> <span class="o">=</span> <span class="n">indirect_selection</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">command</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">command</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the list command.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="s2">&quot;list&quot;</span></div>
 
@@ -685,7 +680,7 @@
 
 <div class="viewcode-block" id="DbtRunOperationOperator">
 <a class="viewcode-back" href="../../../reference/operators.html#airflow_dbt_python.operators.dbt.DbtRunOperationOperator">[docs]</a>
-<span class="k">class</span> <span class="nc">DbtRunOperationOperator</span><span class="p">(</span><span class="n">DbtBaseOperator</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">DbtRunOperationOperator</span><span class="p">(</span><span class="n">DbtBaseOperator</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Executes a dbt run-operation command.</span>
 
 <span class="sd">    The documentation for the dbt command can be found here:</span>
@@ -694,7 +689,7 @@
 
     <span class="n">template_fields</span> <span class="o">=</span> <span class="n">base_template_fields</span> <span class="o">+</span> <span class="p">[</span><span class="s2">&quot;macro&quot;</span><span class="p">,</span> <span class="s2">&quot;args&quot;</span><span class="p">]</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">macro</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
         <span class="n">args</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -705,7 +700,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">args</span> <span class="o">=</span> <span class="n">args</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">command</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">command</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the run-operation command.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="s2">&quot;run-operation&quot;</span></div>
 
@@ -713,14 +708,14 @@
 
 <div class="viewcode-block" id="DbtParseOperator">
 <a class="viewcode-back" href="../../../reference/operators.html#airflow_dbt_python.operators.dbt.DbtParseOperator">[docs]</a>
-<span class="k">class</span> <span class="nc">DbtParseOperator</span><span class="p">(</span><span class="n">DbtBaseOperator</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">DbtParseOperator</span><span class="p">(</span><span class="n">DbtBaseOperator</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Executes a dbt parse command.</span>
 
 <span class="sd">    The documentation for the dbt command can be found here:</span>
 <span class="sd">    https://docs.getdbt.com/reference/commands/parse.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">upload_dbt_project</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
         <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
@@ -729,7 +724,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">upload_dbt_project</span> <span class="o">=</span> <span class="n">upload_dbt_project</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">command</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">command</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the parse command.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="s2">&quot;parse&quot;</span></div>
 
@@ -737,14 +732,14 @@
 
 <div class="viewcode-block" id="DbtSourceFreshnessOperator">
 <a class="viewcode-back" href="../../../reference/operators.html#airflow_dbt_python.operators.dbt.DbtSourceFreshnessOperator">[docs]</a>
-<span class="k">class</span> <span class="nc">DbtSourceFreshnessOperator</span><span class="p">(</span><span class="n">DbtBaseOperator</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">DbtSourceFreshnessOperator</span><span class="p">(</span><span class="n">DbtBaseOperator</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Executes a dbt source-freshness command.</span>
 
 <span class="sd">    The documentation for the dbt command can be found here:</span>
 <span class="sd">    https://docs.getdbt.com/reference/commands/source.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">select</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">dbt_output</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Path</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -761,7 +756,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">upload_dbt_project</span> <span class="o">=</span> <span class="n">upload_dbt_project</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">command</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">command</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the source command.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="s2">&quot;source&quot;</span></div>
 
@@ -769,7 +764,7 @@
 
 <div class="viewcode-block" id="DbtBuildOperator">
 <a class="viewcode-back" href="../../../reference/operators.html#airflow_dbt_python.operators.dbt.DbtBuildOperator">[docs]</a>
-<span class="k">class</span> <span class="nc">DbtBuildOperator</span><span class="p">(</span><span class="n">DbtBaseOperator</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">DbtBuildOperator</span><span class="p">(</span><span class="n">DbtBaseOperator</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Executes a dbt build command.</span>
 
 <span class="sd">    The build command combines the run, test, seed, and snapshot commands into one. The</span>
@@ -779,7 +774,7 @@
 
     <span class="n">template_fields</span> <span class="o">=</span> <span class="n">base_template_fields</span> <span class="o">+</span> <span class="n">selection_template_fields</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">full_refresh</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">select</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -802,7 +797,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">indirect_selection</span> <span class="o">=</span> <span class="n">indirect_selection</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">command</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">command</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the build command.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="s2">&quot;build&quot;</span></div>
 
@@ -810,13 +805,13 @@
 
 <div class="viewcode-block" id="run_result_factory">
 <a class="viewcode-back" href="../../../reference/operators.html#airflow_dbt_python.operators.dbt.run_result_factory">[docs]</a>
-<span class="k">def</span> <span class="nf">run_result_factory</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">run_result_factory</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Dictionary factory for dbt&#39;s run_result.</span>
 
 <span class="sd">    We need to handle dt.datetime and agate.table.Table.</span>
 <span class="sd">    The rest of the types should already be JSON-serializable.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="kn">from</span> <span class="nn">agate.table</span> <span class="kn">import</span> <span class="n">Table</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">agate.table</span><span class="w"> </span><span class="kn">import</span> <span class="n">Table</span>
 
     <span class="n">d</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
