@@ -11,7 +11,7 @@ from typing import Any, Optional, Type, Union
 
 import dbt.flags as flags
 import yaml
-from dbt.adapters.factory import register_adapter
+from dbt.cli.option_types import Package
 from dbt.clients import yaml_helper  # type: ignore
 from dbt.config.profile import Profile, read_profile
 from dbt.config.project import PartialProject, Project
@@ -20,13 +20,14 @@ from dbt.config.runtime import RuntimeConfig
 from dbt.contracts.graph.manifest import Manifest
 from dbt.exceptions import DbtProjectError
 from dbt.graph.graph import Graph
-from dbt.parser.manifest import ManifestLoader, parse_manifest
+from dbt.parser.manifest import parse_manifest
 from dbt.task.base import BaseTask, ConfiguredTask
 from dbt.task.build import BuildTask
 from dbt.task.clean import CleanTask
 from dbt.task.compile import CompileTask
 from dbt.task.debug import DebugTask
 from dbt.task.deps import DepsTask
+from dbt.task.docs.generate import GenerateTask
 from dbt.task.freshness import FreshnessTask
 from dbt.task.list import ListTask
 from dbt.task.run import RunTask
@@ -38,15 +39,7 @@ from dbt.task.test import TestTask
 from dbt.tracking import initialize_from_flags
 
 from airflow_dbt_python.utils.enums import FromStrEnum, LogFormat, Output
-from airflow_dbt_python.utils.version import (
-    DBT_INSTALLED_GTE_1_7,
-    DBT_INSTALLED_GTE_1_8,
-)
-
-if DBT_INSTALLED_GTE_1_8:
-    from dbt.task.docs.generate import GenerateTask
-else:
-    from dbt.task.generate import GenerateTask  # type: ignore[no-redef]
+from airflow_dbt_python.utils.version import DBT_INSTALLED_GTE_1_9
 
 
 def parse_yaml_args(args: Optional[Union[str, dict[str, Any]]]) -> dict[str, Any]:
@@ -139,34 +132,27 @@ class BaseConfig:
         default=None, repr=False
     )
 
-    # dbt >= 1.7
-    if DBT_INSTALLED_GTE_1_7:
-        from dbt.cli.option_types import Package
+    include_saved_query: Optional[bool] = None
+    no_include_saved_query: Optional[bool] = dataclasses.field(default=None, repr=False)
 
-        include_saved_query: Optional[bool] = None
-        no_include_saved_query: Optional[bool] = dataclasses.field(
-            default=None, repr=False
-        )
+    clean_project_files_only: Optional[bool] = None
+    no_clean_project_files_only: Optional[bool] = dataclasses.field(
+        default=None, repr=False
+    )
 
-        clean_project_files_only: Optional[bool] = None
-        no_clean_project_files_only: Optional[bool] = dataclasses.field(
-            default=None, repr=False
-        )
+    require_resource_names_without_spaces: bool = False
 
-        require_resource_names_without_spaces: bool = False
+    add_package: Optional[Package] = None
+    dry_run: bool = False
+    lock: bool = False
+    static: bool = False
+    upgrade: bool = False
 
-        add_package: Optional[Package] = None
-        dry_run: bool = False
-        lock: bool = False
-        static: bool = False
-        upgrade: bool = False
-
-    if DBT_INSTALLED_GTE_1_8:
-        require_model_names_without_spaces: bool = False
-        source_freshness_run_project_hooks: bool = False
-        exclude_resource_types: list[str] = dataclasses.field(
-            default_factory=list, repr=False
-        )
+    require_model_names_without_spaces: bool = False
+    source_freshness_run_project_hooks: bool = False
+    exclude_resource_types: list[str] = dataclasses.field(
+        default_factory=list, repr=False
+    )
 
     def __post_init__(self):
         """Post initialization actions for a dbt configuration."""
@@ -318,53 +304,33 @@ class BaseConfig:
         flags.set_from_args(self, {})  # type: ignore
         project, profile = self.create_dbt_project_and_profile(extra_targets)
 
-        self.cls.set_log_format()
+        if not DBT_INSTALLED_GTE_1_9:
+            self.cls.set_log_format()  # type: ignore[attr-defined]
+
         initialize_from_flags(self.send_anonymous_usage_stats, self.profiles_dir)
 
         local_flags = flags.get_flags()
 
         runtime_config = self.create_runtime_config(project, profile)
 
-        if DBT_INSTALLED_GTE_1_8:
-            if issubclass(self.dbt_task, ConfiguredTask) and runtime_config:
-                manifest = parse_manifest(
-                    runtime_config,
-                    write_perf_info=write_perf_info,
-                    write=False,
-                    write_json=False,
-                )
-                task: BaseTask = self.dbt_task(
-                    args=local_flags, config=runtime_config, manifest=manifest
-                )
-            elif issubclass(self.dbt_task, DepsTask):
-                task = self.dbt_task(args=local_flags, project=project)
-            elif issubclass(self.dbt_task, DebugTask):
-                task = self.dbt_task(args=local_flags)
-            elif issubclass(self.dbt_task, CleanTask):
-                task = self.dbt_task(args=local_flags, config=project)
-            else:
-                task = self.dbt_task(args=local_flags)
+        if issubclass(self.dbt_task, ConfiguredTask) and runtime_config:
+            manifest = parse_manifest(
+                runtime_config,
+                write_perf_info=write_perf_info,
+                write=False,
+                write_json=False,
+            )
+            task: BaseTask = self.dbt_task(
+                args=local_flags, config=runtime_config, manifest=manifest
+            )
+        elif issubclass(self.dbt_task, DepsTask):
+            task = self.dbt_task(args=local_flags, project=project)
+        elif issubclass(self.dbt_task, DebugTask):
+            task = self.dbt_task(args=local_flags)
+        elif issubclass(self.dbt_task, CleanTask):
+            task = self.dbt_task(args=local_flags, config=project)
         else:
-            if issubclass(self.dbt_task, ConfiguredTask) and runtime_config:
-                register_adapter(runtime_config)  # type: ignore[call-arg]
-                manifest = ManifestLoader.get_full_manifest(
-                    runtime_config, write_perf_info=write_perf_info
-                )
-                task = self.dbt_task(
-                    args=self,  # type: ignore[arg-type]
-                    config=runtime_config,
-                    manifest=manifest,
-                )
-            elif issubclass(self.dbt_task, DepsTask):
-                task = self.dbt_task(args=self, project=project)
-            elif issubclass(self.dbt_task, DebugTask):
-                task = self.dbt_task(args=self, config=runtime_config)  # type: ignore[arg-type,call-arg]
-            else:
-                task = self.dbt_task(  # type: ignore[call-arg]
-                    args=self,  # type: ignore[arg-type]
-                    config=runtime_config,
-                    project=project,
-                )
+            task = self.dbt_task(args=local_flags)
 
         if self.compiled_target is not None:
             # Only supported by subclasses of dbt's GraphRunnableTask.
@@ -473,11 +439,10 @@ class BaseConfig:
         Returns:
             A dbt profile for the task represented by this configuration.
         """
-        if DBT_INSTALLED_GTE_1_8:
-            from dbt_common.clients.system import get_env
-            from dbt_common.context import set_invocation_context
+        from dbt_common.clients.system import get_env
+        from dbt_common.context import set_invocation_context
 
-            set_invocation_context(get_env())
+        set_invocation_context(get_env())
 
         if self.profiles_dir is not None:
             raw_profiles = read_profile(self.profiles_dir)
@@ -695,6 +660,7 @@ class TestTaskConfig(SelectionConfig):
     singular: Optional[bool] = None
     store_failures: Optional[bool] = None
     which: str = dataclasses.field(default="test", init=False)
+    resource_types: Optional[list[str]] = None
 
     def __post_init__(self):
         """Support for type casting arguments."""

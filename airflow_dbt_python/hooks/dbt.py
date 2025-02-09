@@ -25,8 +25,6 @@ from airflow.exceptions import AirflowException
 from airflow.hooks.base import BaseHook
 from airflow.models.connection import Connection
 
-from airflow_dbt_python.utils.version import DBT_INSTALLED_GTE_1_8
-
 if sys.version_info >= (3, 11):
     from contextlib import chdir as chdir_ctx
 else:
@@ -400,13 +398,7 @@ class DbtHook(BaseHook):
         default_stdout. As these are initialized by the CLI app, we need to
         initialize them here.
         """
-        if DBT_INSTALLED_GTE_1_8:
-            from dbt.events.logging import setup_event_logger
-        else:
-            from dbt.events.functions import (  # type: ignore[no-redef]
-                setup_event_logger,
-            )
-
+        from dbt.events.logging import setup_event_logger
         from dbt.flags import get_flags
 
         flags = get_flags()

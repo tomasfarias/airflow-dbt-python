@@ -26,26 +26,22 @@ jobs:
           - '3.11'
           - '3.10'
           - '3.9'
-          - '3.8'
         airflow-version:
-          - '2.9.2'
-          - '2.8.4'
-          - '2.7.3'
+          - '2.10'
+          - '2.9'
+          - '2.8'
         dbt-version:
+          - 1.9
           - 1.8
-          - 1.7
         exclude:
           # Incompatible combinations
           - python-version: 3.12
-            airflow-version: '2.8.4'
-
-          - python-version: 3.12
-            airflow-version: '2.7.3'
+            airflow-version: '2.8'
 
     runs-on: ubuntu-latest
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@v2.8.1
+        uses: step-security/harden-runner@v2.10.4
         with:
           egress-policy: block
           allowed-endpoints: >
@@ -54,6 +50,7 @@ jobs:
             hub.getdbt.com:443
             github.com:80
             github.com:443
+            gitlab.com:22
             gitlab.com:80
             gitlab.com:443
             objects.githubusercontent.com:443
@@ -64,6 +61,7 @@ jobs:
             esm.ubuntu.com:443
             motd.ubuntu.com:443
             packages.microsoft.com:80
+            packages.microsoft.com:443
             ppa.launchpadcontent.net:443
             security.ubuntu.com:80
 
@@ -71,21 +69,21 @@ jobs:
           sudo apt-get update
           sudo apt-get install --yes --no-install-recommends postgresql
 
-      - uses: actions/checkout@v4.1.7
+      - uses: actions/checkout@v4.2.2
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v5.1.0
+        uses: actions/setup-python@v5.4.0
         with:
           python-version: ${{ matrix.python-version }}
 
       - name: Install Poetry
-        uses: abatilo/actions-poetry@v2.3.0
+        uses: abatilo/actions-poetry@v2.4.0
         with:
-          poetry-version: 1.8.3
+          poetry-version: 2.0.1
 
       - name: Install Airflow & dbt
         run: |
           poetry env use ${{ matrix.python-version }}
-          poetry add "apache-airflow==${{ matrix.airflow-version }}" \
+          poetry add "apache-airflow~=${{ matrix.airflow-version }}.0" \
                      "dbt-core~=${{ matrix.dbt-version }}.0" \
                      "dbt-postgres~=${{ matrix.dbt-version }}.0" \
                  --python ${{ matrix.python-version }}
@@ -99,14 +97,14 @@ jobs:
       - name: Static type checking with mypy
         # We only run mypy on the latest supported versions of Airflow & dbt,
         # so it is currently impossible to write conditions for that depend on package versions.
-        if: matrix.python-version == '3.12' && matrix.airflow-version == '2.9.2' && matrix.dbt-version == '1.8'
+        if: matrix.python-version == '3.12' && matrix.airflow-version == '2.10' && matrix.dbt-version == '1.9'
         run: poetry run mypy .
 
       - name: Code formatting with black
         run: poetry run black --check .
 
       - name: Set COVERAGE_FILE in environment
-        run: echo "COVERAGE_FILE=.coverage.${{ matrix.python-version }}.${{ matrix.airflow-version }}" >> $GITHUB_ENV
+        run: echo "COVERAGE_FILE=.coverage.${{ matrix.python-version }}-${{ matrix.airflow-version }}-${{ matrix.dbt-version }}" >> $GITHUB_ENV
 
       - name: Run tests with pytest
         run: poetry run coverage run -m pytest -v tests/ airflow_dbt_python/utils/
@@ -117,11 +115,11 @@ jobs:
           GITHUB_USERNAME: ${{ secrets.GH_USERNAME }}
 
       - name: Upload code coverage
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
-          name: coverage-data
+          name: coverage-data-${{ matrix.python-version }}-${{ matrix.airflow-version }}-${{ matrix.dbt-version }}
           path: ".coverage.*"
-          if-no-files-found: ignore
+          include-hidden-files: true
 
   coverage:
     name: Combine and check coverage
@@ -130,7 +128,7 @@ jobs:
 
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@v2.8.1
+        uses: step-security/harden-runner@v2.10.4
         with:
           egress-policy: block
           allowed-endpoints: >
@@ -139,23 +137,23 @@ jobs:
             api.github.com:443
             pypi.org:443
 
-      - uses: actions/checkout@v4.1.7
-      - uses: actions/setup-python@v5.1.0
+      - uses: actions/checkout@v4.2.2
+      - uses: actions/setup-python@v5.4.0
         with:
           python-version: '3.12'
 
       - name: Install Poetry
-        uses: abatilo/actions-poetry@v2.3.0
+        uses: abatilo/actions-poetry@v2.4.0
         with:
-          poetry-version: 1.8.3
+          poetry-version: 2.0.1
 
       - name: Install airflow-dbt-python with Poetry
         run: poetry install --with dev -E airflow-providers
 
       - name: Download coverage data.
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
-          name: coverage-data
+          merge-multiple: true
 
       - name: Combine coverage & fail if it's <95%.
         run: |
@@ -171,7 +169,7 @@ jobs:
           poetry run coverage report --fail-under=95
 
       - name: Upload HTML report if check failed.
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: ${{ failure() }}
         with:
           name: html-report

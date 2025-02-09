@@ -9,15 +9,15 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: Set up Python 3.10
-        uses: actions/setup-python@v2
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5.4.0
         with:
-          python-version: '3.10'
+          python-version: '3.12'
 
       - name: Install Poetry
-        uses: abatilo/actions-poetry@v2.1.4
+        uses: abatilo/actions-poetry@v2.4.0
         with:
-          poetry-version: 1.3.2
+          poetry-version: 2.0.1
 
       - name: Install airflow-dbt-python with Poetry
         run: poetry install
