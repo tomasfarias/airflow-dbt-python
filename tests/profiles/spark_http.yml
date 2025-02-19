@@ -1,0 +1,19 @@
+default:
+  target: spark_http
+  outputs:
+    spark_http:
+      type: spark
+      method: http
+      schema: schema_name
+      host: yourorg.sparkhost.com
+      organization: my_org_id
+      token: abc123
+      cluster: cluster_id
+
+      # optional
+      port: 443
+      user: username
+      connect_timeout: 60
+      connect_retries: 5
+      server_side_parameters:
+        "spark.driver.memory": "4g"

@@ -1,0 +1,9 @@
+default:
+  target: bigquery_sa_file
+  outputs:
+    bigquery_sa_file:
+      type: bigquery
+      method: service-account
+      project: GCP_PROJECT_ID
+      dataset: DBT_DATASET_NAME
+      keyfile: /PATH/TO/BIGQUERY/keyfile.json

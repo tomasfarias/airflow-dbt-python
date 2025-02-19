@@ -1,0 +1,17 @@
+{
+  "conn_type": "spark_connect",
+  "host": "yourorg.sparkhost.com",
+  "port": 444,
+  "login": "username",
+  "password": "abc123",
+  "schema": "schema_name",
+  "extra": {
+    "method": "odbc",
+    "driver": "/path/to/driver",
+    "endpoint": "endpoint_id",
+    "organization": "my_org_id",
+    "server_side_parameters": {
+      "spark.driver.memory": "4g"
+    }
+  }
+}

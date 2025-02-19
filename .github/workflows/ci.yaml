@@ -85,9 +85,8 @@ jobs:
           poetry env use ${{ matrix.python-version }}
           poetry add "apache-airflow~=${{ matrix.airflow-version }}.0" \
                      "dbt-core~=${{ matrix.dbt-version }}.0" \
-                     "dbt-postgres~=${{ matrix.dbt-version }}.0" \
                  --python ${{ matrix.python-version }}
-          poetry install -E postgres --with dev
+          poetry install -E adapters --with dev
           poetry run airflow db migrate
           poetry run airflow connections create-default-connections
 

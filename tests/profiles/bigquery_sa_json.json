@@ -1,0 +1,19 @@
+{
+  "conn_type": "gcpbigquery",
+  "schema": "DBT_DATASET_NAME",
+  "extra": {
+    "project": "GCP_PROJECT_ID",
+    "keyfile_dict": {
+      "auth_provider_x509_cert_url": "xxx",
+      "auth_uri": "xxx",
+      "client_email": "xxx",
+      "client_id": "xxx",
+      "client_x509_cert_url": "xxx",
+      "private_key": "xxx",
+      "private_key_id": "xxx",
+      "project_id": "xxx",
+      "token_uri": "xxx",
+      "type": "xxx"
+    }
+  }
+}

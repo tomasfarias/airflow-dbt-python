@@ -1,0 +1,18 @@
+default:
+  target: redshift
+  outputs:
+    redshift:
+      type: redshift
+      host: hostname.region.redshift.amazonaws.com
+      user: username
+      password: password1
+      dbname: analytics
+      schema: analytics_schema
+      port: 5439
+
+      # Optional Redshift configs:
+      sslmode: prefer
+      role: my_role
+      ra3_node: true
+      autocommit: true
+      connect_timeout: 1

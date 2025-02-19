@@ -1,0 +1,20 @@
+default:
+  target: postgres
+  outputs:
+    postgres:
+      type: postgres
+      host: hostname
+      user: my_username
+      password: my_password
+      port: 5432
+      dbname: database_name
+      schema: dbt_schema
+      keepalives_idle: 10
+      connect_timeout: 20
+      retries: 2
+      search_path: "some path"
+      role: my_role
+      sslmode: require
+      sslcert: postgresql.crt
+      sslkey: postgresql.key
+      sslrootcert: ca.crt

@@ -1,0 +1,19 @@
+default:
+  target: spark_odbc
+  outputs:
+    spark_odbc:
+      type: spark
+      method: odbc
+      driver: /path/to/driver
+      schema: schema_name
+      host: yourorg.sparkhost.com
+      organization: my_org_id
+      token: abc123
+
+      endpoint: endpoint_id
+
+      # optional
+      port: 444
+      user: username
+      server_side_parameters:
+        "spark.driver.memory": "4g"

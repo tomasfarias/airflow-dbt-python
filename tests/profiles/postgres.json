@@ -1,0 +1,20 @@
+{
+  "conn_type": "postgres",
+  "host": "hostname",
+  "port": 5432,
+  "login": "my_username",
+  "password": "my_password",
+  "schema": "dbt_schema",
+  "extra": {
+    "dbname": "database_name",
+    "role": "my_role",
+    "sslmode": "require",
+    "sslcert": "postgresql.crt",
+    "sslkey": "postgresql.key",
+    "sslrootcert": "ca.crt",
+    "retries": 2,
+    "keepalives_idle": 10,
+    "connect_timeout": 20,
+    "options": "-c search_path=some path"
+  }
+}

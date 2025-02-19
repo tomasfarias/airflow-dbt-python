@@ -1,0 +1,20 @@
+{
+  "conn_type": "snowflake",
+  "schema": "test_schema",
+  "login": "my_oauth_client_id",
+  "password": "my_oauth_client_secret",
+  "extra": {
+    "authenticator": "oauth",
+    "refresh_token": "oauth_refresh_token",
+    "account": "test_account.us-east-1",
+    "warehouse": "test_wh",
+    "database": "test_db",
+    "role": "test_role",
+    "client_session_keep_alive": true,
+    "query_tag": "some_tag",
+    "connect_timeout": 12,
+    "retry_on_database_errors": true,
+    "retry_all": true,
+    "reuse_connections": true
+  }
+}

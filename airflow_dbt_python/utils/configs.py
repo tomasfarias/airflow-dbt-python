@@ -282,8 +282,7 @@ class BaseConfig:
                     task._flattened_nodes.append(task.manifest.sources[uid])
                 else:
                     raise DbtException(
-                        f"Node selection returned {uid}, expected a node or a "
-                        f"source"
+                        f"Node selection returned {uid}, expected a node or a source"
                     )
             task.num_nodes = len(
                 [n for n in task._flattened_nodes if not n.is_ephemeral_model]

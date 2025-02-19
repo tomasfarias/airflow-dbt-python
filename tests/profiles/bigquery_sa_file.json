@@ -1,0 +1,8 @@
+{
+  "conn_type": "gcpbigquery",
+  "schema": "DBT_DATASET_NAME",
+  "extra": {
+    "project": "GCP_PROJECT_ID",
+    "key_path": "/PATH/TO/BIGQUERY/keyfile.json"
+  }
+}

@@ -1,0 +1,25 @@
+default:
+  target: snowflake_mfa
+  outputs:
+    snowflake_mfa:
+      type: snowflake
+      account: test_account.us-east-1
+
+      # User/password auth
+      user: test_user
+      password: test_password
+      authenticator: username_password_mfa
+
+      role: test_role
+      database: test_db
+      warehouse: test_wh
+      schema: test_schema
+      client_session_keep_alive: True
+      query_tag: "some_tag"
+
+      # optional
+      connect_retries: 1
+      connect_timeout: 12
+      retry_on_database_errors: True
+      retry_all: True
+      reuse_connections: True
