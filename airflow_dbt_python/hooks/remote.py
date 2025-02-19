@@ -6,6 +6,7 @@ Currently, only AWS S3 and the local filesystem are supported as remotes.
 """
 
 from abc import ABC, abstractmethod
+from functools import cache
 from pathlib import Path
 from typing import Optional, Type
 
@@ -139,6 +140,7 @@ class DbtRemoteHook(ABC, LoggingMixin):
             source_url.unlink()
 
 
+@cache
 def get_remote(scheme: str, conn_id: Optional[str] = None) -> DbtRemoteHook:
     """Get a DbtRemoteHook as long as the scheme is supported.
 
