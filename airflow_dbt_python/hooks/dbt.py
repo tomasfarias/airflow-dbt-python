@@ -135,7 +135,6 @@ class DbtHook(BaseHook):
         profiles_conn_id: Optional[str] = None,
         **kwargs,
     ):
-        self.remotes: DbtRemoteHooksDict = {}
         self.dbt_conn_id = dbt_conn_id
         self.project_conn_id = project_conn_id
         self.profiles_conn_id = profiles_conn_id
@@ -150,12 +149,7 @@ class DbtHook(BaseHook):
         """
         from .remote import get_remote
 
-        try:
-            return self.remotes[(scheme, conn_id)]
-        except KeyError:
-            remote = get_remote(scheme, conn_id)
-        self.remotes[(scheme, conn_id)] = remote
-        return remote
+        return get_remote(scheme, conn_id)
 
     def download_dbt_profiles(
         self,

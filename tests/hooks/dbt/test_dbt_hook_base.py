@@ -89,13 +89,14 @@ class FakeRemote:
         return args, kwargs
 
 
-def test_dbt_hook_download_dbt_profiles():
+def test_dbt_hook_download_dbt_profiles(mocker):
     """Test dbt hook calls remote correctly.
 
     We ignore types as we are monkey patching a FakeRemote for testing.
     """
     hook = DbtHook()
-    hook.remotes[("", None)] = FakeRemote()  # type: ignore
+    mock = mocker.patch("airflow_dbt_python.hooks.dbt.DbtHook.get_remote")
+    mock.return_value = FakeRemote()
 
     args, kwargs = hook.download_dbt_profiles("/path/to/profiles", "/path/to/store")  # type: ignore
 
@@ -103,13 +104,14 @@ def test_dbt_hook_download_dbt_profiles():
     assert kwargs == {}
 
 
-def test_dbt_hook_upload_dbt_project():
+def test_dbt_hook_upload_dbt_project(mocker):
     """Test dbt hook calls remote correctly.
 
     We ignore types as we are monkey patching a FakeRemote for testing.
     """
     hook = DbtHook()
-    hook.remotes[("", None)] = FakeRemote()  # type: ignore
+    mock = mocker.patch("airflow_dbt_python.hooks.dbt.DbtHook.get_remote")
+    mock.return_value = FakeRemote()
 
     args, kwargs = hook.upload_dbt_project(  # type: ignore
         "/path/to/profiles", "/path/to/store", replace=True, delete_before=True
@@ -119,10 +121,11 @@ def test_dbt_hook_upload_dbt_project():
     assert kwargs == {"replace": True, "delete_before": True}
 
 
-def test_dbt_hook_download_dbt_project():
+def test_dbt_hook_download_dbt_project(mocker):
     """Test dbt hook calls remote correctly."""
     hook = DbtHook(project_conn_id="conn_id")
-    hook.remotes[("", "conn_id")] = FakeRemote()  # type: ignore
+    mock = mocker.patch("airflow_dbt_python.hooks.dbt.DbtHook.get_remote")
+    mock.return_value = FakeRemote()
 
     args, kwargs = hook.download_dbt_project("/path/to/profiles", "/path/to/store")  # type: ignore
 
