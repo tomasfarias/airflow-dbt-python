@@ -168,7 +168,7 @@ class DbtHook(BaseHook):
         supported for remotes that require it.
         """
         scheme = urlparse(str(profiles_dir)).scheme
-        remote = self.get_remote(scheme, self.project_conn_id)
+        remote = self.get_remote(scheme, self.profiles_conn_id)
 
         return remote.download_dbt_profiles(profiles_dir, destination)
 
