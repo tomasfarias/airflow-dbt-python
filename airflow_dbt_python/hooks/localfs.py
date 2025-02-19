@@ -6,7 +6,6 @@ Intended to be used only when running Airflow with a LocalExceutor.
 from __future__ import annotations
 
 import shutil
-import sys
 from functools import partial
 from pathlib import Path
 from typing import Optional
@@ -127,33 +126,6 @@ class DbtLocalFsRemoteHook(FSHook, DbtRemoteHook):
 
         copy_function = partial(self.copy_one, replace=replace)
 
-        if sys.version_info.major == 3 and sys.version_info.minor < 8:
-            py37_copytree(source, destination, replace)
-        else:
-            shutil.copytree(  # type: ignore
-                source, destination, copy_function=copy_function, dirs_exist_ok=True
-            )
-
-
-def py37_copytree(source: URL, destination: URL, replace: bool = True):
-    """A (probably) poor attempt at replicating shutil.copytree for Python 3.7.
-
-    shutil.copytree is available in Python 3.7, however it doesn't have the
-    dirs_exist_ok parameter, and we really need that. If the destination path doesn't
-    exist, we can use shutil.copytree, however if it does then we need to copy files
-    one by one and make any subdirectories ourselves.
-    """
-    if destination.exists():
-        for url in source:
-            if url.is_dir():
-                continue
-
-            target_url = destination / url.relative_to(source)
-            if target_url.exists() and not replace:
-                # shutil.copy replaces by default
-                continue
-
-            target_url.parent.mkdir(exist_ok=True, parents=True)
-            shutil.copy(url, target_url)
-    else:
-        shutil.copytree(source, destination)
+        shutil.copytree(  # type: ignore
+            source, destination, copy_function=copy_function, dirs_exist_ok=True
+        )

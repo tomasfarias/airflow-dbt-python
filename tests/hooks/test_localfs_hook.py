@@ -4,7 +4,7 @@ import shutil
 from pathlib import Path
 from zipfile import ZipFile
 
-from airflow_dbt_python.hooks.localfs import DbtLocalFsRemoteHook, py37_copytree
+from airflow_dbt_python.hooks.localfs import DbtLocalFsRemoteHook
 from airflow_dbt_python.utils.url import URL
 
 
@@ -184,48 +184,3 @@ def test_upload_dbt_project_to_zip_file(tmpdir, test_files):
     remote.upload_dbt_project(test_files[0].parent.parent, zip_path)
 
     assert zip_path.exists()
-
-
-def test_py37_copytree(test_files, tmpdir):
-    """The Python 3.7 workaround should produce the same results as copytree."""
-    py37_dir = tmpdir / "py37_copytree_target"
-    assert not py37_dir.exists()
-    copytree_dir = tmpdir / "copytree_target"
-    assert not copytree_dir.exists()
-
-    shutil.copytree(URL(test_files[0].parent.parent), URL(copytree_dir))
-    py37_copytree(URL(test_files[0].parent.parent), URL(py37_dir))
-
-    for path in Path(copytree_dir).glob("**/*"):
-        if path.is_dir():
-            continue
-
-        py37_path = py37_dir / path.relative_to(copytree_dir)
-        assert py37_path.exists()
-
-
-def test_py37_copytree_no_replace(test_files, tmpdir):
-    """The Python 3.7 workaround should produce the same results as copytree."""
-    source = test_files[0].parent.parent
-    py37_copytree(URL(source), URL(source), replace=False)
-
-    all_paths = [p for p in source.glob("**/*") if not p.is_dir()]
-    assert len(all_paths) == 4
-
-
-def test_py37_copytree_if_exists(test_files, tmpdir):
-    """The Python 3.7 workaround should produce the same results as copytree."""
-    py37_dir = tmpdir / "py37_copytree_target"
-    py37_dir.mkdir()
-
-    assert py37_dir.exists()
-
-    source = test_files[0].parent.parent
-    py37_copytree(URL(source), URL(py37_dir))
-
-    for path in source.glob("**/*"):
-        if path.is_dir():
-            continue
-
-        py37_path = py37_dir / path.relative_to(source)
-        assert py37_path.exists()
