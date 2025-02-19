@@ -9,19 +9,19 @@ Requirements
 ------------
 
 Before using *airflow-dbt-python*, ensure you meet the following requirements:
-* A *dbt* project using `dbt-core <https://pypi.org/project/dbt-core/>`_ version 1.0.0 or later.
-* An Airflow environment using version 2.2 or later.
+* A *dbt* project using `dbt-core <https://pypi.org/project/dbt-core/>`_ version 1.8 or later.
+* An Airflow environment using version 2.8 or later.
 
-  * If using any managed service, like AWS MWAA, ensure your environment is created with a supported version of Airflow.
+  * If using any managed service, like AWS MWAA or GCP Cloud Composer 2/3, ensure your environment is created with a supported version of Airflow.
   * If self-hosting, Airflow installation instructions can be found in their `official documentation <https://airflow.apache.org/docs/apache-airflow/stable/installation/index.html>`_.
 
-* Running Python 3.7 or later in your Airflow environment.
+* Running Python 3.9 or later in your Airflow environment.
 
 .. warning::
    Even though we don't impose any upper limits on versions of Airflow and *dbt*, it's possible that new versions are not supported immediately after release, particularly for *dbt*. We recommend testing the latest versions before upgrading and `reporting any issues <https://github.com/tomasfarias/airflow-dbt-python/issues/new/choose>`_.
 
 .. note::
-   Older versions of Airflow and *dbt* may work with *airflow-dbt-python*, although we cannot guarantee this. Our testing pipeline runs the latest *dbt-core* with the latest Airflow release, and the latest version supported by `AWS MWAA <https://aws.amazon.com/managed-workflows-for-apache-airflow/>`_.
+   Older versions of Airflow and *dbt* may work with *airflow-dbt-python*, although we cannot guarantee this. Our testing pipeline runs the latest *dbt-core* with the latest Airflow release, and the latest version supported by `AWS MWAA <https://aws.amazon.com/managed-workflows-for-apache-airflow/>`_ and `GCP Cloud Composer 2/3 <https://aws.amazon.com/managed-workflows-for-apache-airflow/>`_.
 
 Installation
 ------------
@@ -109,7 +109,7 @@ The wheel file can now be added to your *plugins.zip*, and the requirements can 
 .. code-block:: shell
    :caption: requirements.txt
 
-   /usr/local/airflow/plugins/airflow_dbt_python-1.0.0-py3-none-any.whl
+   /usr/local/airflow/plugins/airflow_dbt_python-3.0.0-py3-none-any.whl
 
 Accessing a *dbt* project
 -------------------------
