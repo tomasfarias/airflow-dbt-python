@@ -4,8 +4,12 @@ Common fixtures include a connection to a postgres database, a set of sample mod
  seed files, dbt configuration files, and temporary directories for everything.
 """
 
+from __future__ import annotations
+
+import json
 import shutil
-from typing import List
+from pathlib import Path
+from typing import TYPE_CHECKING, Generator, List
 
 import boto3
 import pytest
@@ -15,6 +19,10 @@ from moto import mock_aws
 from pytest_postgresql.janitor import DatabaseJanitor
 
 from airflow_dbt_python.hooks.dbt import DbtHook
+
+if TYPE_CHECKING:
+    from _pytest.fixtures import SubRequest
+
 
 PROFILES = """
 flags:
@@ -209,7 +217,7 @@ def airflow_conns(database):
     connections are set for now as our testing database is postgres.
     """
     uris = (
-        f"postgres://{database.user}:{database.password}@{database.host}:{database.port}/public?dbname={database.dbname}",
+        f"postgres://{database.user}:{database.password}@{database.host}:{database.port}/public?database={database.dbname}",
         f"postgres://{database.user}:{database.password}@{database.host}:{database.port}/public",
     )
     ids = (
@@ -235,6 +243,60 @@ def airflow_conns(database):
 
     for conn in connections:
         session.delete(conn)
+
+    session.commit()
+    session.close()
+
+
+@pytest.fixture(scope="session")
+def private_key() -> tuple[str, str]:
+    """Generate a private key for testing."""
+    import secrets
+    import string
+
+    from cryptography.hazmat.primitives import serialization
+    from cryptography.hazmat.primitives.asymmetric import rsa
+
+    password_length = 12
+    characters = string.ascii_letters + string.digits + string.punctuation
+    password = "".join(secrets.choice(characters) for _ in range(password_length))
+
+    private_key = rsa.generate_private_key(
+        public_exponent=65537,
+        key_size=2048,
+    )
+    pem_private_key = private_key.private_bytes(
+        encoding=serialization.Encoding.PEM,
+        format=serialization.PrivateFormat.PKCS8,
+        encryption_algorithm=serialization.BestAvailableEncryption(
+            password.encode(encoding="utf-8")
+        ),
+    )
+    return pem_private_key.decode(encoding="utf-8"), password
+
+
+@pytest.fixture
+def profile_conn_id(request: SubRequest) -> Generator[str, None, None]:
+    """Create an Airflow connection by conn_id."""
+    conn_id = request.param
+    session = settings.Session()
+    existing = session.query(Connection).filter_by(conn_id=conn_id).first()
+    if existing is not None:
+        # Connections may exist from previous test run.
+        session.delete(existing)
+        session.commit()
+
+    conn_json_path = Path(__file__).parent / "profiles" / f"{conn_id}.json"
+    conn_kwargs = json.loads(conn_json_path.read_text())
+    conn = Connection(conn_id=conn_id, **conn_kwargs)
+
+    session.add(conn)
+
+    session.commit()
+
+    yield conn_id
+
+    session.delete(conn)
 
     session.commit()
     session.close()

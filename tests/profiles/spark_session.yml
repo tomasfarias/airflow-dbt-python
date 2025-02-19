@@ -1,0 +1,10 @@
+default:
+  target: spark_session
+  outputs:
+    spark_session:
+      type: spark
+      method: session
+      schema: schema_name
+      host: NA  # not used, but required by `dbt-core`
+      server_side_parameters:
+        "spark.driver.memory": "4g"

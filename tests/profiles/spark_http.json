@@ -1,0 +1,18 @@
+{
+  "conn_type": "spark_connect",
+  "host": "yourorg.sparkhost.com",
+  "port": 443,
+  "login": "username",
+  "password": "abc123",
+  "schema": "schema_name",
+  "extra": {
+    "method": "http",
+    "cluster": "cluster_id",
+    "organization": "my_org_id",
+    "connect_timeout": 60,
+    "connect_retries": 5,
+    "server_side_parameters": {
+      "spark.driver.memory": "4g"
+    }
+  }
+}

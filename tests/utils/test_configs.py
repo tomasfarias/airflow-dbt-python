@@ -1,9 +1,11 @@
 """Unit test module for dbt task configuration utilities."""
 
 import os
+from pathlib import Path
 from unittest.mock import patch
 
 import pytest
+from dbt import flags
 from dbt.exceptions import DbtProfileError, EnvVarMissingError
 from dbt.task.build import BuildTask
 from dbt.task.compile import CompileTask
@@ -11,6 +13,7 @@ from dbt.task.debug import DebugTask
 from dbt.task.deps import DepsTask
 from dbt.task.run import RunTask
 
+from airflow_dbt_python.hooks.dbt import DbtHook
 from airflow_dbt_python.utils.configs import (
     BaseConfig,
     BuildTaskConfig,
@@ -311,6 +314,46 @@ def test_base_config_create_dbt_profile_with_extra_target(
         target = profile.to_target_dict()
         assert target["name"] == conn_id
         assert target["type"] == "postgres"
+
+
+profiles = sorted(
+    f.stem for f in Path(__file__).parent.parent.joinpath("profiles").glob("*.json")
+)
+
+
+@pytest.mark.parametrize(
+    "profile_conn_id", profiles, ids=profiles, indirect=["profile_conn_id"]
+)
+def test_create_db_specific_dbt_profile_with_extra_target(
+    profile_conn_id, dbt_project_file
+):
+    """Test Airflow connections that they can be used in both Airflow and dbt."""
+    # Profile from Airflow connection
+    config = BaseConfig(
+        target=profile_conn_id,
+        project_dir=dbt_project_file.parent,
+        profiles_dir=None,
+    )
+    flags.set_from_args(config, {})
+
+    hook = DbtHook(dbt_conn_id=profile_conn_id)
+    extra_target = hook.get_dbt_target_from_connection(profile_conn_id)
+    profile_from_conn = config.create_dbt_profile(extra_target)
+
+    profiles = Path(__file__).parent.parent / "profiles"
+    yaml_profile = profiles / f"{profile_conn_id}.yml"
+    yaml_profile_data = yaml_profile.read_text()
+
+    profile_file = dbt_project_file.parent / "profiles.yml"
+    profile_file.write_text(yaml_profile_data)
+
+    # Profile from Yaml
+    config = BaseConfig(
+        project_dir=dbt_project_file.parent,
+        profiles_dir=dbt_project_file.parent,
+    )
+    profile_from_yaml = config.create_dbt_profile()
+    assert profile_from_conn == profile_from_yaml
 
 
 def test_base_config_create_dbt_profile_with_extra_target_no_profile(

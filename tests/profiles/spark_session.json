@@ -1,0 +1,12 @@
+{
+  "conn_type": "spark_connect",
+  "host": "NA",
+  "port": 443,
+  "schema": "schema_name",
+  "extra": {
+    "method": "session",
+    "server_side_parameters": {
+      "spark.driver.memory": "4g"
+    }
+  }
+}

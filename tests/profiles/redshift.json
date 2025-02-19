@@ -1,0 +1,15 @@
+{
+  "conn_type": "redshift",
+  "host": "hostname.region.redshift.amazonaws.com",
+  "port": 5439,
+  "login": "username",
+  "password": "password1",
+  "schema": "analytics_schema",
+  "extra": {
+    "dbname": "analytics",
+    "sslmode": "prefer",
+    "role": "my_role",
+    "ra3_node": true,
+    "connect_timeout": 1
+  }
+}

@@ -1,0 +1,17 @@
+default:
+  target: spark_thrift
+  outputs:
+    spark_thrift:
+      type: spark
+      method: thrift
+      schema: schema_name
+      host: yourorg.sparkhost.com
+
+      # optional
+      port: 10001
+      user: username
+      auth: KERBEROS
+      kerberos_service_name: hive
+      use_ssl: true
+      server_side_parameters:
+        "spark.driver.memory": "4g"

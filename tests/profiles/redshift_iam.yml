@@ -1,0 +1,24 @@
+default:
+  target: redshift_iam
+  outputs:
+    redshift_iam:
+      type: redshift
+      method: iam
+      cluster_id: CLUSTER_ID
+      host: hostname.region.redshift.amazonaws.com
+      user: alice
+      iam_profile: analyst
+      region: us-east-1
+      dbname: analytics
+      schema: analytics_schema
+      port: 5439
+
+      # Optional Redshift configs:
+      connect_timeout: 2
+      retries: 1
+      role: my_role
+      sslmode: prefer
+      ra3_node: true
+      autocommit: true
+      autocreate: true
+      db_groups: ['ANALYSTS']

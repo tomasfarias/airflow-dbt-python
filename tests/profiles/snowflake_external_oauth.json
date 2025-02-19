@@ -1,0 +1,20 @@
+{
+  "conn_type": "snowflake",
+  "schema": "test_schema",
+  "login": "test_user",
+  "password": "OKTA_PASSWORD",
+  "extra": {
+    "authenticator": "https://dev-390798.oktapreview.com/oauth2/auslh9j9vf9ej7NfT0h7",
+    "username": "OKTA_USERNAME",
+    "account": "test_account.us-east-1",
+    "warehouse": "test_wh",
+    "database": "test_db",
+    "role": "test_role",
+    "client_session_keep_alive": true,
+    "query_tag": "some_tag",
+    "connect_timeout": 12,
+    "retry_on_database_errors": true,
+    "retry_all": true,
+    "reuse_connections": true
+  }
+}

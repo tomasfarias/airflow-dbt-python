@@ -1,0 +1,19 @@
+{
+  "conn_type": "snowflake",
+  "login": "test_user",
+  "password": "test_password",
+  "schema": "test_schema",
+  "extra": {
+    "authenticator": "username_password_mfa",
+    "account": "test_account.us-east-1",
+    "warehouse": "test_wh",
+    "database": "test_db",
+    "role": "test_role",
+    "client_session_keep_alive": true,
+    "query_tag": "some_tag",
+    "connect_timeout": 12,
+    "retry_on_database_errors": true,
+    "retry_all": true,
+    "reuse_connections": true
+  }
+}

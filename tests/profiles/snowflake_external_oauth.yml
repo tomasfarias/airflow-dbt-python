@@ -1,0 +1,26 @@
+default:
+  target: snowflake_external_oauth
+  outputs:
+    snowflake_external_oauth:
+      type: snowflake
+      account: test_account.us-east-1
+      user: test_user
+
+      # SSO config -- The three following fields are REQUIRED
+      authenticator: https://dev-390798.oktapreview.com/oauth2/auslh9j9vf9ej7NfT0h7
+      username: OKTA_USERNAME
+      password: OKTA_PASSWORD
+
+      role: test_role
+      database: test_db
+      warehouse: test_wh
+      schema: test_schema
+      client_session_keep_alive: True
+      query_tag: "some_tag"
+
+      # optional
+      connect_retries: 1
+      connect_timeout: 12
+      retry_on_database_errors: True
+      retry_all: True
+      reuse_connections: True
