@@ -1,6 +1,6 @@
 [project]
 name = "airflow-dbt-python"
-version = "2.2.0"
+version = "3.0.0"
 description = "A collection of Airflow operators, hooks, and utilities to execute dbt commands"
 authors = [{ name = "Tomás Farías Santana", email = "tomas@tomasfarias.dev" }]
 license = "MIT"
@@ -43,7 +43,7 @@ adapters = [
     "dbt-redshift>=1.8.0,<2.0.0",
     "dbt-postgres>=1.8.0,<2.0.0",
     "dbt-snowflake>=1.8.0,<2.0.0",
-    "dbt-spark>=1.8.0,<2.0.0",
+    "dbt-spark[all]>=1.8.0,<2.0.0",
 ]
 bigquery = [
     "dbt-bigquery>=1.8.0,<2.0.0",
