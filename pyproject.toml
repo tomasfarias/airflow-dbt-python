@@ -1,11 +1,11 @@
-[tool.poetry]
+[project]
 name = "airflow-dbt-python"
 version = "2.2.0"
 description = "A collection of Airflow operators, hooks, and utilities to execute dbt commands"
-authors = ["Tomás Farías Santana <tomas@tomasfarias.dev>"]
+authors = [{ name = "Tomás Farías Santana", email = "tomas@tomasfarias.dev" }]
 license = "MIT"
 readme = "README.md"
-repository = "https://github.com/tomasfarias/airflow-dbt-python"
+requires-python = ">=3.9,<3.13"
 classifiers = [
     "Development Status :: 5 - Production/Stable",
 
@@ -19,25 +19,56 @@ classifiers = [
     "Programming Language :: Python :: 3.12",
 ]
 
+dependencies = [
+    "apache-airflow>=2.8",
+    "contextlib-chdir==1.0.2;python_version<'3.11'",
+    "dbt-core>=1.8.0,<2.0.0",
+]
+
+[project.url]
+repository = "https://github.com/tomasfarias/airflow-dbt-python"
+
+[build-system]
+requires = ["poetry-core>=1.2.0"]
+build-backend = "poetry.core.masonry.api"
+
+[project.optional-dependencies]
+airflow-providers = [
+    "apache-airflow-providers-amazon>=3.0.0",
+    "apache-airflow-providers-ssh>=3.0.0",
+]
+adapters = [
+    "dbt-bigquery>=1.8.0,<2.0.0",
+    "dbt-redshift>=1.8.0,<2.0.0",
+    "dbt-postgres>=1.8.0,<2.0.0",
+    "dbt-snowflake>=1.8.0,<2.0.0",
+    "dbt-spark>=1.8.0,<2.0.0",
+]
+bigquery = [
+    "dbt-bigquery>=1.8.0,<2.0.0",
+]
+git = [
+    "apache-airflow-providers-ssh>=3.0.0",
+    "dulwich>=0.21",
+]
+postgres = [
+    "dbt-postgres>=1.8.0,<2.0.0",
+]
+redshift = [
+    "dbt-redshift>=1.8.0,<2.0.0",
+]
+s3 = [
+    "apache-airflow-providers-amazon>=3.0.0",
+]
+snowflake = [
+    "dbt-snowflake>=1.8.0,<2.0.0",
+]
+spark = [
+    "dbt-spark>=1.8.0,<2.0.0",
+]
+
 [tool.poetry.requires-plugins]
 poetry-plugin-export = ">=1.8"
-
-[tool.poetry.dependencies]
-python = ">=3.9,<3.13"  # Airflow providers require this upper boundary
-
-apache-airflow = { version = ">=2.8" }
-apache-airflow-providers-amazon = { version = ">=3.0.0", optional = true }
-apache-airflow-providers-ssh = { version = ">=3.0.0", optional = true }
-connexion = { version = "<3.0" }  # https://github.com/apache/airflow/issues/35217
-dulwich = { version = ">=0.21", optional = true }
-contextlib-chdir = { version = "==1.0.2", python = "<3.11" }
-
-dbt-core = { version = ">=1.8.0,<2.0.0", optional = true }
-dbt-bigquery = { version = ">=1.8.0,<2.0.0", optional = true }
-dbt-postgres = { version = ">=1.8.0,<2.0.0", optional = true }
-dbt-redshift = { version = ">=1.8.0,<2.0.0", optional = true }
-dbt-snowflake = { version = ">=1.8.0,<2.0.0", optional = true }
-dbt-spark = { version = ">=1.8.0,<2.0.0", optional = true }
 
 [tool.poetry.group.dev]
 optional = true
@@ -65,39 +96,11 @@ types-PyYAML = ">=6.0.7"
 optional = true
 
 [tool.poetry.group.docs.dependencies]
-Sphinx = [
-    { python = ">=3.9", version = "7.4.7" },
-]
+Sphinx = "7.4.7"
 sphinx-rtd-theme = "3.0.2"
 sphinx-copybutton = "0.5.2"
 attrs = ">=22"
 zipp = ">=3.19.1"
-
-[tool.poetry.group.adapters]
-optional = true
-
-[tool.poetry.group.adapters.dependencies]
-dbt-bigquery = { version = ">=1.8.0,<2.0.0", optional = true }
-dbt-postgres = { version = ">=1.8.0,<2.0.0", optional = true }
-dbt-redshift = { version = ">=1.8.0,<2.0.0", optional = true }
-dbt-snowflake = { version = ">=1.8.0,<2.0.0", optional = true }
-dbt-spark = { version = ">=1.8.0,<2.0.0", optional = true }
-
-[tool.poetry.extras]
-airflow-providers = ["apache-airflow-providers-amazon", "apache-airflow-providers-ssh"]
-adapters = ["dbt-bigquery", "dbt-redshift", "dbt-postgres", "dbt-snowflake", "dbt-spark"]
-bigquery = ["dbt-bigquery"]
-docs = ["Sphinx", "sphinx-rtd-theme", "sphinx-copybutton"]
-git = ["apache-airflow-providers-ssh", "dulwich"]
-postgres = ["dbt-postgres"]
-redshift = ["dbt-redshift"]
-s3 = ["apache-airflow-providers-amazon"]
-snowflake = ["dbt-snowflake"]
-spark = ["dbt-spark"]
-
-[build-system]
-requires = ["poetry-core>=1.2.0"]
-build-backend = "poetry.core.masonry.api"
 
 [tool.black]
 line-length = 88
