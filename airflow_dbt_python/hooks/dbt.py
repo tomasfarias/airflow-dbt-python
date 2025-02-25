@@ -248,7 +248,7 @@ class DbtHook(BaseHook):
                     )
                     requires_profile = isinstance(task, (CleanTask, DepsTask))
 
-                    self.setup_dbt_logging(task, config.debug)
+                    self.setup_dbt_logging(config.debug)
 
                     if runtime_config is not None and not requires_profile:
                         # The deps command installs the dependencies, which means they
@@ -385,7 +385,7 @@ class DbtHook(BaseHook):
 
         return new_project_dir, new_profiles_dir
 
-    def setup_dbt_logging(self, task: BaseTask, debug: Optional[bool]):
+    def setup_dbt_logging(self, debug: Optional[bool]):
         """Setup dbt logging.
 
         Starting with dbt v1, dbt initializes two loggers: default_file and
@@ -401,6 +401,7 @@ class DbtHook(BaseHook):
         configured_file = logging.getLogger("configured_file")
         file_log = logging.getLogger("file_log")
         stdout_log = logging.getLogger("stdout_log")
+        stdout_log.handlers.clear()
         stdout_log.propagate = True
 
         if not debug:
