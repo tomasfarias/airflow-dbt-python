@@ -144,7 +144,7 @@ def test_dbt_hook_get_dbt_target_from_connection(airflow_conns, database):
         assert conn_id in extra_target
         assert extra_target[conn_id]["user"] == database.user
         assert extra_target[conn_id]["password"] == database.password
-        assert extra_target[conn_id]["dbname"] == database.dbname
+        assert extra_target[conn_id]["database"] == database.dbname
 
 
 @pytest.mark.parametrize("conn_id", ["non_existent", None])
@@ -192,7 +192,7 @@ def test_dbt_hook_get_target_from_empty_connection(no_user_airflow_conn, databas
     assert extra_target is not None
     assert no_user_airflow_conn in extra_target
     assert extra_target[no_user_airflow_conn].get("user") is None
-    assert extra_target[no_user_airflow_conn]["dbname"] == database.dbname
+    assert extra_target[no_user_airflow_conn]["database"] == database.dbname
 
 
 class FakeConnection:
@@ -231,7 +231,7 @@ def hook_with_conn_parameters(conn_params, conn_extra_params):
                 "type": "postgres",
                 "host": "localhost",
                 "schema": "test",
-                "user": "user",
+                "login": "user",
                 "port": 5432,
                 "extra_param": 123,
             },
