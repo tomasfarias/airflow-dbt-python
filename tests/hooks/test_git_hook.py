@@ -9,7 +9,7 @@ import pytest
 from dulwich.repo import Repo
 from dulwich.server import DictBackend, TCPGitServer
 
-from airflow_dbt_python.hooks.git import DbtGitRemoteHook
+from airflow_dbt_python.hooks.remote.git import DbtGitRemoteHook
 from airflow_dbt_python.utils.url import URL
 
 JAFFLE_SHOP = os.getenv("GIT_TEST_REPO", "tomasfarias/jaffle_shop")

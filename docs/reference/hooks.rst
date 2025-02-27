@@ -19,17 +19,17 @@ The DbtRemoteHook interface
 *dbt* git remote
 ^^^^^^^^^^^^^^^^
 
-.. automodule:: airflow_dbt_python.hooks.git
+.. automodule:: airflow_dbt_python.hooks.remote.git
    :members:
 
 *dbt* localfs remote
 ^^^^^^^^^^^^^^^^^^^^
 
-.. automodule:: airflow_dbt_python.hooks.localfs
+.. automodule:: airflow_dbt_python.hooks.remote.localfs
    :members:
 
 *dbt* S3 remote
 ^^^^^^^^^^^^^^^^
 
-.. automodule:: airflow_dbt_python.hooks.s3
+.. automodule:: airflow_dbt_python.hooks.remote.s3
    :members:

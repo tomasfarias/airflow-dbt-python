@@ -33,7 +33,7 @@ class DbtRemoteHook(ABC, LoggingMixin):
     """
 
     @abstractmethod
-    def download(
+    def _download(
         self,
         source: URL,
         destination: URL,
@@ -44,7 +44,7 @@ class DbtRemoteHook(ABC, LoggingMixin):
         return NotImplemented
 
     @abstractmethod
-    def upload(
+    def _upload(
         self,
         source: URL,
         destination: URL,
@@ -72,7 +72,7 @@ class DbtRemoteHook(ABC, LoggingMixin):
         if source_url.is_archive():
             destination_url = destination_url / source_url.name
 
-        self.download(source_url, destination_url)
+        self._download(source_url, destination_url)
 
         if destination_url.exists() and destination_url.is_archive():
             destination_url.extract()
@@ -104,7 +104,7 @@ class DbtRemoteHook(ABC, LoggingMixin):
         if destination_url.is_dir() or destination_url.name != "profiles.yml":
             destination_url = destination_url / "profiles.yml"
 
-        self.download(source_url, destination_url)
+        self._download(source_url, destination_url)
 
         return destination_url.path
 
@@ -134,7 +134,7 @@ class DbtRemoteHook(ABC, LoggingMixin):
             source_url.archive(zip_url)
             source_url = zip_url
 
-        self.upload(source_url, destination_url, replace, delete_before)
+        self._upload(source_url, destination_url, replace, delete_before)
 
         if destination_url.is_archive():
             source_url.unlink()

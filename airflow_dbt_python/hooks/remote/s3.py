@@ -26,7 +26,7 @@ class DbtS3RemoteHook(S3Hook, DbtRemoteHook):
         """Initialize a dbt remote for AWS S3."""
         super().__init__(*args, **kwargs)
 
-    def upload(
+    def _upload(
         self,
         source: URL,
         destination: URL,
@@ -110,7 +110,7 @@ class DbtS3RemoteHook(S3Hook, DbtRemoteHook):
 
         return success
 
-    def download(
+    def _download(
         self,
         source: URL,
         destination: URL,
@@ -188,7 +188,7 @@ class DbtS3RemoteHook(S3Hook, DbtRemoteHook):
 
         except IsADirectoryError:
             # Uploading files manually via the AWS UI to S3 can cause files
-            # with empty names to appear. When we attemp to download it, we build
+            # with empty names to appear. When we attempt to download it, we build
             # a relative path  that is equal to the parent directory that already
             # exists.
             self.log.warning("A file with no name was found in S3 at %s", s3_object)

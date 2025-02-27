@@ -7,7 +7,7 @@ import freezegun
 import pytest
 
 try:
-    from airflow_dbt_python.hooks.s3 import DbtS3RemoteHook
+    from airflow_dbt_python.hooks.remote.s3 import DbtS3RemoteHook
 except ImportError:
     pytest.skip(
         "S3 Remote not available, consider installing amazon extras",

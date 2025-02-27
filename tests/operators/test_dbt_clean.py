@@ -7,7 +7,7 @@ from airflow_dbt_python.utils.configs import CleanTaskConfig
 
 condition = False
 try:
-    from airflow_dbt_python.hooks.s3 import DbtS3RemoteHook
+    from airflow_dbt_python.hooks.remote.s3 import DbtS3RemoteHook
 except ImportError:
     condition = True
 no_s3_backend = pytest.mark.skipif(

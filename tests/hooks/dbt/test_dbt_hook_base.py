@@ -11,7 +11,7 @@ from airflow_dbt_python.utils.configs import RunTaskConfig
 
 condition = False
 try:
-    from airflow_dbt_python.hooks.s3 import DbtS3RemoteHook
+    from airflow_dbt_python.hooks.remote.s3 import DbtS3RemoteHook
 except ImportError:
     condition = True
 no_s3_remote = pytest.mark.skipif(
@@ -20,7 +20,7 @@ no_s3_remote = pytest.mark.skipif(
 
 condition = False
 try:
-    from airflow_dbt_python.hooks.git import DbtGitRemoteHook
+    from airflow_dbt_python.hooks.remote.git import DbtGitRemoteHook
 except ImportError:
     condition = True
 no_git_remote = pytest.mark.skipif(
