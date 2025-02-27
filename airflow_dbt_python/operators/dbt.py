@@ -99,7 +99,7 @@ class DbtBaseOperator(BaseOperator):
         send_anonymous_usage_stats: Optional[bool] = None,
         no_send_anonymous_usage_stats: Optional[bool] = None,
         # Extra features configuration
-        dbt_conn_id: Optional[str] = "dbt_conn_id",
+        dbt_conn_id: Optional[str] = None,
         profiles_conn_id: Optional[str] = None,
         project_conn_id: Optional[str] = None,
         do_xcom_push_artifacts: Optional[list[str]] = None,
@@ -305,7 +305,7 @@ class DbtRunOperator(DbtBaseOperator):
 class DbtSeedOperator(DbtBaseOperator):
     """Executes a dbt seed command.
 
-    The seed command loads csv files into the  the given target. The
+    The seed command loads csv files into the given target. The
     documentation for the dbt command can be found here:
     https://docs.getdbt.com/reference/commands/seed.
     """

@@ -4,9 +4,11 @@ import os
 from pathlib import Path
 
 import pytest
+from airflow.exceptions import AirflowNotFoundException
 
 from airflow_dbt_python.hooks.dbt import DbtHook
-from airflow_dbt_python.hooks.localfs import DbtLocalFsRemoteHook
+from airflow_dbt_python.hooks.remote.localfs import DbtLocalFsRemoteHook
+from airflow_dbt_python.hooks.target import DbtConnectionHook, DbtPostgresHook
 from airflow_dbt_python.utils.configs import RunTaskConfig
 
 condition = False
@@ -135,10 +137,9 @@ def test_dbt_hook_download_dbt_project(mocker):
 
 def test_dbt_hook_get_dbt_target_from_connection(airflow_conns, database):
     """Test fetching Airflow connections."""
-    hook = DbtHook()
-
     for conn_id in airflow_conns:
-        extra_target = hook.get_dbt_target_from_connection(conn_id)
+        hook = DbtConnectionHook.get_db_conn_hook(conn_id=conn_id)
+        extra_target = hook.get_dbt_target_from_connection()
 
         assert extra_target is not None
         assert conn_id in extra_target
@@ -150,8 +151,8 @@ def test_dbt_hook_get_dbt_target_from_connection(airflow_conns, database):
 @pytest.mark.parametrize("conn_id", ["non_existent", None])
 def test_dbt_hook_get_target_from_connection_non_existent(conn_id):
     """Test None is returned when Airflow connections do not exist."""
-    hook = DbtHook()
-    assert hook.get_dbt_target_from_connection(conn_id) is None
+    with pytest.raises(AirflowNotFoundException):
+        DbtConnectionHook.get_db_conn_hook(conn_id=conn_id)
 
 
 @pytest.fixture
@@ -185,9 +186,8 @@ def no_user_airflow_conn(database):
 
 def test_dbt_hook_get_target_from_empty_connection(no_user_airflow_conn, database):
     """Test fetching Airflow connections."""
-    hook = DbtHook()
-
-    extra_target = hook.get_dbt_target_from_connection(no_user_airflow_conn)
+    hook = DbtConnectionHook.get_db_conn_hook(conn_id=no_user_airflow_conn)
+    extra_target = hook.get_dbt_target_from_connection()
 
     assert extra_target is not None
     assert no_user_airflow_conn in extra_target
@@ -204,21 +204,22 @@ class FakeConnection:
         self.extra_dejson = extras
 
 
-def hook_with_conn_parameters(conn_params, conn_extra_params):
+def hook_cls_with_conn_parameters(conn_params, conn_extra_params):
     """Create a hook with connection parameters for testing."""
-    hook = DbtHook()
-    hook.conn_params = conn_params
-    hook.conn_extra_params = conn_extra_params
-
+    hook = type(
+        "FakeDbtConnectionHook",
+        (DbtConnectionHook,),
+        {"conn_params": conn_params, "conn_extra_params": conn_extra_params},
+    )
     return hook
 
 
 @pytest.mark.parametrize(
-    "hook,fake_conn,expected",
+    "hook_cls,fake_conn,expected",
     (
-        (DbtHook(), FakeConnection({}), {}),
+        (DbtConnectionHook, FakeConnection({}), {}),
         (
-            DbtHook(),
+            DbtConnectionHook,
             FakeConnection(
                 {"extra_param": 123},
                 conn_type="postgres",
@@ -237,7 +238,7 @@ def hook_with_conn_parameters(conn_params, conn_extra_params):
             },
         ),
         (
-            hook_with_conn_parameters([], []),
+            hook_cls_with_conn_parameters([], []),
             FakeConnection(
                 {"extra_param": 123, "extra_param_2": 456},
                 conn_type="postgres",
@@ -252,7 +253,7 @@ def hook_with_conn_parameters(conn_params, conn_extra_params):
             },
         ),
         (
-            hook_with_conn_parameters(
+            hook_cls_with_conn_parameters(
                 ["custom_param"], ["custom_extra", "custom_extra_1"]
             ),
             FakeConnection(
@@ -272,9 +273,10 @@ def hook_with_conn_parameters(conn_params, conn_extra_params):
         ),
     ),
 )
-def test_dbt_details_from_connection(hook, fake_conn, expected):
+def test_dbt_details_from_connection(hook_cls, fake_conn, expected):
     """Assert dbt connection details are read from a fake Airflow Connection."""
-    dbt_details = hook.get_dbt_details_from_connection(fake_conn)
+    hook = hook_cls(conn=fake_conn)
+    dbt_details = hook.get_dbt_details_from_connection(hook.conn)
 
     assert dbt_details == expected
 

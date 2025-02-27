@@ -217,13 +217,9 @@ def airflow_conns(database):
     connections are set for now as our testing database is postgres.
     """
     uris = (
-        f"postgres://{database.user}:{database.password}@{database.host}:{database.port}/public?database={database.dbname}",
-        f"postgres://{database.user}:{database.password}@{database.host}:{database.port}/public",
+        f"postgres://{database.user}:{database.password}@{database.host}:{database.port}/public?dbname={database.dbname}",
     )
-    ids = (
-        "dbt_test_postgres_1",
-        database.dbname,
-    )
+    ids = ("dbt_test_postgres_1",)
     session = settings.Session()
 
     connections = []

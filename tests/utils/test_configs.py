@@ -13,7 +13,7 @@ from dbt.task.debug import DebugTask
 from dbt.task.deps import DepsTask
 from dbt.task.run import RunTask
 
-from airflow_dbt_python.hooks.dbt import DbtHook
+from airflow_dbt_python.hooks.target import DbtConnectionHook
 from airflow_dbt_python.utils.configs import (
     BaseConfig,
     BuildTaskConfig,
@@ -40,7 +40,7 @@ def test_task_config_enum():
     assert ConfigFactory.from_str("seed").value == SeedTaskConfig
 
 
-def test_compile_task_minimal_config(hook, profiles_file, dbt_project_file):
+def test_compile_task_minimal_config(profiles_file, dbt_project_file):
     """Test the creation of a CompileTask from arguments."""
     cfg = CompileTaskConfig(
         profiles_dir=profiles_file.parent, project_dir=dbt_project_file.parent
@@ -74,7 +74,7 @@ def test_deps_task_minimal_config(profiles_file, dbt_project_file):
     assert isinstance(task, DepsTask)
 
 
-def test_run_task_minimal_config(hook, profiles_file, dbt_project_file):
+def test_run_task_minimal_config(profiles_file, dbt_project_file):
     """Test the creation of a RunTask from arguments."""
     cfg = RunTaskConfig(
         profiles_dir=profiles_file.parent, project_dir=dbt_project_file.parent
@@ -145,7 +145,7 @@ def test_config_vars(vars, expected):
     assert config.vars == expected
 
 
-def test_build_task_minimal_config(hook, profiles_file, dbt_project_file):
+def test_build_task_minimal_config(profiles_file, dbt_project_file):
     """Test the creation of a BuildTask from arguments."""
     cfg = BuildTaskConfig(
         profiles_dir=profiles_file.parent, project_dir=dbt_project_file.parent
@@ -157,7 +157,7 @@ def test_build_task_minimal_config(hook, profiles_file, dbt_project_file):
     assert isinstance(task, BuildTask)
 
 
-def test_build_task_minimal_config_generic(hook, profiles_file, dbt_project_file):
+def test_build_task_minimal_config_generic(profiles_file, dbt_project_file):
     """Test the creation of a BuildTask from arguments with generic = True."""
     cfg = BuildTaskConfig(
         profiles_dir=profiles_file.parent,
@@ -172,7 +172,7 @@ def test_build_task_minimal_config_generic(hook, profiles_file, dbt_project_file
     assert isinstance(task, BuildTask)
 
 
-def test_build_task_minimal_config_singular(hook, profiles_file, dbt_project_file):
+def test_build_task_minimal_config_singular(profiles_file, dbt_project_file):
     """Test the creation of a BuildTask from arguments with singular = True."""
     cfg = BuildTaskConfig(
         profiles_dir=profiles_file.parent,
@@ -227,7 +227,7 @@ def test_parse_yaml_args(vars, expected):
     ],
 )
 def test_base_config_profile_name_property(
-    profile_name, expected, hook, profiles_file, dbt_project_file
+    profile_name, expected, profiles_file, dbt_project_file
 ):
     """Test the profile_name property."""
     config = BaseConfig(
@@ -237,7 +237,7 @@ def test_base_config_profile_name_property(
     assert config.profile_name == expected
 
 
-def test_base_config_partial_project_property(hook, profiles_file, dbt_project_file):
+def test_base_config_partial_project_property(profiles_file, dbt_project_file):
     """Test the partial_project property."""
     config = BaseConfig(project_dir=dbt_project_file.parent)
 
@@ -245,7 +245,7 @@ def test_base_config_partial_project_property(hook, profiles_file, dbt_project_f
     assert config.partial_project.project_dict["profile"] == "default"
 
 
-def test_base_config_create_dbt_profile(hook, profiles_file, dbt_project_file):
+def test_base_config_create_dbt_profile(profiles_file, dbt_project_file):
     """Test the create_dbt_profile with real project file."""
     config = BaseConfig(
         project_dir=dbt_project_file.parent,
@@ -296,7 +296,7 @@ def test_base_config_create_dbt_profile_with_env_vars(
 
 
 def test_base_config_create_dbt_profile_with_extra_target(
-    hook, profiles_file, dbt_project_file, airflow_conns
+    profiles_file, dbt_project_file, airflow_conns
 ):
     """Test the create_dbt_profile with additional targets."""
     for conn_id in airflow_conns:
@@ -305,7 +305,8 @@ def test_base_config_create_dbt_profile_with_extra_target(
             project_dir=dbt_project_file.parent,
             profiles_dir=profiles_file.parent,
         )
-        extra_target = hook.get_dbt_target_from_connection(conn_id)
+        hook = DbtConnectionHook.get_db_conn_hook(conn_id=conn_id)
+        extra_target = hook.get_dbt_target_from_connection()
 
         profile = config.create_dbt_profile(extra_target)
         assert profile.profile_name == "default"
@@ -336,8 +337,8 @@ def test_create_db_specific_dbt_profile_with_extra_target(
     )
     flags.set_from_args(config, {})
 
-    hook = DbtHook(dbt_conn_id=profile_conn_id)
-    extra_target = hook.get_dbt_target_from_connection(profile_conn_id)
+    hook = DbtConnectionHook.get_db_conn_hook(conn_id=profile_conn_id)
+    extra_target = hook.get_dbt_target_from_connection()
     profile_from_conn = config.create_dbt_profile(extra_target)
 
     profiles = Path(__file__).parent.parent / "profiles"
@@ -357,14 +358,15 @@ def test_create_db_specific_dbt_profile_with_extra_target(
 
 
 def test_base_config_create_dbt_profile_with_extra_target_no_profile(
-    hook, dbt_project_file, airflow_conns
+    dbt_project_file, airflow_conns
 ):
     """Test the create_dbt_profile with no project file."""
     for conn_id in airflow_conns:
         config = BaseConfig(
             target=conn_id, project_dir=dbt_project_file.parent, profiles_dir=None
         )
-        extra_target = hook.get_dbt_target_from_connection(conn_id)
+        hook = DbtConnectionHook.get_db_conn_hook(conn_id=conn_id)
+        extra_target = hook.get_dbt_target_from_connection()
 
         profile = config.create_dbt_profile(extra_target)
         assert profile.profile_name == "default"
@@ -375,7 +377,7 @@ def test_base_config_create_dbt_profile_with_extra_target_no_profile(
         assert target["type"] == "postgres"
 
 
-def test_base_config_create_dbt_profile_fails_with_no_profile(hook, dbt_project_file):
+def test_base_config_create_dbt_profile_fails_with_no_profile(dbt_project_file):
     """Test the create_dbt_profile with no profile and no extra targets."""
     config = BaseConfig(project_dir=dbt_project_file.parent, profiles_dir=None)
 
@@ -388,7 +390,7 @@ def test_base_config_create_dbt_profile_fails_with_no_profile(hook, dbt_project_
     [("non-existent", None), ("default", "non-existent")],
 )
 def test_base_config_create_dbt_profile_fails(
-    profile_name, target, hook, dbt_project_file, profiles_file
+    profile_name, target, dbt_project_file, profiles_file
 ):
     """Test the create_dbt_profile with no profile and no extra targets."""
     config = BaseConfig(
@@ -402,9 +404,7 @@ def test_base_config_create_dbt_profile_fails(
         config.create_dbt_profile()
 
 
-def test_base_config_create_dbt_project_and_profile(
-    hook, profiles_file, dbt_project_file
-):
+def test_base_config_create_dbt_project_and_profile(profiles_file, dbt_project_file):
     """Test the create_dbt_project_and_profile with real project file."""
     config = BaseConfig(
         project_dir=dbt_project_file.parent,
@@ -425,7 +425,7 @@ def test_base_config_create_dbt_project_and_profile(
 
 
 def test_base_config_create_dbt_project_and_profile_with_no_profile(
-    hook, dbt_project_file, airflow_conns
+    dbt_project_file, airflow_conns
 ):
     """Test the create_dbt_project_and_profile with real project file."""
     config = BaseConfig(
@@ -439,7 +439,8 @@ def test_base_config_create_dbt_project_and_profile_with_no_profile(
     for conn_id in airflow_conns:
         config.target = conn_id
 
-        extra_target = hook.get_dbt_target_from_connection(conn_id)
+        hook = DbtConnectionHook.get_db_conn_hook(conn_id=conn_id)
+        extra_target = hook.get_dbt_target_from_connection()
         project, profile = config.create_dbt_project_and_profile(extra_target)
 
         assert project.model_paths == ["models"]

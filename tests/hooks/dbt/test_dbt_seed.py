@@ -181,12 +181,11 @@ def test_dbt_seed_with_airflow_connection(
 ):
     """Pulling a target from an Airflow connection."""
     for conn_id in airflow_conns:
-        hook = DbtHook()
+        hook = DbtHook(dbt_conn_id=conn_id)
         result = hook.run_dbt_task(
             "seed",
             project_dir=dbt_project_file.parent,
             profiles_dir=profiles_file.parent,
-            target=conn_id,
             select=[str(s.stem) for s in seed_files],
         )
 
@@ -200,18 +199,18 @@ def test_dbt_seed_with_airflow_connection(
 
 
 def test_dbt_seed_with_airflow_connection_and_no_profiles(
-    hook, dbt_project_file, seed_files, airflow_conns
+    dbt_project_file, seed_files, airflow_conns
 ):
     """Using an Airflow connection in place of a profiles file.
 
     We omit the profiles_file hook as it should not be needed.
     """
     for conn_id in airflow_conns:
+        hook = DbtHook(dbt_conn_id=conn_id)
         result = hook.run_dbt_task(
             "seed",
             project_dir=dbt_project_file.parent,
             profiles_dir=None,
-            target=conn_id,
             select=[str(s.stem) for s in seed_files],
         )
 

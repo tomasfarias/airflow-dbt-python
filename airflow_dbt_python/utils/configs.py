@@ -457,10 +457,10 @@ class BaseConfig:
             raw_profiles = {}
 
         if extra_targets:
-            profile = raw_profiles.setdefault(self.profile_name, {})
-            outputs = profile.setdefault("outputs", {})
+            raw_profile = raw_profiles.setdefault(self.profile_name, {})
+            outputs = raw_profile.setdefault("outputs", {})
             outputs.setdefault("target", self.target)
-            profile["outputs"] = {**outputs, **extra_targets}
+            raw_profile["outputs"] = {**outputs, **extra_targets}
 
         profile = Profile.from_raw_profile_info(
             raw_profile=raw_profiles.get(
