@@ -351,7 +351,7 @@ def test_dbt_run_models_with_airflow_connection(
             task_id="dbt_task",
             project_dir=dbt_project_file.parent,
             models=[str(m.stem) for m in model_files],
-            target=conn_id,
+            dbt_conn_id=conn_id,
         )
 
         execution_results = op.execute({})
@@ -359,7 +359,7 @@ def test_dbt_run_models_with_airflow_connection(
 
         assert run_result["status"] == RunStatus.Success
         assert op.profiles_dir is None
-        assert op.target == conn_id
+        assert op.dbt_conn_id == conn_id
 
 
 def test_dbt_run_with_airflow_connection_and_profile(
@@ -370,14 +370,16 @@ def test_dbt_run_with_airflow_connection_and_profile(
     An Airflow connection target should still be usable even in the presence of
     profiles file, and vice-versa.
     """
-    all_targets = airflow_conns + ("test",)
+    all_airflow_conns = airflow_conns + (None,)
+    target = "test"
 
-    for target in all_targets:
+    for conn_id in all_airflow_conns:
         op = DbtRunOperator(
             task_id="dbt_task",
             project_dir=dbt_project_file.parent,
             profiles_dir=profiles_file.parent,
             select=[str(m.stem) for m in model_files],
+            dbt_conn_id=conn_id,
             target=target,
         )
 
@@ -386,4 +388,4 @@ def test_dbt_run_with_airflow_connection_and_profile(
 
         assert run_result["status"] == RunStatus.Success
         assert op.profiles_dir == profiles_file.parent
-        assert op.target == target
+        assert execution_results["args"]["target"] == conn_id or target

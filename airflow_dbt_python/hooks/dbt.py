@@ -5,29 +5,25 @@ from __future__ import annotations
 import json
 import logging
 import os
-import re
 import sys
+from abc import ABC
 from contextlib import contextmanager
-from copy import copy
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import (
     TYPE_CHECKING,
     Any,
-    Callable,
     Dict,
     Iterable,
     Iterator,
     NamedTuple,
     Optional,
     Tuple,
-    Union,
 )
 from urllib.parse import urlparse
 
 from airflow.exceptions import AirflowException
-from airflow.hooks.base import BaseHook
-from airflow.models.connection import Connection
+from airflow.utils.log.logging_mixin import LoggingMixin
 
 if sys.version_info >= (3, 11):
     from contextlib import chdir as chdir_ctx
@@ -36,9 +32,9 @@ else:
 
 if TYPE_CHECKING:
     from dbt.contracts.results import RunResult
-    from dbt.task.base import BaseTask
 
     from airflow_dbt_python.hooks.remote import DbtRemoteHook
+    from airflow_dbt_python.hooks.target import DbtConnectionHook
     from airflow_dbt_python.utils.configs import BaseConfig
     from airflow_dbt_python.utils.url import URLLike
 
@@ -57,36 +53,6 @@ class DbtTaskResult(NamedTuple):
     success: bool
     run_results: Optional[RunResult]
     artifacts: dict[str, Any]
-
-
-class DbtConnectionParam(NamedTuple):
-    """A tuple indicating connection parameters relevant to dbt.
-
-    Attributes:
-        name: The name of the connection parameter. This name will be used to get the
-            parameter from an Airflow Connection or its extras.
-        store_override_name: A new name for the connection parameter. If not None, this
-            is the name used in a dbt profiles.
-        default: A default value if the parameter is not found.
-    """
-
-    name: str
-    store_override_name: Optional[str] = None
-    default: Optional[Any] = None
-    depends_on: Callable[[Connection], bool] = lambda x: True
-
-    @property
-    def override_name(self):
-        """Returns the override_name if defined, otherwise defaults to name.
-
-        >>> DbtConnectionParam("login", "user").override_name
-        'user'
-        >>> DbtConnectionParam("port").override_name
-        'port'
-        """
-        if self.store_override_name is None:
-            return self.name
-        return self.store_override_name
 
 
 class DbtTemporaryDirectory(TemporaryDirectory):
@@ -110,31 +76,16 @@ class DbtTemporaryDirectory(TemporaryDirectory):
             )
 
 
-class DbtHook(BaseHook):
+class DbtHook(ABC, LoggingMixin):
     """A hook to interact with dbt.
 
     Allows for running dbt tasks and provides required configurations for each task.
     """
 
-    conn_name_attr = "dbt_conn_id"
-    default_conn_name = "dbt_default"
-    conn_type = "dbt"
-    hook_name = "dbt Hook"
-
-    conn_params: list[Union[DbtConnectionParam, str]] = [
-        DbtConnectionParam("conn_type", "type"),
-        "host",
-        "schema",
-        "login",
-        "password",
-        "port",
-    ]
-    conn_extra_params: list[Union[DbtConnectionParam, str]] = []
-
     def __init__(
         self,
         *args,
-        dbt_conn_id: Optional[str] = default_conn_name,
+        dbt_conn_id: Optional[str] = None,
         project_conn_id: Optional[str] = None,
         profiles_conn_id: Optional[str] = None,
         **kwargs,
@@ -144,7 +95,15 @@ class DbtHook(BaseHook):
         self.profiles_conn_id = profiles_conn_id
         super().__init__(*args, **kwargs)
 
-    def get_remote(self, scheme: str, conn_id: Optional[str]) -> DbtRemoteHook:
+    @staticmethod
+    def get_dbt_target_hook(conn_id: str) -> DbtConnectionHook:
+        """Get a hook to get a dbt profile based on the Airflow connection."""
+        from .target import DbtConnectionHook
+
+        return DbtConnectionHook.get_db_conn_hook(conn_id)
+
+    @staticmethod
+    def get_remote(scheme: str, conn_id: Optional[str]) -> DbtRemoteHook:
         """Get a remote to interact with dbt files.
 
         RemoteHooks are defined by the scheme we are looking for and an optional
@@ -229,8 +188,14 @@ class DbtHook(BaseHook):
         from dbt.task.deps import DepsTask
         from dbt.tracking import track_run
 
+        if self.dbt_conn_id:
+            kwargs["target"] = self.dbt_conn_id
+            target_hook = self.get_dbt_target_hook(self.dbt_conn_id)
+            extra_target = target_hook.get_dbt_target_from_connection()
+        else:
+            extra_target = None
+
         config = self.get_dbt_task_config(command, **kwargs)
-        extra_target = self.get_dbt_target_from_connection(config.target)
 
         with self.dbt_directory(
             config,
@@ -413,287 +378,3 @@ class DbtHook(BaseHook):
             file_log.propagate = False
             configured_file.setLevel("INFO")
             configured_file.propagate = False
-
-    def get_dbt_target_from_connection(
-        self, target: Optional[str]
-    ) -> Optional[dict[str, Any]]:
-        """Return a dictionary of connection details to use as a dbt target.
-
-        The connection details are fetched from an Airflow connection identified by
-        target or self.dbt_conn_id.
-
-        Args:
-            target: The target name to use as an Airflow connection ID. If ommitted, we
-                will use self.dbt_conn_id.
-
-        Returns:
-            A dictionary with a configuration for a dbt target, or None if a matching
-                Airflow connection is not found for given dbt target.
-        """
-        conn_id = target or self.dbt_conn_id
-
-        if conn_id is None:
-            return None
-
-        try:
-            conn = self.get_connection(conn_id)
-        except AirflowException:
-            self.log.debug(
-                "No Airflow connection matching dbt target %s was found.", target
-            )
-            return None
-
-        db_hook_class = self.get_db_hook_class(conn)
-
-        details = db_hook_class.get_dbt_details_from_connection(conn)
-
-        return {conn_id: details}
-
-    @classmethod
-    def get_dbt_details_from_connection(cls, conn: Connection) -> dict[str, Any]:
-        """Extract dbt connection details from Airflow Connection.
-
-        dbt connection details may be present as Airflow Connection attributes or in the
-        Connection's extras. This class' conn_params and conn_extra_params will be used
-        to fetch required attributes from attributes and extras respectively. If
-        conn_extra_params is empty, we merge parameters with all extras.
-
-        Subclasses may override this class attributes to narrow down the connection
-        details for a specific dbt target (like Postgres, or Redshift).
-
-        Args:
-            conn: The Airflow Connection to extract dbt connection details from.
-
-        Returns:
-            A dictionary of dbt connection details.
-        """
-        dbt_details = {}
-        for param in cls.conn_params:
-            if isinstance(param, DbtConnectionParam):
-                if not param.depends_on(conn):
-                    continue
-                key = param.override_name
-                value = getattr(conn, param.name, param.default)
-            else:
-                key = param
-                value = getattr(conn, key, None)
-
-            if value is None:
-                continue
-
-            dbt_details[key] = value
-
-        extra = conn.extra_dejson
-
-        if not cls.conn_extra_params:
-            return {**dbt_details, **extra}
-
-        for param in cls.conn_extra_params:
-            if isinstance(param, DbtConnectionParam):
-                if not param.depends_on(conn):
-                    continue
-                key = param.override_name
-                value = extra.get(param.name, param.default)
-            else:
-                key = param
-                value = extra.get(key, None)
-
-            if value is None:
-                continue
-
-            dbt_details[key] = value
-
-        return dbt_details
-
-    @classmethod
-    def get_db_hook_class(cls, conn: Connection) -> type[DbtHook]:
-        """Get a dbt hook class depend on Airflow connection type."""
-        known_dbt_hooks = (
-            DbtPostgresHook,
-            DbtRedshiftHook,
-            DbtSnowflakeHook,
-            DbtBigQueryHook,
-            DbtSparkHook,
-        )
-        for hook in known_dbt_hooks:
-            if hook.conn_type == conn.conn_type:
-                return hook
-        return DbtHook
-
-
-class DbtPostgresHook(DbtHook):
-    """A hook to interact with dbt using a Postgres connection."""
-
-    conn_type = "postgres"
-    hook_name = "dbt Postgres Hook"
-    conn_params = [
-        DbtConnectionParam("conn_type", "type", conn_type),
-        "host",
-        DbtConnectionParam("schema", default="public"),
-        DbtConnectionParam("login", "user"),
-        "password",
-        DbtConnectionParam("port", default=5432),
-    ]
-    conn_extra_params = [
-        DbtConnectionParam("dbname", "database", "postgres"),
-        "connect_timeout",
-        "role",
-        "search_path",
-        "keepalives_idle",
-        "sslmode",
-        "sslcert",
-        "sslkey",
-        "sslrootcert",
-        "retries",
-    ]
-
-    @classmethod
-    def get_dbt_details_from_connection(cls, conn: Connection) -> dict[str, Any]:
-        """Extract dbt connection details from Airflow Connection.
-
-        dbt connection details may be present as Airflow Connection attributes or in the
-        Connection's extras. This class' conn_params and conn_extra_params will be used
-        to fetch required attributes from attributes and extras respectively. If
-        conn_extra_params is empty, we merge parameters with all extras.
-
-        Subclasses may override this class attributes to narrow down the connection
-        details for a specific dbt target (like Postgres, or Redshift).
-
-        Args:
-            conn: The Airflow Connection to extract dbt connection details from.
-
-        Returns:
-            A dictionary of dbt connection details.
-        """
-        if "options" in conn.extra_dejson:
-            conn = copy(conn)
-            extra_dejson = conn.extra_dejson
-            options = extra_dejson.pop("options")
-            for k, v in re.findall(r"-c (\w+)=(.*)$", options):
-                extra_dejson[k] = v
-            conn.extra = json.dumps(extra_dejson)
-        return super().get_dbt_details_from_connection(conn)
-
-
-class DbtRedshiftHook(DbtPostgresHook):
-    """A hook to interact with dbt using a Redshift connection."""
-
-    conn_type = "redshift"
-    hook_name = "dbt Redshift Hook"
-    conn_extra_params = DbtPostgresHook.conn_extra_params + [
-        "method",
-        "cluster_id",
-        "iam_profile",
-        "autocreate",
-        "db_groups",
-        "ra3_node",
-        "connect_timeout",
-        "role",
-        "region",
-    ]
-
-
-class DbtSnowflakeHook(DbtHook):
-    """A hook to interact with dbt using a Snowflake connection."""
-
-    conn_type = "snowflake"
-    hook_name = "dbt Snowflake Hook"
-    conn_params = [
-        DbtConnectionParam("conn_type", "type", conn_type),
-        "host",
-        "schema",
-        DbtConnectionParam(
-            "login",
-            "user",
-            depends_on=lambda x: x.extra_dejson.get("authenticator", "") != "oauth",
-        ),
-        DbtConnectionParam(
-            "login",
-            "oauth_client_id",
-            depends_on=lambda x: x.extra_dejson.get("authenticator", "") == "oauth",
-        ),
-        DbtConnectionParam(
-            "password",
-            depends_on=lambda x: not any(
-                (
-                    *(k in x.extra_dejson for k in ("private_key_file", "private_key_content")),
-                    x.extra_dejson.get("authenticator", "") == "oauth",
-                ),
-            ),
-        ),
-        DbtConnectionParam(
-            "password",
-            "private_key_passphrase",
-            depends_on=lambda x: any(
-                k in x.extra_dejson for k in ("private_key_file", "private_key_content")
-            ),
-        ),
-        DbtConnectionParam(
-            "password",
-            "oauth_client_secret",
-            depends_on=lambda x: x.extra_dejson.get("authenticator", "") == "oauth",
-        ),
-    ]
-    conn_extra_params = [
-        "warehouse",
-        "role",
-        "authenticator",
-        "query_tag",
-        "client_session_keep_alive",
-        "connect_timeout",
-        "retry_on_database_errors",
-        "retry_all",
-        "reuse_connections",
-        "account",
-        "database",
-        DbtConnectionParam("refresh_token", "token"),
-        DbtConnectionParam("private_key_file", "private_key_path"),
-        DbtConnectionParam("private_key_content", "private_key"),
-    ]
-
-
-class DbtBigQueryHook(DbtHook):
-    """A hook to interact with dbt using a BigQuery connection."""
-
-    conn_type = "bigquery"
-    hook_name = "dbt BigQuery Hook"
-    conn_params = [
-        DbtConnectionParam("conn_type", "type", conn_type),
-        "schema",
-    ]
-    conn_extra_params = [
-        DbtConnectionParam("keyfile_path", "keyfile"),
-        DbtConnectionParam("keyfile_dict", "keyfile_json"),
-        "method",
-        "database",
-        "schema",
-        "refresh_token",
-        "client_id",
-        "client_secret",
-        "token_uri",
-        "OPTIONAL_CONFIG",
-    ]
-
-
-class DbtSparkHook(DbtHook):
-    """A hook to interact with dbt using a Spark connection."""
-
-    conn_type = "spark"
-    hook_name = "dbt Spark Hook"
-    conn_params = [
-        DbtConnectionParam("conn_type", "type", conn_type),
-        "host",
-        "port",
-        "schema",
-        DbtConnectionParam("login", "user"),
-        DbtConnectionParam(
-            "password",
-            depends_on=lambda x: x.extra_dejson.get("method", "") == "thrift",
-        ),
-        DbtConnectionParam(
-            "password",
-            "token",
-            depends_on=lambda x: x.extra_dejson.get("method", "") != "thrift",
-        ),
-    ]
-    conn_extra_params = []

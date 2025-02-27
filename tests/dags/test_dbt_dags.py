@@ -59,7 +59,7 @@ def clear_dagruns():
     session.query(DagRun).delete()
     session.commit()
     # We delete any serialized DAGs too for reproducible test runs.
-    session.query(SerializedDagModel)
+    session.query(SerializedDagModel).delete()
     session.commit()
 
 
@@ -317,7 +317,7 @@ def target_connection_dag(
     ) as dag:
         dbt_seed = DbtSeedOperator(
             task_id="dbt_seed",
-            target=connection,
+            dbt_conn_id=connection,
             project_dir=dbt_project_file.parent,
             profiles_dir=None,
             do_xcom_push_artifacts=["run_results.json"],
@@ -325,7 +325,7 @@ def target_connection_dag(
 
         dbt_run = DbtRunOperator(
             task_id="dbt_run",
-            target=connection,
+            dbt_conn_id=connection,
             project_dir=dbt_project_file.parent,
             profiles_dir=None,
             do_xcom_push_artifacts=["run_results.json"],
@@ -334,7 +334,7 @@ def target_connection_dag(
 
         dbt_test = DbtTestOperator(
             task_id="dbt_test",
-            target=connection,
+            dbt_conn_id=connection,
             project_dir=dbt_project_file.parent,
             profiles_dir=None,
             do_xcom_push_artifacts=["run_results.json"],
@@ -366,7 +366,7 @@ def test_dbt_operators_in_connection_dag(
         assert ti.state == TaskInstanceState.SUCCESS
 
         if isinstance(ti.task, DbtBaseOperator):
-            assert ti.task.target == "integration_test_conn"
+            assert ti.task.dbt_conn_id == "integration_test_conn"
             assert ti.task.project_dir == dbt_project_file.parent
 
             results = ti.xcom_pull(
@@ -471,14 +471,14 @@ def test_example_dbt_project_in_github_dag(dagbag, connection, clear_dagruns):
     for task_id in ("dbt_seed", "dbt_run", "dbt_test"):
         ti = dagrun.get_task_instance(task_id=task_id)
         ti.task = dag.get_task(task_id=task_id)
-        ti.task.target = connection
+        ti.task.dbt_conn_id = connection
 
         ti.run(ignore_ti_state=True)
 
         assert ti.state == TaskInstanceState.SUCCESS
 
         if isinstance(ti.task, DbtBaseOperator):
-            assert ti.task.target == "integration_test_conn"
+            assert ti.task.dbt_conn_id == "integration_test_conn"
             assert (
                 ti.task.project_dir == "https://github.com/dbt-labs/jaffle-shop-classic"
             )
