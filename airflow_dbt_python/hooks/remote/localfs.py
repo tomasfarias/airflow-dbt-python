@@ -52,7 +52,7 @@ class DbtLocalFsRemoteHook(FSHook, DbtRemoteHook):
 
         return URL(self.basepath) / url
 
-    def download(
+    def _download(
         self,
         source: URL,
         destination: URL,
@@ -70,7 +70,7 @@ class DbtLocalFsRemoteHook(FSHook, DbtRemoteHook):
         else:
             self.copy_one(source, destination, replace)
 
-    def upload(
+    def _upload(
         self,
         source: URL,
         destination: URL,

@@ -63,7 +63,7 @@ class DbtGitRemoteHook(SSHHook, DbtRemoteHook):
             **kwargs,
         )
 
-    def upload(
+    def _upload(
         self,
         source: URL,
         destination: URL,
@@ -130,7 +130,7 @@ class DbtGitRemoteHook(SSHHook, DbtRemoteHook):
             generate_pack_data=repo.generate_pack_data,
         )
 
-    def download(
+    def _download(
         self,
         source: URL,
         destination: URL,

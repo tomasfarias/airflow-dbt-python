@@ -4,8 +4,7 @@ import shutil
 from pathlib import Path
 from zipfile import ZipFile
 
-from airflow_dbt_python.hooks.localfs import DbtLocalFsRemoteHook
-from airflow_dbt_python.utils.url import URL
+from airflow_dbt_python.hooks.remote.localfs import DbtLocalFsRemoteHook
 
 
 def test_download_dbt_profiles(tmpdir, profiles_file):
