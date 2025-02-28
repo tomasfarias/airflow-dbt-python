@@ -7,7 +7,7 @@ from airflow.providers.ssh.hooks.ssh import SSHHook
 from dulwich.client import HttpGitClient, SSHGitClient, TCPGitClient
 from dulwich.contrib.paramiko_vendor import ParamikoSSHVendor
 from dulwich.objectspec import parse_reftuples
-from dulwich.porcelain import Error, active_branch, check_diverged
+from dulwich.porcelain import Error, active_branch, branch_create, check_diverged
 from dulwich.protocol import ZERO_SHA
 from dulwich.repo import Repo
 
@@ -83,7 +83,11 @@ class DbtGitRemoteHook(SSHHook, DbtRemoteHook):
                 f"Cannot upload archive to remote git repository: {source}"
             )
 
+        client, path, branch = self.get_git_client_path(destination)
+
         repo = Repo(str(source))
+        if branch:
+            branch_create(repo, branch, force=True)
 
         for f in source:
             if self.upload_filter(f) is False:
@@ -122,8 +126,6 @@ class DbtGitRemoteHook(SSHHook, DbtRemoteHook):
                         remote_changed_refs[rh] = localsha
             return new_refs
 
-        client, path = self.get_git_client_path(destination)
-
         client.send_pack(
             path,
             update_refs,
@@ -152,11 +154,13 @@ class DbtGitRemoteHook(SSHHook, DbtRemoteHook):
                 f"Cannot download archive from remote git repository: {source}"
             )
 
-        client, path = self.get_git_client_path(source)
+        client, path, branch = self.get_git_client_path(source)
 
-        client.clone(path, str(destination), mkdir=not destination.exists())
+        client.clone(
+            path, str(destination), mkdir=not destination.exists(), branch=branch
+        )
 
-    def get_git_client_path(self, url: URL) -> Tuple[GitClients, str]:
+    def get_git_client_path(self, url: URL) -> Tuple[GitClients, str, Optional[str]]:
         """Initialize a dulwich git client according to given URL's scheme."""
         if url.scheme == "git":
             client: GitClients = TCPGitClient(url.hostname, url.port)
@@ -210,4 +214,7 @@ class DbtGitRemoteHook(SSHHook, DbtRemoteHook):
         else:
             raise ValueError(f"Unsupported scheme: {url.scheme}")
 
-        return client, path
+        path, *remain = path.split("@", maxsplit=1)
+        branch = remain[0] if remain else None
+
+        return client, path, branch
