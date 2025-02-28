@@ -367,23 +367,22 @@ class DbtHook(BaseHook):
             project_dir,
             tmp_dir,
         )
-        new_project_dir = str(project_dir_path) + "/"
-
-        if (project_dir_path / "profiles.yml").exists():
-            # We may have downloaded the profiles.yml file together
-            # with the project.
-            return new_project_dir, new_project_dir
 
         if profiles_dir is not None:
             profiles_file_path = self.download_dbt_profiles(
                 profiles_dir,
                 tmp_dir,
             )
-            new_profiles_dir = str(profiles_file_path.parent) + "/"
+            profiles_dir_path = profiles_file_path.parent
+        elif (project_dir_path / "profiles.yml").exists():
+            profiles_dir_path = project_dir_path
         else:
-            new_profiles_dir = None
+            profiles_dir_path = None
 
-        return new_project_dir, new_profiles_dir
+        return (
+            str(project_dir_path) + os.sep,
+            str(profiles_dir_path) + os.sep if profiles_dir_path is not None else None,
+        )
 
     def setup_dbt_logging(self, debug: Optional[bool]):
         """Setup dbt logging.
