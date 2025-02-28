@@ -10,11 +10,13 @@ import json
 import shutil
 from pathlib import Path
 from typing import TYPE_CHECKING, Generator, List
+from unittest.mock import patch
 
 import boto3
 import pytest
 from airflow import settings
 from airflow.models.connection import Connection
+from mockgcp.storage.client import MockClient as MockStorageClient
 from moto import mock_aws
 from pytest_postgresql.janitor import DatabaseJanitor
 
@@ -376,10 +378,7 @@ def mocked_s3_res():
 @pytest.fixture
 def s3_hook():
     """Provide an S3 for testing."""
-    try:
-        from airflow.providers.amazon.aws.hooks.s3 import S3Hook
-    except ImportError:
-        from airflow.hooks.S3_hook import S3Hook
+    from airflow.providers.amazon.aws.hooks.s3 import S3Hook
 
     return S3Hook()
 
@@ -409,6 +408,68 @@ def s3_bucket(mocked_s3_res, s3_hook):
             "",
         )
     assert keys is None or len(keys) == 0
+
+
+@pytest.fixture
+def gcp_conn_id():
+    """Provide a GCS connection for testing."""
+    from airflow.providers.google.cloud.hooks.gcs import GCSHook
+
+    conn_id = GCSHook.default_conn_name
+
+    session = settings.Session()
+    existing = session.query(Connection).filter_by(conn_id=conn_id).first()
+    if existing is not None:
+        # Connections may exist from previous test run.
+        session.delete(existing)
+        session.commit()
+
+    conn = Connection(conn_id=conn_id, conn_type=GCSHook.conn_type)
+
+    session.add(conn)
+
+    session.commit()
+
+    yield conn_id
+
+    session.delete(conn)
+
+    session.commit()
+    session.close()
+
+
+@pytest.fixture
+def mocked_gcs_client():
+    """Provide mock Google Storage Client for testing."""
+    with patch("google.cloud.storage.client.Client", MockStorageClient):
+        yield MockStorageClient(project="test-project")
+
+
+@pytest.fixture
+def gcs_hook(gcp_conn_id):
+    """Provide an GCS for testing."""
+    from airflow_dbt_python.hooks.remote.gcs import DbtGCSRemoteHook
+
+    with patch(
+        "airflow.providers.google.cloud.hooks.gcs.GCSHook.get_credentials_and_project_id",
+        lambda x: ({}, "test-project"),
+    ):
+        with patch("google.cloud.storage.Client", MockStorageClient):
+            yield DbtGCSRemoteHook()
+
+
+@pytest.fixture
+def gcs_bucket(mocked_gcs_client, gcs_hook):
+    """Return a mocked gcs bucket for testing.
+
+    Bucket is cleaned after every use.
+    """
+    bucket_name = "airflow-dbt-test-gcs-bucket"
+    bucket = mocked_gcs_client.create_bucket(bucket_name)
+
+    yield bucket_name
+
+    bucket.delete()
 
 
 BROKEN_SQL = """
