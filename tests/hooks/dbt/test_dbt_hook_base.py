@@ -217,7 +217,7 @@ def hook_cls_with_conn_parameters(conn_params, conn_extra_params):
 @pytest.mark.parametrize(
     "hook_cls,fake_conn,expected",
     (
-        (DbtConnectionHook, FakeConnection({}), {}),
+        (DbtConnectionHook, FakeConnection({}), {"type": "dbt"}),
         (
             DbtConnectionHook,
             FakeConnection(
@@ -248,6 +248,7 @@ def hook_cls_with_conn_parameters(conn_params, conn_extra_params):
                 login="user",
             ),
             {
+                "type": "dbt",
                 "extra_param": 123,
                 "extra_param_2": 456,
             },
@@ -258,6 +259,7 @@ def hook_cls_with_conn_parameters(conn_params, conn_extra_params):
             ),
             FakeConnection(
                 {
+                    "type": "dbt",
                     "custom_extra": "extra",
                     "extra_param": 123,
                     "extra_param_2": 456,
@@ -269,7 +271,7 @@ def hook_cls_with_conn_parameters(conn_params, conn_extra_params):
                 port=5432,
                 login="user",
             ),
-            {"custom_param": "test", "custom_extra": "extra"},
+            {"custom_param": "test", "custom_extra": "extra", "type": "dbt"},
         ),
     ),
 )

@@ -54,20 +54,20 @@ class DbtConnectionHookMeta(ABCMeta):
     """A hook metaclass to collect all subclasses of DbtConnectionHook."""
 
     _dbt_hooks_by_conn_type: ClassVar[dict[str, DbtConnectionHookMeta]] = {}
-    conn_type: str
+    airflow_conn_types: tuple[str, ...]
 
     def __new__(cls, name, bases, attrs, **kwargs) -> DbtConnectionHookMeta:
         """Adds each DbtConnectionHook subclass to the dict based on its conn_type."""
         new_hook_cls = super().__new__(cls, name, bases, attrs)
-        if new_hook_cls.conn_type in cls._dbt_hooks_by_conn_type:
-            warnings.warn(
-                f"The connection type `{new_hook_cls.conn_type}`"
-                f" has been overwritten by `{new_hook_cls}`",
-                UserWarning,
-                stacklevel=1,
-            )
-
-        cls._dbt_hooks_by_conn_type[new_hook_cls.conn_type] = new_hook_cls
+        for airflow_conn_type in new_hook_cls.airflow_conn_types:
+            if airflow_conn_type in cls._dbt_hooks_by_conn_type:
+                warnings.warn(
+                    f"The connection type `{airflow_conn_type}`"
+                    f" has been overwritten by `{new_hook_cls}`",
+                    UserWarning,
+                    stacklevel=1,
+                )
+            cls._dbt_hooks_by_conn_type[airflow_conn_type] = new_hook_cls
         return new_hook_cls
 
 
@@ -76,6 +76,7 @@ class DbtConnectionHook(BaseHook, ABC, metaclass=DbtConnectionHookMeta):
 
     conn_type = "dbt"
     hook_name = "dbt Hook"
+    airflow_conn_types: tuple[str, ...] = ()
 
     conn_params: list[Union[DbtConnectionParam, str]] = [
         DbtConnectionParam("conn_type", "type"),
@@ -135,7 +136,7 @@ class DbtConnectionHook(BaseHook, ABC, metaclass=DbtConnectionHookMeta):
         Returns:
             A dictionary of dbt connection details.
         """
-        dbt_details = {}
+        dbt_details = {"type": self.conn_type}
         for param in self.conn_params:
             if isinstance(param, DbtConnectionParam):
                 if not param.depends_on(conn):
@@ -179,8 +180,9 @@ class DbtPostgresHook(DbtConnectionHook):
 
     conn_type = "postgres"
     hook_name = "dbt Postgres Hook"
+    airflow_conn_types: tuple[str, ...] = (conn_type, "gcpcloudsql")
+
     conn_params = [
-        DbtConnectionParam("conn_type", "type", conn_type),
         "host",
         DbtConnectionParam("schema", default="public"),
         DbtConnectionParam("login", "user"),
@@ -229,8 +231,15 @@ class DbtRedshiftHook(DbtPostgresHook):
 
     conn_type = "redshift"
     hook_name = "dbt Redshift Hook"
+    airflow_conn_types = (conn_type,)
+
     conn_extra_params = DbtPostgresHook.conn_extra_params + [
         "method",
+        DbtConnectionParam(
+            "method",
+            default="iam",
+            depends_on=lambda x: x.extra_dejson.get("iam_profile") is not None,
+        ),
         "cluster_id",
         "iam_profile",
         "autocreate",
@@ -247,8 +256,9 @@ class DbtSnowflakeHook(DbtConnectionHook):
 
     conn_type = "snowflake"
     hook_name = "dbt Snowflake Hook"
+    airflow_conn_types = (conn_type,)
+
     conn_params = [
-        DbtConnectionParam("conn_type", "type", conn_type),
         "host",
         "schema",
         DbtConnectionParam(
@@ -309,21 +319,38 @@ class DbtBigQueryHook(DbtConnectionHook):
 
     conn_type = "bigquery"
     hook_name = "dbt BigQuery Hook"
+    airflow_conn_types = ("gcpbigquery", "google_cloud_platform")
+
     conn_params = [
-        DbtConnectionParam("conn_type", "type", conn_type),
         "schema",
     ]
     conn_extra_params = [
-        DbtConnectionParam("keyfile_path", "keyfile"),
+        DbtConnectionParam("method", default="oauth"),
+        DbtConnectionParam(
+            "method",
+            default="oauth-secrets",
+            depends_on=lambda x: x.extra_dejson.get("refresh_token") is not None,
+        ),
+        DbtConnectionParam(
+            "method",
+            default="service-account-json",
+            depends_on=lambda x: x.extra_dejson.get("keyfile_dict") is not None,
+        ),
+        DbtConnectionParam(
+            "method",
+            default="service-account",
+            depends_on=lambda x: x.extra_dejson.get("key_path") is not None,
+        ),
+        DbtConnectionParam("key_path", "keyfile"),
         DbtConnectionParam("keyfile_dict", "keyfile_json"),
         "method",
-        "database",
+        DbtConnectionParam("project", "database"),
         "schema",
         "refresh_token",
         "client_id",
         "client_secret",
         "token_uri",
-        "OPTIONAL_CONFIG",
+        "scopes",
     ]
 
 
@@ -332,8 +359,8 @@ class DbtSparkHook(DbtConnectionHook):
 
     conn_type = "spark"
     hook_name = "dbt Spark Hook"
+    airflow_conn_types = ("spark_connect",)
     conn_params = [
-        DbtConnectionParam("conn_type", "type", conn_type),
         "host",
         "port",
         "schema",
