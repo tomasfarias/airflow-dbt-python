@@ -95,9 +95,11 @@ class BaseConfig:
     log_level_file: str = "none"
     record_timing_info: Optional[str] = None
     debug: Optional[bool] = None
-    quiet: Optional[bool] = None
-    no_print: Optional[bool] = None
     printer_width: int = 80
+    quiet: Optional[bool] = None
+    no_quiet: Optional[bool] = dataclasses.field(default=None, repr=False)
+    print: Optional[bool] = None
+    no_print: Optional[bool] = dataclasses.field(default=None, repr=False)
 
     # Mutually exclusive attributes
     defer: Optional[bool] = None
@@ -140,6 +142,32 @@ class BaseConfig:
         default=None, repr=False
     )
 
+    partial_parse_file_diff: Optional[bool] = None
+    no_partial_parse_file_diff: Optional[bool] = dataclasses.field(
+        default=None, repr=False
+    )
+
+    inject_ephemeral_ctes: Optional[bool] = None
+    no_inject_ephemeral_ctes: Optional[bool] = dataclasses.field(
+        default=None, repr=False
+    )
+
+    empty: Optional[bool] = None
+    no_empty: Optional[bool] = dataclasses.field(default=None, repr=False)
+
+    show_resource_report: Optional[bool] = None
+    no_show_resource_report: Optional[bool] = dataclasses.field(
+        default=None, repr=False
+    )
+
+    favor_state: Optional[bool] = None
+    no_favor_state: Optional[bool] = dataclasses.field(default=None, repr=False)
+
+    export_saved_queries: Optional[bool] = None
+    no_export_saved_queries: Optional[bool] = dataclasses.field(
+        default=None, repr=False
+    )
+
     add_package: Optional[Package] = None
     dry_run: bool = False
     lock: bool = False
@@ -178,6 +206,8 @@ class BaseConfig:
                 to non-None values.
         """
         mutually_exclusive_attrs = (
+            ("quiet", False),
+            ("print", True),
             ("defer", False),
             ("partial_parse", True),
             ("log_cache_events", False),
@@ -191,6 +221,12 @@ class BaseConfig:
             ("write_json", True),
             ("include_saved_query", None),
             ("clean_project_files_only", True),
+            ("partial_parse_file_diff", True),
+            ("inject_ephemeral_ctes", True),
+            ("empty", False),
+            ("show_resource_report", False),
+            ("favor_state", None),
+            ("export_saved_queries", None),
         )
 
         for attrs, default_value in mutually_exclusive_attrs:
