@@ -79,6 +79,8 @@ class DbtBaseOperator(BaseOperator):
         log_format: LogFormat = LogFormat.DEFAULT,
         log_cache_events: Optional[bool] = False,
         quiet: Optional[bool] = None,
+        no_quiet: Optional[bool] = None,
+        print: Optional[bool] = None,
         no_print: Optional[bool] = None,
         record_timing_info: Optional[str] = None,
         # Mutually exclusive
@@ -98,6 +100,18 @@ class DbtBaseOperator(BaseOperator):
         write_perf_info: Optional[bool] = None,
         send_anonymous_usage_stats: Optional[bool] = None,
         no_send_anonymous_usage_stats: Optional[bool] = None,
+        partial_parse_file_diff: Optional[bool] = None,
+        no_partial_parse_file_diff: Optional[bool] = None,
+        inject_ephemeral_ctes: Optional[bool] = None,
+        no_inject_ephemeral_ctes: Optional[bool] = None,
+        empty: Optional[bool] = None,
+        no_empty: Optional[bool] = None,
+        show_resource_report: Optional[bool] = None,
+        no_show_resource_report: Optional[bool] = None,
+        favor_state: Optional[bool] = None,
+        no_favor_state: Optional[bool] = None,
+        export_saved_queries: Optional[bool] = None,
+        no_export_saved_queries: Optional[bool] = None,
         # Extra features configuration
         dbt_conn_id: Optional[str] = None,
         profiles_conn_id: Optional[str] = None,
@@ -129,6 +143,8 @@ class DbtBaseOperator(BaseOperator):
         self.log_path = log_path
         self.log_cache_events = log_cache_events
         self.quiet = quiet
+        self.no_quiet = no_quiet
+        self.print = print
         self.no_print = no_print
         self.log_level = log_level
         self.log_level_file = log_level_file
@@ -161,6 +177,18 @@ class DbtBaseOperator(BaseOperator):
         )
 
         self.write_perf_info = write_perf_info
+        self.partial_parse_file_diff = partial_parse_file_diff
+        self.no_partial_parse_file_diff = no_partial_parse_file_diff
+        self.inject_ephemeral_ctes = inject_ephemeral_ctes
+        self.no_inject_ephemeral_ctes = no_inject_ephemeral_ctes
+        self.empty = empty
+        self.no_empty = no_empty
+        self.show_resource_report = show_resource_report
+        self.no_show_resource_report = no_show_resource_report
+        self.favor_state = favor_state
+        self.no_favor_state = no_favor_state
+        self.export_saved_queries = export_saved_queries
+        self.no_export_saved_queries = no_export_saved_queries
 
         self.dbt_conn_id = dbt_conn_id
         self.profiles_conn_id = profiles_conn_id
