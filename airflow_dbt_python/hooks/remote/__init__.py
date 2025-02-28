@@ -151,6 +151,10 @@ def get_remote(scheme: str, conn_id: Optional[str] = None) -> DbtRemoteHook:
         from .s3 import DbtS3RemoteHook
 
         remote_cls: Type[DbtRemoteHook] = DbtS3RemoteHook
+    elif scheme == "gs":
+        from .gcs import DbtGCSRemoteHook
+
+        remote_cls = DbtGCSRemoteHook
     elif scheme in ("https", "git", "git+ssh", "ssh", "http"):
         from .git import DbtGitRemoteHook
 

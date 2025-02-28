@@ -35,6 +35,7 @@ build-backend = "poetry.core.masonry.api"
 [project.optional-dependencies]
 airflow-providers = [
     "apache-airflow-providers-amazon>=3.0.0",
+    "apache-airflow-providers-google>=11.0.0",
     "apache-airflow-providers-ssh>=3.0.0",
 ]
 adapters = [
@@ -46,6 +47,9 @@ adapters = [
 ]
 bigquery = [
     "dbt-bigquery>=1.8.0,<2.0.0",
+]
+gcs = [
+    "apache-airflow-providers-google>=11.0.0",
 ]
 git = [
     "apache-airflow-providers-ssh>=3.0.0",
@@ -75,6 +79,7 @@ optional = true
 
 [tool.poetry.group.dev.dependencies]
 apache-airflow-providers-amazon = ">=3.0.0"
+apache-airflow-providers-google = ">=11.0.0"
 apache-airflow-providers-ssh = ">=3.0.0"
 black = ">=22"
 boto3-stubs = { extras = ["s3"], version = ">=1.26.8" }
@@ -91,6 +96,8 @@ pytest-postgresql = ">=5"
 ruff = ">=0.0.254"
 types-freezegun = ">=1.1.6"
 types-PyYAML = ">=6.0.7"
+pytest-mock = "^3.14.0"
+mock-gcp = {git = "https://github.com/millin/mock-gcp.git", rev = "0d972df9b6cce164b49f09ec4417a4eb77beb960"}
 
 [tool.poetry.group.docs]
 optional = true
