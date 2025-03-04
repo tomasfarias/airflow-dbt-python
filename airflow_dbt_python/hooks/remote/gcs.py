@@ -194,7 +194,7 @@ class DbtGCSRemoteHook(GCSHook, DbtRemoteHook):
         self,
         filename: Path | str,
         key: str,
-        bucket_name: str | None = None,
+        bucket_name: str,
         replace: bool = False,
         encrypt: bool = False,
         gzip: bool = False,
@@ -215,7 +215,6 @@ class DbtGCSRemoteHook(GCSHook, DbtRemoteHook):
         if not replace and self.check_for_key(key, bucket_name):
             raise ValueError(f"The key {key} already exists.")
 
-        metadata = {}
         if encrypt:
             raise NotImplementedError("Encrypt is not implemented in GCSHook.")
 
@@ -224,7 +223,6 @@ class DbtGCSRemoteHook(GCSHook, DbtRemoteHook):
             object_name=key,
             filename=filename,
             gzip=gzip,
-            metadata=metadata,
         )
         get_hook_lineage_collector().add_input_asset(
             context=self, scheme="file", asset_kwargs={"path": filename}
