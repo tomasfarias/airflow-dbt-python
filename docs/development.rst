@@ -43,7 +43,7 @@ If you wish to install a different version of Airflow for testing you may skip t
 
 .. code-block:: shell
 
-   pip install apache-airflow==2.2 apache-airflow-providers-amazon==5.0
+   pip install apache-airflow>=2.2 apache-airflow-providers-amazon>=3.0
 
 Modifying dependencies
 ----------------------
@@ -134,6 +134,6 @@ Most of *airflow-dbt-python*'s operator and hook tests follow the same pattern:
 
 1. Initialize a specific operator or hook.
 2. Run it with a basic test *dbt* project against the test PostgreSQL database.
-3. Assert *dbt* executes succesfuly, any results are properly propagated, and any artifacts are pushed to where they need to go.
+3. Assert *dbt* executes successfully, any results are properly propagated, and any artifacts are pushed to where they need to go.
 
 However, *airflow-dbt-python* also includes DAG tests, which can be seen as broader integration tests. These are located under ``tests/dags/``. DAG tests focus on testing complete end-to-end DAGs, including those shown in :ref:`example_dags`.

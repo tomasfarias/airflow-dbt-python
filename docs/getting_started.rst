@@ -118,7 +118,7 @@ Accessing a *dbt* project
 
 1. Using a `local executor <https://airflow.apache.org/docs/apache-airflow/stable/executor/local.html>`_ with a single-machine installation means we can rely on the local machine's filesystem to store a *dbt* project. This also applies to ``DebugExecutor`` and ``SequentialExecutor``, but these executors are generally only used for debugging/development so we will ignore them. If you are running a setup like this, then simply ensure your *dbt* project and *profiles.yml* exist somewhere in the ``LocalExecutor``'s file system.
 
-2. Once your setup has evolved to a multi-machine/cloud installation with any remote executor, we must rely on a remote storage for *dbt* files. Currently, supported remote storages include AWS S3 and git remote repositories although more are in plans to be added. In this setup, your *dbt* project will need to be uploaded to a remote storage that Airflow can access. *airflow-dbt-python* can utilize Airflow connections to access these storages.
+2. Once your setup has evolved to a multi-machine/cloud installation with any remote executor, we must rely on a remote storage for *dbt* files. Currently, supported remote storages include AWS S3, Google Cloud Storage and Git repositories although more are in plans to be added. In this setup, your *dbt* project will need to be uploaded to a remote storage that Airflow can access. *airflow-dbt-python* can utilize Airflow connections to access these storages.
 
 Single-machine installation
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -316,7 +316,7 @@ The DAG looks the same as the AWS S3 example, except that now we use the GitHub 
            project_dir="git+ssh://github.com:dbt-labs/jaffle-shop-classic",
            select=["+tag:daily"],
            exclude=["tag:deprecated"],
-           target="my_warehouse_connection",
+           dbt_conn_id="my_warehouse_connection",
            profile="my-project",
       )
 

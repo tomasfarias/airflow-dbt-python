@@ -33,3 +33,9 @@ The DbtRemoteHook interface
 
 .. automodule:: airflow_dbt_python.hooks.remote.s3
    :members:
+
+*dbt* GCS remote
+^^^^^^^^^^^^^^^^
+
+.. automodule:: airflow_dbt_python.hooks.remote.gcs
+   :members:
