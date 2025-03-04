@@ -14,7 +14,7 @@ Features
 We believe Airflow can **enhance** a *dbt* user's experience with several additional features that leverage Airflow as much as possible:
 
 * Configuring *dbt* connections with Airflow connections.
-* Downloading *dbt* projects from remote storages, like `AWS S3 <https://aws.amazon.com/s3/>`_ or Github repositories.
+* Downloading *dbt* projects from remote storages, like `AWS S3 <https://aws.amazon.com/s3/>`_, `Google Cloud Storage <https://cloud.google.com/storage/docs>`_ or Github repositories.
 * Communicate between tasks by pushing results and artifacts to `XCom <https://airflow.apache.org/docs/apache-airflow/stable/core-concepts/xcoms.html>`_.
 
 Can you think of another way Airflow can enhance *dbt*? Let us know in a `GitHub issue <https://github.com/tomasfarias/airflow-dbt-python/issues/new/choose>`_!
@@ -26,7 +26,7 @@ Read along for a breakdown of *airflow-dbt-python*'s main features, or head over
 Download dbt files from S3
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The dbt parameters ``profiles_dir`` and ``project_dir`` would normally point to a directory containing a ``profiles.yml`` file and a dbt project in the local environment respectively (defined by the presence of a ``dbt_project.yml`` file). airflow-dbt-python extends these parameters to also accept an `AWS S3 <https://aws.amazon.com/s3/>`_ URL (identified by a ``s3://`` scheme):
+The dbt parameters ``profiles_dir`` and ``project_dir`` would normally point to a directory containing a ``profiles.yml`` file and a dbt project in the local environment respectively (defined by the presence of a ``dbt_project.yml`` file). airflow-dbt-python extends these parameters to also accept an `AWS S3 <https://aws.amazon.com/s3/>`_ URL (identified by a ``s3://`` scheme) and a `Google Cloud Storate <https://cloud.google.com/storage/docs>`_ URL (identified by a ``gs://`` scheme):
 
 * If an S3 URL is used for ``profiles_dir``, then this URL must point to a directory in S3 that contains a ``profiles.yml`` file. The ``profiles.yml`` file will be downloaded and made available for the operator to use when running.
 * If an S3 URL is used for ``project_dir``, then this URL must point to a directory in S3 containing all the files required for a dbt project to run. All of the contents of this directory will be downloaded and made available for the operator. The URL may also point to a zip file containing all the files of a dbt project, which will be downloaded, uncompressed, and made available for the operator.
@@ -134,7 +134,7 @@ Use Airflow connections as dbt targets (without a profiles.yml)
    ) as dag:
    dbt_run = DbtRunOperator(
        task_id="dbt_run_hourly",
-       target="my_db_connection",
+       dbt_conn_id="my_db_connection",
        # Profiles file is not needed as we are using an Airflow connection.
        # If a profiles file is used, the Airflow connection will be merged to the
        # existing targets

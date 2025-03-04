@@ -58,7 +58,7 @@ This ensures *dbt* can work with any Airflow deployment, including most producti
 *dbt* remote hooks
 ------------------
 
-*dbt* remote hooks implement a simple interface to communicate with *dbt* remotes. A *dbt* remote can be any external storage that contains a *dbt* project and potentially also a *profiles.yml* file for example: an AWS S3 bucket or a GitHub repository. See the reference for a list of which remotes are currently supported.
+*dbt* remote hooks implement a simple interface to communicate with *dbt* remotes. A *dbt* remote can be any external storage that contains a *dbt* project and potentially also a *profiles.yml* file for example: an AWS S3 bucket, a Google Cloud Storage or a GitHub repository. See the reference for a list of which remotes are currently supported.
 
 Implementing the ``DbtRemoteHook`` interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
