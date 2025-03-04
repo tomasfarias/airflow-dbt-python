@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import datetime as dt
 import os
+from abc import ABC, abstractmethod
 from dataclasses import asdict, is_dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Dict, Optional, Union
@@ -38,18 +39,84 @@ class DbtBaseOperator(BaseOperator):
     command itself, subclasses should set it.
 
     Attributes:
-        command: The dbt command to execute.
         project_dir: Directory for dbt to look for dbt_profile.yml. Defaults to
             current directory.
         profiles_dir: Directory for dbt to look for profiles.yml. Defaults to
             ~/.dbt.
         profile: Which profile to load. Overrides dbt_profile.yml.
         target: Which target to load for the given profile.
+        state: Unless overridden, use this state directory for both state comparison
+            and deferral.
+        cache_selected_only: At start of run, populate relational cache
+            only for schemas containing selected nodes, or for all schemas of interest.
+        fail_fast: Stop execution on first failure.
+        single_threaded: Execute dbt command in single threaded mode. For test only
+        threads: Specify number of threads to use while executing models.
+            Overrides settings in profiles.yml.
+        use_experimental_parser: Enable experimental parsing features.
         vars: Supply variables to the project. Should be a YAML string. Overrides
             variables defined in dbt_profile.yml.
+        warn_error: If dbt would normally warn, instead raise an exception.
+            Examples include --select that selects nothing, deprecations,
+            configurations with no associated models, invalid test configurations,
+            and missing sources/refs in tests.
+        debug: Display debug logging during dbt execution.
+            Useful for debugging and making bug reports.
+        log_path: Log path for dbt execution.
+        log_level: Specify the minimum severity of events that are logged
+            to the console and the log file.
+        log_level_file: Specify the minimum severity of events that are logged
+            to the log file by overriding the default value
+        log_format: Specify the format of logging to the console and the log file.
+        log_format_file: Specify the format of logging to the log file by overriding
+            the default value
         log_cache_events: Flag to enable logging of cache events.
-        s3_conn_id: An s3 Airflow connection ID to use when pulling dbt files from s3.
+        quiet/no_quiet: Suppress all non-error logging to stdout.
+            Does not affect {{ print() }} macro calls.
+        print/no_print: Output all {{ print() }} macro calls.
+        record_timing_info: When this option is passed, dbt will output low-level
+            timing stats to the specified file.
+        defer/no_defer: If set, resolve unselected nodes by deferring to the manifest
+            within the --state directory.
+        partial_parse/no_partial_parse: Allow for partial parsing by looking for
+            and writing to a pickle file in the target directory.
+        introspect/no_introspect: Whether to scaffold introspective queries
+            as part of compilation
+        use_colors/no_use_colors: Specify whether log output is colorized
+            in the console and the log file.
+        static_parser/no_static_parser: Use the static parser.
+        version_check/no_version_check: If set, ensure the installed dbt version matches
+            the require-dbt-version specified in the dbt_project.yml file (if any).
+            Otherwise, allow them to differ.
+        write_json/no_write_json: Whether or not to write the manifest.json
+            and run_results.json files to the target directory
+        send_anonymous_usage_stats/no_send_anonymous_usage_stats: Send anonymous usage
+            stats to dbt Labs.
+        partial_parse_file_diff/no_partial_parse_file_diff: Internal flag for whether
+            to compute a file diff during partial parsing.
+        inject_ephemeral_ctes/no_inject_ephemeral_ctes: Internal flag controlling
+            injection of referenced ephemeral models' CTEs during `compile`.
+        empty/no_empty: If specified, limit input refs and sources to zero rows.
+        show_resource_report/no_show_resource_report: If set, dbt will output
+            resource report into log.
+        favor_state/no_favor_state: If set, defer to the argument provided to
+            the state flag for resolving unselected nodes, even if the node(s) exist
+            as a database object in the current environment.
+        export_saved_queries/no_export_saved_queries: Export saved queries within
+            the 'build' command, otherwise no-op
+        dbt_conn_id: An Airflow connection ID to generate dbt profile from.
+        profiles_conn_id: An Airflow connection ID to use for pulling dbt profiles
+            from remote (e.g. git/s3/gcs).
+        project_conn_id: An Airflow connection ID to use for pulling dbt project
+            from remote (e.g. git/s3/gcs).
         do_xcom_push_artifacts: A list of dbt artifacts to XCom push.
+        upload_dbt_project: Flag to enable unloading the project dbt after the operator
+            execution back to project_dir.
+        delete_before_upload: Flag to enable cleaning up project_dir before uploading
+            dbt project back to.
+        replace_on_upload: Flag to allow replacing files when uploading dbt project
+            back to project_dir.
+        env_vars: Supply environment variables to the project
     """
 
     template_fields = base_template_fields
@@ -77,6 +144,7 @@ class DbtBaseOperator(BaseOperator):
         log_level: Optional[str] = None,
         log_level_file: Optional[str] = None,
         log_format: LogFormat = LogFormat.DEFAULT,
+        log_format_file: LogFormat = LogFormat.DEBUG,
         log_cache_events: Optional[bool] = False,
         quiet: Optional[bool] = None,
         no_quiet: Optional[bool] = None,
@@ -149,6 +217,7 @@ class DbtBaseOperator(BaseOperator):
         self.log_level = log_level
         self.log_level_file = log_level_file
         self.log_format = log_format
+        self.log_format_file = log_format_file
         self.record_timing_info = record_timing_info
 
         self.dbt_defer = defer
@@ -243,6 +312,7 @@ class DbtBaseOperator(BaseOperator):
         return serializable_result
 
     @property
+    @abstractmethod
     def command(self) -> str:
         """Return the current dbt command.
 
@@ -294,6 +364,22 @@ class DbtBaseOperator(BaseOperator):
         if is_dataclass(result) is False:
             return result  # type: ignore
         return asdict(result, dict_factory=run_result_factory)
+
+
+class _GraphRunnableOperator(ABC, DbtBaseOperator):
+    """The abstract base Airflow dbt operator for list/compile commands.
+
+    Attributes:
+        compiled_target:
+    """
+
+    def __init__(
+        self,
+        compiled_target: Optional[Union[os.PathLike, str, bytes]] = None,
+        **kwargs,
+    ):
+        super().__init__(**kwargs)
+        self.compiled_target = compiled_target
 
 
 selection_template_fields = ["select", "exclude"]
@@ -397,7 +483,7 @@ class DbtTestOperator(DbtBaseOperator):
         return "test"
 
 
-class DbtCompileOperator(DbtBaseOperator):
+class DbtCompileOperator(_GraphRunnableOperator):
     """Executes a dbt compile command.
 
     The compile command generates SQL files. The
@@ -542,7 +628,7 @@ class DbtSnapshotOperator(DbtBaseOperator):
         return "snapshot"
 
 
-class DbtLsOperator(DbtBaseOperator):
+class DbtLsOperator(_GraphRunnableOperator):
     """Executes a dbt list (or ls) command.
 
     The documentation for the dbt command can be found here:
