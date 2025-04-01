@@ -379,8 +379,8 @@ def test_dbt_base_dbt_directory_changed_to_s3(
         assert Path(tmp_dir).exists()
         assert Path(tmp_dir).is_dir()
 
-        assert config.project_dir == f"{tmp_dir}/"
-        assert config.profiles_dir == f"{tmp_dir}/"
+        assert config.project_dir == tmp_dir
+        assert config.profiles_dir == tmp_dir
         assert config.state == f"{tmp_dir}/target"
 
         assert Path(f"{tmp_dir}/profiles.yml").exists()
