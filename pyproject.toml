@@ -97,7 +97,7 @@ ruff = ">=0.0.254"
 types-freezegun = ">=1.1.6"
 types-PyYAML = ">=6.0.7"
 pytest-mock = "^3.14.0"
-mock-gcp = {git = "https://github.com/millin/mock-gcp.git", rev = "0d972df9b6cce164b49f09ec4417a4eb77beb960"}
+mock-gcp = ">=0.2.0"
 
 [tool.poetry.group.docs]
 optional = true
