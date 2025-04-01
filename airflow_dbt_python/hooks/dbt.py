@@ -33,12 +33,12 @@ else:
 if TYPE_CHECKING:
     from dbt.contracts.results import RunResult
 
-    from airflow_dbt_python.hooks.remote import DbtRemoteHook
+    from airflow_dbt_python.hooks.fs import DbtFSHook
     from airflow_dbt_python.hooks.target import DbtConnectionHook
     from airflow_dbt_python.utils.configs import BaseConfig
     from airflow_dbt_python.utils.url import URLLike
 
-    DbtRemoteHooksDict = Dict[Tuple[str, Optional[str]], DbtRemoteHook]
+    DbtFSHooksDict = Dict[Tuple[str, Optional[str]], DbtFSHook]
 
 
 class DbtTaskResult(NamedTuple):
@@ -103,16 +103,16 @@ class DbtHook(ABC, LoggingMixin):
         return DbtConnectionHook.get_db_conn_hook(conn_id)
 
     @staticmethod
-    def get_remote(scheme: str, conn_id: Optional[str]) -> DbtRemoteHook:
-        """Get a remote to interact with dbt files.
+    def get_fs_hook(scheme: str, conn_id: Optional[str]) -> DbtFSHook:
+        """Get a fs_hook to interact with dbt files.
 
-        RemoteHooks are defined by the scheme we are looking for and an optional
+        FSHooks are defined by the scheme we are looking for and an optional
         connection id if we are looking to interface with any Airflow hook that
         uses a connection.
         """
-        from .remote import get_remote
+        from .fs import get_fs_hook
 
-        return get_remote(scheme, conn_id)
+        return get_fs_hook(scheme, conn_id)
 
     def download_dbt_profiles(
         self,
@@ -121,13 +121,13 @@ class DbtHook(ABC, LoggingMixin):
     ) -> Path:
         """Pull a dbt profiles.yml file from a given profiles_dir.
 
-        This operation is delegated to a DbtRemoteHook. An optional connection id is
+        This operation is delegated to a DbtFSHook. An optional connection id is
         supported for remotes that require it.
         """
         scheme = urlparse(str(profiles_dir)).scheme
-        remote = self.get_remote(scheme, self.profiles_conn_id)
+        fs_hook = self.get_fs_hook(scheme, self.profiles_conn_id)
 
-        return remote.download_dbt_profiles(profiles_dir, destination)
+        return fs_hook.download_dbt_profiles(profiles_dir, destination)
 
     def download_dbt_project(
         self,
@@ -136,13 +136,13 @@ class DbtHook(ABC, LoggingMixin):
     ) -> Path:
         """Pull a dbt project from a given project_dir.
 
-        This operation is delegated to a DbtRemoteHook. An optional connection id is
+        This operation is delegated to a DbtFSHook. An optional connection id is
         supported for remotes that require it.
         """
         scheme = urlparse(str(project_dir)).scheme
-        remote = self.get_remote(scheme, self.project_conn_id)
+        fs_hook = self.get_fs_hook(scheme, self.project_conn_id)
 
-        return remote.download_dbt_project(project_dir, destination)
+        return fs_hook.download_dbt_project(project_dir, destination)
 
     def upload_dbt_project(
         self,
@@ -153,13 +153,13 @@ class DbtHook(ABC, LoggingMixin):
     ) -> None:
         """Push a dbt project from a given project_dir.
 
-        This operation is delegated to a DbtRemoteHook. An optional connection id is
+        This operation is delegated to a DbtFSHook. An optional connection id is
         supported for remotes that require it.
         """
         scheme = urlparse(str(destination)).scheme
-        remote = self.get_remote(scheme, self.project_conn_id)
+        fs_hook = self.get_fs_hook(scheme, self.project_conn_id)
 
-        return remote.upload_dbt_project(
+        return fs_hook.upload_dbt_project(
             project_dir, destination, replace=replace, delete_before=delete_before
         )
 

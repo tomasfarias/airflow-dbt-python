@@ -12,14 +12,14 @@ from typing import Optional
 
 from airflow.hooks.filesystem import FSHook
 
-from airflow_dbt_python.hooks.remote import DbtRemoteHook
+from airflow_dbt_python.hooks.fs import DbtFSHook
 from airflow_dbt_python.utils.url import URL
 
 
-class DbtLocalFsRemoteHook(FSHook, DbtRemoteHook):
-    """A concrete dbt remote for a local filesystem.
+class DbtLocalFsHook(FSHook, DbtFSHook):
+    """A concrete dbt hook for a local filesystem.
 
-    This remote is intended to be used when running Airflow with a LocalExecutor, and
+    This hook is intended to be used when running Airflow with a LocalExecutor, and
     it relies on shutil from the standard library to do all the file manipulation. For
     these reasons, running multiple concurrent tasks with this remote may lead to race
     conditions if attempting to push files to the remote.
@@ -28,7 +28,7 @@ class DbtLocalFsRemoteHook(FSHook, DbtRemoteHook):
     conn_name_attr = "fs_conn_id"
     default_conn_name = "fs_default"
     conn_type = "filesystem"
-    hook_name = "dbt Local Filesystem RemoteHook"
+    hook_name = "dbt Local Filesystem FSHook"
 
     def __init__(
         self,

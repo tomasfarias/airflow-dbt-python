@@ -1,1 +1,1 @@
-"""Hooks module provides DbtHooks and DbtRemoteHooks."""
+"""Hooks module provides DbtHooks and DbtFSHooks."""

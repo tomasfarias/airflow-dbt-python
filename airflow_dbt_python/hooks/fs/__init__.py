@@ -1,6 +1,6 @@
-"""The DbtRemoteHook interface includes methods for downloading and uploading files.
+"""The DbtFSHook interface includes methods for downloading and uploading files.
 
-Internally, DbtRemoteHooks can use Airflow hooks to execute the actual operations.
+Internally, DbtFSHooks can use Airflow hooks to execute the actual operations.
 
 Currently, only AWS S3 and the local filesystem are supported as remotes.
 """
@@ -17,7 +17,7 @@ from airflow_dbt_python.utils.url import URL, URLLike
 StrPath = str
 
 
-class DbtRemoteHook(ABC, LoggingMixin):
+class DbtFSHook(ABC, LoggingMixin):
     """Represents a dbt project storing any dbt files.
 
     A concrete backend class should implement the push and pull methods to fetch one
@@ -141,33 +141,33 @@ class DbtRemoteHook(ABC, LoggingMixin):
 
 
 @cache
-def get_remote(scheme: str, conn_id: Optional[str] = None) -> DbtRemoteHook:
-    """Get a DbtRemoteHook as long as the scheme is supported.
+def get_fs_hook(scheme: str, conn_id: Optional[str] = None) -> DbtFSHook:
+    """Get a DbtFSHook as long as the scheme is supported.
 
     In the future we should make our hooks discoverable and package ourselves as a
     proper Airflow providers package.
     """
     if scheme == "s3":
-        from .s3 import DbtS3RemoteHook
+        from .s3 import DbtS3FSHook
 
-        remote_cls: Type[DbtRemoteHook] = DbtS3RemoteHook
+        fs_hook_cls: Type[DbtFSHook] = DbtS3FSHook
     elif scheme == "gs":
-        from .gcs import DbtGCSRemoteHook
+        from .gcs import DbtGCSFSHook
 
-        remote_cls = DbtGCSRemoteHook
+        fs_hook_cls = DbtGCSFSHook
     elif scheme in ("https", "git", "git+ssh", "ssh", "http"):
-        from .git import DbtGitRemoteHook
+        from .git import DbtGitFSHook
 
-        remote_cls = DbtGitRemoteHook
+        fs_hook_cls = DbtGitFSHook
     elif scheme == "":
-        from .localfs import DbtLocalFsRemoteHook
+        from .local import DbtLocalFsHook
 
-        remote_cls = DbtLocalFsRemoteHook
+        fs_hook_cls = DbtLocalFsHook
     else:
         raise NotImplementedError(f"Backend {scheme} is not supported")
 
     if conn_id is not None:
-        remote = remote_cls(conn_id)
+        fs_hook = fs_hook_cls(conn_id)
     else:
-        remote = remote_cls()
-    return remote
+        fs_hook = fs_hook_cls()
+    return fs_hook

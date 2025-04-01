@@ -229,7 +229,7 @@ When Airflow is installed is running on a multi- machine or cloud installation, 
 
 For these deployments we must rely on a *dbt* remote to download and, eventually, upload all required *dbt* files. The remote *dbt* URL may be used in place of a local ``project_dir`` or ``profiles_dir`` to have *airflow-dbt-python* download the *dbt* files in the remote into a temporary directory for execution.
 
-Interactions with storages are supported by subclasses of ``DbtRemoteHook``. Read the documentation :ref:`dbt_remote_hooks` to learn more about these hooks.
+Interactions with storages are supported by subclasses of ``DbtFSHook``. Read the documentation :ref:`dbt_remote_hooks` to learn more about these hooks.
 
 As an example, let's upload our *dbt* project to an AWS S3 bucket. The files may end up structured in the bucket as:
 
@@ -285,7 +285,7 @@ Then, we can alter the previous example DAG to set ``project_dir`` and ``profile
            profile="my-project",
       )
 
-*airflow-dbt-python* uses the URL scheme (in this example, ``"s3"``) to figure out the type of remote, and the corresponding ``DbtRemoteHook`` to download all required files. An exception would be raised if the scheme does not point to a supported remote.
+*airflow-dbt-python* uses the URL scheme (in this example, ``"s3"``) to figure out the type of remote, and the corresponding ``DbtFSHook`` to download all required files. An exception would be raised if the scheme does not point to a supported remote.
 
 *airflow-dbt-python* takes care of adjusting any path-like arguments so that they are pointing to files in a local temporary directory once all the *dbt* files are download from the remote storage.
 
@@ -320,7 +320,7 @@ The DAG looks the same as the AWS S3 example, except that now we use the GitHub 
            profile="my-project",
       )
 
-*airflow-dbt-python* can determine this URL requires a ``DbtGitRemoteHook`` by looking at the URL's scheme (``"git+ssh"``). As we are passing an SSH URL, ``DbtGitRemoteHook`` can utilize an Airflow `SSH Connection <https://airflow.apache.org/docs/apache-airflow-providers-ssh/stable/connections/ssh.html>`_ as it subclasses Airflow's ``SSHHook``. This connection type allows us to setup the necessary SSH keys to access GitHub. Of course, as this is a public repository, we could have just used an HTTP URL, but for private repositories an SSH key may be required.
+*airflow-dbt-python* can determine this URL requires a ``DbtGitFSHook`` by looking at the URL's scheme (``"git+ssh"``). As we are passing an SSH URL, ``DbtGitFSHook`` can utilize an Airflow `SSH Connection <https://airflow.apache.org/docs/apache-airflow-providers-ssh/stable/connections/ssh.html>`_ as it subclasses Airflow's ``SSHHook``. This connection type allows us to setup the necessary SSH keys to access GitHub. Of course, as this is a public repository, we could have just used an HTTP URL, but for private repositories an SSH key may be required.
 
 .. note::
    *airflow-dbt-python* can utilize Airflow Connections to fetch connection details for *dbt* remotes as well as for *dbt* targets (e.g. for your data warehouse). The ``project_conn_id`` and ``profiles_conn_id`` arguments that all *dbt* operators have refer to Airflow Connections to used to fetch *dbt* projects and *profiles.yml* respectively, whereas the ``target`` argument can point to an Airflow Connection used to setup *dbt* to access your data warehouse.

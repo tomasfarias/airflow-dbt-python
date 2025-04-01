@@ -1,4 +1,4 @@
-"""Unit test module for DbtS3RemoteHook."""
+"""Unit test module for DbtS3FSHook."""
 
 import io
 from zipfile import ZipFile
@@ -7,7 +7,7 @@ import freezegun
 import pytest
 
 try:
-    from airflow_dbt_python.hooks.remote.s3 import DbtS3RemoteHook
+    from airflow_dbt_python.hooks.fs.s3 import DbtS3FSHook
 except ImportError:
     pytest.skip(
         "S3 Remote not available, consider installing amazon extras",
@@ -23,8 +23,8 @@ def test_download_dbt_profiles(s3_bucket, s3_hook, tmpdir, profiles_file):
         profiles_content = pf.read()
     bucket.put_object(Key="profiles/profiles.yml", Body=profiles_content.encode())
 
-    remote = DbtS3RemoteHook()
-    profiles_path = remote.download_dbt_profiles(
+    fs_hook = DbtS3FSHook()
+    profiles_path = fs_hook.download_dbt_profiles(
         f"s3://{s3_bucket}/profiles/",
         tmpdir,
     )
@@ -46,8 +46,8 @@ def test_download_dbt_profiles_sub_dir(s3_bucket, s3_hook, tmpdir, profiles_file
         Key="profiles/v0.0.1/profiles.yml", Body=profiles_content.encode()
     )
 
-    remote = DbtS3RemoteHook()
-    profiles_path = remote.download_dbt_profiles(
+    fs_hook = DbtS3FSHook()
+    profiles_path = fs_hook.download_dbt_profiles(
         f"s3://{s3_bucket}/profiles/v0.0.1",
         tmpdir,
     )
@@ -71,8 +71,8 @@ def test_download_dbt_profiles_sub_dir_trailing_slash(
         Key="profiles/v0.0.1/profiles.yml", Body=profiles_content.encode()
     )
 
-    remote = DbtS3RemoteHook()
-    profiles_path = remote.download_dbt_profiles(
+    fs_hook = DbtS3FSHook()
+    profiles_path = fs_hook.download_dbt_profiles(
         f"s3://{s3_bucket}/profiles/v0.0.1/",
         tmpdir,
     )
@@ -95,8 +95,8 @@ def test_download_dbt_project(s3_bucket, s3_hook, tmpdir, dbt_project_file):
     bucket.put_object(Key="project/models/another_model.sql", Body=b"SELECT 2")
     bucket.put_object(Key="project/data/a_seed.csv", Body=b"col1,col2\n1,2")
 
-    remote = DbtS3RemoteHook()
-    project_path = remote.download_dbt_project(
+    fs_hook = DbtS3FSHook()
+    project_path = fs_hook.download_dbt_project(
         f"s3://{s3_bucket}/project/",
         tmpdir.mkdir("project"),
     )
@@ -140,8 +140,8 @@ def test_download_dbt_project_no_trailing_slash(
     bucket.put_object(Key="project/models/another_model.sql", Body=b"SELECT 2")
     bucket.put_object(Key="project/data/a_seed.csv", Body=b"col1,col2\n1,2")
 
-    remote = DbtS3RemoteHook()
-    project_path = remote.download_dbt_project(
+    fs_hook = DbtS3FSHook()
+    project_path = fs_hook.download_dbt_project(
         f"s3://{s3_bucket}/project",
         tmpdir.mkdir("project"),
     )
@@ -191,8 +191,8 @@ def test_download_dbt_project_from_zip_file(
     bucket = s3_hook.get_bucket(s3_bucket)
     bucket.put_object(Key="project/project.zip", Body=zip_buffer.getvalue())
 
-    remote = DbtS3RemoteHook()
-    project_path = remote.download_dbt_project(
+    fs_hook = DbtS3FSHook()
+    project_path = fs_hook.download_dbt_project(
         f"s3://{s3_bucket}/project/project.zip",
         tmpdir.mkdir("project"),
     )
@@ -236,8 +236,8 @@ def test_download_dbt_project_with_empty_file(
     bucket.put_object(Key="project/data/a_seed.csv", Body=b"col1,col2\n1,2")
     bucket.put_object(Key="project/data//", Body=b"")
 
-    remote = DbtS3RemoteHook()
-    project_path = remote.download_dbt_project(
+    fs_hook = DbtS3FSHook()
+    project_path = fs_hook.download_dbt_project(
         f"s3://{s3_bucket}/project",
         tmpdir.mkdir("project"),
     )
@@ -272,8 +272,8 @@ def test_upload_dbt_project_to_zip_file(s3_bucket, s3_hook, tmpdir, test_files):
     key = s3_hook.check_for_key(zip_s3_key)
     assert key is False
 
-    remote = DbtS3RemoteHook()
-    remote.upload_dbt_project(test_files[0].parent.parent, zip_s3_key)
+    fs_hook = DbtS3FSHook()
+    fs_hook.upload_dbt_project(test_files[0].parent.parent, zip_s3_key)
 
     key = s3_hook.check_for_key(
         "project/project.zip",
@@ -294,8 +294,8 @@ def test_upload_dbt_project_to_files(s3_bucket, s3_hook, test_files):
 
     prefix = f"s3://{s3_bucket}/project/"
 
-    remote = DbtS3RemoteHook()
-    remote.upload_dbt_project(test_files[0].parent.parent, prefix)
+    fs_hook = DbtS3FSHook()
+    fs_hook.upload_dbt_project(test_files[0].parent.parent, prefix)
 
     keys = s3_hook.list_keys(bucket_name=s3_bucket)
     assert len(keys) == 4
@@ -329,11 +329,11 @@ def test_upload_dbt_project_with_no_replace(s3_bucket, s3_hook, test_files):
             )
             last_modified_expected[key] = obj.last_modified
 
-    remote = DbtS3RemoteHook()
+    fs_hook = DbtS3FSHook()
     with freezegun.freeze_time("2022-02-02"):
         # Try to push the same files, a month after.
         # Should not be replaced since replace = False.
-        remote.upload_dbt_project(
+        fs_hook.upload_dbt_project(
             project_dir, f"s3://{s3_bucket}/project/", replace=False
         )
 
@@ -388,11 +388,11 @@ def test_upload_dbt_project_with_partial_replace(
         [f"s3://{s3_bucket}/project/seeds/a_seed.csv"],
     )
 
-    remote = DbtS3RemoteHook()
+    fs_hook = DbtS3FSHook()
     with freezegun.freeze_time("2022-02-02"):
         # Attempt to push project a month after.
         # Only one file should be pushed as the rest exist and we using replace = False.
-        remote.upload_dbt_project(
+        fs_hook.upload_dbt_project(
             project_dir, f"s3://{s3_bucket}/project/", replace=False
         )
 
@@ -446,10 +446,10 @@ def test_upload_dbt_project_with_delete_before(s3_bucket, s3_hook, tmpdir, test_
     keys = s3_hook.list_keys(bucket_name=s3_bucket)
     assert len(keys) == 5
 
-    remote = DbtS3RemoteHook()
+    fs_hook = DbtS3FSHook()
     with freezegun.freeze_time("2022-02-02"):
         # Try to push the same files, a month after.
-        remote.upload_dbt_project(project_dir, prefix, delete_before=True)
+        fs_hook.upload_dbt_project(project_dir, prefix, delete_before=True)
 
     keys = s3_hook.list_keys(bucket_name=s3_bucket)
     assert len(keys) == 4, keys
@@ -474,12 +474,12 @@ def test_load_file_handle_replace_error_returns_false_on_valueerror():
     replace = False.
     """
 
-    class FakeHook(DbtS3RemoteHook):
+    class FakeHook(DbtS3FSHook):
         def load_file(*args, **kwargs):
             raise ValueError()
 
-    remote = FakeHook()
+    fs_hook = FakeHook()
 
-    result = remote.load_file_handle_replace_error("/path/to/file", "s3://path/to/key")
+    result = fs_hook.load_file_handle_replace_error("/path/to/file", "s3://path/to/key")
 
     assert result is False

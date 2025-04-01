@@ -1,4 +1,4 @@
-"""A concrete DbtRemoteHook for git repositories with dulwich."""
+"""A concrete DbtFSHook for git repositories with dulwich."""
 
 import datetime as dt
 from typing import Callable, Optional, Tuple, Union
@@ -11,7 +11,7 @@ from dulwich.porcelain import Error, active_branch, branch_create, check_diverge
 from dulwich.protocol import ZERO_SHA
 from dulwich.repo import Repo
 
-from airflow_dbt_python.hooks.remote import DbtRemoteHook
+from airflow_dbt_python.hooks.fs import DbtFSHook
 from airflow_dbt_python.utils.url import URL
 
 GitClients = Union[HttpGitClient, SSHGitClient, TCPGitClient]
@@ -22,13 +22,13 @@ def no_filter(_: URL) -> bool:
     return True
 
 
-class DbtGitRemoteHook(SSHHook, DbtRemoteHook):
+class DbtGitFSHook(SSHHook, DbtFSHook):
     """A dbt remote implementation for git repositories.
 
-    This concrete remote class implements the DbtRemote interface by using any git
+    This concrete remote class implements the DbtFs interface by using any git
     repository to upload and download dbt files to and from.
 
-    The DbtGitRemoteHook subclasses Airflow's SSHHook to interact with to utilize its
+    The DbtGitFSHook subclasses Airflow's SSHHook to interact with to utilize its
     defined methods to operate with SSH connections. However, SSH connections are not
     the only ones supported for interacting with git repositories: HTTP (http:// or
     https://) and plain TCP (git://) may be used.

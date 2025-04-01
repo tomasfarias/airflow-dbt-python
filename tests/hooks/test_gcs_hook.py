@@ -1,4 +1,4 @@
-"""Unit test module for DbtGCSRemoteHook."""
+"""Unit test module for DbtGCSFSHook."""
 
 import io
 from zipfile import ZipFile
@@ -7,7 +7,7 @@ import freezegun
 import pytest
 
 try:
-    from airflow_dbt_python.hooks.remote.gcs import DbtGCSRemoteHook
+    from airflow_dbt_python.hooks.fs.gcs import DbtGCSFSHook
 except ImportError:
     pytest.skip(
         "GCS Remote not available, consider installing google extras",
@@ -418,7 +418,7 @@ def test_load_file_handle_replace_error_returns_false_on_valueerror(gcp_conn_id)
     replace = False.
     """
 
-    class FakeHook(DbtGCSRemoteHook):
+    class FakeHook(DbtGCSFSHook):
         def load_file(*args, **kwargs):
             raise ValueError()
 

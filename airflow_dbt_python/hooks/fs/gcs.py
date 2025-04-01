@@ -9,16 +9,16 @@ from airflow.providers.common.compat.lineage.hook import get_hook_lineage_collec
 from airflow.providers.google.cloud.hooks.gcs import GCSHook, _parse_gcs_url
 from google.cloud.storage import Blob
 
-from airflow_dbt_python.hooks.remote import DbtRemoteHook
+from airflow_dbt_python.hooks.fs import DbtFSHook
 from airflow_dbt_python.utils.url import URL, URLLike
 
 
-class DbtGCSRemoteHook(GCSHook, DbtRemoteHook):
+class DbtGCSFSHook(GCSHook, DbtFSHook):
     """A dbt remote implementation for GCS.
 
-    This concrete remote class implements the DbtRemote interface by using GCS as a
+    This concrete remote class implements the DbtFs interface by using GCS as a
     storage for uploading and downloading dbt files to and from.
-    The DbtGCSRemoteHook subclasses Airflow's GCSHook to interact with GCS.
+    The DbtGCSFSHook subclasses Airflow's GCSHook to interact with GCS.
     A connection id may be passed to set the connection to use with GCS.
     """
 
@@ -128,7 +128,7 @@ class DbtGCSRemoteHook(GCSHook, DbtRemoteHook):
             destination: A destination URL where to download the objects to. The
                 existing sub-directory hierarchy in GCS will be preserved.
             replace: Indicates whether to replace existing files when downloading.
-                This flag is kept here to comply with the DbtRemote interface but its
+                This flag is kept here to comply with the DbtFs interface but its
                 ignored as files downloaded from GCS always overwrite local files.
             delete_before: Delete destination directory before download.
         """

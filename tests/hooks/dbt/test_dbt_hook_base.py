@@ -7,13 +7,13 @@ import pytest
 from airflow.exceptions import AirflowNotFoundException
 
 from airflow_dbt_python.hooks.dbt import DbtHook
-from airflow_dbt_python.hooks.remote.localfs import DbtLocalFsRemoteHook
+from airflow_dbt_python.hooks.fs.local import DbtLocalFsHook
 from airflow_dbt_python.hooks.target import DbtConnectionHook, DbtPostgresHook
 from airflow_dbt_python.utils.configs import RunTaskConfig
 
 condition = False
 try:
-    from airflow_dbt_python.hooks.remote.s3 import DbtS3RemoteHook
+    from airflow_dbt_python.hooks.fs.s3 import DbtS3FSHook
 except ImportError:
     condition = True
 no_s3_remote = pytest.mark.skipif(
@@ -22,7 +22,7 @@ no_s3_remote = pytest.mark.skipif(
 
 condition = False
 try:
-    from airflow_dbt_python.hooks.remote.git import DbtGitRemoteHook
+    from airflow_dbt_python.hooks.fs.git import DbtGitFSHook
 except ImportError:
     condition = True
 no_git_remote = pytest.mark.skipif(
@@ -37,11 +37,11 @@ def test_dbt_hook_get_s3_remote():
 
     hook = DbtHook()
 
-    remote = hook.get_remote("s3", "not_aws_default")
+    fs_hook = hook.get_fs_hook("s3", "not_aws_default")
 
-    assert isinstance(remote, DbtS3RemoteHook)
-    assert isinstance(remote, S3Hook)
-    assert remote.aws_conn_id == "not_aws_default"
+    assert isinstance(fs_hook, DbtS3FSHook)
+    assert isinstance(fs_hook, S3Hook)
+    assert fs_hook.aws_conn_id == "not_aws_default"
 
 
 def test_dbt_hook_get_local_fs_remote():
@@ -50,10 +50,10 @@ def test_dbt_hook_get_local_fs_remote():
 
     hook = DbtHook()
 
-    remote = hook.get_remote("", None)
+    fs_hook = hook.get_fs_hook("", None)
 
-    assert isinstance(remote, DbtLocalFsRemoteHook)
-    assert isinstance(remote, FSHook)
+    assert isinstance(fs_hook, DbtLocalFsHook)
+    assert isinstance(fs_hook, FSHook)
 
 
 @no_git_remote
@@ -62,17 +62,17 @@ def test_dbt_hook_get_git_remote(scheme):
     """Test the correct remote is procured."""
     hook = DbtHook()
 
-    remote = hook.get_remote(scheme, None)
+    fs_hook = hook.get_fs_hook(scheme, None)
 
-    assert isinstance(remote, DbtGitRemoteHook)
+    assert isinstance(fs_hook, DbtGitFSHook)
 
 
-def test_dbt_hook_get_remote_raises_not_implemented():
+def test_dbt_hook_get_fs_hook_raises_not_implemented():
     """Test an error is raised on unsupported remote."""
     hook = DbtHook()
 
     with pytest.raises(NotImplementedError):
-        hook.get_remote("does not exist", None)
+        hook.get_fs_hook("does not exist", None)
 
 
 class FakeRemote:
@@ -97,7 +97,7 @@ def test_dbt_hook_download_dbt_profiles(mocker):
     We ignore types as we are monkey patching a FakeRemote for testing.
     """
     hook = DbtHook()
-    mock = mocker.patch("airflow_dbt_python.hooks.dbt.DbtHook.get_remote")
+    mock = mocker.patch("airflow_dbt_python.hooks.dbt.DbtHook.get_fs_hook")
     mock.return_value = FakeRemote()
 
     args, kwargs = hook.download_dbt_profiles("/path/to/profiles", "/path/to/store")  # type: ignore
@@ -112,7 +112,7 @@ def test_dbt_hook_upload_dbt_project(mocker):
     We ignore types as we are monkey patching a FakeRemote for testing.
     """
     hook = DbtHook()
-    mock = mocker.patch("airflow_dbt_python.hooks.dbt.DbtHook.get_remote")
+    mock = mocker.patch("airflow_dbt_python.hooks.dbt.DbtHook.get_fs_hook")
     mock.return_value = FakeRemote()
 
     args, kwargs = hook.upload_dbt_project(  # type: ignore
@@ -126,7 +126,7 @@ def test_dbt_hook_upload_dbt_project(mocker):
 def test_dbt_hook_download_dbt_project(mocker):
     """Test dbt hook calls remote correctly."""
     hook = DbtHook(project_conn_id="conn_id")
-    mock = mocker.patch("airflow_dbt_python.hooks.dbt.DbtHook.get_remote")
+    mock = mocker.patch("airflow_dbt_python.hooks.dbt.DbtHook.get_fs_hook")
     mock.return_value = FakeRemote()
 
     args, kwargs = hook.download_dbt_project("/path/to/profiles", "/path/to/store")  # type: ignore

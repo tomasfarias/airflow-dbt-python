@@ -448,14 +448,14 @@ def mocked_gcs_client():
 @pytest.fixture
 def gcs_hook(gcp_conn_id):
     """Provide an GCS for testing."""
-    from airflow_dbt_python.hooks.remote.gcs import DbtGCSRemoteHook
+    from airflow_dbt_python.hooks.fs.gcs import DbtGCSFSHook
 
     with patch(
         "airflow.providers.google.cloud.hooks.gcs.GCSHook.get_credentials_and_project_id",
         lambda x: ({}, "test-project"),
     ):
         with patch("google.cloud.storage.Client", MockStorageClient):
-            yield DbtGCSRemoteHook()
+            yield DbtGCSFSHook()
 
 
 @pytest.fixture

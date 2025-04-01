@@ -10,7 +10,7 @@ Core *dbt* hooks
 Supported *dbt* remote hooks
 ----------------------------
 
-The DbtRemoteHook interface
+The DbtFSHook interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. automodule:: airflow_dbt_python.hooks.remote
