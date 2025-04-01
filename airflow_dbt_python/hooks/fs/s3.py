@@ -6,16 +6,16 @@ from typing import Iterable, Optional
 
 from airflow.providers.amazon.aws.hooks.s3 import S3Hook
 
-from airflow_dbt_python.hooks.remote import DbtRemoteHook
+from airflow_dbt_python.hooks.fs import DbtFSHook
 from airflow_dbt_python.utils.url import URL, URLLike
 
 
-class DbtS3RemoteHook(S3Hook, DbtRemoteHook):
+class DbtS3FSHook(S3Hook, DbtFSHook):
     """A dbt remote implementation for S3.
 
-    This concrete remote class implements the DbtRemote interface by using S3 as a
+    This concrete remote class implements the DbtFs interface by using S3 as a
     storage for uploading and downloading dbt files to and from.
-    The DbtS3RemoteHook subclasses Airflow's S3Hook to interact with S3. A connection id
+    The DbtS3FSHook subclasses Airflow's S3Hook to interact with S3. A connection id
     may be passed to set the connection to use with S3.
     """
 
@@ -126,7 +126,7 @@ class DbtS3RemoteHook(S3Hook, DbtRemoteHook):
             destination: A destination URL where to download the objects to. The
                 existing sub-directory hierarchy in S3 will be preserved.
             replace: Indicates whether to replace existing files when downloading.
-                This flag is kept here to comply with the DbtRemote interface but its
+                This flag is kept here to comply with the DbtFs interface but its
                 ignored as files downloaded from S3 always overwrite local files.
             delete_before: Delete destination directory before download.
         """

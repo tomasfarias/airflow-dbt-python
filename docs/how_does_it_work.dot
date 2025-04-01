@@ -18,8 +18,8 @@ digraph HowDoesItWork {
 
         DbtHook;
         DbtOperator -> DbtHook [label="run_dbt_task"];
-        DbtRemoteHooks -> DbtHook [label="download"];
-        DbtHook -> DbtRemoteHooks [label="upload", labelfloat=true];
+        DbtFSHooks -> DbtHook [label="download"];
+        DbtHook -> DbtFSHooks [label="upload", labelfloat=true];
     }
 
     "dbt-core" [style=filled, fillcolor="#CBCBCB", color="#FF7557"];
@@ -34,7 +34,7 @@ digraph HowDoesItWork {
     {rank=same; split; DbtOperator; }
 
     "Remote storage" [style=filled, fillcolor="#CBCBCB", color="#FF7557"];
-    DbtRemoteHooks -> "Remote storage" [headlabel="interacts", labeldistance=4.0];
-    {rank=same; "Remote storage"; DbtRemoteHooks; }
+    DbtFSHooks -> "Remote storage" [headlabel="interacts", labeldistance=4.0];
+    {rank=same; "Remote storage"; DbtFSHooks; }
 
 }

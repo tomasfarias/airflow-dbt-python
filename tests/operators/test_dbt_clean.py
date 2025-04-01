@@ -7,11 +7,11 @@ from airflow_dbt_python.utils.configs import CleanTaskConfig
 
 condition = False
 try:
-    from airflow_dbt_python.hooks.remote.s3 import DbtS3RemoteHook
+    from airflow_dbt_python.hooks.fs.s3 import DbtS3FSHook
 except ImportError:
     condition = True
 no_s3_backend = pytest.mark.skipif(
-    condition, reason="S3 RemoteHook not available, consider installing amazon extras"
+    condition, reason="S3 FSHook not available, consider installing amazon extras"
 )
 
 

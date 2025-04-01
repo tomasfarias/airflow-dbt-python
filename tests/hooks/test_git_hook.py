@@ -1,4 +1,4 @@
-"""Unit test module for DbtGitRemoteHook."""
+"""Unit test module for DbtGitFSHook."""
 
 import multiprocessing
 import os
@@ -9,7 +9,7 @@ import pytest
 from dulwich.repo import Repo
 from dulwich.server import DictBackend, TCPGitServer
 
-from airflow_dbt_python.hooks.remote.git import DbtGitRemoteHook
+from airflow_dbt_python.hooks.fs.git import DbtGitFSHook
 from airflow_dbt_python.utils.url import URL
 
 JAFFLE_SHOP = os.getenv("GIT_TEST_REPO", "tomasfarias/jaffle_shop")
@@ -40,9 +40,9 @@ def test_download_dbt_project_from_http_public_github_repo(
     In this test we use an HTTP/HTTPS connection to access GitHub. No credentials are
     required as the test repo is public.
     """
-    remote = DbtGitRemoteHook()
+    fs_hook = DbtGitFSHook()
     source = URL(repo_url)
-    local_repo_path = remote.download_dbt_project(source, tmp_path)
+    local_repo_path = fs_hook.download_dbt_project(source, tmp_path)
 
     expected = [
         URL(local_repo_path / "dbt_project.yml"),
@@ -77,9 +77,9 @@ def test_download_dbt_project_from_ssh_public_github_repo(
     SSH key to be setup in the host, so the tests are flaky by design. Future tests will
     rely on Airflow connections and test SSH keys instead.
     """
-    remote = DbtGitRemoteHook()
+    fs_hook = DbtGitFSHook()
     source = URL(repo_url)
-    local_repo_path = remote.download_dbt_project(source, tmp_path)
+    local_repo_path = fs_hook.download_dbt_project(source, tmp_path)
 
     expected = [
         URL(local_repo_path / "dbt_project.yml"),
@@ -109,9 +109,9 @@ def test_download_dbt_project_from_http_public_gitlab_repo(
     In this test we use an HTTP/HTTPS connection to access GitLab. No credentials are
     required as the test repo is public.
     """
-    remote = DbtGitRemoteHook()
+    fs_hook = DbtGitFSHook()
     source = URL(repo_url)
-    local_repo_path = remote.download_dbt_project(source, tmp_path)
+    local_repo_path = fs_hook.download_dbt_project(source, tmp_path)
 
     expected = [
         URL(local_repo_path / "dbt_project.yml"),
@@ -150,9 +150,9 @@ def test_download_dbt_project_from_https_private_github_repo_using_token(
     """
     username, token = os.environ["GITHUB_USERNAME"], os.environ["GITHUB_READ_TOKEN"]
 
-    remote = DbtGitRemoteHook()
+    fs_hook = DbtGitFSHook()
     source = URL(repo_url.format(username=username, token=token))
-    local_repo_path = remote.download_dbt_project(source, tmp_path)
+    local_repo_path = fs_hook.download_dbt_project(source, tmp_path)
 
     expected = [
         URL(local_repo_path / "dbt_project.yml"),
@@ -187,9 +187,9 @@ def test_download_dbt_project_from_ssh_public_gitlab_repo(
     SSH key to be setup in the host, so the tests are flaky by design. Future tests will
     rely on Airflow connections and test SSH keys instead.
     """
-    remote = DbtGitRemoteHook()
+    fs_hook = DbtGitFSHook()
     source = URL(repo_url)
-    local_repo_path = remote.download_dbt_project(source, tmp_path)
+    local_repo_path = fs_hook.download_dbt_project(source, tmp_path)
 
     expected = [
         URL(local_repo_path / "dbt_project.yml"),
@@ -228,9 +228,9 @@ def test_download_dbt_project_from_https_private_gitlab_repo_using_token(
     """
     token = os.environ["GITLAB_READ_TOKEN"]
 
-    remote = DbtGitRemoteHook()
+    fs_hook = DbtGitFSHook()
     source = URL(repo_url.format(token=token))
-    local_repo_path = remote.download_dbt_project(source, tmp_path)
+    local_repo_path = fs_hook.download_dbt_project(source, tmp_path)
 
     expected = [
         URL(local_repo_path / "dbt_project.yml"),
@@ -271,9 +271,9 @@ def test_download_dbt_project_from_https_private_gitlab_repo_using_credentials(
     """
     username, password = os.environ["GITLAB_USERNAME"], os.environ["GITLAB_PASSWORD"]
 
-    remote = DbtGitRemoteHook()
+    fs_hook = DbtGitFSHook()
     source = URL(repo_url.format(username=username, password=password))
-    local_repo_path = remote.download_dbt_project(source, tmp_path)
+    local_repo_path = fs_hook.download_dbt_project(source, tmp_path)
 
     expected = [
         URL(local_repo_path / "dbt_project.yml"),
@@ -348,10 +348,10 @@ def test_download_dbt_project_with_local_server(
 ):
     """Test downloading a dbt project from a local git server."""
     local_path = tmp_path / "local"
-    remote = DbtGitRemoteHook()
+    fs_hook = DbtGitFSHook()
     server_address, server_port = git_server
     source = URL(f"git://{server_address}:{server_port}/{repo_name}")
-    local_repo_path = remote.download_dbt_project(source, local_path)
+    local_repo_path = fs_hook.download_dbt_project(source, local_path)
 
     expected = [
         URL(local_repo_path / "dbt_project.yml"),
@@ -393,14 +393,14 @@ def test_upload_dbt_project_with_local_server(
             return True
         return False
 
-    remote = DbtGitRemoteHook(upload_filter=upload_only_target)
+    fs_hook = DbtGitFSHook(upload_filter=upload_only_target)
     server_address, server_port = git_server
     destination = URL(f"git://{server_address}:{server_port}/{repo_name}")
 
-    remote.upload_dbt_project(str(repo_dir), destination)
+    fs_hook.upload_dbt_project(str(repo_dir), destination)
 
     new_repo_path = tmp_path / "new_repo"
-    remote.download_dbt_project(destination, new_repo_path)
+    fs_hook.download_dbt_project(destination, new_repo_path)
 
     expected = [
         URL(new_repo_path / "dbt_project.yml"),
