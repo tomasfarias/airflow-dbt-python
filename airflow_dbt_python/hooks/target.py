@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import operator
 import re
 import warnings
 from abc import ABC, ABCMeta
@@ -34,7 +35,6 @@ class DbtConnectionParam(NamedTuple):
     name: str
     store_override_name: Optional[str] = None
     default: Optional[Any] = None
-    depends_on: Callable[[Connection], bool] = lambda x: True
 
     @property
     def override_name(self):
@@ -48,6 +48,88 @@ class DbtConnectionParam(NamedTuple):
         if self.store_override_name is None:
             return self.name
         return self.store_override_name
+
+
+class ResolverCondition(NamedTuple):
+    """Condition for resolving connection parameters based on extra_dejson.
+
+    Attributes:
+        condition_key: The key in `extra_dejson` to check.
+        comparison_operator: A function to compare the actual value
+         with the expected value.
+        expected: The expected value for the condition to be satisfied.
+    """
+
+    condition_key: str
+    comparison_operator: Callable[[Any, Any], bool]
+    expected: Any
+
+
+class ResolverResult(NamedTuple):
+    """Result of resolving a connection parameter.
+
+    Attributes:
+        override_name: The name to override the parameter with, if applicable.
+        default: The default value to use if no value is found.
+    """
+
+    override_name: Optional[str]
+    default: Optional[Any]
+
+
+def make_extra_dejson_resolver(
+    *conditions: tuple[ResolverCondition, ResolverResult],
+    default: ResolverResult = ResolverResult(None, None),
+) -> Callable[[Connection], ResolverResult]:
+    """Creates a resolver function for override names and defaults.
+
+    Args:
+        *conditions: A sequence of conditions and their corresponding results.
+        default: The default result if no condition is met.
+
+    Returns:
+        A function that takes a `Connection` object and returns
+        the appropriate `ResolverResult`.
+    """
+
+    def extra_dejson_resolver(conn: Connection) -> ResolverResult:
+        for (
+            condition_key,
+            comparison_operator,
+            expected,
+        ), resolver_result in conditions:
+            if comparison_operator(conn.extra_dejson.get(condition_key), expected):
+                return resolver_result
+        return default
+
+    return extra_dejson_resolver
+
+
+class DbtConnectionConditionParam(NamedTuple):
+    """Connection parameter with dynamic override name and default value.
+
+    Attributes:
+        name: The original name of the parameter.
+        resolver: A function that resolves the parameter
+        name and default value based on the connection's `extra_dejson`.
+    """
+
+    name: str
+    resolver: Callable[[Connection], ResolverResult]
+
+    def resolve(self, connection: Connection) -> ResolverResult:
+        """Resolves the override name and default value for this parameter.
+
+        Args:
+            connection: The Airflow connection object.
+
+        Returns:
+            The resolved override name and default value.
+        """
+        override_name, default = self.resolver(connection)
+        if override_name is None:
+            return ResolverResult(self.name, default)
+        return ResolverResult(override_name, default)
 
 
 class DbtConnectionHookMeta(ABCMeta):
@@ -78,7 +160,7 @@ class DbtConnectionHook(BaseHook, ABC, metaclass=DbtConnectionHookMeta):
     hook_name = "dbt Hook"
     airflow_conn_types: tuple[str, ...] = ()
 
-    conn_params: list[Union[DbtConnectionParam, str]] = [
+    conn_params: list[Union[DbtConnectionParam, DbtConnectionConditionParam, str]] = [
         DbtConnectionParam("conn_type", "type"),
         "host",
         "schema",
@@ -86,7 +168,9 @@ class DbtConnectionHook(BaseHook, ABC, metaclass=DbtConnectionHookMeta):
         "password",
         "port",
     ]
-    conn_extra_params: list[Union[DbtConnectionParam, str]] = []
+    conn_extra_params: list[
+        Union[DbtConnectionParam, DbtConnectionConditionParam, str]
+    ] = []
 
     def __init__(
         self,
@@ -139,10 +223,11 @@ class DbtConnectionHook(BaseHook, ABC, metaclass=DbtConnectionHookMeta):
         dbt_details = {"type": self.conn_type}
         for param in self.conn_params:
             if isinstance(param, DbtConnectionParam):
-                if not param.depends_on(conn):
-                    continue
                 key = param.override_name
                 value = getattr(conn, param.name, param.default)
+            elif isinstance(param, DbtConnectionConditionParam):
+                key, default = param.resolve(conn)
+                value = getattr(conn, param.name, default)
             else:
                 key = param
                 value = getattr(conn, key, None)
@@ -159,10 +244,11 @@ class DbtConnectionHook(BaseHook, ABC, metaclass=DbtConnectionHookMeta):
 
         for param in self.conn_extra_params:
             if isinstance(param, DbtConnectionParam):
-                if not param.depends_on(conn):
-                    continue
                 key = param.override_name
                 value = extra.get(param.name, param.default)
+            elif isinstance(param, DbtConnectionConditionParam):
+                key, default = param.resolve(conn)
+                value = extra.get(param.name, default)
             else:
                 key = param
                 value = extra.get(key, None)
@@ -220,7 +306,8 @@ class DbtPostgresHook(DbtConnectionHook):
             conn = copy(conn)
             extra_dejson = conn.extra_dejson
             options = extra_dejson.pop("options")
-            # This is to pass options (e.g. `-c search_path=myschema`) to dbt in the required form
+            # This is to pass options (e.g. `-c search_path=myschema`) to dbt
+            # in the required form
             for k, v in re.findall(r"-c (\w+)=(.*)$", options):
                 extra_dejson[k] = v
             conn.extra = json.dumps(extra_dejson)
@@ -235,11 +322,14 @@ class DbtRedshiftHook(DbtPostgresHook):
     airflow_conn_types = (conn_type,)
 
     conn_extra_params = DbtPostgresHook.conn_extra_params + [
-        "method",
-        DbtConnectionParam(
+        DbtConnectionConditionParam(
             "method",
-            default="iam",
-            depends_on=lambda x: x.extra_dejson.get("iam_profile") is not None,
+            resolver=make_extra_dejson_resolver(
+                (
+                    ResolverCondition("iam_profile", operator.is_not, None),
+                    ResolverResult(None, "iam"),
+                )
+            ),
         ),
         "cluster_id",
         "iam_profile",
@@ -262,39 +352,32 @@ class DbtSnowflakeHook(DbtConnectionHook):
     conn_params = [
         "host",
         "schema",
-        DbtConnectionParam(
+        DbtConnectionConditionParam(
             "login",
-            "user",
-            depends_on=lambda x: x.extra_dejson.get("authenticator", "") != "oauth",
-        ),
-        DbtConnectionParam(
-            "login",
-            "oauth_client_id",
-            depends_on=lambda x: x.extra_dejson.get("authenticator", "") == "oauth",
-        ),
-        DbtConnectionParam(
-            "password",
-            depends_on=lambda x: not any(
+            resolver=make_extra_dejson_resolver(
                 (
-                    *(
-                        k in x.extra_dejson
-                        for k in ("private_key_file", "private_key_content")
-                    ),
-                    x.extra_dejson.get("authenticator", "") == "oauth",
+                    ResolverCondition("authenticator", operator.eq, "oauth"),
+                    ResolverResult("oauth_client_id", None),
+                ),
+                default=ResolverResult("user", None),
+            ),
+        ),
+        DbtConnectionConditionParam(
+            "password",
+            resolver=make_extra_dejson_resolver(
+                (
+                    ResolverCondition("authenticator", operator.eq, "oauth"),
+                    ResolverResult("oauth_client_secret", None),
+                ),
+                (
+                    ResolverCondition("private_key_file", operator.is_not, None),
+                    ResolverResult("private_key_passphrase", None),
+                ),
+                (
+                    ResolverCondition("private_key_content", operator.is_not, None),
+                    ResolverResult("private_key_passphrase", None),
                 ),
             ),
-        ),
-        DbtConnectionParam(
-            "password",
-            "private_key_passphrase",
-            depends_on=lambda x: any(
-                k in x.extra_dejson for k in ("private_key_file", "private_key_content")
-            ),
-        ),
-        DbtConnectionParam(
-            "password",
-            "oauth_client_secret",
-            depends_on=lambda x: x.extra_dejson.get("authenticator", "") == "oauth",
         ),
     ]
     conn_extra_params = [
@@ -327,20 +410,22 @@ class DbtBigQueryHook(DbtConnectionHook):
     ]
     conn_extra_params = [
         DbtConnectionParam("method", default="oauth"),
-        DbtConnectionParam(
+        DbtConnectionConditionParam(
             "method",
-            default="oauth-secrets",
-            depends_on=lambda x: x.extra_dejson.get("refresh_token") is not None,
-        ),
-        DbtConnectionParam(
-            "method",
-            default="service-account-json",
-            depends_on=lambda x: x.extra_dejson.get("keyfile_dict") is not None,
-        ),
-        DbtConnectionParam(
-            "method",
-            default="service-account",
-            depends_on=lambda x: x.extra_dejson.get("key_path") is not None,
+            resolver=make_extra_dejson_resolver(
+                (
+                    ResolverCondition("refresh_token", operator.is_not, None),
+                    ResolverResult(None, "oauth-secrets"),
+                ),
+                (
+                    ResolverCondition("keyfile_dict", operator.is_not, None),
+                    ResolverResult(None, "service-account-json"),
+                ),
+                (
+                    ResolverCondition("key_path", operator.is_not, None),
+                    ResolverResult(None, "service-account"),
+                ),
+            ),
         ),
         DbtConnectionParam("key_path", "keyfile"),
         DbtConnectionParam("keyfile_dict", "keyfile_json"),
@@ -366,14 +451,14 @@ class DbtSparkHook(DbtConnectionHook):
         "port",
         "schema",
         DbtConnectionParam("login", "user"),
-        DbtConnectionParam(
+        DbtConnectionConditionParam(
             "password",
-            depends_on=lambda x: x.extra_dejson.get("method", "") == "thrift",
-        ),
-        DbtConnectionParam(
-            "password",
-            "token",
-            depends_on=lambda x: x.extra_dejson.get("method", "") != "thrift",
+            resolver=make_extra_dejson_resolver(
+                (
+                    ResolverCondition("method", operator.ne, "thrift"),
+                    ResolverResult("token", None),
+                ),
+            ),
         ),
     ]
     conn_extra_params = []
