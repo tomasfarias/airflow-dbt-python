@@ -173,10 +173,6 @@ class DbtGCSFSHook(GCSHook, DbtFSHook):
         bucket_name, key_prefix = _parse_gcs_url(str(source))
 
         for key in self.list(bucket_name=bucket_name, prefix=key_prefix):
-            if key.endswith("//"):
-                # Sometimes, GCS files with empty names can appear, usually when using
-                # the UI. These empty GCS files may also be confused with directories.
-                continue
             yield URL.from_parts(scheme="gs", netloc=bucket_name, path=key)
 
     def get_key(self, key: str, bucket_name: str) -> Blob:
