@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import json
 import logging
-import os
 import sys
 from abc import ABC
 from contextlib import contextmanager
@@ -347,8 +346,8 @@ class DbtHook(ABC, LoggingMixin):
             profiles_dir_path = None
 
         return (
-            str(project_dir_path) + os.sep,
-            str(profiles_dir_path) + os.sep if profiles_dir_path is not None else None,
+            str(project_dir_path),
+            str(profiles_dir_path) if profiles_dir_path is not None else None,
         )
 
     def setup_dbt_logging(self, debug: Optional[bool]):
