@@ -220,6 +220,7 @@ class DbtPostgresHook(DbtConnectionHook):
             conn = copy(conn)
             extra_dejson = conn.extra_dejson
             options = extra_dejson.pop("options")
+            # This is to pass options (e.g. `-c search_path=myschema`) to dbt in the required form
             for k, v in re.findall(r"-c (\w+)=(.*)$", options):
                 extra_dejson[k] = v
             conn.extra = json.dumps(extra_dejson)
