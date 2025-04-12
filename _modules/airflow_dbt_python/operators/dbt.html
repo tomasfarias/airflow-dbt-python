@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>airflow_dbt_python.operators.dbt &mdash; airflow-dbt-python 2.2.0 documentation</title>
+  <title>airflow_dbt_python.operators.dbt &mdash; airflow-dbt-python 3.0.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="../../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../../_static/documentation_options.js?v=b21de401"></script>
+      <script src="../../../_static/documentation_options.js?v=acc74ff5"></script>
       <script src="../../../_static/doctools.js?v=9a2dae69"></script>
       <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -85,6 +85,7 @@
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">dt</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">ABC</span><span class="p">,</span> <span class="n">abstractmethod</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">asdict</span><span class="p">,</span> <span class="n">is_dataclass</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Union</span>
@@ -121,18 +122,84 @@
 <span class="sd">    command itself, subclasses should set it.</span>
 
 <span class="sd">    Attributes:</span>
-<span class="sd">        command: The dbt command to execute.</span>
 <span class="sd">        project_dir: Directory for dbt to look for dbt_profile.yml. Defaults to</span>
 <span class="sd">            current directory.</span>
 <span class="sd">        profiles_dir: Directory for dbt to look for profiles.yml. Defaults to</span>
 <span class="sd">            ~/.dbt.</span>
 <span class="sd">        profile: Which profile to load. Overrides dbt_profile.yml.</span>
 <span class="sd">        target: Which target to load for the given profile.</span>
+<span class="sd">        state: Unless overridden, use this state directory for both state comparison</span>
+<span class="sd">            and deferral.</span>
+<span class="sd">        cache_selected_only: At start of run, populate relational cache</span>
+<span class="sd">            only for schemas containing selected nodes, or for all schemas of interest.</span>
+<span class="sd">        fail_fast: Stop execution on first failure.</span>
+<span class="sd">        single_threaded: Execute dbt command in single threaded mode. For test only</span>
+<span class="sd">        threads: Specify number of threads to use while executing models.</span>
+<span class="sd">            Overrides settings in profiles.yml.</span>
+<span class="sd">        use_experimental_parser: Enable experimental parsing features.</span>
 <span class="sd">        vars: Supply variables to the project. Should be a YAML string. Overrides</span>
 <span class="sd">            variables defined in dbt_profile.yml.</span>
+<span class="sd">        warn_error: If dbt would normally warn, instead raise an exception.</span>
+<span class="sd">            Examples include --select that selects nothing, deprecations,</span>
+<span class="sd">            configurations with no associated models, invalid test configurations,</span>
+<span class="sd">            and missing sources/refs in tests.</span>
+<span class="sd">        debug: Display debug logging during dbt execution.</span>
+<span class="sd">            Useful for debugging and making bug reports.</span>
+<span class="sd">        log_path: Log path for dbt execution.</span>
+<span class="sd">        log_level: Specify the minimum severity of events that are logged</span>
+<span class="sd">            to the console and the log file.</span>
+<span class="sd">        log_level_file: Specify the minimum severity of events that are logged</span>
+<span class="sd">            to the log file by overriding the default value</span>
+<span class="sd">        log_format: Specify the format of logging to the console and the log file.</span>
+<span class="sd">        log_format_file: Specify the format of logging to the log file by overriding</span>
+<span class="sd">            the default value</span>
 <span class="sd">        log_cache_events: Flag to enable logging of cache events.</span>
-<span class="sd">        s3_conn_id: An s3 Airflow connection ID to use when pulling dbt files from s3.</span>
+<span class="sd">        quiet/no_quiet: Suppress all non-error logging to stdout.</span>
+<span class="sd">            Does not affect {{ print() }} macro calls.</span>
+<span class="sd">        print/no_print: Output all {{ print() }} macro calls.</span>
+<span class="sd">        record_timing_info: When this option is passed, dbt will output low-level</span>
+<span class="sd">            timing stats to the specified file.</span>
+<span class="sd">        defer/no_defer: If set, resolve unselected nodes by deferring to the manifest</span>
+<span class="sd">            within the --state directory.</span>
+<span class="sd">        partial_parse/no_partial_parse: Allow for partial parsing by looking for</span>
+<span class="sd">            and writing to a pickle file in the target directory.</span>
+<span class="sd">        introspect/no_introspect: Whether to scaffold introspective queries</span>
+<span class="sd">            as part of compilation</span>
+<span class="sd">        use_colors/no_use_colors: Specify whether log output is colorized</span>
+<span class="sd">            in the console and the log file.</span>
+<span class="sd">        static_parser/no_static_parser: Use the static parser.</span>
+<span class="sd">        version_check/no_version_check: If set, ensure the installed dbt version matches</span>
+<span class="sd">            the require-dbt-version specified in the dbt_project.yml file (if any).</span>
+<span class="sd">            Otherwise, allow them to differ.</span>
+<span class="sd">        write_json/no_write_json: Whether or not to write the manifest.json</span>
+<span class="sd">            and run_results.json files to the target directory</span>
+<span class="sd">        send_anonymous_usage_stats/no_send_anonymous_usage_stats: Send anonymous usage</span>
+<span class="sd">            stats to dbt Labs.</span>
+<span class="sd">        partial_parse_file_diff/no_partial_parse_file_diff: Internal flag for whether</span>
+<span class="sd">            to compute a file diff during partial parsing.</span>
+<span class="sd">        inject_ephemeral_ctes/no_inject_ephemeral_ctes: Internal flag controlling</span>
+<span class="sd">            injection of referenced ephemeral models&#39; CTEs during `compile`.</span>
+<span class="sd">        empty/no_empty: If specified, limit input refs and sources to zero rows.</span>
+<span class="sd">        show_resource_report/no_show_resource_report: If set, dbt will output</span>
+<span class="sd">            resource report into log.</span>
+<span class="sd">        favor_state/no_favor_state: If set, defer to the argument provided to</span>
+<span class="sd">            the state flag for resolving unselected nodes, even if the node(s) exist</span>
+<span class="sd">            as a database object in the current environment.</span>
+<span class="sd">        export_saved_queries/no_export_saved_queries: Export saved queries within</span>
+<span class="sd">            the &#39;build&#39; command, otherwise no-op</span>
+<span class="sd">        dbt_conn_id: An Airflow connection ID to generate dbt profile from.</span>
+<span class="sd">        profiles_conn_id: An Airflow connection ID to use for pulling dbt profiles</span>
+<span class="sd">            from remote (e.g. git/s3/gcs).</span>
+<span class="sd">        project_conn_id: An Airflow connection ID to use for pulling dbt project</span>
+<span class="sd">            from remote (e.g. git/s3/gcs).</span>
 <span class="sd">        do_xcom_push_artifacts: A list of dbt artifacts to XCom push.</span>
+<span class="sd">        upload_dbt_project: Flag to enable unloading the project dbt after the operator</span>
+<span class="sd">            execution back to project_dir.</span>
+<span class="sd">        delete_before_upload: Flag to enable cleaning up project_dir before uploading</span>
+<span class="sd">            dbt project back to.</span>
+<span class="sd">        replace_on_upload: Flag to allow replacing files when uploading dbt project</span>
+<span class="sd">            back to project_dir.</span>
+<span class="sd">        env_vars: Supply environment variables to the project</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">template_fields</span> <span class="o">=</span> <span class="n">base_template_fields</span>
@@ -160,8 +227,11 @@
         <span class="n">log_level</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">log_level_file</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">log_format</span><span class="p">:</span> <span class="n">LogFormat</span> <span class="o">=</span> <span class="n">LogFormat</span><span class="o">.</span><span class="n">DEFAULT</span><span class="p">,</span>
+        <span class="n">log_format_file</span><span class="p">:</span> <span class="n">LogFormat</span> <span class="o">=</span> <span class="n">LogFormat</span><span class="o">.</span><span class="n">DEBUG</span><span class="p">,</span>
         <span class="n">log_cache_events</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="n">quiet</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">no_quiet</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="nb">print</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">no_print</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">record_timing_info</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="c1"># Mutually exclusive</span>
@@ -181,8 +251,20 @@
         <span class="n">write_perf_info</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">send_anonymous_usage_stats</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">no_send_anonymous_usage_stats</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">partial_parse_file_diff</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">no_partial_parse_file_diff</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">inject_ephemeral_ctes</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">no_inject_ephemeral_ctes</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">empty</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">no_empty</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">show_resource_report</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">no_show_resource_report</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">favor_state</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">no_favor_state</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">export_saved_queries</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">no_export_saved_queries</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="c1"># Extra features configuration</span>
-        <span class="n">dbt_conn_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;dbt_conn_id&quot;</span><span class="p">,</span>
+        <span class="n">dbt_conn_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">profiles_conn_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">project_conn_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">do_xcom_push_artifacts</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -212,10 +294,13 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">log_path</span> <span class="o">=</span> <span class="n">log_path</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">log_cache_events</span> <span class="o">=</span> <span class="n">log_cache_events</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">quiet</span> <span class="o">=</span> <span class="n">quiet</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">no_quiet</span> <span class="o">=</span> <span class="n">no_quiet</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">print</span> <span class="o">=</span> <span class="nb">print</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">no_print</span> <span class="o">=</span> <span class="n">no_print</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">log_level</span> <span class="o">=</span> <span class="n">log_level</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">log_level_file</span> <span class="o">=</span> <span class="n">log_level_file</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">log_format</span> <span class="o">=</span> <span class="n">log_format</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log_format_file</span> <span class="o">=</span> <span class="n">log_format_file</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">record_timing_info</span> <span class="o">=</span> <span class="n">record_timing_info</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">dbt_defer</span> <span class="o">=</span> <span class="n">defer</span>
@@ -244,6 +329,18 @@
         <span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">write_perf_info</span> <span class="o">=</span> <span class="n">write_perf_info</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">partial_parse_file_diff</span> <span class="o">=</span> <span class="n">partial_parse_file_diff</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">no_partial_parse_file_diff</span> <span class="o">=</span> <span class="n">no_partial_parse_file_diff</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">inject_ephemeral_ctes</span> <span class="o">=</span> <span class="n">inject_ephemeral_ctes</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">no_inject_ephemeral_ctes</span> <span class="o">=</span> <span class="n">no_inject_ephemeral_ctes</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">empty</span> <span class="o">=</span> <span class="n">empty</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">no_empty</span> <span class="o">=</span> <span class="n">no_empty</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">show_resource_report</span> <span class="o">=</span> <span class="n">show_resource_report</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">no_show_resource_report</span> <span class="o">=</span> <span class="n">no_show_resource_report</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">favor_state</span> <span class="o">=</span> <span class="n">favor_state</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">no_favor_state</span> <span class="o">=</span> <span class="n">no_favor_state</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">export_saved_queries</span> <span class="o">=</span> <span class="n">export_saved_queries</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">no_export_saved_queries</span> <span class="o">=</span> <span class="n">no_export_saved_queries</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">dbt_conn_id</span> <span class="o">=</span> <span class="n">dbt_conn_id</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">profiles_conn_id</span> <span class="o">=</span> <span class="n">profiles_conn_id</span>
@@ -301,6 +398,7 @@
 
 
     <span class="nd">@property</span>
+    <span class="nd">@abstractmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">command</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the current dbt command.</span>
 
@@ -361,6 +459,22 @@
 
 
 
+<span class="k">class</span><span class="w"> </span><span class="nc">_GraphRunnableOperator</span><span class="p">(</span><span class="n">ABC</span><span class="p">,</span> <span class="n">DbtBaseOperator</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;The abstract base Airflow dbt operator for list/compile commands.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        compiled_target:</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">compiled_target</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">os</span><span class="o">.</span><span class="n">PathLike</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">compiled_target</span> <span class="o">=</span> <span class="n">compiled_target</span>
+
+
 <span class="n">selection_template_fields</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;select&quot;</span><span class="p">,</span> <span class="s2">&quot;exclude&quot;</span><span class="p">]</span>
 
 
@@ -403,7 +517,7 @@
 <span class="k">class</span><span class="w"> </span><span class="nc">DbtSeedOperator</span><span class="p">(</span><span class="n">DbtBaseOperator</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Executes a dbt seed command.</span>
 
-<span class="sd">    The seed command loads csv files into the  the given target. The</span>
+<span class="sd">    The seed command loads csv files into the given target. The</span>
 <span class="sd">    documentation for the dbt command can be found here:</span>
 <span class="sd">    https://docs.getdbt.com/reference/commands/seed.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -473,7 +587,7 @@
 
 <div class="viewcode-block" id="DbtCompileOperator">
 <a class="viewcode-back" href="../../../reference/operators.html#airflow_dbt_python.operators.dbt.DbtCompileOperator">[docs]</a>
-<span class="k">class</span><span class="w"> </span><span class="nc">DbtCompileOperator</span><span class="p">(</span><span class="n">DbtBaseOperator</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">DbtCompileOperator</span><span class="p">(</span><span class="n">_GraphRunnableOperator</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Executes a dbt compile command.</span>
 
 <span class="sd">    The compile command generates SQL files. The</span>
@@ -636,7 +750,7 @@
 
 <div class="viewcode-block" id="DbtLsOperator">
 <a class="viewcode-back" href="../../../reference/operators.html#airflow_dbt_python.operators.dbt.DbtLsOperator">[docs]</a>
-<span class="k">class</span><span class="w"> </span><span class="nc">DbtLsOperator</span><span class="p">(</span><span class="n">DbtBaseOperator</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">DbtLsOperator</span><span class="p">(</span><span class="n">_GraphRunnableOperator</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Executes a dbt list (or ls) command.</span>
 
 <span class="sd">    The documentation for the dbt command can be found here:</span>

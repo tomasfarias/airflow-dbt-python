@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Development &mdash; airflow-dbt-python 2.2.0 documentation</title>
+  <title>Development &mdash; airflow-dbt-python 3.0.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
@@ -16,7 +16,7 @@
   
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=b21de401"></script>
+      <script src="_static/documentation_options.js?v=acc74ff5"></script>
       <script src="_static/doctools.js?v=9a2dae69"></script>
       <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -122,7 +122,7 @@
 <h2>Installing a different version of Airflow<a class="headerlink" href="#installing-a-different-version-of-airflow" title="Link to this heading"></a></h2>
 <p>The <em>airflow</em> extra dependency group installs the latest supported version of Airflow. However, <em>airflow-dbt-python</em> is also tested for older versions of Airflow; as a general rule, besides the latest version of Airflow, we test <em>airflow-dbt-python</em> against the latest version available in <a class="reference external" href="https://aws.amazon.com/managed-workflows-for-apache-airflow/">AWS MWAA</a>. Although support for older versions of Airflow is not guaranteed, we are open to patches to ensure backwards compatibility as long as they don’t increase maintenance load signifincantly.</p>
 <p>If you wish to install a different version of Airflow for testing you may skip the <em>airflow</em> and <em>airflow-providers</em> extras of the previous section and use <em>pip</em> instead to install any versions of <em>apache-airflow</em> and required providers:</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>apache-airflow<span class="o">==</span><span class="m">2</span>.2<span class="w"> </span>apache-airflow-providers-amazon<span class="o">==</span><span class="m">5</span>.0
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>apache-airflow&gt;<span class="o">=</span><span class="m">2</span>.2<span class="w"> </span>apache-airflow-providers-amazon&gt;<span class="o">=</span><span class="m">3</span>.0
 </pre></div>
 </div>
 </section>
@@ -194,7 +194,7 @@ poetry<span class="w"> </span>run<span class="w"> </span>airflow<span class="w">
 <ol class="arabic simple">
 <li><p>Initialize a specific operator or hook.</p></li>
 <li><p>Run it with a basic test <em>dbt</em> project against the test PostgreSQL database.</p></li>
-<li><p>Assert <em>dbt</em> executes succesfuly, any results are properly propagated, and any artifacts are pushed to where they need to go.</p></li>
+<li><p>Assert <em>dbt</em> executes successfully, any results are properly propagated, and any artifacts are pushed to where they need to go.</p></li>
 </ol>
 <p>However, <em>airflow-dbt-python</em> also includes DAG tests, which can be seen as broader integration tests. These are located under <code class="docutils literal notranslate"><span class="pre">tests/dags/</span></code>. DAG tests focus on testing complete end-to-end DAGs, including those shown in <span class="xref std std-ref">example_dags</span>.</p>
 </section>

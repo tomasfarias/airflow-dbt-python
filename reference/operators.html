@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>airflow_dbt_python.operators &mdash; airflow-dbt-python 2.2.0 documentation</title>
+  <title>airflow_dbt_python.operators &mdash; airflow-dbt-python 3.0.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
@@ -16,7 +16,7 @@
   
       <script src="../_static/jquery.js?v=5d32c60e"></script>
       <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../_static/documentation_options.js?v=b21de401"></script>
+      <script src="../_static/documentation_options.js?v=acc74ff5"></script>
       <script src="../_static/doctools.js?v=9a2dae69"></script>
       <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -58,16 +58,35 @@
 <li class="toctree-l2"><a class="reference internal" href="hooks.html">airflow_dbt_python.hooks</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">airflow_dbt_python.operators</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#airflow_dbt_python.operators.dbt.DbtBaseOperator"><code class="docutils literal notranslate"><span class="pre">DbtBaseOperator</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#airflow_dbt_python.operators.dbt.DbtBaseOperator.command"><code class="docutils literal notranslate"><span class="pre">DbtBaseOperator.command</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#airflow_dbt_python.operators.dbt.DbtBaseOperator.project_dir"><code class="docutils literal notranslate"><span class="pre">DbtBaseOperator.project_dir</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#airflow_dbt_python.operators.dbt.DbtBaseOperator.profiles_dir"><code class="docutils literal notranslate"><span class="pre">DbtBaseOperator.profiles_dir</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#airflow_dbt_python.operators.dbt.DbtBaseOperator.profile"><code class="docutils literal notranslate"><span class="pre">DbtBaseOperator.profile</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#airflow_dbt_python.operators.dbt.DbtBaseOperator.target"><code class="docutils literal notranslate"><span class="pre">DbtBaseOperator.target</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#airflow_dbt_python.operators.dbt.DbtBaseOperator.state"><code class="docutils literal notranslate"><span class="pre">DbtBaseOperator.state</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#airflow_dbt_python.operators.dbt.DbtBaseOperator.cache_selected_only"><code class="docutils literal notranslate"><span class="pre">DbtBaseOperator.cache_selected_only</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#airflow_dbt_python.operators.dbt.DbtBaseOperator.fail_fast"><code class="docutils literal notranslate"><span class="pre">DbtBaseOperator.fail_fast</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#airflow_dbt_python.operators.dbt.DbtBaseOperator.single_threaded"><code class="docutils literal notranslate"><span class="pre">DbtBaseOperator.single_threaded</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#airflow_dbt_python.operators.dbt.DbtBaseOperator.threads"><code class="docutils literal notranslate"><span class="pre">DbtBaseOperator.threads</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#airflow_dbt_python.operators.dbt.DbtBaseOperator.use_experimental_parser"><code class="docutils literal notranslate"><span class="pre">DbtBaseOperator.use_experimental_parser</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#airflow_dbt_python.operators.dbt.DbtBaseOperator.vars"><code class="docutils literal notranslate"><span class="pre">DbtBaseOperator.vars</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#airflow_dbt_python.operators.dbt.DbtBaseOperator.warn_error"><code class="docutils literal notranslate"><span class="pre">DbtBaseOperator.warn_error</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#airflow_dbt_python.operators.dbt.DbtBaseOperator.debug"><code class="docutils literal notranslate"><span class="pre">DbtBaseOperator.debug</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#airflow_dbt_python.operators.dbt.DbtBaseOperator.log_path"><code class="docutils literal notranslate"><span class="pre">DbtBaseOperator.log_path</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#airflow_dbt_python.operators.dbt.DbtBaseOperator.log_level"><code class="docutils literal notranslate"><span class="pre">DbtBaseOperator.log_level</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#airflow_dbt_python.operators.dbt.DbtBaseOperator.log_level_file"><code class="docutils literal notranslate"><span class="pre">DbtBaseOperator.log_level_file</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#airflow_dbt_python.operators.dbt.DbtBaseOperator.log_format"><code class="docutils literal notranslate"><span class="pre">DbtBaseOperator.log_format</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#airflow_dbt_python.operators.dbt.DbtBaseOperator.log_format_file"><code class="docutils literal notranslate"><span class="pre">DbtBaseOperator.log_format_file</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#airflow_dbt_python.operators.dbt.DbtBaseOperator.log_cache_events"><code class="docutils literal notranslate"><span class="pre">DbtBaseOperator.log_cache_events</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#airflow_dbt_python.operators.dbt.DbtBaseOperator.s3_conn_id"><code class="docutils literal notranslate"><span class="pre">DbtBaseOperator.s3_conn_id</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#airflow_dbt_python.operators.dbt.DbtBaseOperator.record_timing_info"><code class="docutils literal notranslate"><span class="pre">DbtBaseOperator.record_timing_info</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#airflow_dbt_python.operators.dbt.DbtBaseOperator.dbt_conn_id"><code class="docutils literal notranslate"><span class="pre">DbtBaseOperator.dbt_conn_id</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#airflow_dbt_python.operators.dbt.DbtBaseOperator.profiles_conn_id"><code class="docutils literal notranslate"><span class="pre">DbtBaseOperator.profiles_conn_id</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#airflow_dbt_python.operators.dbt.DbtBaseOperator.project_conn_id"><code class="docutils literal notranslate"><span class="pre">DbtBaseOperator.project_conn_id</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#airflow_dbt_python.operators.dbt.DbtBaseOperator.do_xcom_push_artifacts"><code class="docutils literal notranslate"><span class="pre">DbtBaseOperator.do_xcom_push_artifacts</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#id0"><code class="docutils literal notranslate"><span class="pre">DbtBaseOperator.command</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#airflow_dbt_python.operators.dbt.DbtBaseOperator.upload_dbt_project"><code class="docutils literal notranslate"><span class="pre">DbtBaseOperator.upload_dbt_project</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#airflow_dbt_python.operators.dbt.DbtBaseOperator.delete_before_upload"><code class="docutils literal notranslate"><span class="pre">DbtBaseOperator.delete_before_upload</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#airflow_dbt_python.operators.dbt.DbtBaseOperator.replace_on_upload"><code class="docutils literal notranslate"><span class="pre">DbtBaseOperator.replace_on_upload</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#airflow_dbt_python.operators.dbt.DbtBaseOperator.env_vars"><code class="docutils literal notranslate"><span class="pre">DbtBaseOperator.env_vars</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#airflow_dbt_python.operators.dbt.DbtBaseOperator.command"><code class="docutils literal notranslate"><span class="pre">DbtBaseOperator.command</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#airflow_dbt_python.operators.dbt.DbtBaseOperator.dbt_hook"><code class="docutils literal notranslate"><span class="pre">DbtBaseOperator.dbt_hook</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#airflow_dbt_python.operators.dbt.DbtBaseOperator.execute"><code class="docutils literal notranslate"><span class="pre">DbtBaseOperator.execute()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#airflow_dbt_python.operators.dbt.DbtBaseOperator.make_run_results_serializable"><code class="docutils literal notranslate"><span class="pre">DbtBaseOperator.make_run_results_serializable()</span></code></a></li>
@@ -169,7 +188,7 @@
 <p>Airflow operators for all dbt commands.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="airflow_dbt_python.operators.dbt.DbtBaseOperator">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">airflow_dbt_python.operators.dbt.</span></span><span class="sig-name descname"><span class="pre">DbtBaseOperator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">project_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">profiles_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">profile</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">state</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">compiled_target</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cache_selected_only</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fail_fast</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">single_threaded</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threads</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_experimental_parser</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vars</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">warn_error</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">debug</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_level</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_level_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_format</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">LogFormat.DEFAULT</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_cache_events</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">quiet</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">no_print</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">record_timing_info</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">defer</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">no_defer</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">partial_parse</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">no_partial_parse</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">introspect</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">no_introspect</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_colors</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">no_use_colors</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">static_parser</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">no_static_parser</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">version_check</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">no_version_check</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">write_json</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">write_perf_info</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">send_anonymous_usage_stats</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">no_send_anonymous_usage_stats</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dbt_conn_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'dbt_conn_id'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">profiles_conn_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">project_conn_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">do_xcom_push_artifacts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">upload_dbt_project</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">delete_before_upload</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">replace_on_upload</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">env_vars</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/airflow_dbt_python/operators/dbt.html#DbtBaseOperator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#airflow_dbt_python.operators.dbt.DbtBaseOperator" title="Link to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">airflow_dbt_python.operators.dbt.</span></span><span class="sig-name descname"><span class="pre">DbtBaseOperator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">project_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">profiles_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">profile</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">state</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">compiled_target</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cache_selected_only</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fail_fast</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">single_threaded</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threads</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_experimental_parser</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vars</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">warn_error</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">debug</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_level</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_level_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_format</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">LogFormat.DEFAULT</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_format_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">LogFormat.DEBUG</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_cache_events</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">quiet</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">no_quiet</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">print</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">no_print</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">record_timing_info</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">defer</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">no_defer</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">partial_parse</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">no_partial_parse</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">introspect</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">no_introspect</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_colors</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">no_use_colors</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">static_parser</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">no_static_parser</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">version_check</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">no_version_check</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">write_json</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">write_perf_info</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">send_anonymous_usage_stats</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">no_send_anonymous_usage_stats</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">partial_parse_file_diff</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">no_partial_parse_file_diff</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inject_ephemeral_ctes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">no_inject_ephemeral_ctes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">empty</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">no_empty</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_resource_report</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">no_show_resource_report</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">favor_state</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">no_favor_state</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">export_saved_queries</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">no_export_saved_queries</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dbt_conn_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">profiles_conn_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">project_conn_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">do_xcom_push_artifacts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">upload_dbt_project</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">delete_before_upload</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">replace_on_upload</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">env_vars</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/airflow_dbt_python/operators/dbt.html#DbtBaseOperator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#airflow_dbt_python.operators.dbt.DbtBaseOperator" title="Link to this definition"></a></dt>
 <dd><p>The basic Airflow dbt operator.</p>
 <p>Defines how to build an argument list and execute a dbt command. Does not set a
 command itself, subclasses should set it.</p>
@@ -194,8 +213,11 @@ command itself, subclasses should set it.</p>
 <li><p><strong>log_level</strong> (<em>Optional</em><em>[</em><em>str</em><em>]</em>)</p></li>
 <li><p><strong>log_level_file</strong> (<em>Optional</em><em>[</em><em>str</em><em>]</em>)</p></li>
 <li><p><strong>log_format</strong> (<em>LogFormat</em>)</p></li>
+<li><p><strong>log_format_file</strong> (<em>LogFormat</em>)</p></li>
 <li><p><strong>log_cache_events</strong> (<em>Optional</em><em>[</em><em>bool</em><em>]</em>)</p></li>
 <li><p><strong>quiet</strong> (<em>Optional</em><em>[</em><em>bool</em><em>]</em>)</p></li>
+<li><p><strong>no_quiet</strong> (<em>Optional</em><em>[</em><em>bool</em><em>]</em>)</p></li>
+<li><p><strong>print</strong> (<em>Optional</em><em>[</em><em>bool</em><em>]</em>)</p></li>
 <li><p><strong>no_print</strong> (<em>Optional</em><em>[</em><em>bool</em><em>]</em>)</p></li>
 <li><p><strong>record_timing_info</strong> (<em>Optional</em><em>[</em><em>str</em><em>]</em>)</p></li>
 <li><p><strong>defer</strong> (<em>Optional</em><em>[</em><em>bool</em><em>]</em>)</p></li>
@@ -214,6 +236,18 @@ command itself, subclasses should set it.</p>
 <li><p><strong>write_perf_info</strong> (<em>Optional</em><em>[</em><em>bool</em><em>]</em>)</p></li>
 <li><p><strong>send_anonymous_usage_stats</strong> (<em>Optional</em><em>[</em><em>bool</em><em>]</em>)</p></li>
 <li><p><strong>no_send_anonymous_usage_stats</strong> (<em>Optional</em><em>[</em><em>bool</em><em>]</em>)</p></li>
+<li><p><strong>partial_parse_file_diff</strong> (<em>Optional</em><em>[</em><em>bool</em><em>]</em>)</p></li>
+<li><p><strong>no_partial_parse_file_diff</strong> (<em>Optional</em><em>[</em><em>bool</em><em>]</em>)</p></li>
+<li><p><strong>inject_ephemeral_ctes</strong> (<em>Optional</em><em>[</em><em>bool</em><em>]</em>)</p></li>
+<li><p><strong>no_inject_ephemeral_ctes</strong> (<em>Optional</em><em>[</em><em>bool</em><em>]</em>)</p></li>
+<li><p><strong>empty</strong> (<em>Optional</em><em>[</em><em>bool</em><em>]</em>)</p></li>
+<li><p><strong>no_empty</strong> (<em>Optional</em><em>[</em><em>bool</em><em>]</em>)</p></li>
+<li><p><strong>show_resource_report</strong> (<em>Optional</em><em>[</em><em>bool</em><em>]</em>)</p></li>
+<li><p><strong>no_show_resource_report</strong> (<em>Optional</em><em>[</em><em>bool</em><em>]</em>)</p></li>
+<li><p><strong>favor_state</strong> (<em>Optional</em><em>[</em><em>bool</em><em>]</em>)</p></li>
+<li><p><strong>no_favor_state</strong> (<em>Optional</em><em>[</em><em>bool</em><em>]</em>)</p></li>
+<li><p><strong>export_saved_queries</strong> (<em>Optional</em><em>[</em><em>bool</em><em>]</em>)</p></li>
+<li><p><strong>no_export_saved_queries</strong> (<em>Optional</em><em>[</em><em>bool</em><em>]</em>)</p></li>
 <li><p><strong>dbt_conn_id</strong> (<em>Optional</em><em>[</em><em>str</em><em>]</em>)</p></li>
 <li><p><strong>profiles_conn_id</strong> (<em>Optional</em><em>[</em><em>str</em><em>]</em>)</p></li>
 <li><p><strong>project_conn_id</strong> (<em>Optional</em><em>[</em><em>str</em><em>]</em>)</p></li>
@@ -225,12 +259,6 @@ command itself, subclasses should set it.</p>
 </ul>
 </dd>
 </dl>
-<dl class="py attribute">
-<dt class="sig sig-object py" id="airflow_dbt_python.operators.dbt.DbtBaseOperator.command">
-<span class="sig-name descname"><span class="pre">command</span></span><a class="headerlink" href="#airflow_dbt_python.operators.dbt.DbtBaseOperator.command" title="Link to this definition"></a></dt>
-<dd><p>The dbt command to execute.</p>
-</dd></dl>
-
 <dl class="py attribute">
 <dt class="sig sig-object py" id="airflow_dbt_python.operators.dbt.DbtBaseOperator.project_dir">
 <span class="sig-name descname"><span class="pre">project_dir</span></span><a class="headerlink" href="#airflow_dbt_python.operators.dbt.DbtBaseOperator.project_dir" title="Link to this definition"></a></dt>
@@ -258,10 +286,98 @@ current directory.</p>
 </dd></dl>
 
 <dl class="py attribute">
+<dt class="sig sig-object py" id="airflow_dbt_python.operators.dbt.DbtBaseOperator.state">
+<span class="sig-name descname"><span class="pre">state</span></span><a class="headerlink" href="#airflow_dbt_python.operators.dbt.DbtBaseOperator.state" title="Link to this definition"></a></dt>
+<dd><p>Unless overridden, use this state directory for both state comparison
+and deferral.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="airflow_dbt_python.operators.dbt.DbtBaseOperator.cache_selected_only">
+<span class="sig-name descname"><span class="pre">cache_selected_only</span></span><a class="headerlink" href="#airflow_dbt_python.operators.dbt.DbtBaseOperator.cache_selected_only" title="Link to this definition"></a></dt>
+<dd><p>At start of run, populate relational cache
+only for schemas containing selected nodes, or for all schemas of interest.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="airflow_dbt_python.operators.dbt.DbtBaseOperator.fail_fast">
+<span class="sig-name descname"><span class="pre">fail_fast</span></span><a class="headerlink" href="#airflow_dbt_python.operators.dbt.DbtBaseOperator.fail_fast" title="Link to this definition"></a></dt>
+<dd><p>Stop execution on first failure.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="airflow_dbt_python.operators.dbt.DbtBaseOperator.single_threaded">
+<span class="sig-name descname"><span class="pre">single_threaded</span></span><a class="headerlink" href="#airflow_dbt_python.operators.dbt.DbtBaseOperator.single_threaded" title="Link to this definition"></a></dt>
+<dd><p>Execute dbt command in single threaded mode. For test only</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="airflow_dbt_python.operators.dbt.DbtBaseOperator.threads">
+<span class="sig-name descname"><span class="pre">threads</span></span><a class="headerlink" href="#airflow_dbt_python.operators.dbt.DbtBaseOperator.threads" title="Link to this definition"></a></dt>
+<dd><p>Specify number of threads to use while executing models.
+Overrides settings in profiles.yml.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="airflow_dbt_python.operators.dbt.DbtBaseOperator.use_experimental_parser">
+<span class="sig-name descname"><span class="pre">use_experimental_parser</span></span><a class="headerlink" href="#airflow_dbt_python.operators.dbt.DbtBaseOperator.use_experimental_parser" title="Link to this definition"></a></dt>
+<dd><p>Enable experimental parsing features.</p>
+</dd></dl>
+
+<dl class="py attribute">
 <dt class="sig sig-object py" id="airflow_dbt_python.operators.dbt.DbtBaseOperator.vars">
 <span class="sig-name descname"><span class="pre">vars</span></span><a class="headerlink" href="#airflow_dbt_python.operators.dbt.DbtBaseOperator.vars" title="Link to this definition"></a></dt>
 <dd><p>Supply variables to the project. Should be a YAML string. Overrides
 variables defined in dbt_profile.yml.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="airflow_dbt_python.operators.dbt.DbtBaseOperator.warn_error">
+<span class="sig-name descname"><span class="pre">warn_error</span></span><a class="headerlink" href="#airflow_dbt_python.operators.dbt.DbtBaseOperator.warn_error" title="Link to this definition"></a></dt>
+<dd><p>If dbt would normally warn, instead raise an exception.
+Examples include –select that selects nothing, deprecations,
+configurations with no associated models, invalid test configurations,
+and missing sources/refs in tests.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="airflow_dbt_python.operators.dbt.DbtBaseOperator.debug">
+<span class="sig-name descname"><span class="pre">debug</span></span><a class="headerlink" href="#airflow_dbt_python.operators.dbt.DbtBaseOperator.debug" title="Link to this definition"></a></dt>
+<dd><p>Display debug logging during dbt execution.
+Useful for debugging and making bug reports.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="airflow_dbt_python.operators.dbt.DbtBaseOperator.log_path">
+<span class="sig-name descname"><span class="pre">log_path</span></span><a class="headerlink" href="#airflow_dbt_python.operators.dbt.DbtBaseOperator.log_path" title="Link to this definition"></a></dt>
+<dd><p>Log path for dbt execution.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="airflow_dbt_python.operators.dbt.DbtBaseOperator.log_level">
+<span class="sig-name descname"><span class="pre">log_level</span></span><a class="headerlink" href="#airflow_dbt_python.operators.dbt.DbtBaseOperator.log_level" title="Link to this definition"></a></dt>
+<dd><p>Specify the minimum severity of events that are logged
+to the console and the log file.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="airflow_dbt_python.operators.dbt.DbtBaseOperator.log_level_file">
+<span class="sig-name descname"><span class="pre">log_level_file</span></span><a class="headerlink" href="#airflow_dbt_python.operators.dbt.DbtBaseOperator.log_level_file" title="Link to this definition"></a></dt>
+<dd><p>Specify the minimum severity of events that are logged
+to the log file by overriding the default value</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="airflow_dbt_python.operators.dbt.DbtBaseOperator.log_format">
+<span class="sig-name descname"><span class="pre">log_format</span></span><a class="headerlink" href="#airflow_dbt_python.operators.dbt.DbtBaseOperator.log_format" title="Link to this definition"></a></dt>
+<dd><p>Specify the format of logging to the console and the log file.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="airflow_dbt_python.operators.dbt.DbtBaseOperator.log_format_file">
+<span class="sig-name descname"><span class="pre">log_format_file</span></span><a class="headerlink" href="#airflow_dbt_python.operators.dbt.DbtBaseOperator.log_format_file" title="Link to this definition"></a></dt>
+<dd><p>Specify the format of logging to the log file by overriding
+the default value</p>
 </dd></dl>
 
 <dl class="py attribute">
@@ -271,9 +387,141 @@ variables defined in dbt_profile.yml.</p>
 </dd></dl>
 
 <dl class="py attribute">
-<dt class="sig sig-object py" id="airflow_dbt_python.operators.dbt.DbtBaseOperator.s3_conn_id">
-<span class="sig-name descname"><span class="pre">s3_conn_id</span></span><a class="headerlink" href="#airflow_dbt_python.operators.dbt.DbtBaseOperator.s3_conn_id" title="Link to this definition"></a></dt>
-<dd><p>An s3 Airflow connection ID to use when pulling dbt files from s3.</p>
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">quiet/no_quiet</span></span></dt>
+<dd><p>Suppress all non-error logging to stdout.
+Does not affect {{ print() }} macro calls.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">print/no_print</span></span></dt>
+<dd><p>Output all {{ print() }} macro calls.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="airflow_dbt_python.operators.dbt.DbtBaseOperator.record_timing_info">
+<span class="sig-name descname"><span class="pre">record_timing_info</span></span><a class="headerlink" href="#airflow_dbt_python.operators.dbt.DbtBaseOperator.record_timing_info" title="Link to this definition"></a></dt>
+<dd><p>When this option is passed, dbt will output low-level
+timing stats to the specified file.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">defer/no_defer</span></span></dt>
+<dd><p>If set, resolve unselected nodes by deferring to the manifest
+within the –state directory.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">partial_parse/no_partial_parse</span></span></dt>
+<dd><p>Allow for partial parsing by looking for
+and writing to a pickle file in the target directory.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">introspect/no_introspect</span></span></dt>
+<dd><p>Whether to scaffold introspective queries
+as part of compilation</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">use_colors/no_use_colors</span></span></dt>
+<dd><p>Specify whether log output is colorized
+in the console and the log file.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">static_parser/no_static_parser</span></span></dt>
+<dd><p>Use the static parser.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">version_check/no_version_check</span></span></dt>
+<dd><p>If set, ensure the installed dbt version matches
+the require-dbt-version specified in the dbt_project.yml file (if any).
+Otherwise, allow them to differ.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">write_json/no_write_json</span></span></dt>
+<dd><p>Whether or not to write the manifest.json
+and run_results.json files to the target directory</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">send_anonymous_usage_stats/no_send_anonymous_usage_stats</span></span></dt>
+<dd><p>Send anonymous usage
+stats to dbt Labs.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">partial_parse_file_diff/no_partial_parse_file_diff</span></span></dt>
+<dd><p>Internal flag for whether
+to compute a file diff during partial parsing.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">inject_ephemeral_ctes/no_inject_ephemeral_ctes</span></span></dt>
+<dd><p>Internal flag controlling
+injection of referenced ephemeral models’ CTEs during <cite>compile</cite>.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">empty/no_empty</span></span></dt>
+<dd><p>If specified, limit input refs and sources to zero rows.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">show_resource_report/no_show_resource_report</span></span></dt>
+<dd><p>If set, dbt will output
+resource report into log.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">favor_state/no_favor_state</span></span></dt>
+<dd><p>If set, defer to the argument provided to
+the state flag for resolving unselected nodes, even if the node(s) exist
+as a database object in the current environment.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">export_saved_queries/no_export_saved_queries</span></span></dt>
+<dd><p>Export saved queries within
+the ‘build’ command, otherwise no-op</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="airflow_dbt_python.operators.dbt.DbtBaseOperator.dbt_conn_id">
+<span class="sig-name descname"><span class="pre">dbt_conn_id</span></span><a class="headerlink" href="#airflow_dbt_python.operators.dbt.DbtBaseOperator.dbt_conn_id" title="Link to this definition"></a></dt>
+<dd><p>An Airflow connection ID to generate dbt profile from.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="airflow_dbt_python.operators.dbt.DbtBaseOperator.profiles_conn_id">
+<span class="sig-name descname"><span class="pre">profiles_conn_id</span></span><a class="headerlink" href="#airflow_dbt_python.operators.dbt.DbtBaseOperator.profiles_conn_id" title="Link to this definition"></a></dt>
+<dd><p>An Airflow connection ID to use for pulling dbt profiles
+from remote (e.g. git/s3/gcs).</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="airflow_dbt_python.operators.dbt.DbtBaseOperator.project_conn_id">
+<span class="sig-name descname"><span class="pre">project_conn_id</span></span><a class="headerlink" href="#airflow_dbt_python.operators.dbt.DbtBaseOperator.project_conn_id" title="Link to this definition"></a></dt>
+<dd><p>An Airflow connection ID to use for pulling dbt project
+from remote (e.g. git/s3/gcs).</p>
 </dd></dl>
 
 <dl class="py attribute">
@@ -282,9 +530,36 @@ variables defined in dbt_profile.yml.</p>
 <dd><p>A list of dbt artifacts to XCom push.</p>
 </dd></dl>
 
+<dl class="py attribute">
+<dt class="sig sig-object py" id="airflow_dbt_python.operators.dbt.DbtBaseOperator.upload_dbt_project">
+<span class="sig-name descname"><span class="pre">upload_dbt_project</span></span><a class="headerlink" href="#airflow_dbt_python.operators.dbt.DbtBaseOperator.upload_dbt_project" title="Link to this definition"></a></dt>
+<dd><p>Flag to enable unloading the project dbt after the operator
+execution back to project_dir.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="airflow_dbt_python.operators.dbt.DbtBaseOperator.delete_before_upload">
+<span class="sig-name descname"><span class="pre">delete_before_upload</span></span><a class="headerlink" href="#airflow_dbt_python.operators.dbt.DbtBaseOperator.delete_before_upload" title="Link to this definition"></a></dt>
+<dd><p>Flag to enable cleaning up project_dir before uploading
+dbt project back to.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="airflow_dbt_python.operators.dbt.DbtBaseOperator.replace_on_upload">
+<span class="sig-name descname"><span class="pre">replace_on_upload</span></span><a class="headerlink" href="#airflow_dbt_python.operators.dbt.DbtBaseOperator.replace_on_upload" title="Link to this definition"></a></dt>
+<dd><p>Flag to allow replacing files when uploading dbt project
+back to project_dir.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="airflow_dbt_python.operators.dbt.DbtBaseOperator.env_vars">
+<span class="sig-name descname"><span class="pre">env_vars</span></span><a class="headerlink" href="#airflow_dbt_python.operators.dbt.DbtBaseOperator.env_vars" title="Link to this definition"></a></dt>
+<dd><p>Supply environment variables to the project</p>
+</dd></dl>
+
 <dl class="py property">
-<dt class="sig sig-object py" id="id0">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">command</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#id0" title="Link to this definition"></a></dt>
+<dt class="sig sig-object py" id="airflow_dbt_python.operators.dbt.DbtBaseOperator.command">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">command</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#airflow_dbt_python.operators.dbt.DbtBaseOperator.command" title="Link to this definition"></a></dt>
 <dd><p>Return the current dbt command.</p>
 <p>Each subclass of DbtBaseOperator should return its corresponding command.</p>
 </dd></dl>
@@ -590,7 +865,7 @@ documentation for the dbt command can be found here:
 <dt class="sig sig-object py" id="airflow_dbt_python.operators.dbt.DbtSeedOperator">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">airflow_dbt_python.operators.dbt.</span></span><span class="sig-name descname"><span class="pre">DbtSeedOperator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">full_refresh</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">select</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exclude</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">selector_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/airflow_dbt_python/operators/dbt.html#DbtSeedOperator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#airflow_dbt_python.operators.dbt.DbtSeedOperator" title="Link to this definition"></a></dt>
 <dd><p>Executes a dbt seed command.</p>
-<p>The seed command loads csv files into the  the given target. The
+<p>The seed command loads csv files into the given target. The
 documentation for the dbt command can be found here:
 <a class="reference external" href="https://docs.getdbt.com/reference/commands/seed">https://docs.getdbt.com/reference/commands/seed</a>.</p>
 <dl class="field-list simple">

@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>How does it work? &mdash; airflow-dbt-python 2.2.0 documentation</title>
+  <title>How does it work? &mdash; airflow-dbt-python 3.0.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
@@ -16,7 +16,7 @@
   
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=b21de401"></script>
+      <script src="_static/documentation_options.js?v=acc74ff5"></script>
       <script src="_static/doctools.js?v=9a2dae69"></script>
       <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -59,8 +59,8 @@
 <li class="toctree-l3"><a class="reference internal" href="#temporary-directories-ensure-task-independence">Temporary directories ensure task independence</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#dbt-remote-hooks"><em>dbt</em> remote hooks</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#implementing-the-dbtremotehook-interface">Implementing the <code class="docutils literal notranslate"><span class="pre">DbtRemoteHook</span></code> interface</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#dbt-filesystem-hooks"><em>dbt</em> filesystem hooks</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#implementing-the-dbtfshook-interface">Implementing the <code class="docutils literal notranslate"><span class="pre">DbtFSHook</span></code> interface</a></li>
 </ul>
 </li>
 </ul>
@@ -99,9 +99,9 @@
 <p>To achieve this goal <em>airflow-dbt-python</em> provides Airflow operators, hooks, and other utilities. Hooks in particular come in two flavors:</p>
 <ul class="simple">
 <li><p>A <code class="docutils literal notranslate"><span class="pre">DbtHook</span></code> that abstracts all interaction with <em>dbt</em> internals.</p></li>
-<li><p>Subclasses of <code class="docutils literal notranslate"><span class="pre">DbtRemoteHook</span></code> that expose an interface to interact with <em>dbt</em> remote storages where project files are located (like AWS S3 buckets or git repositories).</p></li>
+<li><p>Subclasses of <code class="docutils literal notranslate"><span class="pre">DbtFSHook</span></code> that expose an interface to interact with <em>dbt</em> remote storages where project files are located (like AWS S3 buckets or git repositories).</p></li>
 </ul>
-<div class="graphviz"><object data="_images/graphviz-9dd7c29a87b67c098827658d1d43cfe5867b37d0.svg" type="image/svg+xml" class="graphviz">
+<div class="graphviz"><object data="_images/graphviz-b217a4f2d888747162340fc8afa61506d6beed21.svg" type="image/svg+xml" class="graphviz">
 <p class="warning">digraph HowDoesItWork {
     graph [fontname=&quot;Hack&quot;, splines=ortho];
     node [fontname=&quot;Hack&quot;, shape=box];
@@ -122,8 +122,8 @@
 
         DbtHook;
         DbtOperator -&gt; DbtHook [label=&quot;run_dbt_task&quot;];
-        DbtRemoteHooks -&gt; DbtHook [label=&quot;download&quot;];
-        DbtHook -&gt; DbtRemoteHooks [label=&quot;upload&quot;, labelfloat=true];
+        DbtFSHooks -&gt; DbtHook [label=&quot;download&quot;];
+        DbtHook -&gt; DbtFSHooks [label=&quot;upload&quot;, labelfloat=true];
     }
 
     &quot;dbt-core&quot; [style=filled, fillcolor=&quot;#CBCBCB&quot;, color=&quot;#FF7557&quot;];
@@ -138,8 +138,8 @@
     {rank=same; split; DbtOperator; }
 
     &quot;Remote storage&quot; [style=filled, fillcolor=&quot;#CBCBCB&quot;, color=&quot;#FF7557&quot;];
-    DbtRemoteHooks -&gt; &quot;Remote storage&quot; [headlabel=&quot;interacts&quot;, labeldistance=4.0];
-    {rank=same; &quot;Remote storage&quot;; DbtRemoteHooks; }
+    DbtFSHooks -&gt; &quot;Remote storage&quot; [headlabel=&quot;interacts&quot;, labeldistance=4.0];
+    {rank=same; &quot;Remote storage&quot;; DbtFSHooks; }
 
 }</p></object></div>
 <section id="dbt-as-a-library">
@@ -172,12 +172,12 @@
 <p>This ensures <em>dbt</em> can work with any Airflow deployment, including most production deployments running <a class="reference external" href="https://airflow.apache.org/docs/apache-airflow/stable/executor/index.html#executor-types">Remote Executors</a> that do not guarantee any files will be shared between tasks, since each task may run in a completely different worker.</p>
 </section>
 </section>
-<section id="dbt-remote-hooks">
-<span id="id4"></span><h2><em>dbt</em> remote hooks<a class="headerlink" href="#dbt-remote-hooks" title="Link to this heading"></a></h2>
-<p><em>dbt</em> remote hooks implement a simple interface to communicate with <em>dbt</em> remotes. A <em>dbt</em> remote can be any external storage that contains a <em>dbt</em> project and potentially also a <em>profiles.yml</em> file for example: an AWS S3 bucket or a GitHub repository. See the reference for a list of which remotes are currently supported.</p>
-<section id="implementing-the-dbtremotehook-interface">
-<h3>Implementing the <code class="docutils literal notranslate"><span class="pre">DbtRemoteHook</span></code> interface<a class="headerlink" href="#implementing-the-dbtremotehook-interface" title="Link to this heading"></a></h3>
-<p>Supporting a new remote to store <em>dbt</em> files requires implementing the <code class="docutils literal notranslate"><span class="pre">DbtRemoteHook</span></code> interface. There are only two methods in the interface: <code class="docutils literal notranslate"><span class="pre">DbtRemoteHook.download</span></code> and <code class="docutils literal notranslate"><span class="pre">DbtRemoteHook.upload</span></code>.</p>
+<section id="dbt-filesystem-hooks">
+<span id="dbt-fs-hooks"></span><h2><em>dbt</em> filesystem hooks<a class="headerlink" href="#dbt-filesystem-hooks" title="Link to this heading"></a></h2>
+<p><em>dbt</em> fs hooks implement a simple interface to communicate with <em>dbt</em> remotes. A <em>dbt</em> fs can be any external storage that contains a <em>dbt</em> project and potentially also a <em>profiles.yml</em> file for example: an AWS S3 bucket, a Google Cloud Storage or a GitHub repository. See the reference for a list of which remotes are currently supported.</p>
+<section id="implementing-the-dbtfshook-interface">
+<h3>Implementing the <code class="docutils literal notranslate"><span class="pre">DbtFSHook</span></code> interface<a class="headerlink" href="#implementing-the-dbtfshook-interface" title="Link to this heading"></a></h3>
+<p>Supporting a new fs to store <em>dbt</em> files requires implementing the <code class="docutils literal notranslate"><span class="pre">DbtFSHook</span></code> interface. There are only two methods in the interface: <code class="docutils literal notranslate"><span class="pre">DbtFSHook.download</span></code> and <code class="docutils literal notranslate"><span class="pre">DbtFSHook.upload</span></code>.</p>
 </section>
 </section>
 </section>

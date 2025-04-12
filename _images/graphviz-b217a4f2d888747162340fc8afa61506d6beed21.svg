@@ -69,17 +69,17 @@
 <title>DbtOperator&#45;&gt;split</title>
 <path fill="none" stroke="black" d="M156.08,-300C200.7,-300 259.52,-300 271.01,-300"/>
 </g>
-<!-- DbtRemoteHooks -->
+<!-- DbtFSHooks -->
 <g id="node6" class="node">
-<title>DbtRemoteHooks</title>
-<polygon fill="none" stroke="black" points="174.5,-75 37.5,-75 37.5,-39 174.5,-39 174.5,-75"/>
-<text text-anchor="middle" x="106" y="-53.3" font-family="Hack" font-size="14.00">DbtRemoteHooks</text>
+<title>DbtFSHooks</title>
+<polygon fill="none" stroke="black" points="156.5,-75 55.5,-75 55.5,-39 156.5,-39 156.5,-75"/>
+<text text-anchor="middle" x="106" y="-53.3" font-family="Hack" font-size="14.00">DbtFSHooks</text>
 </g>
-<!-- DbtHook&#45;&gt;DbtRemoteHooks -->
+<!-- DbtHook&#45;&gt;DbtFSHooks -->
 <g id="edge4" class="edge">
-<title>DbtHook&#45;&gt;DbtRemoteHooks</title>
-<path fill="none" stroke="black" d="M109.17,-123.97C109.17,-123.97 109.17,-85 109.17,-85"/>
-<polygon fill="black" stroke="black" points="112.67,-85 109.17,-75 105.67,-85 112.67,-85"/>
+<title>DbtHook&#45;&gt;DbtFSHooks</title>
+<path fill="none" stroke="black" d="M107.83,-123.97C107.83,-123.97 107.83,-85 107.83,-85"/>
+<polygon fill="black" stroke="black" points="111.33,-85 107.83,-75 104.33,-85 111.33,-85"/>
 <text text-anchor="middle" x="94.5" y="-96.4" font-family="Hack" font-size="12.00">upload</text>
 </g>
 <!-- dbt&#45;core -->
@@ -95,25 +95,25 @@
 <polygon fill="black" stroke="black" points="265.71,-139.5 275.71,-136 265.71,-132.5 265.71,-139.5"/>
 <text text-anchor="middle" x="234.92" y="-151.92" font-family="Hack" font-size="12.00">executes</text>
 </g>
-<!-- DbtRemoteHooks&#45;&gt;DbtHook -->
+<!-- DbtFSHooks&#45;&gt;DbtHook -->
 <g id="edge3" class="edge">
-<title>DbtRemoteHooks&#45;&gt;DbtHook</title>
-<path fill="none" stroke="black" d="M134.83,-75.03C134.83,-75.03 134.83,-114 134.83,-114"/>
-<polygon fill="black" stroke="black" points="131.33,-114 134.83,-124 138.33,-114 131.33,-114"/>
+<title>DbtFSHooks&#45;&gt;DbtHook</title>
+<path fill="none" stroke="black" d="M132.17,-75.03C132.17,-75.03 132.17,-114 132.17,-114"/>
+<polygon fill="black" stroke="black" points="128.67,-114 132.17,-124 135.67,-114 128.67,-114"/>
 <text text-anchor="middle" x="167" y="-96.4" font-family="Hack" font-size="12.00">download</text>
 </g>
 <!-- Remote storage -->
 <g id="node9" class="node">
 <title>Remote storage</title>
-<polygon fill="#cbcbcb" stroke="#ff7557" points="416,-75 290,-75 290,-39 416,-39 416,-75"/>
-<text text-anchor="middle" x="353" y="-53.3" font-family="Hack" font-size="14.00">Remote storage</text>
+<polygon fill="#cbcbcb" stroke="#ff7557" points="398,-75 272,-75 272,-39 398,-39 398,-75"/>
+<text text-anchor="middle" x="335" y="-53.3" font-family="Hack" font-size="14.00">Remote storage</text>
 </g>
-<!-- DbtRemoteHooks&#45;&gt;Remote storage -->
+<!-- DbtFSHooks&#45;&gt;Remote storage -->
 <g id="edge10" class="edge">
-<title>DbtRemoteHooks&#45;&gt;Remote storage</title>
-<path fill="none" stroke="black" d="M174.8,-57C174.8,-57 279.64,-57 279.64,-57"/>
-<polygon fill="black" stroke="black" points="279.64,-60.5 289.64,-57 279.64,-53.5 279.64,-60.5"/>
-<text text-anchor="middle" x="253.39" y="-70.8" font-family="Hack" font-size="12.00">interacts</text>
+<title>DbtFSHooks&#45;&gt;Remote storage</title>
+<path fill="none" stroke="black" d="M156.54,-57C156.54,-57 261.91,-57 261.91,-57"/>
+<polygon fill="black" stroke="black" points="261.91,-60.5 271.91,-57 261.91,-53.5 261.91,-60.5"/>
+<text text-anchor="middle" x="235.65" y="-70.8" font-family="Hack" font-size="12.00">interacts</text>
 </g>
 <!-- split&#45;&gt;XCom -->
 <g id="edge8" class="edge">

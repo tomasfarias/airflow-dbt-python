@@ -10,7 +10,7 @@ Core *dbt* hooks
 Supported *dbt* remote hooks
 ----------------------------
 
-The DbtRemoteHook interface
+The DbtFSHook interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. automodule:: airflow_dbt_python.hooks.remote
@@ -19,17 +19,23 @@ The DbtRemoteHook interface
 *dbt* git remote
 ^^^^^^^^^^^^^^^^
 
-.. automodule:: airflow_dbt_python.hooks.git
+.. automodule:: airflow_dbt_python.hooks.remote.git
    :members:
 
 *dbt* localfs remote
 ^^^^^^^^^^^^^^^^^^^^
 
-.. automodule:: airflow_dbt_python.hooks.localfs
+.. automodule:: airflow_dbt_python.hooks.remote.localfs
    :members:
 
 *dbt* S3 remote
 ^^^^^^^^^^^^^^^^
 
-.. automodule:: airflow_dbt_python.hooks.s3
+.. automodule:: airflow_dbt_python.hooks.remote.s3
+   :members:
+
+*dbt* GCS remote
+^^^^^^^^^^^^^^^^
+
+.. automodule:: airflow_dbt_python.hooks.remote.gcs
    :members:

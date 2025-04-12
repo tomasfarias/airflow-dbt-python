@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Getting started &mdash; airflow-dbt-python 2.2.0 documentation</title>
+  <title>Getting started &mdash; airflow-dbt-python 3.0.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
@@ -16,7 +16,7 @@
   
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=b21de401"></script>
+      <script src="_static/documentation_options.js?v=acc74ff5"></script>
       <script src="_static/doctools.js?v=9a2dae69"></script>
       <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -101,16 +101,16 @@
 <section id="requirements">
 <span id="id1"></span><h2>Requirements<a class="headerlink" href="#requirements" title="Link to this heading"></a></h2>
 <p>Before using <em>airflow-dbt-python</em>, ensure you meet the following requirements:
-* A <em>dbt</em> project using <a class="reference external" href="https://pypi.org/project/dbt-core/">dbt-core</a> version 1.0.0 or later.
-* An Airflow environment using version 2.2 or later.</p>
+* A <em>dbt</em> project using <a class="reference external" href="https://pypi.org/project/dbt-core/">dbt-core</a> version 1.8 or later.
+* An Airflow environment using version 2.8 or later.</p>
 <blockquote>
 <div><ul class="simple">
-<li><p>If using any managed service, like AWS MWAA, ensure your environment is created with a supported version of Airflow.</p></li>
+<li><p>If using any managed service, like AWS MWAA or GCP Cloud Composer 2/3, ensure your environment is created with a supported version of Airflow.</p></li>
 <li><p>If self-hosting, Airflow installation instructions can be found in their <a class="reference external" href="https://airflow.apache.org/docs/apache-airflow/stable/installation/index.html">official documentation</a>.</p></li>
 </ul>
 </div></blockquote>
 <ul class="simple">
-<li><p>Running Python 3.7 or later in your Airflow environment.</p></li>
+<li><p>Running Python 3.9 or later in your Airflow environment.</p></li>
 </ul>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
@@ -118,7 +118,7 @@
 </div>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Older versions of Airflow and <em>dbt</em> may work with <em>airflow-dbt-python</em>, although we cannot guarantee this. Our testing pipeline runs the latest <em>dbt-core</em> with the latest Airflow release, and the latest version supported by <a class="reference external" href="https://aws.amazon.com/managed-workflows-for-apache-airflow/">AWS MWAA</a>.</p>
+<p>Older versions of Airflow and <em>dbt</em> may work with <em>airflow-dbt-python</em>, although we cannot guarantee this. Our testing pipeline runs the latest <em>dbt-core</em> with the latest Airflow release, and the latest version supported by <a class="reference external" href="https://aws.amazon.com/managed-workflows-for-apache-airflow/">AWS MWAA</a> and <a class="reference external" href="https://aws.amazon.com/managed-workflows-for-apache-airflow/">GCP Cloud Composer 2/3</a>.</p>
 </div>
 </section>
 <section id="installation">
@@ -184,7 +184,7 @@ poetry<span class="w"> </span>install<span class="w"> </span>-E<span class="w"> 
 <p>The wheel file can now be added to your <em>plugins.zip</em>, and the requirements can be updated to point to this wheel file:</p>
 <div class="literal-block-wrapper docutils container" id="id3">
 <div class="code-block-caption"><span class="caption-text">requirements.txt</span><a class="headerlink" href="#id3" title="Link to this code"></a></div>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>/usr/local/airflow/plugins/airflow_dbt_python-1.0.0-py3-none-any.whl
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>/usr/local/airflow/plugins/airflow_dbt_python-3.0.0-py3-none-any.whl
 </pre></div>
 </div>
 </div>
@@ -195,7 +195,7 @@ poetry<span class="w"> </span>install<span class="w"> </span>-E<span class="w"> 
 <p><em>airflow-dbt-python</em> needs a way to access your <em>dbt</em> project to run. The requirements to grant this access will depend on how your Airflow environment is setup:</p>
 <ol class="arabic simple">
 <li><p>Using a <a class="reference external" href="https://airflow.apache.org/docs/apache-airflow/stable/executor/local.html">local executor</a> with a single-machine installation means we can rely on the local machine’s filesystem to store a <em>dbt</em> project. This also applies to <code class="docutils literal notranslate"><span class="pre">DebugExecutor</span></code> and <code class="docutils literal notranslate"><span class="pre">SequentialExecutor</span></code>, but these executors are generally only used for debugging/development so we will ignore them. If you are running a setup like this, then simply ensure your <em>dbt</em> project and <em>profiles.yml</em> exist somewhere in the <code class="docutils literal notranslate"><span class="pre">LocalExecutor</span></code>’s file system.</p></li>
-<li><p>Once your setup has evolved to a multi-machine/cloud installation with any remote executor, we must rely on a remote storage for <em>dbt</em> files. Currently, supported remote storages include AWS S3 and git remote repositories although more are in plans to be added. In this setup, your <em>dbt</em> project will need to be uploaded to a remote storage that Airflow can access. <em>airflow-dbt-python</em> can utilize Airflow connections to access these storages.</p></li>
+<li><p>Once your setup has evolved to a multi-machine/cloud installation with any remote executor, we must rely on a remote storage for <em>dbt</em> files. Currently, supported remote storages include AWS S3, Google Cloud Storage and Git repositories although more are in plans to be added. In this setup, your <em>dbt</em> project will need to be uploaded to a remote storage that Airflow can access. <em>airflow-dbt-python</em> can utilize Airflow connections to access these storages.</p></li>
 </ol>
 <section id="single-machine-installation">
 <h3>Single-machine installation<a class="headerlink" href="#single-machine-installation" title="Link to this heading"></a></h3>
@@ -299,7 +299,7 @@ poetry<span class="w"> </span>install<span class="w"> </span>-E<span class="w"> 
 <h3>Multi-machine/cloud installation<a class="headerlink" href="#multi-machine-cloud-installation" title="Link to this heading"></a></h3>
 <p>When Airflow is installed is running on a multi- machine or cloud installation, each individual worker does not have does not have access to a common filesystem that we can reliably use to store <em>dbt</em> project files (at least, assuming any deployment with more than one worker). This includes both self-hosted deployments as well as managed Airflow deployments like AWS MWAA or Astronomer.</p>
 <p>For these deployments we must rely on a <em>dbt</em> remote to download and, eventually, upload all required <em>dbt</em> files. The remote <em>dbt</em> URL may be used in place of a local <code class="docutils literal notranslate"><span class="pre">project_dir</span></code> or <code class="docutils literal notranslate"><span class="pre">profiles_dir</span></code> to have <em>airflow-dbt-python</em> download the <em>dbt</em> files in the remote into a temporary directory for execution.</p>
-<p>Interactions with storages are supported by subclasses of <code class="docutils literal notranslate"><span class="pre">DbtRemoteHook</span></code>. Read the documentation <a class="reference internal" href="how_does_it_work.html#dbt-remote-hooks"><span class="std std-ref">dbt remote hooks</span></a> to learn more about these hooks.</p>
+<p>Interactions with storages are supported by subclasses of <code class="docutils literal notranslate"><span class="pre">DbtFSHook</span></code>. Read the documentation <span class="xref std std-ref">dbt_remote_hooks</span> to learn more about these hooks.</p>
 <p>As an example, let’s upload our <em>dbt</em> project to an AWS S3 bucket. The files may end up structured in the bucket as:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>s3://my-bucket/
 .
@@ -349,7 +349,7 @@ poetry<span class="w"> </span>install<span class="w"> </span>-E<span class="w"> 
 </pre></div>
 </div>
 </div>
-<p><em>airflow-dbt-python</em> uses the URL scheme (in this example, <code class="docutils literal notranslate"><span class="pre">&quot;s3&quot;</span></code>) to figure out the type of remote, and the corresponding <code class="docutils literal notranslate"><span class="pre">DbtRemoteHook</span></code> to download all required files. An exception would be raised if the scheme does not point to a supported remote.</p>
+<p><em>airflow-dbt-python</em> uses the URL scheme (in this example, <code class="docutils literal notranslate"><span class="pre">&quot;s3&quot;</span></code>) to figure out the type of remote, and the corresponding <code class="docutils literal notranslate"><span class="pre">DbtFSHook</span></code> to download all required files. An exception would be raised if the scheme does not point to a supported remote.</p>
 <p><em>airflow-dbt-python</em> takes care of adjusting any path-like arguments so that they are pointing to files in a local temporary directory once all the <em>dbt</em> files are download from the remote storage.</p>
 <p>Let’s do another example where we upload our <em>dbt</em> project to a GitHub repository. For this example, let’s use dbt-labs’ own <a class="reference external" href="https://github.com/dbt-labs/jaffle-shop-classic">jaffle_shop</a>.</p>
 <p>The DAG looks the same as the AWS S3 example, except that now we use the GitHub repository’s SSH URL as the <code class="docutils literal notranslate"><span class="pre">project_dir</span></code> argument:</p>
@@ -373,13 +373,13 @@ poetry<span class="w"> </span>install<span class="w"> </span>-E<span class="w"> 
 <span class="hll"><span class="linenos">16</span>        <span class="n">project_dir</span><span class="o">=</span><span class="s2">&quot;git+ssh://github.com:dbt-labs/jaffle-shop-classic&quot;</span><span class="p">,</span>
 </span><span class="linenos">17</span>        <span class="n">select</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;+tag:daily&quot;</span><span class="p">],</span>
 <span class="linenos">18</span>        <span class="n">exclude</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;tag:deprecated&quot;</span><span class="p">],</span>
-<span class="linenos">19</span>        <span class="n">target</span><span class="o">=</span><span class="s2">&quot;my_warehouse_connection&quot;</span><span class="p">,</span>
+<span class="linenos">19</span>        <span class="n">dbt_conn_id</span><span class="o">=</span><span class="s2">&quot;my_warehouse_connection&quot;</span><span class="p">,</span>
 <span class="linenos">20</span>        <span class="n">profile</span><span class="o">=</span><span class="s2">&quot;my-project&quot;</span><span class="p">,</span>
 <span class="linenos">21</span>   <span class="p">)</span>
 </pre></div>
 </div>
 </div>
-<p><em>airflow-dbt-python</em> can determine this URL requires a <code class="docutils literal notranslate"><span class="pre">DbtGitRemoteHook</span></code> by looking at the URL’s scheme (<code class="docutils literal notranslate"><span class="pre">&quot;git+ssh&quot;</span></code>). As we are passing an SSH URL, <code class="docutils literal notranslate"><span class="pre">DbtGitRemoteHook</span></code> can utilize an Airflow <a class="reference external" href="https://airflow.apache.org/docs/apache-airflow-providers-ssh/stable/connections/ssh.html">SSH Connection</a> as it subclasses Airflow’s <code class="docutils literal notranslate"><span class="pre">SSHHook</span></code>. This connection type allows us to setup the necessary SSH keys to access GitHub. Of course, as this is a public repository, we could have just used an HTTP URL, but for private repositories an SSH key may be required.</p>
+<p><em>airflow-dbt-python</em> can determine this URL requires a <code class="docutils literal notranslate"><span class="pre">DbtGitFSHook</span></code> by looking at the URL’s scheme (<code class="docutils literal notranslate"><span class="pre">&quot;git+ssh&quot;</span></code>). As we are passing an SSH URL, <code class="docutils literal notranslate"><span class="pre">DbtGitFSHook</span></code> can utilize an Airflow <a class="reference external" href="https://airflow.apache.org/docs/apache-airflow-providers-ssh/stable/connections/ssh.html">SSH Connection</a> as it subclasses Airflow’s <code class="docutils literal notranslate"><span class="pre">SSHHook</span></code>. This connection type allows us to setup the necessary SSH keys to access GitHub. Of course, as this is a public repository, we could have just used an HTTP URL, but for private repositories an SSH key may be required.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p><em>airflow-dbt-python</em> can utilize Airflow Connections to fetch connection details for <em>dbt</em> remotes as well as for <em>dbt</em> targets (e.g. for your data warehouse). The <code class="docutils literal notranslate"><span class="pre">project_conn_id</span></code> and <code class="docutils literal notranslate"><span class="pre">profiles_conn_id</span></code> arguments that all <em>dbt</em> operators have refer to Airflow Connections to used to fetch <em>dbt</em> projects and <em>profiles.yml</em> respectively, whereas the <code class="docutils literal notranslate"><span class="pre">target</span></code> argument can point to an Airflow Connection used to setup <em>dbt</em> to access your data warehouse.</p>

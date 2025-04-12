@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Introduction &mdash; airflow-dbt-python 2.2.0 documentation</title>
+  <title>Introduction &mdash; airflow-dbt-python 3.0.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
@@ -16,7 +16,7 @@
   
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=b21de401"></script>
+      <script src="_static/documentation_options.js?v=acc74ff5"></script>
       <script src="_static/doctools.js?v=9a2dae69"></script>
       <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -99,14 +99,14 @@
 <p>We believe Airflow can <strong>enhance</strong> a <em>dbt</em> user’s experience with several additional features that leverage Airflow as much as possible:</p>
 <ul class="simple">
 <li><p>Configuring <em>dbt</em> connections with Airflow connections.</p></li>
-<li><p>Downloading <em>dbt</em> projects from remote storages, like <a class="reference external" href="https://aws.amazon.com/s3/">AWS S3</a> or Github repositories.</p></li>
+<li><p>Downloading <em>dbt</em> projects from remote storages, like <a class="reference external" href="https://aws.amazon.com/s3/">AWS S3</a>, <a class="reference external" href="https://cloud.google.com/storage/docs">Google Cloud Storage</a> or Github repositories.</p></li>
 <li><p>Communicate between tasks by pushing results and artifacts to <a class="reference external" href="https://airflow.apache.org/docs/apache-airflow/stable/core-concepts/xcoms.html">XCom</a>.</p></li>
 </ul>
 <p>Can you think of another way Airflow can enhance <em>dbt</em>? Let us know in a <a class="reference external" href="https://github.com/tomasfarias/airflow-dbt-python/issues/new/choose">GitHub issue</a>!</p>
 <p>Read along for a breakdown of <em>airflow-dbt-python</em>’s main features, or head over to <span class="xref std std-ref">getting_started</span> to get your <em>dbt</em> workflows running in Airflow!</p>
 <section id="download-dbt-files-from-s3">
 <span id="id1"></span><h3>Download dbt files from S3<a class="headerlink" href="#download-dbt-files-from-s3" title="Link to this heading"></a></h3>
-<p>The dbt parameters <code class="docutils literal notranslate"><span class="pre">profiles_dir</span></code> and <code class="docutils literal notranslate"><span class="pre">project_dir</span></code> would normally point to a directory containing a <code class="docutils literal notranslate"><span class="pre">profiles.yml</span></code> file and a dbt project in the local environment respectively (defined by the presence of a <code class="docutils literal notranslate"><span class="pre">dbt_project.yml</span></code> file). airflow-dbt-python extends these parameters to also accept an <a class="reference external" href="https://aws.amazon.com/s3/">AWS S3</a> URL (identified by a <code class="docutils literal notranslate"><span class="pre">s3://</span></code> scheme):</p>
+<p>The dbt parameters <code class="docutils literal notranslate"><span class="pre">profiles_dir</span></code> and <code class="docutils literal notranslate"><span class="pre">project_dir</span></code> would normally point to a directory containing a <code class="docutils literal notranslate"><span class="pre">profiles.yml</span></code> file and a dbt project in the local environment respectively (defined by the presence of a <code class="docutils literal notranslate"><span class="pre">dbt_project.yml</span></code> file). airflow-dbt-python extends these parameters to also accept an <a class="reference external" href="https://aws.amazon.com/s3/">AWS S3</a> URL (identified by a <code class="docutils literal notranslate"><span class="pre">s3://</span></code> scheme) and a <a class="reference external" href="https://cloud.google.com/storage/docs">Google Cloud Storate</a> URL (identified by a <code class="docutils literal notranslate"><span class="pre">gs://</span></code> scheme):</p>
 <ul class="simple">
 <li><p>If an S3 URL is used for <code class="docutils literal notranslate"><span class="pre">profiles_dir</span></code>, then this URL must point to a directory in S3 that contains a <code class="docutils literal notranslate"><span class="pre">profiles.yml</span></code> file. The <code class="docutils literal notranslate"><span class="pre">profiles.yml</span></code> file will be downloaded and made available for the operator to use when running.</p></li>
 <li><p>If an S3 URL is used for <code class="docutils literal notranslate"><span class="pre">project_dir</span></code>, then this URL must point to a directory in S3 containing all the files required for a dbt project to run. All of the contents of this directory will be downloaded and made available for the operator. The URL may also point to a zip file containing all the files of a dbt project, which will be downloaded, uncompressed, and made available for the operator.</p></li>
@@ -206,7 +206,7 @@
 <span class="linenos">35</span><span class="p">)</span> <span class="k">as</span> <span class="n">dag</span><span class="p">:</span>
 <span class="linenos">36</span><span class="n">dbt_run</span> <span class="o">=</span> <span class="n">DbtRunOperator</span><span class="p">(</span>
 <span class="linenos">37</span>    <span class="n">task_id</span><span class="o">=</span><span class="s2">&quot;dbt_run_hourly&quot;</span><span class="p">,</span>
-<span class="linenos">38</span>    <span class="n">target</span><span class="o">=</span><span class="s2">&quot;my_db_connection&quot;</span><span class="p">,</span>
+<span class="linenos">38</span>    <span class="n">dbt_conn_id</span><span class="o">=</span><span class="s2">&quot;my_db_connection&quot;</span><span class="p">,</span>
 <span class="linenos">39</span>    <span class="c1"># Profiles file is not needed as we are using an Airflow connection.</span>
 <span class="linenos">40</span>    <span class="c1"># If a profiles file is used, the Airflow connection will be merged to the</span>
 <span class="linenos">41</span>    <span class="c1"># existing targets</span>

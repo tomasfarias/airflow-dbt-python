@@ -8,7 +8,7 @@ How does it work?
 To achieve this goal *airflow-dbt-python* provides Airflow operators, hooks, and other utilities. Hooks in particular come in two flavors:
 
 * A ``DbtHook`` that abstracts all interaction with *dbt* internals.
-* Subclasses of ``DbtRemoteHook`` that expose an interface to interact with *dbt* remote storages where project files are located (like AWS S3 buckets or git repositories).
+* Subclasses of ``DbtFSHook`` that expose an interface to interact with *dbt* remote storages where project files are located (like AWS S3 buckets or git repositories).
 
 .. graphviz:: how_does_it_work.dot
 
@@ -53,14 +53,14 @@ In order to respect this constraint, *airflow-dbt-python* hooks run each *dbt* c
 
 This ensures *dbt* can work with any Airflow deployment, including most production deployments running `Remote Executors <https://airflow.apache.org/docs/apache-airflow/stable/executor/index.html#executor-types>`_ that do not guarantee any files will be shared between tasks, since each task may run in a completely different worker.
 
-.. _dbt_remote_hooks:
+.. _dbt_fs_hooks:
 
-*dbt* remote hooks
+*dbt* filesystem hooks
 ------------------
 
-*dbt* remote hooks implement a simple interface to communicate with *dbt* remotes. A *dbt* remote can be any external storage that contains a *dbt* project and potentially also a *profiles.yml* file for example: an AWS S3 bucket or a GitHub repository. See the reference for a list of which remotes are currently supported.
+*dbt* fs hooks implement a simple interface to communicate with *dbt* remotes. A *dbt* fs can be any external storage that contains a *dbt* project and potentially also a *profiles.yml* file for example: an AWS S3 bucket, a Google Cloud Storage or a GitHub repository. See the reference for a list of which remotes are currently supported.
 
-Implementing the ``DbtRemoteHook`` interface
+Implementing the ``DbtFSHook`` interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Supporting a new remote to store *dbt* files requires implementing the ``DbtRemoteHook`` interface. There are only two methods in the interface: ``DbtRemoteHook.download`` and ``DbtRemoteHook.upload``.
+Supporting a new fs to store *dbt* files requires implementing the ``DbtFSHook`` interface. There are only two methods in the interface: ``DbtFSHook.download`` and ``DbtFSHook.upload``.

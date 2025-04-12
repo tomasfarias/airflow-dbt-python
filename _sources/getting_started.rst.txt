@@ -9,19 +9,19 @@ Requirements
 ------------
 
 Before using *airflow-dbt-python*, ensure you meet the following requirements:
-* A *dbt* project using `dbt-core <https://pypi.org/project/dbt-core/>`_ version 1.0.0 or later.
-* An Airflow environment using version 2.2 or later.
+* A *dbt* project using `dbt-core <https://pypi.org/project/dbt-core/>`_ version 1.8 or later.
+* An Airflow environment using version 2.8 or later.
 
-  * If using any managed service, like AWS MWAA, ensure your environment is created with a supported version of Airflow.
+  * If using any managed service, like AWS MWAA or GCP Cloud Composer 2/3, ensure your environment is created with a supported version of Airflow.
   * If self-hosting, Airflow installation instructions can be found in their `official documentation <https://airflow.apache.org/docs/apache-airflow/stable/installation/index.html>`_.
 
-* Running Python 3.7 or later in your Airflow environment.
+* Running Python 3.9 or later in your Airflow environment.
 
 .. warning::
    Even though we don't impose any upper limits on versions of Airflow and *dbt*, it's possible that new versions are not supported immediately after release, particularly for *dbt*. We recommend testing the latest versions before upgrading and `reporting any issues <https://github.com/tomasfarias/airflow-dbt-python/issues/new/choose>`_.
 
 .. note::
-   Older versions of Airflow and *dbt* may work with *airflow-dbt-python*, although we cannot guarantee this. Our testing pipeline runs the latest *dbt-core* with the latest Airflow release, and the latest version supported by `AWS MWAA <https://aws.amazon.com/managed-workflows-for-apache-airflow/>`_.
+   Older versions of Airflow and *dbt* may work with *airflow-dbt-python*, although we cannot guarantee this. Our testing pipeline runs the latest *dbt-core* with the latest Airflow release, and the latest version supported by `AWS MWAA <https://aws.amazon.com/managed-workflows-for-apache-airflow/>`_ and `GCP Cloud Composer 2/3 <https://aws.amazon.com/managed-workflows-for-apache-airflow/>`_.
 
 Installation
 ------------
@@ -109,7 +109,7 @@ The wheel file can now be added to your *plugins.zip*, and the requirements can 
 .. code-block:: shell
    :caption: requirements.txt
 
-   /usr/local/airflow/plugins/airflow_dbt_python-1.0.0-py3-none-any.whl
+   /usr/local/airflow/plugins/airflow_dbt_python-3.0.0-py3-none-any.whl
 
 Accessing a *dbt* project
 -------------------------
@@ -118,7 +118,7 @@ Accessing a *dbt* project
 
 1. Using a `local executor <https://airflow.apache.org/docs/apache-airflow/stable/executor/local.html>`_ with a single-machine installation means we can rely on the local machine's filesystem to store a *dbt* project. This also applies to ``DebugExecutor`` and ``SequentialExecutor``, but these executors are generally only used for debugging/development so we will ignore them. If you are running a setup like this, then simply ensure your *dbt* project and *profiles.yml* exist somewhere in the ``LocalExecutor``'s file system.
 
-2. Once your setup has evolved to a multi-machine/cloud installation with any remote executor, we must rely on a remote storage for *dbt* files. Currently, supported remote storages include AWS S3 and git remote repositories although more are in plans to be added. In this setup, your *dbt* project will need to be uploaded to a remote storage that Airflow can access. *airflow-dbt-python* can utilize Airflow connections to access these storages.
+2. Once your setup has evolved to a multi-machine/cloud installation with any remote executor, we must rely on a remote storage for *dbt* files. Currently, supported remote storages include AWS S3, Google Cloud Storage and Git repositories although more are in plans to be added. In this setup, your *dbt* project will need to be uploaded to a remote storage that Airflow can access. *airflow-dbt-python* can utilize Airflow connections to access these storages.
 
 Single-machine installation
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -229,7 +229,7 @@ When Airflow is installed is running on a multi- machine or cloud installation, 
 
 For these deployments we must rely on a *dbt* remote to download and, eventually, upload all required *dbt* files. The remote *dbt* URL may be used in place of a local ``project_dir`` or ``profiles_dir`` to have *airflow-dbt-python* download the *dbt* files in the remote into a temporary directory for execution.
 
-Interactions with storages are supported by subclasses of ``DbtRemoteHook``. Read the documentation :ref:`dbt_remote_hooks` to learn more about these hooks.
+Interactions with storages are supported by subclasses of ``DbtFSHook``. Read the documentation :ref:`dbt_remote_hooks` to learn more about these hooks.
 
 As an example, let's upload our *dbt* project to an AWS S3 bucket. The files may end up structured in the bucket as:
 
@@ -285,7 +285,7 @@ Then, we can alter the previous example DAG to set ``project_dir`` and ``profile
            profile="my-project",
       )
 
-*airflow-dbt-python* uses the URL scheme (in this example, ``"s3"``) to figure out the type of remote, and the corresponding ``DbtRemoteHook`` to download all required files. An exception would be raised if the scheme does not point to a supported remote.
+*airflow-dbt-python* uses the URL scheme (in this example, ``"s3"``) to figure out the type of remote, and the corresponding ``DbtFSHook`` to download all required files. An exception would be raised if the scheme does not point to a supported remote.
 
 *airflow-dbt-python* takes care of adjusting any path-like arguments so that they are pointing to files in a local temporary directory once all the *dbt* files are download from the remote storage.
 
@@ -316,11 +316,11 @@ The DAG looks the same as the AWS S3 example, except that now we use the GitHub 
            project_dir="git+ssh://github.com:dbt-labs/jaffle-shop-classic",
            select=["+tag:daily"],
            exclude=["tag:deprecated"],
-           target="my_warehouse_connection",
+           dbt_conn_id="my_warehouse_connection",
            profile="my-project",
       )
 
-*airflow-dbt-python* can determine this URL requires a ``DbtGitRemoteHook`` by looking at the URL's scheme (``"git+ssh"``). As we are passing an SSH URL, ``DbtGitRemoteHook`` can utilize an Airflow `SSH Connection <https://airflow.apache.org/docs/apache-airflow-providers-ssh/stable/connections/ssh.html>`_ as it subclasses Airflow's ``SSHHook``. This connection type allows us to setup the necessary SSH keys to access GitHub. Of course, as this is a public repository, we could have just used an HTTP URL, but for private repositories an SSH key may be required.
+*airflow-dbt-python* can determine this URL requires a ``DbtGitFSHook`` by looking at the URL's scheme (``"git+ssh"``). As we are passing an SSH URL, ``DbtGitFSHook`` can utilize an Airflow `SSH Connection <https://airflow.apache.org/docs/apache-airflow-providers-ssh/stable/connections/ssh.html>`_ as it subclasses Airflow's ``SSHHook``. This connection type allows us to setup the necessary SSH keys to access GitHub. Of course, as this is a public repository, we could have just used an HTTP URL, but for private repositories an SSH key may be required.
 
 .. note::
    *airflow-dbt-python* can utilize Airflow Connections to fetch connection details for *dbt* remotes as well as for *dbt* targets (e.g. for your data warehouse). The ``project_conn_id`` and ``profiles_conn_id`` arguments that all *dbt* operators have refer to Airflow Connections to used to fetch *dbt* projects and *profiles.yml* respectively, whereas the ``target`` argument can point to an Airflow Connection used to setup *dbt* to access your data warehouse.
