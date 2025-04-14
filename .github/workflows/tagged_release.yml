@@ -9,13 +9,22 @@ jobs:
   gh_tagged_release:
     runs-on: ubuntu-latest
     steps:
-      - name: Wait for Tests to succeed
+      - name: Wait for CI
         uses: fountainhead/action-wait-for-check@v1.0.0
-        id: wait-for-test
+        id: wait-for-ci
         with:
           token: ${{ secrets.GH_DEPLOY_TOKEN }}
           checkName: CI
           ref: ${{ github.sha }}
+          # Wait for one hour
+          timeoutSeconds: 3600
+          intervalSeconds: 60
+
+      - name: Fail if CI failed
+        if: steps.wait-for-ci.outputs.conclusion != 'success'
+        run: |
+          echo "CI failed or didn't complete in time"
+          exit 1
 
       - name: Checkout
         uses: actions/checkout@v2.3.4
