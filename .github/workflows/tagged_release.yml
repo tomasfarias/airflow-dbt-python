@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Wait for CI
-        uses: fountainhead/action-wait-for-check@v1.0.0
+        uses: fountainhead/action-wait-for-check@v1.2.0
         id: wait-for-ci
         with:
           token: ${{ secrets.GH_DEPLOY_TOKEN }}
