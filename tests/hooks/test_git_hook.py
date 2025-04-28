@@ -4,6 +4,7 @@ import multiprocessing
 import os
 import platform
 import shutil
+import typing
 
 import pytest
 from dulwich.repo import Repo
@@ -295,7 +296,7 @@ def repo_name():
 
 
 @pytest.fixture
-def repo_branch(request) -> bytes | None:
+def repo_branch(request) -> typing.Optional[bytes]:
     """A configurable local git repo branch."""
     try:
         return request.param
