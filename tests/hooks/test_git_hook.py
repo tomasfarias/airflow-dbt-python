@@ -295,6 +295,16 @@ def repo_name():
 
 
 @pytest.fixture
+def repo_branch(request) -> bytes | None:
+    """A configurable local git repo branch."""
+    try:
+        return request.param
+    except AttributeError:
+        # Default to dulwich's
+        return None
+
+
+@pytest.fixture
 def repo_dir(tmp_path):
     """A testing local git repo directory."""
     repo_dir = tmp_path / "repo"
@@ -303,9 +313,9 @@ def repo_dir(tmp_path):
 
 
 @pytest.fixture
-def repo(repo_dir, dbt_project_file, test_files, profiles_file):
+def repo(repo_dir, dbt_project_file, test_files, profiles_file, repo_branch):
     """Initialize a git repo with some dbt test files."""
-    repo = Repo.init(repo_dir)
+    repo = Repo.init(repo_dir, default_branch=repo_branch)
     shutil.copyfile(dbt_project_file, repo_dir / "dbt_project.yml")
     repo.stage("dbt_project.yml")
 
@@ -351,6 +361,31 @@ def test_download_dbt_project_with_local_server(
     fs_hook = DbtGitFSHook()
     server_address, server_port = git_server
     source = URL(f"git://{server_address}:{server_port}/{repo_name}")
+    local_repo_path = fs_hook.download_dbt_project(source, local_path)
+
+    expected = [
+        URL(local_repo_path / "dbt_project.yml"),
+        URL(local_repo_path / "models" / "a_model.sql"),
+        URL(local_repo_path / "models" / "another_model.sql"),
+        URL(local_repo_path / "seeds" / "a_seed.csv"),
+    ]
+
+    assert local_repo_path.exists()
+    assert_dir_contents(local_repo_path, expected, exact=False)
+
+
+@no_git_local_server
+@pytest.mark.parametrize("repo_branch", ["test-branch".encode("utf-8")], indirect=True)
+def test_download_dbt_project_with_custom_branch_from_local_server(
+    tmp_path, git_server, repo_name, assert_dir_contents, repo_branch
+):
+    """Test downloading a dbt project from a local git server."""
+    local_path = tmp_path / "local"
+    fs_hook = DbtGitFSHook()
+    server_address, server_port = git_server
+    source = URL(
+        f"git://{server_address}:{server_port}/{repo_name}@{repo_branch.decode('utf-8')}"
+    )
     local_repo_path = fs_hook.download_dbt_project(source, local_path)
 
     expected = [
