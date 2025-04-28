@@ -7,13 +7,6 @@ repos:
       - id: end-of-file-fixer
         name: Ensure end of file newline
 
-  - repo: https://github.com/psf/black
-    rev: 23.1.0
-    hooks:
-    - id: black
-      name: Python code formatting
-      types_or: [python, pyi]
-
   - repo: https://github.com/pre-commit/mirrors-mypy
     rev: v1.1.1
     hooks:
@@ -30,5 +23,7 @@ repos:
   - repo: https://github.com/charliermarsh/ruff-pre-commit
     rev: 'v0.11.7'
     hooks:
+      - id: ruff-format
+        name: Formatting with ruff
       - id: ruff
         name: Linting with ruff
