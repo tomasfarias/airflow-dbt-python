@@ -157,7 +157,11 @@ class DbtGitFSHook(SSHHook, DbtFSHook):
         client, path, branch = self.get_git_client_path(source)
 
         client.clone(
-            path, str(destination), mkdir=not destination.exists(), branch=branch
+            path,
+            str(destination),
+            mkdir=not destination.exists(),
+            # NOTE: Dulwich expects branch to be bytes if defined.
+            branch=branch.encode("utf-8") if isinstance(branch, str) else branch,
         )
 
     def get_git_client_path(self, url: URL) -> Tuple[GitClients, str, Optional[str]]:
