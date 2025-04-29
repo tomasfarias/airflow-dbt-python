@@ -1,6 +1,6 @@
 [project]
 name = "airflow-dbt-python"
-version = "3.0.0"
+version = "3.0.1"
 description = "A collection of Airflow operators, hooks, and utilities to execute dbt commands"
 authors = [{ name = "Tomás Farías Santana", email = "tomas@tomasfarias.dev" }]
 license = "MIT"
