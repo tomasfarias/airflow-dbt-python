@@ -385,9 +385,9 @@ def assert_dbt_results(
     results, expected_results: dict[typing.Union[RunStatus, TestStatus], int]
 ):
     """Evaluate dbt run results match expected results."""
-    assert len(results["results"]) == sum(
-        expected_results.values()
-    ), "Expected number of results doesn't match"
+    assert len(results["results"]) == sum(expected_results.values()), (
+        "Expected number of results doesn't match"
+    )
 
     for state, count in expected_results.items():
         assert sum(result["status"] == state for result in results["results"]) == count

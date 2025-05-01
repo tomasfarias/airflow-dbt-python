@@ -740,8 +740,8 @@ def assert_dir_contents():
             )
         else:
             missing_contents = [exp for exp in expected if exp not in dir_contents]
-            assert (
-                len(missing_contents) == 0
-            ), f"Missing dir contents: {missing_contents}"
+            assert len(missing_contents) == 0, (
+                f"Missing dir contents: {missing_contents}"
+            )
 
     return wrapper
