@@ -8,10 +8,8 @@ build:
     - graphviz
   jobs:
     pre_install:
-      - python -m pip install poetry==2.0.1
-      - poetry config virtualenvs.create false --local
-      - poetry install -E git -E s3 --with docs
-      - poetry export -E git -E s3 --with docs -f requirements.txt --without-hashes --output docs/requirements.txt
+      - python -m pip install uv
+      - uv export --extra git --extra s3 --group docs --format requirements.txt --no-hashes --output-file docs/requirements.txt
 
 python:
   install:

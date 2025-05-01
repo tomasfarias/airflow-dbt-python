@@ -54,10 +54,10 @@ git clone https://github.com/tomasfarias/airflow-dbt-python.git
 cd airflow-dbt-python
 ```
 
-And installing with *Poetry*:
+And installing with *uv*:
 
 ``` shell
-poetry install
+uv pip install .
 ```
 
 ## In AWS MWAA
@@ -225,10 +225,10 @@ See the [development documentation](https://airflow-dbt-python.readthedocs.io/en
 
 ## Testing
 
-Tests are run with *pytest*, can be located in `tests/`. To run them locally, you may use *Poetry*:
+Tests are run with *pytest*, can be located in `tests/`. To run them locally, you may use *uv*:
 
 ``` shell
-poetry run pytest tests/ -vv
+uv run pytest tests/ -vv
 ```
 
 # License

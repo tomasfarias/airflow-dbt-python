@@ -7,23 +7,22 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-
-      - name: Set up Python 3.12
-        uses: actions/setup-python@v5.4.0
+      - uses: actions/checkout@v4.2.2
+      - uses: actions/setup-python@v5.4.0
         with:
           python-version: '3.12'
 
-      - name: Install Poetry
-        uses: abatilo/actions-poetry@v2.4.0
+      - name: Install uv and set the python version
+        uses: astral-sh/setup-uv@v5
         with:
-          poetry-version: 2.0.1
+          version: 0.7.2
+          python-version: 3.12
 
-      - name: Install airflow-dbt-python with Poetry
-        run: poetry install
+      - name: Install airflow-dbt-python with uv
+        run: uv sync --no-dev
 
-      - name: Build airflow-dbt-python with Poetry
-        run: poetry build
+      - name: Build airflow-dbt-python with uv
+        run: uv build
 
-      - name: Publish airflow-dbt-python to PyPI with Poetry
-        run: poetry publish --username __token__ --password ${{ secrets.PYPI_API_TOKEN }}
+      - name: Publish airflow-dbt-python to PyPI with uv
+        run: uv publish --token ${{ secrets.PYPI_API_TOKEN }}

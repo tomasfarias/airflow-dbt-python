@@ -7,12 +7,10 @@ This section dives into the development process of *airflow-dbt-python* by descr
 
 If you would like to dig a bit into the internals of *airflow-dbt-python* and learn about the development philosophy, it's recommended that you check out the :ref:`how_does_it_work` documentation.
 
-Project management: Poetry
+Project management: *uv*
 --------------------------
 
-*airflow-dbt-python* uses `Poetry <https://python-poetry.org/>`_ for project management. See `Poetry's installation documentation <https://python-poetry.org/docs/#installation>`_ if you need to install it first.
-
-As of *airflow-dbt-python* version 0.14, we have moved the project to Poetry version >= 1.2.0 to allow us to use dependency groups. Ensure your installation meets this requirement.
+*airflow-dbt-python* uses `uv <https://docs.astral.sh/uv/>`_ for project management. See `uv's installation documentation <https://docs.astral.sh/uv/getting-started/installation/>`_ if you need to install it first.
 
 Installing *airflow-dbt-python*
 -------------------------------
@@ -24,33 +22,29 @@ Clone the *airflow-dbt-python* repository:
    git clone https://github.com/tomasfarias/airflow-dbt-python.git
    cd airflow-dbt-python
 
-And install it with *Poetry*:
+Create a local virtual environment (if you don't want *uv* to manage it), and ensure your local development environment is in sync with *uv*:
 
 .. code-block:: shell
 
-   poetry install --with dev -E airflow-providers -E postgres
+   uv sync --dev --extra airflow-providers --extra postgres
 
 The *dev* dependency group includes development tools for code formatting, type checking, and testing.
 
-The additional extras, *airflow-providers*, *postgres*, and *airflow* install dependencies required for testing. If testing a specific Airflow version, the extras may be ommitted, see the following section with more details.
+The additional extras, *airflow-providers* and *postgres* install dependencies required for testing. If testing a specific Airflow version, the extras may be omitted, see the following section with more details.
 
-Installing a different version of Airflow
------------------------------------------
+Support for different versions of *Airflow*
+-------------------------------------------
 
-The *airflow* extra dependency group installs the latest supported version of Airflow. However, *airflow-dbt-python* is also tested for older versions of Airflow; as a general rule, besides the latest version of Airflow, we test *airflow-dbt-python* against the latest version available in `AWS MWAA <https://aws.amazon.com/managed-workflows-for-apache-airflow/>`_. Although support for older versions of Airflow is not guaranteed, we are open to patches to ensure backwards compatibility as long as they don't increase maintenance load signifincantly.
+*airflow-dbt-python* supports and is tested with multiple versions of Airflow; as a general rule, besides the latest version of Airflow, we test *airflow-dbt-python* against the latest version available in `AWS MWAA <https://aws.amazon.com/managed-workflows-for-apache-airflow/>`_, which usually lags behind a few minor versions. We are open to patches to improve backwards compatibility as long as they don't increase maintenance load significantly.
 
-If you wish to install a different version of Airflow for testing you may skip the *airflow* and *airflow-providers* extras of the previous section and use *pip* instead to install any versions of *apache-airflow* and required providers:
-
-.. code-block:: shell
-
-   pip install apache-airflow>=2.2 apache-airflow-providers-amazon>=3.0
+If you wish to install a different version of Airflow for testing you may skip the *airflow-providers* extras of the previous section and use *pip* instead to install any versions of *apache-airflow* and required providers.
 
 Modifying dependencies
 ----------------------
 
-Apache Airflow is a package of significant size that requires a lot of dependencies. Together with ``dbt-core``, it's common to find dependency conflicts all over the place. Ultimately, we allow users to figure these issues out themselves, as most of the dependency conflicts are harmless: We do not interact with the dbt CLI, so any conflicts with CLI-specific packages can be safely ignored, but these requirements are not optional for ``dbt-core``.
+Apache Airflow is a package of significant size that requires a lot of dependencies. Together with *dbt-core*, it's common to find dependency conflicts all over the place. Ultimately, we allow users to figure these issues out themselves, as most of the dependency conflicts are harmless: We do not interact with the *dbt* CLI, so any conflicts with CLI-specific packages can be safely ignored, but these requirements are not optional for *dbt-core*.
 
-All being said, this presents a problem when we try to add dependencies or modify existing ones, as ``poetry`` will take a long time to check all possible conflicts. Grabbing a constraints file from `Airflow <https://github.com/apache/airflow>`_ and adding it as an optional group in ``pyproject.toml`` can be a useful strategy to speed up the process, as we are limiting the search domain for ``poetry``. However, this does require relaxing dependencies one by one in between running ``poetry lock --no-update``.
+All being said, this presents a problem when we try to add dependencies or modify existing ones. Grabbing a constraints file from `Airflow <https://github.com/apache/airflow>`_ and adding it as an optional group in ``pyproject.toml`` can be a useful strategy.
 
 Pre-commit hooks
 ----------------
@@ -62,10 +56,9 @@ These hooks include:
 * Trailing whitespace trimming.
 * Ensure EOF newline.
 * Detect secrets.
-* Code formatting (`black <https://github.com/psf/black>`_).
-* PEP8 linting (`flake8 <https://github.com/pycqa/flake8/>`_).
+* Code formatting (`ruff <https://github.com/astral-sh/ruff>`_).
+* Linting (`ruff <https://github.com/astral-sh/ruff>`_).
 * Static type checking (`mypy <https://github.com/python/mypy>`_).
-* Import sorting (`isort <https://github.com/PyCQA/isort>`_).
 
 All *pre-commit* hooks can be installed with:
 
@@ -73,11 +66,11 @@ All *pre-commit* hooks can be installed with:
 
    pre-commit install
 
-Alternatively, all of the aforementioned tools are installed with the *dev* dependency group and can ran individually, without *pre-commit* hooks. For example, to format files with *black*:
+Alternatively, all of the aforementioned tools are installed with the *dev* dependency group and can ran individually, without *pre-commit* hooks. For example, to format files with *ruff*:
 
 .. code-block:: shell
 
-   poetry run black airflow_dbt_python/
+   uv run ruff format airflow_dbt_python/
 
 Testing *airflow-dbt-python*
 ----------------------------
@@ -97,7 +90,7 @@ An Airflow database needs to be initialized in your local environment. This requ
 .. code-block:: shell
 
     export AIRFLOW_HOME=$PWD
-    poetry run airflow db migrate
+    uv run airflow db migrate
 
 The ``AIRFLOW_HOME`` environment variable has to be set to the same value used when initializing the database for most testing commands, so it's recommended to ``export`` it.
 
@@ -114,7 +107,7 @@ All unit tests can be run with:
 
 .. code-block:: shell
 
-   poetry run pytest tests/ airflow_dbt_python/ -vv
+   uv run pytest tests/ airflow_dbt_python/ -vv
 
 The majority of tests are found in the ``tests/`` directory, but we also test `doctest <https://docs.python.org/3.10/library/doctest.html>`_ documentation examples.
 
@@ -125,7 +118,7 @@ Generating coverage reports with *coverage.py* can be done with:
 
 .. code-block:: shell
 
-   poetry run coverage run -m pytest tests/ airflow_dbt_python/
+   uv run coverage run -m pytest tests/ airflow_dbt_python/
 
 Unit tests and DAG tests
 ^^^^^^^^^^^^^^^^^^^^^^^^

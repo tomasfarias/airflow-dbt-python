@@ -62,18 +62,17 @@ Building from source
    git clone https://github.com/tomasfarias/airflow-dbt-python.git
    cd airflow-dbt-python
 
-And installing with *Poetry*:
+And installing with *pip*:
 
 .. code-block:: shell
 
-   poetry install
+   pip install .
 
-Any extra *dbt* adapters can be installed by specifying extras:
+Optionally, any *dbt* adapters can be installed by specifying extras:
 
 .. code-block:: shell
 
-   poetry install -E postgres -E redshift -E bigquery -E snowflake
-   poetry install -E all
+   pip install .[postgres, redshift, bigquery, snowflake]
 
 Installing in MWAA
 ^^^^^^^^^^^^^^^^^^
@@ -98,18 +97,18 @@ For example, we can start by cloning the GitHub repository:
    git clone https://github.com/tomasfarias/airflow-dbt-python.git
    cd airflow-dbt-python
 
-Then building an *airflow-dbt-python* wheel using *poetry*:
+Then building an *airflow-dbt-python* wheel using *uv*:
 
 .. code-block:: shell
 
-   poetry build -f wheel
+   uv build --wheel
 
-The wheel file can now be added to your *plugins.zip*, and the requirements can be updated to point to this wheel file:
+The wheel file can now be added to your *plugins.zip*, and the requirements can be updated to point to this wheel file (note that the version placeholder 'X.Y.Z' has to be replaced by the actual version you have just built):
 
 .. code-block:: shell
    :caption: requirements.txt
 
-   /usr/local/airflow/plugins/airflow_dbt_python-3.0.0-py3-none-any.whl
+   /usr/local/airflow/plugins/airflow_dbt_python-X.Y.Z-py3-none-any.whl
 
 Accessing a *dbt* project
 -------------------------
@@ -348,7 +347,7 @@ Airflow Connections are generally created in the UI, but for illustration purpos
        login="username",
        port=5432,
        schema="my_dbt_schema",
-       password="password",
+       password="password",  # pragma: allowlist secret
        # Other dbt parameters can be added as extras
        extra=json.dumps(dict(threads=4, sslmode="require")),
    )
