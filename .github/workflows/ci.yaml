@@ -5,6 +5,7 @@ on:
     branches: [ master ]
     paths:
       - '**.py'
+      - 'pyproject.toml'
       - '!airflow_dbt_python/__version__.py'
     tags:
       - "v*"
@@ -13,6 +14,7 @@ on:
       - master
     paths:
       - '**.py'
+      - 'pyproject.toml'
       - '!airflow_dbt_python/__version__.py'
 
 jobs:
