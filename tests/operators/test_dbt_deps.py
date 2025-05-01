@@ -77,9 +77,9 @@ def test_dbt_deps_downloads_dbt_utils(
     assert len([m for m in modules]) == 1
 
     for _file, last_modified in files_and_times:
-        assert (
-            last_modified == os.stat(_file).st_mtime
-        ), f"DbtDepsOperator changed an unexpected file: {_file}"
+        assert last_modified == os.stat(_file).st_mtime, (
+            f"DbtDepsOperator changed an unexpected file: {_file}"
+        )
 
 
 @no_s3_backend
@@ -147,9 +147,9 @@ def test_dbt_deps_upload_to_s3(
     assert len([k for k in keys if "dbt_utils" in k]) >= 0
 
     for _file, last_modified in files_and_times:
-        assert (
-            last_modified == os.stat(_file).st_mtime
-        ), f"DbtDepsOperator changed an unexpected file: {_file}"
+        assert last_modified == os.stat(_file).st_mtime, (
+            f"DbtDepsOperator changed an unexpected file: {_file}"
+        )
 
 
 def test_dbt_deps_doesnt_affect_non_package_files(
@@ -196,14 +196,14 @@ def test_dbt_deps_doesnt_affect_non_package_files(
     assert len([m for m in modules]) == 1
 
     for _file, last_modified in files_and_times:
-        assert (
-            last_modified == os.stat(_file).st_mtime
-        ), f"DbtDepsOperator changed an unexpected file: {_file}"
+        assert last_modified == os.stat(_file).st_mtime, (
+            f"DbtDepsOperator changed an unexpected file: {_file}"
+        )
 
     for _file, last_modified in dbt_packages_and_times:
-        assert (
-            last_modified < os.stat(_file).st_mtime
-        ), f"DbtDepsOperator did not change a package file: {_file}"
+        assert last_modified < os.stat(_file).st_mtime, (
+            f"DbtDepsOperator did not change a package file: {_file}"
+        )
 
 
 @no_s3_backend
