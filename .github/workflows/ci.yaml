@@ -75,38 +75,37 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
-      - name: Install Poetry
-        uses: abatilo/actions-poetry@v2.4.0
+      - name: Install uv and set the python version
+        uses: astral-sh/setup-uv@v5
         with:
-          poetry-version: 2.0.1
+          version: 0.7.2
+          python-version: ${{ matrix.python-version }}
 
       - name: Install Airflow & dbt
         run: |
-          poetry env use ${{ matrix.python-version }}
-          poetry add "apache-airflow~=${{ matrix.airflow-version }}.0" \
-                     "dbt-core~=${{ matrix.dbt-version }}.0" \
-                 --python ${{ matrix.python-version }}
-          poetry install -E adapters --with dev
-          poetry run airflow db migrate
-          poetry run airflow connections create-default-connections
+          uv add "apache-airflow~=${{ matrix.airflow-version }}.0" \
+                 "dbt-core~=${{ matrix.dbt-version }}.0"
+          uv sync --all-extras --dev
+          uv run airflow db migrate
+          uv run airflow connections create-default-connections
 
       - name: Linting with ruff
-        run: poetry run ruff check .
+        run: uv run ruff check .
 
       - name: Static type checking with mypy
         # We only run mypy on the latest supported versions of Airflow & dbt,
         # so it is currently impossible to write conditions for that depend on package versions.
         if: matrix.python-version == '3.12' && matrix.airflow-version == '2.10' && matrix.dbt-version == '1.9'
-        run: poetry run mypy .
+        run: uv run mypy .
 
-      - name: Code formatting with black
-        run: poetry run black --check .
+      - name: Code formatting with ruff
+        run: uv run ruff format --check .
 
       - name: Set COVERAGE_FILE in environment
         run: echo "COVERAGE_FILE=.coverage.${{ matrix.python-version }}-${{ matrix.airflow-version }}-${{ matrix.dbt-version }}" >> $GITHUB_ENV
 
       - name: Run tests with pytest
-        run: poetry run coverage run -m pytest -v tests/ airflow_dbt_python/utils/
+        run: uv run coverage run -m pytest -v tests/ airflow_dbt_python/utils/
         env:
           GITLAB_READ_TOKEN: ${{ secrets.GITLAB_READ_TOKEN }}
           GITLAB_USERNAME: ${{ secrets.GITLAB_USERNAME }}
@@ -141,13 +140,14 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Install Poetry
-        uses: abatilo/actions-poetry@v2.4.0
+      - name: Install uv and set the python version
+        uses: astral-sh/setup-uv@v5
         with:
-          poetry-version: 2.0.1
+          version: 0.7.2
+          python-version: ${{ matrix.python-version }}
 
-      - name: Install airflow-dbt-python with Poetry
-        run: poetry install --with dev -E airflow-providers
+      - name: Install airflow-dbt-python with uv
+        run: uv sync --dev --extra airflow-providers
 
       - name: Download coverage data.
         uses: actions/download-artifact@v4
@@ -156,16 +156,16 @@ jobs:
 
       - name: Combine coverage & fail if it's <95%.
         run: |
-          poetry run coverage combine
-          poetry run coverage html --skip-covered --skip-empty
-          poetry run coverage json
+          uv run coverage combine
+          uv run coverage html --skip-covered --skip-empty
+          uv run coverage json
           # Save in env variable for badge
           export TOTAL=$(python -c "import json;print(json.load(open('coverage.json'))['totals']['percent_covered_display'])")
           echo "total=$TOTAL" >> $GITHUB_ENV
           # Report and write to summary.
-          poetry run coverage report | sed 's/^/    /' >> $GITHUB_STEP_SUMMARY
+          uv run coverage report | sed 's/^/    /' >> $GITHUB_STEP_SUMMARY
           # Report again and fail if under 100%.
-          poetry run coverage report --fail-under=95
+          uv run coverage report --fail-under=95
 
       - name: Upload HTML report if check failed.
         uses: actions/upload-artifact@v4

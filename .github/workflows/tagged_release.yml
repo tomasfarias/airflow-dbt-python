@@ -26,33 +26,31 @@ jobs:
           echo "CI failed or didn't complete in time"
           exit 1
 
-      - name: Checkout
-        uses: actions/checkout@v2.3.4
-
-      - name: Set up Python 3.10
-        uses: actions/setup-python@v5.4.0
+      - uses: actions/checkout@v4.2.2
+      - uses: actions/setup-python@v5.4.0
         with:
-          python-version: '3.10'
+          python-version: '3.12'
 
-      - name: Install Poetry
-        uses: abatilo/actions-poetry@v2.4.0
+      - name: Install uv and set the python version
+        uses: astral-sh/setup-uv@v5
         with:
-          poetry-version: 2.0.1
+          version: 0.7.2
+          python-version: 3.12
 
-      - name: Install airflow-dbt-python with Poetry
-        run: poetry install
+      - name: Install airflow-dbt-python with uv
+        run: uv sync --no-dev
 
-      - name: Build airflow-dbt-python with Poetry
-        run: poetry build
+      - name: Build airflow-dbt-python with uv
+        run: uv build
 
       - name: Set prerelease variable
-        run: echo "IS_PRERELEASE=$(if $(poetry version -s | grep -qP '^[0-9]+\.[0-9]+\.[0-9]+$'); then echo 'false'; else echo 'true'; fi)" >> $GITHUB_ENV
+        run: echo "IS_PRERELEASE=$(if $(uv version --short | grep -qP '^[0-9]+\.[0-9]+\.[0-9]+$'); then echo 'false'; else echo 'true'; fi)" >> $GITHUB_ENV
 
       - name: Set release git tag
         run: echo "RELEASE_TAG=${{ github.ref_name }}" >> $GITHUB_ENV
 
       - name: Check tag matches package version
-        run: if [[ "$(poetry version -s)" == ${RELEASE_TAG/v/} ]]; then exit 0; else exit 1; fi
+        run: if [[ "$(uv version --short)" == ${RELEASE_TAG/v/} ]]; then exit 0; else exit 1; fi
 
       - name: Release new tag
         uses: softprops/action-gh-release@v1

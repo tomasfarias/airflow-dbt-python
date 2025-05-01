@@ -11,8 +11,6 @@ classifiers = [
 
     "Intended Audience :: Developers",
 
-    "License :: OSI Approved :: MIT License",
-
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
@@ -25,12 +23,9 @@ dependencies = [
     "dbt-core>=1.8.0,<2.0.0",
 ]
 
-[project.url]
+[project.urls]
 repository = "https://github.com/tomasfarias/airflow-dbt-python"
-
-[build-system]
-requires = ["poetry-core>=1.2.0"]
-build-backend = "poetry.core.masonry.api"
+documentation = "https://airflow-dbt-python.readthedocs.io"
 
 [project.optional-dependencies]
 airflow-providers = [
@@ -71,43 +66,36 @@ spark = [
     "dbt-spark>=1.8.0,<2.0.0",
 ]
 
-[tool.poetry.requires-plugins]
-poetry-plugin-export = ">=1.8"
-
-[tool.poetry.group.dev]
-optional = true
-
-[tool.poetry.group.dev.dependencies]
-apache-airflow-providers-amazon = ">=3.0.0"
-apache-airflow-providers-google = ">=11.0.0"
-apache-airflow-providers-ssh = ">=3.0.0"
-black = ">=22"
-boto3-stubs = { extras = ["s3"], version = ">=1.26.8" }
-coverage = { extras = ["toml"], version = ">=7.2" }
-# docutils 0.21 causes an error with poetry (https://github.com/python-poetry/poetry/issues/9293)
-docutils = "!=0.21"
-dulwich = ">=0.21,!=0.21.6"
-moto = ">=4.0.3"
-mypy = ">=1"
-freezegun = ">=1.1.0"
-pre-commit = ">=2.18"
-pytest = ">=7.2"
-pytest-postgresql = ">=5"
-ruff = ">=0.0.254"
-types-freezegun = ">=1.1.6"
-types-PyYAML = ">=6.0.7"
-pytest-mock = "^3.14.0"
-mock-gcp = ">=0.2.0"
-
-[tool.poetry.group.docs]
-optional = true
-
-[tool.poetry.group.docs.dependencies]
-Sphinx = "7.4.7"
-sphinx-rtd-theme = "3.0.2"
-sphinx-copybutton = "0.5.2"
-attrs = ">=22"
-zipp = ">=3.19.1"
+[dependency-groups]
+dev = [
+    "apache-airflow-providers-amazon>=3.0.0",
+    "apache-airflow-providers-google>=11.0.0",
+    "apache-airflow-providers-ssh>=3.0.0",
+    "black>=22",
+    "boto3-stubs[s3]>=1.26.8",
+    "coverage[toml]>=7.2",
+    # docutils 0.21 causes an error with poetry (https://github.com/python-poetry/poetry/issues/9293)
+    "docutils!=0.21",
+    "dulwich>=0.21,!=0.21.6",
+    "freezegun>=1.1.0",
+    "mock-gcp==0.2.0",
+    "moto>=4.0.3",
+    "mypy>=1",
+    "pre-commit>=2.18",
+    "pytest>=7.2",
+    "pytest-mock>=3.14.0",
+    "pytest-postgresql>=5",
+    "ruff>=0.0.254",
+    "types-PyYAML>=6.0.7",
+    "types-freezegun>=1.1.6",
+]
+docs = [
+    "attrs>=22",
+    "Sphinx==7.4.7",
+    "sphinx-copybutton==0.5.2",
+    "sphinx-rtd-theme==3.0.2",
+    "zipp>=3.19.1",
+]
 
 [tool.black]
 line-length = 88
