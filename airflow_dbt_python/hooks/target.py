@@ -1,4 +1,9 @@
-"""Provides a hook to get a dbt profile based on the Airflow connection."""
+"""Provides hooks to establish a dbt connection with supported targets.
+
+The connection details will be extracted from an Airflow connection, and each
+target can interpret connection information differently according to its
+specific connection requirements.
+"""
 
 from __future__ import annotations
 

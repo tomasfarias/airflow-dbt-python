@@ -1,41 +1,49 @@
 airflow_dbt_python.hooks
 ========================
 
-Core *dbt* hooks
-----------------
+Core *dbt* hook
+---------------
 
 .. automodule:: airflow_dbt_python.hooks.dbt
    :members:
+   :no-index:
 
-Supported *dbt* remote hooks
-----------------------------
+Target hooks
+------------
 
-The DbtFSHook interface
+.. automodule:: airflow_dbt_python.hooks.target
+   :members:
+   :no-index:
+
+Filesystem hooks
+----------------
+
+The ``DbtFSHook`` interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. automodule:: airflow_dbt_python.hooks.remote
+.. automodule:: airflow_dbt_python.hooks.fs.__init__
    :members:
 
-*dbt* git remote
-^^^^^^^^^^^^^^^^
+Git
+^^^
 
-.. automodule:: airflow_dbt_python.hooks.remote.git
+.. automodule:: airflow_dbt_python.hooks.fs.git
    :members:
 
-*dbt* localfs remote
-^^^^^^^^^^^^^^^^^^^^
+Local
+^^^^^
 
-.. automodule:: airflow_dbt_python.hooks.remote.localfs
+.. automodule:: airflow_dbt_python.hooks.fs.local
    :members:
 
-*dbt* S3 remote
-^^^^^^^^^^^^^^^^
+S3
+^^^
 
-.. automodule:: airflow_dbt_python.hooks.remote.s3
+.. automodule:: airflow_dbt_python.hooks.fs.s3
    :members:
 
-*dbt* GCS remote
-^^^^^^^^^^^^^^^^
+GCS
+^^^
 
-.. automodule:: airflow_dbt_python.hooks.remote.gcs
+.. automodule:: airflow_dbt_python.hooks.fs.gcs
    :members:

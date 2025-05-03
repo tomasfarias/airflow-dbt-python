@@ -25,22 +25,12 @@ jobs:
         python-version: ${{ matrix.python-version }}
 
     - name: Install airflow-dbt-python with uv
-      run: uv sync --dev --extra airflow-providers
+      run: uv sync --all-extras --group docs
 
     - name: Install Graphviz
       run: sudo apt-get install graphviz
 
     - name: Build documentation
       run: |
-        mkdir gh-pages
-        touch gh-pages/.nojekyll
         cd docs/
-        uv run sphinx-build -b html . _build
-        cp -r _build/* ../gh-pages/
-
-    - name: Deploy documentation
-      if: ${{ github.ref_type == 'tag' }}
-      uses: JamesIves/github-pages-deploy-action@v4
-      with:
-        branch: gh-pages
-        folder: gh-pages
+        python -m sphinx -T -b dirhtml -d _build/doctrees . html

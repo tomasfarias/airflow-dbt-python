@@ -228,7 +228,7 @@ When Airflow is installed is running on a multi- machine or cloud installation, 
 
 For these deployments we must rely on a *dbt* remote to download and, eventually, upload all required *dbt* files. The remote *dbt* URL may be used in place of a local ``project_dir`` or ``profiles_dir`` to have *airflow-dbt-python* download the *dbt* files in the remote into a temporary directory for execution.
 
-Interactions with storages are supported by subclasses of ``DbtFSHook``. Read the documentation :ref:`dbt_remote_hooks` to learn more about these hooks.
+Interactions with storages are supported by subclasses of ``DbtFSHook``. Read the documentation :ref:`dbt_fs_hooks` to learn more about these hooks.
 
 As an example, let's upload our *dbt* project to an AWS S3 bucket. The files may end up structured in the bucket as:
 

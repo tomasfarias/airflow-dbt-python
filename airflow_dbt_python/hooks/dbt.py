@@ -1,4 +1,8 @@
-"""Provides a hook to interact with a dbt project."""
+"""Provides a hook to interact with dbt.
+
+Interacting with dbt mainly means setting up a dbt project and running a dbt
+task.
+"""
 
 from __future__ import annotations
 

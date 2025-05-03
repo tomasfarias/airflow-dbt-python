@@ -1,8 +1,7 @@
-"""The DbtFSHook interface includes methods for downloading and uploading files.
+"""A ``DbtFSHook`` can download and upload dbt project files to a filesystem.
 
-Internally, DbtFSHooks can use Airflow hooks to execute the actual operations.
-
-Currently, only AWS S3 and the local filesystem are supported as remotes.
+By filesystem we understand any storage that can hold dbt project files, like an
+S3 bucket or a git repository.
 """
 
 from abc import ABC, abstractmethod
