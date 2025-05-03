@@ -33,4 +33,4 @@ jobs:
     - name: Build documentation
       run: |
         cd docs/
-        python -m sphinx -T -b dirhtml -d _build/doctrees . html
+        uv run python -m sphinx -T -b dirhtml -d _build/doctrees . html
