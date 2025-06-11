@@ -35,7 +35,7 @@ def test_dbt_seed_mocked_all_args():
         show=True,
         threads=2,
         exclude=["/path/to/data/to/exclude.csv"],
-        selector_name=["a-selector"],
+        selector="a-selector",
         state="/path/to/state/",
     )
     assert op.command == "seed"
@@ -54,7 +54,7 @@ def test_dbt_seed_mocked_all_args():
     assert config.select == ["/path/to/data.csv"]
     assert config.show is True
     assert config.exclude == ["/path/to/data/to/exclude.csv"]
-    assert config.selector_name == ["a-selector"]
+    assert config.selector == "a-selector"
     assert config.state == Path("/path/to/state/")
 
 

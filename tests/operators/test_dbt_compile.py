@@ -25,7 +25,7 @@ def test_dbt_compile_mocked_all_args():
         models=["/path/to/model1.sql", "/path/to/model2.sql"],
         threads=2,
         exclude=["/path/to/data/to/exclude.sql"],
-        selector_name=["a-selector"],
+        selector="a-selector",
         state="/path/to/state/",
     )
 
@@ -49,7 +49,7 @@ def test_dbt_compile_mocked_all_args():
         "/path/to/model2.sql",
     ]
     assert config.exclude == ["/path/to/data/to/exclude.sql"]
-    assert config.selector_name == ["a-selector"]
+    assert config.selector == "a-selector"
     assert config.state == Path("/path/to/state/")
 
 
@@ -198,9 +198,11 @@ def test_dbt_compile_uses_correct_argument_according_to_version():
         models=["/path/to/model1.sql", "/path/to/model2.sql"],
         threads=2,
         exclude=["/path/to/data/to/exclude.sql"],
-        selector_name=["a-selector"],
+        selector_name="a-selector",
         state="/path/to/state/",
     )
 
     assert op.select == ["/path/to/model1.sql", "/path/to/model2.sql"]
     assert getattr(op, "models", None) is None
+    assert op.selector == "a-selector"
+    assert getattr(op, "selector_name", None) is None

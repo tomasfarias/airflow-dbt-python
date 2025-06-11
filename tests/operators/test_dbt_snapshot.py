@@ -23,7 +23,7 @@ def test_dbt_snapshot_mocked_all_args():
         select=["/path/to/models"],
         threads=2,
         exclude=["/path/to/data/to/exclude.sql"],
-        selector_name=["a-selector"],
+        selector="a-selector",
         state="/path/to/state/",
     )
     assert op.command == "snapshot"
@@ -40,7 +40,7 @@ def test_dbt_snapshot_mocked_all_args():
     assert config.threads == 2
     assert config.select == ["/path/to/models"]
     assert config.exclude == ["/path/to/data/to/exclude.sql"]
-    assert config.selector_name == ["a-selector"]
+    assert config.selector == "a-selector"
     assert config.state == Path("/path/to/state/")
 
 
