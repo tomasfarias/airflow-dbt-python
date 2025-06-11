@@ -35,7 +35,7 @@ def test_dbt_run_mocked_all_args():
         fail_fast=True,
         threads=3,
         exclude=["/path/to/model/to/exclude.sql"],
-        selector_name=["a-selector"],
+        selector="a-selector",
         state="/path/to/state/",
     )
     assert op.command == "run"
@@ -54,7 +54,7 @@ def test_dbt_run_mocked_all_args():
     assert config.threads == 3
     assert config.select == ["/path/to/model.sql", "+/another/model.sql+2"]
     assert config.exclude == ["/path/to/model/to/exclude.sql"]
-    assert config.selector_name == ["a-selector"]
+    assert config.selector == "a-selector"
     assert config.state == Path("/path/to/state/")
 
 
