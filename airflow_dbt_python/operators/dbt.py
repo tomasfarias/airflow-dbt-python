@@ -400,14 +400,15 @@ class DbtRunOperator(DbtBaseOperator):
         full_refresh: Optional[bool] = None,
         models: Optional[list[str]] = None,
         select: Optional[list[str]] = None,
-        selector_name: Optional[list[str]] = None,
+        selector: Optional[str] = None,
+        selector_name: Optional[str] = None,
         exclude: Optional[list[str]] = None,
         **kwargs,
     ) -> None:
         super().__init__(**kwargs)
         self.full_refresh = full_refresh
         self.exclude = exclude
-        self.selector_name = selector_name
+        self.selector = selector or selector_name
         self.select = select or models
 
     @property
@@ -432,6 +433,7 @@ class DbtSeedOperator(DbtBaseOperator):
         select: Optional[list[str]] = None,
         show: Optional[bool] = None,
         exclude: Optional[list[str]] = None,
+        selector: Optional[str] = None,
         selector_name: Optional[str] = None,
         **kwargs,
     ) -> None:
@@ -440,7 +442,7 @@ class DbtSeedOperator(DbtBaseOperator):
         self.select = select
         self.show = show
         self.exclude = exclude
-        self.selector_name = selector_name
+        self.selector = selector or selector_name
 
     @property
     def command(self) -> str:
@@ -465,6 +467,7 @@ class DbtTestOperator(DbtBaseOperator):
         models: Optional[list[str]] = None,
         select: Optional[list[str]] = None,
         exclude: Optional[list[str]] = None,
+        selector: Optional[str] = None,
         selector_name: Optional[str] = None,
         indirect_selection: Optional[str] = None,
         **kwargs,
@@ -473,7 +476,7 @@ class DbtTestOperator(DbtBaseOperator):
         self.singular = singular
         self.generic = generic
         self.exclude = exclude
-        self.selector_name = selector_name
+        self.selector = selector or selector_name
         self.select = select or models
         self.indirect_selection = indirect_selection
 
@@ -500,6 +503,7 @@ class DbtCompileOperator(_GraphRunnableOperator):
         models: Optional[list[str]] = None,
         select: Optional[list[str]] = None,
         exclude: Optional[list[str]] = None,
+        selector: Optional[str] = None,
         selector_name: Optional[str] = None,
         upload_dbt_project: bool = True,
         **kwargs,
@@ -508,7 +512,7 @@ class DbtCompileOperator(_GraphRunnableOperator):
         self.parse_only = parse_only
         self.full_refresh = full_refresh
         self.exclude = exclude
-        self.selector_name = selector_name
+        self.selector = selector or selector_name
         self.select = select or models
         self.upload_dbt_project = upload_dbt_project
 
@@ -614,13 +618,14 @@ class DbtSnapshotOperator(DbtBaseOperator):
         self,
         select: Optional[list[str]] = None,
         exclude: Optional[list[str]] = None,
+        selector: Optional[str] = None,
         selector_name: Optional[str] = None,
         **kwargs,
     ) -> None:
         super().__init__(**kwargs)
         self.select = select
         self.exclude = exclude
-        self.selector_name = selector_name
+        self.selector = selector or selector_name
 
     @property
     def command(self) -> str:
@@ -644,6 +649,7 @@ class DbtLsOperator(_GraphRunnableOperator):
         resource_types: Optional[list[str]] = None,
         select: Optional[list[str]] = None,
         exclude: Optional[list[str]] = None,
+        selector: Optional[str] = None,
         selector_name: Optional[str] = None,
         dbt_output: Optional[Output] = None,
         output_keys: Optional[list[str]] = None,
@@ -654,7 +660,7 @@ class DbtLsOperator(_GraphRunnableOperator):
         self.resource_types = resource_types
         self.select = select
         self.exclude = exclude
-        self.selector_name = selector_name
+        self.selector = selector or selector_name
         self.dbt_output = dbt_output
         self.output_keys = output_keys
         self.indirect_selection = indirect_selection
@@ -727,6 +733,7 @@ class DbtSourceFreshnessOperator(DbtBaseOperator):
         select: Optional[list[str]] = None,
         dbt_output: Optional[Union[str, Path]] = None,
         exclude: Optional[list[str]] = None,
+        selector: Optional[str] = None,
         selector_name: Optional[str] = None,
         upload_dbt_project: bool = True,
         **kwargs,
@@ -734,7 +741,7 @@ class DbtSourceFreshnessOperator(DbtBaseOperator):
         super().__init__(**kwargs)
         self.select = select
         self.exclude = exclude
-        self.selector_name = selector_name
+        self.selector = selector or selector_name
         self.dbt_output = dbt_output
         self.upload_dbt_project = upload_dbt_project
 
@@ -759,6 +766,7 @@ class DbtBuildOperator(DbtBaseOperator):
         full_refresh: Optional[bool] = None,
         select: Optional[list[str]] = None,
         exclude: Optional[list[str]] = None,
+        selector: Optional[str] = None,
         selector_name: Optional[str] = None,
         singular: Optional[bool] = None,
         generic: Optional[bool] = None,
@@ -770,7 +778,7 @@ class DbtBuildOperator(DbtBaseOperator):
         self.full_refresh = full_refresh
         self.select = select
         self.exclude = exclude
-        self.selector_name = selector_name
+        self.selector = selector or selector_name
         self.singular = singular
         self.generic = generic
         self.show = show

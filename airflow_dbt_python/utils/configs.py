@@ -518,10 +518,12 @@ class SelectionConfig(BaseConfig):
 
     exclude: Optional[list[str]] = None
     select: Optional[list[str]] = None
-    selector_name: Optional[list[str]] = None
     selector: Optional[str] = None
     state: Optional[Union[Path, str]] = None
     defer_state: Optional[Union[Path, str]] = None
+
+    # Kept for compatibility with dbt versions < 1.5
+    selector_name: Optional[str] = None
 
     # Kept for compatibility with dbt versions < 0.21
     models: Optional[list[str]] = None
