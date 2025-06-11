@@ -26,11 +26,17 @@ Create a local virtual environment (if you don't want *uv* to manage it), and en
 
 .. code-block:: shell
 
-   uv sync --dev --extra airflow-providers --extra postgres
+   uv sync --all-extras --dev
 
 The *dev* dependency group includes development tools for code formatting, type checking, and testing.
 
-The additional extras, *airflow-providers* and *postgres* install dependencies required for testing. If testing a specific Airflow version, the extras may be omitted, see the following section with more details.
+The additional extras install dependencies required for testing. If testing a specific Airflow version, the extras may be omitted, see the following section with more details.
+
+*airflow-dbt-python* does not have a build system (yet!) so it needs to be installed separately:
+
+.. code-block:: shell
+
+   uv pip install -e .
 
 Support for different versions of *Airflow*
 -------------------------------------------
@@ -96,7 +102,11 @@ The ``AIRFLOW_HOME`` environment variable has to be set to the same value used w
 
 The files ``airflow.cfg`` and ``airflow.db`` created as part of initializing the database can be safely deleted once not needed anymore.
 
-Finally, some unit tests require Airflow provider packages. These are all provided by the *airflow-providers* extra.
+Afterwards, ensure default connections are created by running:
+
+.. code-block:: shell
+
+    uv run airflow connections create-default-connections
 
 Running tests
 ^^^^^^^^^^^^^
