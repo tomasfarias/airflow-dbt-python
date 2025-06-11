@@ -64,7 +64,7 @@ uv pip install .
 
 Add *airflow-dbt-python* to your `requirements.txt` file and edit your Airflow environment to use this new `requirements.txt` file, or upload it as a plugin.
 
-Read the [documentation](https://airflow-dbt-python.readthedocs.io/en/latest/getting_started.html#installing-in-mwaa) for more a more detailed AWS MWAA installation breakdown.
+Read the [documentation](https://airflow-dbt-python.readthedocs.io/en/latest/getting_started/#installing-in-mwaa) for more a more detailed AWS MWAA installation breakdown.
 
 ## In GCP Cloud Composer
 
@@ -221,7 +221,7 @@ More examples can be found in the [`examples/`](examples/) directory and the [do
 
 # Development
 
-See the [development documentation](https://airflow-dbt-python.readthedocs.io/en/latest/development.html) for a more in-depth dive into setting up a development environment, running the test-suite, and general commentary on working on *airflow-dbt-python*.
+See the [development documentation](https://airflow-dbt-python.readthedocs.io/en/latest/development/) for a more in-depth dive into setting up a development environment, running the test-suite, and general commentary on working on *airflow-dbt-python*.
 
 ## Testing
 
