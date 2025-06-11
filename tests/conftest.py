@@ -345,14 +345,14 @@ def model_files(dbt_project_dir):
 def selector_file(model_files, dbt_project_dir):
     """Create a selector file."""
     p = dbt_project_dir / "selectors.yml"
-    first_model = next(str(m.stem) for m in model_files)
+    last_model = [str(m.stem) for m in model_files][-1]
 
     p.write_text(f"""\
 selectors:
   - name: first_model
     definition:
       method: fqn
-      value: "{first_model}"
+      value: "{last_model}"
     """)
 
     return p
