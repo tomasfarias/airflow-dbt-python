@@ -136,6 +136,38 @@ def test_dbt_run_models(profiles_file, dbt_project_file, model_files, logs_dir):
     )
 
 
+def test_dbt_run_models_with_first_model_selector(
+    profiles_file, dbt_project_file, model_files, selector_file, logs_dir
+):
+    """Test execution of DbtRunOperator with a single model selector."""
+    op = DbtRunOperator(
+        task_id="dbt_task",
+        project_dir=dbt_project_file.parent,
+        profiles_dir=profiles_file.parent,
+        selector="first_model",
+        do_xcom_push=True,
+        log_path=logs_dir,
+        log_level_file="info",
+        debug=True,
+    )
+
+    execution_results = op.execute({})
+    run_result = execution_results["results"][0]
+
+    assert run_result["status"] == RunStatus.Success
+
+    log_file = logs_dir / "dbt.log"
+    assert log_file.exists()
+
+    with open(log_file) as f:
+        logs = f.read()
+
+    assert (
+        "OK created view model public.model_4" in logs
+        or "OK created sql view model public.model_4" in logs
+    )
+
+
 def test_dbt_run_models_with_env_vars(
     profiles_file_with_env, dbt_project_file, model_files, logs_dir, database
 ):

@@ -342,6 +342,23 @@ def model_files(dbt_project_dir):
 
 
 @pytest.fixture(scope="session")
+def selector_file(model_files, dbt_project_dir):
+    """Create a selector file."""
+    p = dbt_project_dir / "selectors.yml"
+    first_model = next(str(m.stem) for m in model_files)
+
+    p.write_text(f"""\
+selectors:
+  - name: first_model
+    definition:
+      method: fqn
+      value: "{first_model}"
+    """)
+
+    return p
+
+
+@pytest.fixture(scope="session")
 def sources_file(model_files, database):
     """Create test source file."""
     m = model_files[0].parent / "my_sources.yml"
