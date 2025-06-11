@@ -334,12 +334,14 @@ def test_dbt_run_uses_correct_argument_according_to_version():
         fail_fast=True,
         threads=3,
         exclude=["/path/to/model/to/exclude.sql"],
-        selector_name=["a-selector"],
+        selector_name="a-selector",
         state="/path/to/state/",
     )
 
     assert op.select == ["/path/to/model.sql", "+/another/model.sql+2"]
     assert getattr(op, "models", None) is None
+    assert op.selector == "a-selector"
+    assert getattr(op, "selector_name", None) is None
 
 
 def test_dbt_run_models_with_airflow_connection(

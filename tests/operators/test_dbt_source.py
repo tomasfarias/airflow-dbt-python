@@ -19,7 +19,7 @@ def test_dbt_source_mocked_all_args():
         log_cache_events=True,
         select=["/path/to/models"],
         exclude=["/path/to/data/to/exclude.sql"],
-        selector_name=["a-selector"],
+        selector="a-selector",
         dbt_output="json",
     )
     assert op.command == "source"
@@ -35,7 +35,7 @@ def test_dbt_source_mocked_all_args():
     assert config.log_cache_events is True
     assert config.select == ["/path/to/models"]
     assert config.exclude == ["/path/to/data/to/exclude.sql"]
-    assert config.selector_name == ["a-selector"]
+    assert config.selector == "a-selector"
     assert config.output == Output.JSON
 
 

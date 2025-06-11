@@ -33,7 +33,7 @@ def test_dbt_test_configuration_all_args():
         models=["/path/to/models"],
         threads=2,
         exclude=["/path/to/data/to/exclude.sql"],
-        selector_name=["a-selector"],
+        selector="a-selector",
         state="/path/to/state/",
         no_defer=True,
         fail_fast=True,
@@ -60,7 +60,7 @@ def test_dbt_test_configuration_all_args():
         "test_type:generic",
     ]
     assert config.exclude == ["/path/to/data/to/exclude.sql"]
-    assert config.selector_name == ["a-selector"]
+    assert config.selector == "a-selector"
     assert config.state == Path("/path/to/state/")
     assert config.no_defer is True
 
@@ -239,10 +239,12 @@ def test_dbt_test_uses_correct_argument_according_to_version():
         models=["/path/to/models"],
         threads=2,
         exclude=["/path/to/data/to/exclude.sql"],
-        selector_name=["a-selector"],
+        selector_name="a-selector",
         state="/path/to/state/",
         no_defer=True,
     )
 
     assert op.select == ["/path/to/models"]
     assert getattr(op, "models", None) is None
+    assert op.selector == "a-selector"
+    assert getattr(op, "selector_name", None) is None
