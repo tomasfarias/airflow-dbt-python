@@ -28,7 +28,7 @@ with DAG(
 ) as dag:
     dbt_test = DbtTestOperator(
         task_id="dbt_test",
-        selector_name="pre-run-tests",
+        selector="pre-run-tests",
     )
 
     dbt_seed = DbtSeedOperator(
