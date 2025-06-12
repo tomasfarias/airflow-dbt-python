@@ -64,7 +64,7 @@ class FakeTaskInstance:
     def __init__(self):
         self.xcom = {}
 
-    def xcom_push(self, key, value, execution_date):
+    def xcom_push(self, key, value, execution_date=None):
         """Fake xcom_push method that stores the value in instance attribute."""
         self.xcom[key] = (value, execution_date)
 
