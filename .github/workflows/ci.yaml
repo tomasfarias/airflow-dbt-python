@@ -6,6 +6,7 @@ on:
     paths:
       - '**.py'
       - 'pyproject.toml'
+      - 'uv.lock'
       - '!airflow_dbt_python/__version__.py'
     tags:
       - "v*"
@@ -15,6 +16,7 @@ on:
     paths:
       - '**.py'
       - 'pyproject.toml'
+      - 'uv.lock'
       - '!airflow_dbt_python/__version__.py'
 
 jobs:
