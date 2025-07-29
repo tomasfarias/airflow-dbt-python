@@ -181,14 +181,18 @@ class BaseConfig:
 
     # legacy behaviors - https://github.com/dbt-labs/dbt-core/blob/main/docs/guides/behavior-change-flags.md
     require_batched_execution_for_custom_microbatch_strategy: bool = False
+    require_event_names_in_deprecations: bool = False
     require_explicit_package_overrides_for_builtin_materializations: bool = True
-    require_resource_names_without_spaces: bool = False
-    source_freshness_run_project_hooks: bool = False
+    require_resource_names_without_spaces: bool = True
+    source_freshness_run_project_hooks: bool = True
     skip_nodes_if_on_run_start_fails: bool = False
     state_modified_compare_more_unrendered_values: bool = False
     state_modified_compare_vars: bool = False
     require_yaml_configuration_for_mf_time_spines: bool = False
     require_nested_cumulative_type_params: bool = False
+    validate_macro_args: bool = False
+    require_all_warnings_handled_by_warn_error: bool = False
+    require_generic_test_arguments_property: bool = False
 
     def __post_init__(self):
         """Post initialization actions for a dbt configuration."""
