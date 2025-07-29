@@ -7,6 +7,8 @@ specific connection requirements.
 
 from __future__ import annotations
 
+import base64
+import binascii
 import json
 import operator
 import re
@@ -26,6 +28,24 @@ from airflow.hooks.base import BaseHook
 from airflow.models.connection import Connection
 
 
+def try_decode_base64(s: str) -> str:
+    """Attempt to decode a string from base64.
+
+    If the string is not valid base64, returns the original value.
+
+    Args:
+        s: The string to decode.
+
+    Returns:
+        The decoded string, or the original value if decoding fails.
+    """
+    try:
+        s = base64.b64decode(s, validate=True).decode("utf-8")
+    except binascii.Error:
+        pass
+    return s
+
+
 class DbtConnectionParam(NamedTuple):
     """A tuple indicating connection parameters relevant to dbt.
 
@@ -40,6 +60,7 @@ class DbtConnectionParam(NamedTuple):
     name: str
     store_override_name: Optional[str] = None
     default: Optional[Any] = None
+    converter: Callable[[Any], Any] | None = None
 
     @property
     def override_name(self):
@@ -230,6 +251,8 @@ class DbtConnectionHook(BaseHook, ABC, metaclass=DbtConnectionHookMeta):
             if isinstance(param, DbtConnectionParam):
                 key = param.override_name
                 value = getattr(conn, param.name, param.default)
+                if param.converter:
+                    value = param.converter(value)
             elif isinstance(param, DbtConnectionConditionParam):
                 key, default = param.resolve(conn)
                 value = getattr(conn, param.name, default)
@@ -399,7 +422,9 @@ class DbtSnowflakeHook(DbtConnectionHook):
         "database",
         DbtConnectionParam("refresh_token", "token"),
         DbtConnectionParam("private_key_file", "private_key_path"),
-        DbtConnectionParam("private_key_content", "private_key"),
+        DbtConnectionParam(
+            "private_key_content", "private_key", converter=try_decode_base64
+        ),
     ]
 
 
