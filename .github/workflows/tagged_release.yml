@@ -15,7 +15,7 @@ jobs:
         with:
           token: ${{ secrets.GH_DEPLOY_TOKEN }}
           checkName: CI
-          ref: ${{ github.ref_name }}
+          ref: ${{ github.tag }}
           # Wait for one hour
           timeoutSeconds: 3600
           intervalSeconds: 60
