@@ -35,8 +35,8 @@ jobs:
           - '2.10'
           - '2.9'
         dbt-version:
-          - '1.10'
-          - 1.9
+          - '1.10.9'
+          - '1.9.9'
 
     runs-on: ubuntu-latest
     steps:
@@ -84,7 +84,7 @@ jobs:
       - name: Install Airflow & dbt
         run: |
           uv add "apache-airflow~=${{ matrix.airflow-version }}.0" \
-                 "dbt-core~=${{ matrix.dbt-version }}.0"
+                 "dbt-core~=${{ matrix.dbt-version }}"
           uv sync --all-extras --dev
           uv run airflow db migrate
           uv run airflow connections create-default-connections
@@ -95,7 +95,7 @@ jobs:
       - name: Static type checking with mypy
         # We only run mypy on the latest supported versions of Airflow & dbt,
         # so it is currently impossible to write conditions for that depend on package versions.
-        if: matrix.python-version == '3.12' && matrix.airflow-version == '2.10' && matrix.dbt-version == '1.9'
+        if: matrix.python-version == '3.12' && matrix.airflow-version == '2.10' && matrix.dbt-version == '1.9.9'
         run: uv run mypy .
 
       - name: Code formatting with ruff
