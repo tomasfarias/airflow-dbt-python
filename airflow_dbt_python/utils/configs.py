@@ -377,7 +377,7 @@ class BaseConfig:
             task: BaseTask = self.dbt_task(
                 args=local_flags, config=runtime_config, manifest=manifest
             )
-        if (
+        elif (
             issubclass(self.dbt_task, ConfiguredTask)
             and runtime_config
             and DBT_INSTALLED_GTE_1_10_7
