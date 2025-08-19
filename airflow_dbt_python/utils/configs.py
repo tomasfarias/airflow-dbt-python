@@ -39,7 +39,10 @@ from dbt.task.test import TestTask
 from dbt.tracking import initialize_from_flags
 
 from airflow_dbt_python.utils.enums import FromStrEnum, LogFormat, Output
-from airflow_dbt_python.utils.version import DBT_INSTALLED_GTE_1_9
+from airflow_dbt_python.utils.version import (
+    DBT_INSTALLED_GTE_1_9,
+    DBT_INSTALLED_GTE_1_10_7,
+)
 
 
 def parse_yaml_args(args: Optional[Union[str, dict[str, Any]]]) -> dict[str, Any]:
@@ -360,7 +363,11 @@ class BaseConfig:
 
         runtime_config = self.create_runtime_config(project, profile)
 
-        if issubclass(self.dbt_task, ConfiguredTask) and runtime_config:
+        if (
+            issubclass(self.dbt_task, ConfiguredTask)
+            and runtime_config
+            and not DBT_INSTALLED_GTE_1_10_7
+        ):
             manifest = parse_manifest(
                 runtime_config,
                 write_perf_info=write_perf_info,
@@ -368,6 +375,22 @@ class BaseConfig:
                 write_json=False,
             )
             task: BaseTask = self.dbt_task(
+                args=local_flags, config=runtime_config, manifest=manifest
+            )
+        if (
+            issubclass(self.dbt_task, ConfiguredTask)
+            and runtime_config
+            and DBT_INSTALLED_GTE_1_10_7
+        ):
+            manifest = parse_manifest(
+                runtime_config,
+                write_perf_info=write_perf_info,
+                write=False,
+                write_json=False,
+                # TODO: Support for catalog integrations
+                active_integrations=[],
+            )
+            task = self.dbt_task(
                 args=local_flags, config=runtime_config, manifest=manifest
             )
         elif issubclass(self.dbt_task, DepsTask):
