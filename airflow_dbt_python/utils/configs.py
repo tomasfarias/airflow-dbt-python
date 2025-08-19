@@ -388,7 +388,7 @@ class BaseConfig:
                 write=False,
                 write_json=False,
                 # TODO: Support for catalog integrations
-                active_integrations=[],
+                active_integrations=[],  # type: ignore
             )
             task = self.dbt_task(
                 args=local_flags, config=runtime_config, manifest=manifest
