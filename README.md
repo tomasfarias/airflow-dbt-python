@@ -2,7 +2,7 @@
 
 [![PyPI version](https://img.shields.io/pypi/v/airflow-dbt-python?style=plastic)](https://pypi.org/project/airflow-dbt-python/)
 [![CI testing](https://github.com/tomasfarias/airflow-dbt-python/actions/workflows/ci.yaml/badge.svg)](https://github.com/tomasfarias/airflow-dbt-python/actions)
-[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+[![Code style: Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 [![Test coverage](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/tomasfarias/81ef37701aa088d18db8a58ce07c79c7/raw/covbadge.json)](https://github.com/tomasfarias/airflow-dbt-python/actions)
 [![Documentation](https://readthedocs.org/projects/airflow-dbt-python/badge/?version=latest)](https://airflow-dbt-python.readthedocs.io/en/latest/?badge=latest)
 
