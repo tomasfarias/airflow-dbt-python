@@ -492,3 +492,38 @@ class DbtSparkHook(DbtConnectionHook):
         ),
     ]
     conn_extra_params = []
+
+
+class DbtTrinoHook(DbtConnectionHook):
+    """A hook to interact with dbt using a Trino connection."""
+
+    conn_type = "trino"
+    hook_name = "dbt Trino Hook"
+    airflow_conn_types = (conn_type,)
+
+    conn_params = [
+        "host",
+        DbtConnectionParam("schema", default="public"),
+        DbtConnectionParam("login", "user"),
+        "password",
+        DbtConnectionParam("port", default=443),
+    ]
+
+    conn_extra_params = [
+        DbtConnectionParam("type", default="trino"),
+        DbtConnectionParam("method", default="none"),
+        DbtConnectionParam("http_scheme", default="https"),
+        DbtConnectionParam("verify", default=True),
+        DbtConnectionParam("database", "catalog", "hive"),
+        "catalog",
+        "host",
+        "port",
+        DbtConnectionParam("user", "user"),
+        "password",
+        "schema",
+        "session_properties",
+        "http_headers",
+        "role",
+        "client_tags",
+        "source",
+    ]
