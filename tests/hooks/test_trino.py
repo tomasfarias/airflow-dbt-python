@@ -16,11 +16,11 @@ def test_trino_registration():
           "method": "ldap",
           "user": "user",
           "password": "pass",
-          "host": "trino-etl.example",
+          "host": "trino.example",
           "port": 443,
           "http_scheme": "https",
-          "database": "ads_dwh_hdfs",
-          "schema": "ads_platform_dwh",
+          "database": "example",
+          "schema": "example",
           "verify": false
         }
         """,
@@ -31,12 +31,12 @@ def test_trino_registration():
 
     assert details["type"] == "trino"
     assert details["method"] == "ldap"
-    assert details["host"] == "trino-etl.example"
+    assert details["host"] == "trino.example"
     assert details["port"] == 443
     assert details["user"] == "user"
     assert details["password"] == "pass"
-    assert details["schema"] == "ads_platform_dwh"
-    assert details["catalog"] == "ads_dwh_hdfs"
+    assert details["schema"] == "example"
+    assert details["catalog"] == "example"
     assert details["verify"] is False
 
 
