@@ -3,4 +3,4 @@
 __author__ = "Tomás Farías Santana"
 __copyright__ = "Copyright 2021 Tomás Farías Santana"
 __title__ = "airflow-dbt-python"
-__version__ = "3.0.4"
+__version__ = "3.1.0"
