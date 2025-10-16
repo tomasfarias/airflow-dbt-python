@@ -43,6 +43,9 @@ jobs:
           - airflow-version: '3.0'
             python-version: '3.13'
 
+          - airflow-version: '2.10'
+            python-version: '3.13'
+
           # Dbt added 3.13 support in >=1.10
           - dbt-version: '1.9.10'
             python-version: '3.13'
