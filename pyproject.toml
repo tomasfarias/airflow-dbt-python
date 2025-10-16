@@ -5,7 +5,7 @@ description = "A collection of Airflow operators, hooks, and utilities to execut
 authors = [{ name = "Tomás Farías Santana", email = "tomas@tomasfarias.dev" }]
 license = "MIT"
 readme = "README.md"
-requires-python = ">=3.9,<3.13"
+requires-python = ">=3.9,<3.14"
 classifiers = [
     "Development Status :: 5 - Production/Stable",
 
