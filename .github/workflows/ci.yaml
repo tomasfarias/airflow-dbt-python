@@ -99,7 +99,7 @@ jobs:
 
       - name: Install Airflow & dbt
         run: |
-          uv add "apache-airflow~=${{ matrix.airflow-version }}.0" \
+          uv add "apache-airflow~=${{ matrix.airflow-version }}.0; python_version>='${{ matrix.python-version }}'" \
                  "dbt-core~=${{ matrix.dbt-version }}"
           uv sync --all-extras --dev
           uv run airflow db migrate
