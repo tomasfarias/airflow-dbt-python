@@ -10,9 +10,15 @@ import pytest
 from dbt.contracts.results import RunStatus, TestStatus
 
 airflow = pytest.importorskip("airflow", minversion="2.2")
+from airflow_dbt_python.utils.version import AIRFLOW_V_3_0_PLUS
 
-from airflow import DAG, settings
+if AIRFLOW_V_3_0_PLUS:
+    from airflow.sdk import DAG
+else:
+    from airflow import DAG
+
 from airflow import __version__ as airflow_version
+from airflow import settings
 from airflow.models import DagBag, DagRun
 from airflow.models.serialized_dag import SerializedDagModel
 from airflow.utils.state import DagRunState, TaskInstanceState

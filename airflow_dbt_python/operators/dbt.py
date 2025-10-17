@@ -10,10 +10,15 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, Dict, Optional, Union
 
 from airflow.exceptions import AirflowException
-from airflow.models.baseoperator import BaseOperator
 from airflow.models.xcom import XCOM_RETURN_KEY
 
 from airflow_dbt_python.utils.enums import LogFormat
+from airflow_dbt_python.utils.version import AIRFLOW_V_3_1_PLUS
+
+if AIRFLOW_V_3_1_PLUS:
+    from airflow.sdk import BaseOperator
+else:
+    from airflow.models import BaseOperator
 
 if TYPE_CHECKING:
     from dbt.contracts.results import RunResult

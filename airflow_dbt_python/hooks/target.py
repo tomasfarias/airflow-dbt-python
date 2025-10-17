@@ -24,7 +24,13 @@ from typing import (
     Union,
 )
 
-from airflow.hooks.base import BaseHook
+from airflow_dbt_python.utils.version import AIRFLOW_V_3_1_PLUS
+
+if AIRFLOW_V_3_1_PLUS:
+    from airflow.sdk.bases.hook import BaseHook
+else:
+    from airflow.hooks.base import BaseHook
+
 from airflow.models.connection import Connection
 
 
