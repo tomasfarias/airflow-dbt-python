@@ -401,7 +401,7 @@ def s3_hook():
 
 
 @pytest.fixture
-def s3_bucket(mocked_s3_res, s3_hook):
+def s3_bucket(mocked_s3_res, s3_hook, mock_supervisor_comms):
     """Return a mocked s3 bucket for testing.
 
     Bucket is cleaned after every use.
