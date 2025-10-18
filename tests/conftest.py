@@ -539,7 +539,14 @@ def hook():
 
 
 @pytest.fixture
-def pre_compile(hook, model_files, seed_files, dbt_project_file, profiles_file):
+def pre_compile(
+    hook,
+    model_files,
+    seed_files,
+    dbt_project_file,
+    profiles_file,
+    mock_supervisor_comms,
+):
     """Fixture to run a dbt compile task."""
     target_dir = dbt_project_file.parent / "target"
 

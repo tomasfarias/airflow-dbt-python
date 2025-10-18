@@ -115,6 +115,7 @@ warn_unused_configs = true
 
 [tool.pytest.ini_options]
 addopts = "--doctest-modules"
+plugins = "airflow.pytest_plugin"
 postgresql_user = "test"
 postgresql_password = "test" # pragma: allowlist secret
 postgresql_dbname = "test"
