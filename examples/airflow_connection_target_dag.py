@@ -4,10 +4,16 @@ import datetime as dt
 import json
 
 import pendulum
-from airflow import DAG, settings
+from airflow import settings
 from airflow.models.connection import Connection
 
 from airflow_dbt_python.operators.dbt import DbtRunOperator
+from airflow_dbt_python.utils.version import AIRFLOW_V_3_1_PLUS
+
+if AIRFLOW_V_3_1_PLUS:
+    from airflow.sdk import DAG
+else:
+    from airflow import DAG
 
 session = settings.Session()  # type: ignore
 existing = session.query(Connection).filter_by(conn_id="my_db_connection").first()

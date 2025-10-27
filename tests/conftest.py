@@ -14,13 +14,9 @@ from unittest.mock import patch
 
 import boto3
 import pytest
-from airflow import settings
-from airflow.models.connection import Connection
 from mockgcp.storage.client import MockClient as MockStorageClient
 from moto import mock_aws
 from pytest_postgresql.janitor import DatabaseJanitor
-
-from airflow_dbt_python.hooks.dbt import DbtHook
 
 if TYPE_CHECKING:
     from _pytest.fixtures import SubRequest
@@ -218,6 +214,9 @@ def airflow_conns(database):
     We create them by setting AIRFLOW_CONN_{CONN_ID} env variables. Only postgres
     connections are set for now as our testing database is postgres.
     """
+    from airflow import settings
+    from airflow.models.connection import Connection
+
     uris = (
         f"postgres://{database.user}:{database.password}@{database.host}:{database.port}/public?dbname={database.dbname}",
     )
@@ -276,6 +275,9 @@ def private_key() -> tuple[str, str]:
 @pytest.fixture
 def profile_conn_id(request: SubRequest) -> Generator[str, None, None]:
     """Create an Airflow connection by conn_id."""
+    from airflow import settings
+    from airflow.models.connection import Connection
+
     conn_id = request.param
     session = settings.Session()
     existing = session.query(Connection).filter_by(conn_id=conn_id).first()
@@ -401,7 +403,7 @@ def s3_hook():
 
 
 @pytest.fixture
-def s3_bucket(mocked_s3_res, s3_hook, mock_supervisor_comms):
+def s3_bucket(mocked_s3_res, s3_hook):
     """Return a mocked s3 bucket for testing.
 
     Bucket is cleaned after every use.
@@ -430,6 +432,8 @@ def s3_bucket(mocked_s3_res, s3_hook, mock_supervisor_comms):
 @pytest.fixture
 def gcp_conn_id():
     """Provide a GCS connection for testing."""
+    from airflow import settings
+    from airflow.models.connection import Connection
     from airflow.providers.google.cloud.hooks.gcs import GCSHook
 
     conn_id = GCSHook.default_conn_name
@@ -535,6 +539,8 @@ def packages_file(dbt_project_file):
 @pytest.fixture
 def hook():
     """Provide a DbtHook."""
+    from airflow_dbt_python.hooks.dbt import DbtHook
+
     return DbtHook()
 
 
@@ -545,7 +551,6 @@ def pre_compile(
     seed_files,
     dbt_project_file,
     profiles_file,
-    mock_supervisor_comms,
 ):
     """Fixture to run a dbt compile task."""
     target_dir = dbt_project_file.parent / "target"

@@ -31,6 +31,7 @@ from airflow_dbt_python.operators.dbt import (
     DbtSourceFreshnessOperator,
     DbtTestOperator,
 )
+from airflow_dbt_python.utils.version import AIRFLOW_V_3_1_PLUS
 
 DATA_INTERVAL_START = pendulum.datetime(2022, 1, 1, tz="UTC")
 DATA_INTERVAL_END = DATA_INTERVAL_START + dt.timedelta(hours=1)
@@ -45,7 +46,14 @@ def _create_dagrun(
     start_date: dt.datetime,
     run_type: DagRunType,
 ) -> DagRun:
-    if AIRFLOW_MAJOR_VERSION >= 3:
+    print(AIRFLOW_V_3_1_PLUS)
+    print(airflow_version)
+    if AIRFLOW_V_3_1_PLUS:
+        return parent_dag.test(
+            logical_date=logical_date,
+            run_after=dt.datetime(1970, 1, 1, 0, 0, 0, tzinfo=dt.timezone.utc),
+        )
+    elif AIRFLOW_MAJOR_VERSION >= 3:
         from airflow.utils.types import DagRunTriggeredByType  # type: ignore
 
         return parent_dag.create_dagrun(  # type: ignore
