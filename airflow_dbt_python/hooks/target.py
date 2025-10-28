@@ -259,7 +259,7 @@ class DbtConnectionHook(BaseHook, ABC, metaclass=DbtConnectionHookMeta):
                 key = param
                 value = getattr(conn, key, None)
 
-            if value is None:
+            if value is None or value == "":
                 continue
 
             dbt_details[key] = value
