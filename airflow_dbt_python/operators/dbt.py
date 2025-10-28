@@ -10,8 +10,8 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, Dict, Optional, Union
 
 from airflow.exceptions import AirflowException
-from airflow.models.baseoperator import BaseOperator
 from airflow.models.xcom import XCOM_RETURN_KEY
+from airflow.providers.common.compat.sdk import BaseOperator
 
 from airflow_dbt_python.utils.enums import LogFormat
 
