@@ -7,20 +7,28 @@ Common fixtures include a connection to a postgres database, a set of sample mod
 from __future__ import annotations
 
 import json
+import os
 import shutil
 from pathlib import Path
 from typing import TYPE_CHECKING, Generator, List
+from unittest import mock
 from unittest.mock import patch
 
 import boto3
+import pendulum
 import pytest
 from airflow import settings
-from airflow.models.connection import Connection
+from airflow.models import Connection, DagRun
+from airflow.models.dag import DagOwnerAttributes
+from airflow.models.serialized_dag import SerializedDagModel
+from airflow.providers.common.compat.sdk import Context
+from airflow.utils.session import create_session
 from mockgcp.storage.client import MockClient as MockStorageClient
 from moto import mock_aws
 from pytest_postgresql.janitor import DatabaseJanitor
 
 from airflow_dbt_python.hooks.dbt import DbtHook
+from airflow_dbt_python.utils.version import AIRFLOW_V_3_1_PLUS
 
 if TYPE_CHECKING:
     from _pytest.fixtures import SubRequest
@@ -211,39 +219,55 @@ def profiles_file_with_env(tmp_path_factory):
     return p
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="session", autouse=True)
 def airflow_conns(database):
     """Create Airflow connections for testing.
 
-    We create them by setting AIRFLOW_CONN_{CONN_ID} env variables. Only postgres
-    connections are set for now as our testing database is postgres.
+    We create them by setting AIRFLOW_CONN_{CONN_ID} env variables.
     """
     uris = (
         f"postgres://{database.user}:{database.password}@{database.host}:{database.port}/public?dbname={database.dbname}",
+        "/tmp",
+        "google-cloud-platform://",
     )
-    ids = ("dbt_test_postgres_1",)
-    session = settings.Session()
+    ids = ("dbt_test_postgres_1", "fs_default", "google_cloud_default")
 
-    connections = []
-    for conn_id, uri in zip(ids, uris):
-        existing = session.query(Connection).filter_by(conn_id=conn_id).first()
-        if existing is not None:
-            # Connections may exist from previous test run.
-            session.delete(existing)
-            session.commit()
-        connections.append(Connection(conn_id=conn_id, uri=uri))
+    with create_session() as session:
+        connections = []
+        for conn_id, uri in zip(ids, uris):
+            existing = session.query(Connection).filter_by(conn_id=conn_id).first()
+            if existing is not None:
+                # Connections may exist from previous test run.
+                session.delete(existing)
+                session.commit()
+            connections.append(Connection(conn_id=conn_id, uri=uri))
 
-    session.add_all(connections)
+        session.add_all(connections)
 
-    session.commit()
+        session.commit()
+        session.flush()
 
-    yield ids
+    with mock.patch.dict(
+        os.environ, zip((f"AIRFLOW_CONN_{id.upper()}" for id in ids), uris)
+    ):
+        yield ids
 
-    for conn in connections:
-        session.delete(conn)
+    with create_session() as session:
+        for conn in connections:
+            session.delete(conn)
 
-    session.commit()
-    session.close()
+        session.commit()
+        session.flush()
+
+
+@pytest.fixture(scope="session", autouse=True)
+def dbt_target_airflow_conns(airflow_conns):
+    """Return dbt target connection ids used in testing.
+
+    All connections are created in airflow_conns, here we only return those that
+    correspond to dbt targets.
+    """
+    return ("dbt_test_postgres_1",)
 
 
 @pytest.fixture(scope="session")
@@ -277,27 +301,34 @@ def private_key() -> tuple[str, str]:
 def profile_conn_id(request: SubRequest) -> Generator[str, None, None]:
     """Create an Airflow connection by conn_id."""
     conn_id = request.param
-    session = settings.Session()
-    existing = session.query(Connection).filter_by(conn_id=conn_id).first()
-    if existing is not None:
-        # Connections may exist from previous test run.
-        session.delete(existing)
+
+    with create_session() as session:
+        existing = session.query(Connection).filter_by(conn_id=conn_id).first()
+        if existing is not None:
+            # Connections may exist from previous test run.
+            session.delete(existing)
+            session.commit()
+            session.flush()
+
+        conn_json_path = Path(__file__).parent / "profiles" / f"{conn_id}.json"
+        conn_kwargs = json.loads(conn_json_path.read_text())
+        conn = Connection(conn_id=conn_id, **conn_kwargs)
+
+        session.add(conn)
+
         session.commit()
+        session.flush()
 
-    conn_json_path = Path(__file__).parent / "profiles" / f"{conn_id}.json"
-    conn_kwargs = json.loads(conn_json_path.read_text())
-    conn = Connection(conn_id=conn_id, **conn_kwargs)
+    with mock.patch.dict(
+        os.environ, {f"AIRFLOW_CONN_{conn.conn_id.upper()}": conn.get_uri()}
+    ):
+        yield conn_id
 
-    session.add(conn)
+    with create_session() as session:
+        session.delete(conn)
 
-    session.commit()
-
-    yield conn_id
-
-    session.delete(conn)
-
-    session.commit()
-    session.close()
+        session.commit()
+        session.flush()
 
 
 @pytest.fixture(scope="session")
@@ -434,25 +465,26 @@ def gcp_conn_id():
 
     conn_id = GCSHook.default_conn_name
 
-    session = settings.Session()
-    existing = session.query(Connection).filter_by(conn_id=conn_id).first()
-    if existing is not None:
-        # Connections may exist from previous test run.
-        session.delete(existing)
+    with create_session() as session:
+        existing = session.query(Connection).filter_by(conn_id=conn_id).first()
+        if existing is not None:
+            # Connections may exist from previous test run.
+            session.delete(existing)
+            session.commit()
+            session.flush()
+
+        conn = Connection(conn_id=conn_id, conn_type=GCSHook.conn_type)
+
+        session.add(conn)
         session.commit()
-
-    conn = Connection(conn_id=conn_id, conn_type=GCSHook.conn_type)
-
-    session.add(conn)
-
-    session.commit()
+        session.flush()
 
     yield conn_id
 
-    session.delete(conn)
-
-    session.commit()
-    session.close()
+    with create_session() as session:
+        session.delete(conn)
+        session.commit()
+        session.flush()
 
 
 @pytest.fixture
@@ -762,3 +794,16 @@ def assert_dir_contents():
             )
 
     return wrapper
+
+
+@pytest.fixture()
+def context():
+    """Mock context used in tests."""
+    if AIRFLOW_V_3_1_PLUS:
+        date = pendulum.datetime(2025, 1, 1)
+        ctx = Context(logical_date=date)
+        ctx["dag_run"] = DagRun(run_after=date)
+    else:
+        ctx = mock.MagicMock()
+
+    return ctx
