@@ -3,8 +3,10 @@
 import datetime as dt
 
 import pendulum
-from airflow import DAG
 from airflow.operators.python import PythonOperator
+
+# from airflow.sdk import DAG in >=3.1
+from airflow.providers.common.compat.sdk import DAG
 
 from airflow_dbt_python.operators.dbt import DbtRunOperator
 

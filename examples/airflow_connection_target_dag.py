@@ -4,8 +4,11 @@ import datetime as dt
 import json
 
 import pendulum
-from airflow import DAG, settings
+from airflow import settings
 from airflow.models.connection import Connection
+
+# from airflow.sdk import DAG in >=3.1
+from airflow.providers.common.compat.sdk import DAG
 
 from airflow_dbt_python.operators.dbt import DbtRunOperator
 
