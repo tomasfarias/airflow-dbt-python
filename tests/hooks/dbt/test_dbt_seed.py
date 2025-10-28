@@ -177,10 +177,10 @@ def test_dbt_seed_task_compiled(
 
 
 def test_dbt_seed_with_airflow_connection(
-    profiles_file, dbt_project_file, airflow_conns, seed_files
+    profiles_file, dbt_project_file, dbt_target_airflow_conns, seed_files
 ):
     """Pulling a target from an Airflow connection."""
-    for conn_id in airflow_conns:
+    for conn_id in dbt_target_airflow_conns:
         hook = DbtHook(dbt_conn_id=conn_id)
         result = hook.run_dbt_task(
             "seed",
@@ -199,13 +199,13 @@ def test_dbt_seed_with_airflow_connection(
 
 
 def test_dbt_seed_with_airflow_connection_and_no_profiles(
-    dbt_project_file, seed_files, airflow_conns
+    dbt_project_file, seed_files, dbt_target_airflow_conns
 ):
     """Using an Airflow connection in place of a profiles file.
 
     We omit the profiles_file hook as it should not be needed.
     """
-    for conn_id in airflow_conns:
+    for conn_id in dbt_target_airflow_conns:
         hook = DbtHook(dbt_conn_id=conn_id)
         result = hook.run_dbt_task(
             "seed",
@@ -224,7 +224,7 @@ def test_dbt_seed_with_airflow_connection_and_no_profiles(
 
 
 def test_dbt_seed_with_non_existent_airflow_connection(
-    hook, dbt_project_file, seed_files, airflow_conns
+    hook, dbt_project_file, seed_files, dbt_target_airflow_conns
 ):
     """An Exception should be raised if a connection is not found."""
     with pytest.raises(DbtProfileError):
@@ -237,7 +237,7 @@ def test_dbt_seed_with_non_existent_airflow_connection(
 
 
 def test_dbt_run_with_non_existent_airflow_connection_and_profiles(
-    hook, dbt_project_file, seed_files, airflow_conns, profiles_file
+    hook, dbt_project_file, seed_files, dbt_target_airflow_conns, profiles_file
 ):
     """An Exception should be raised if a connection is not found."""
     with pytest.raises(DbtProfileError):

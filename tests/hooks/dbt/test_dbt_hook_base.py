@@ -2,6 +2,7 @@
 
 import os
 from pathlib import Path
+from unittest import mock
 
 import pytest
 from airflow.exceptions import AirflowNotFoundException
@@ -135,9 +136,9 @@ def test_dbt_hook_download_dbt_project(mocker):
     assert kwargs == {}
 
 
-def test_dbt_hook_get_dbt_target_from_connection(airflow_conns, database):
+def test_dbt_hook_get_dbt_target_from_connection(dbt_target_airflow_conns, database):
     """Test fetching Airflow connections."""
-    for conn_id in airflow_conns:
+    for conn_id in dbt_target_airflow_conns:
         hook = DbtConnectionHook.get_db_conn_hook(conn_id=conn_id)
         extra_target = hook.get_dbt_target_from_connection()
 
@@ -176,7 +177,8 @@ def no_user_airflow_conn(database):
 
     session.commit()
 
-    yield conn_id
+    with mock.patch.dict(os.environ, {f"AIRFLOW_CONN_{conn_id.upper()}": uri}):
+        yield conn_id
 
     session.delete(connection)
     session.commit()
