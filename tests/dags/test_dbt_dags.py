@@ -7,16 +7,14 @@ import typing
 
 import pendulum
 import pytest
-from dbt.contracts.results import RunStatus, TestStatus
-
-airflow = pytest.importorskip("airflow", minversion="2.2")
-
-from airflow import DAG, settings
-from airflow import __version__ as airflow_version
-from airflow.models import DagBag, DagRun
+from airflow.models import DagBag, DagModel, DagRun, DagTag
+from airflow.models.dag import DagOwnerAttributes
+from airflow.models.dagrun import get_or_create_dagrun
 from airflow.models.serialized_dag import SerializedDagModel
-from airflow.utils.state import DagRunState, TaskInstanceState
+from airflow.providers.common.compat.sdk import DAG, DagRunState, TaskInstanceState
+from airflow.utils.session import create_session
 from airflow.utils.types import DagRunType
+from dbt.contracts.results import RunStatus, TestStatus
 
 from airflow_dbt_python.operators.dbt import (
     DbtBaseOperator,
@@ -25,10 +23,40 @@ from airflow_dbt_python.operators.dbt import (
     DbtSourceFreshnessOperator,
     DbtTestOperator,
 )
+from airflow_dbt_python.utils.version import AIRFLOW_V_3_0_PLUS, AIRFLOW_V_3_1_PLUS
 
 DATA_INTERVAL_START = pendulum.datetime(2022, 1, 1, tz="UTC")
 DATA_INTERVAL_END = DATA_INTERVAL_START + dt.timedelta(hours=1)
-AIRFLOW_MAJOR_VERSION = int(airflow_version.split(".", 1)[0])
+
+
+def sync_dag_to_db(
+    dag: DAG,
+    bundle_name: str = "testing",
+):
+    """Sync dags into the database."""
+    from airflow.models.dagbundle import DagBundleModel
+    from airflow.models.serialized_dag import SerializedDagModel
+    from airflow.serialization.serialized_objects import (
+        LazyDeserializedDAG,
+        SerializedDAG,
+    )
+    from airflow.utils.session import create_session
+
+    with create_session() as session:
+        session.merge(DagBundleModel(name=bundle_name))
+        session.flush()
+
+        def _write_dag(dag: DAG) -> SerializedDAG:
+            if not SerializedDagModel.has_dag(dag.dag_id):
+                data = SerializedDAG.to_dict(dag)
+                SerializedDagModel.write_dag(
+                    LazyDeserializedDAG(data=data), bundle_name, session=session
+                )
+            return SerializedDAG.from_dict(data)
+
+        SerializedDAG.bulk_write_to_db(bundle_name, None, [dag], session=session)
+        _ = _write_dag(dag)
+        session.flush()
 
 
 def _create_dagrun(
@@ -39,7 +67,10 @@ def _create_dagrun(
     start_date: dt.datetime,
     run_type: DagRunType,
 ) -> DagRun:
-    if AIRFLOW_MAJOR_VERSION >= 3:
+    if AIRFLOW_V_3_1_PLUS:
+        return parent_dag.test()
+
+    elif AIRFLOW_V_3_0_PLUS:
         from airflow.utils.types import DagRunTriggeredByType  # type: ignore
 
         return parent_dag.create_dagrun(  # type: ignore
@@ -83,20 +114,50 @@ def test_dags_loaded(dagbag):
         assert dag is not None
 
 
-@pytest.fixture(scope="function")
-def clear_dagruns():
-    """Ensure we are starting from a clean DagRun table."""
-    session = settings.Session()
-    session.query(DagRun).delete()
-    session.commit()
+@pytest.fixture
+def testing_dag_bundle():
+    """Create a DAG bundle for tests."""
+    from airflow_dbt_python.utils.version import AIRFLOW_V_3_1_PLUS
 
+    if AIRFLOW_V_3_1_PLUS:
+        from airflow.models.dagbundle import DagBundleModel
+
+        with create_session() as session:
+            if (
+                session.query(DagBundleModel)
+                .filter(DagBundleModel.name == "testing")
+                .count()
+                == 0
+            ):
+                testing = DagBundleModel(name="testing")
+                session.add(testing)
+
+
+def _clear_db():
+    with create_session() as session:
+        if AIRFLOW_V_3_1_PLUS:
+            from airflow.models.dag_favorite import DagFavorite
+
+            session.query(DagFavorite).delete()
+
+        session.query(DagTag).delete()
+        session.query(DagOwnerAttributes).delete()
+        session.query(DagRun).delete()
+        session.query(DagModel).delete()
+        session.query(SerializedDagModel).delete()
+
+        if AIRFLOW_V_3_1_PLUS:
+            from airflow.models.dagbundle import DagBundleModel
+
+            session.query(DagBundleModel).delete()
+
+
+@pytest.fixture(autouse=True)
+def clear_db_fixture():
+    """Clear everything from db after and before every test."""
+    _clear_db()
     yield
-
-    session.query(DagRun).delete()
-    session.commit()
-    # We delete any serialized DAGs too for reproducible test runs.
-    session.query(SerializedDagModel).delete()
-    session.commit()
+    _clear_db()
 
 
 @pytest.fixture
@@ -107,6 +168,7 @@ def basic_dag(
     seed_files,
     singular_tests_files,
     generic_tests_files,
+    testing_dag_bundle,
 ):
     """Create a basic testing DAG that utilizes Airflow connections."""
     with DAG(
@@ -144,11 +206,14 @@ def basic_dag(
 
         dbt_seed >> dbt_run >> dbt_test
 
+    sync_dag_to_db(dag)
     return dag
 
 
 def test_dbt_operators_in_dag(
-    basic_dag, dbt_project_file, profiles_file, clear_dagruns
+    basic_dag,
+    dbt_project_file,
+    profiles_file,
 ):
     """Assert DAG contains correct dbt operators when running."""
     dagrun = _create_dagrun(
@@ -192,9 +257,13 @@ def taskflow_dag(
     seed_files,
     singular_tests_files,
     generic_tests_files,
+    testing_dag_bundle,
 ):
     """Create a testing DAG that utilizes Airflow taskflow decorators."""
-    from airflow.decorators import dag, task
+    if AIRFLOW_V_3_1_PLUS:
+        from airflow.sdk import dag, task
+    else:
+        from airflow.decorators import dag, task
 
     @dag(
         dag_id="taskflow_dbt_dag",
@@ -246,14 +315,20 @@ def taskflow_dag(
 
         dbt_seed >> dbt_run >> dbt_test
 
-    return generate_dag()
+    d = generate_dag()
+    sync_dag_to_db(d)
+    return d
 
 
 def test_dbt_operators_in_taskflow_dag(
-    taskflow_dag, dbt_project_file, profiles_file, clear_dagruns
+    taskflow_dag,
+    dbt_project_file,
+    profiles_file,
 ):
     """Assert DAG contains correct dbt operators when running."""
-    if AIRFLOW_MAJOR_VERSION >= 3:
+    if AIRFLOW_V_3_1_PLUS:
+        dag = taskflow_dag
+    elif AIRFLOW_V_3_0_PLUS:
         dag = DAG.from_sdk_dag(taskflow_dag)
     else:
         dag = taskflow_dag
@@ -309,38 +384,38 @@ def connection(database):
     """Create a PostgreSQL database connection in Airflow."""
     import json
 
-    from airflow.models.connection import Connection
+    from airflow.models import Connection
 
     conn_id = "integration_test_conn"
-    session = settings.Session()
-    existing = session.query(Connection).filter_by(conn_id=conn_id).first()
+    with create_session() as session:
+        existing = session.query(Connection).filter_by(conn_id=conn_id).first()
 
-    if existing:
-        # Let's clean up any existing connection.
-        session.delete(existing)
+        if existing:
+            # Let's clean up any existing connection.
+            session.delete(existing)
+            session.commit()
+
+        integration_test_conn = Connection(
+            conn_id="integration_test_conn",
+            conn_type="postgres",
+            description="A test postgres connection",
+            host=database.host,
+            login=database.user,
+            port=database.port,
+            password=database.password,
+            schema="test",
+            extra=json.dumps({"dbname": database.dbname, "threads": 2}),
+        )
+
+        session.add(integration_test_conn)
         session.commit()
+        session.flush()
 
-    integration_test_conn = Connection(
-        conn_id="integration_test_conn",
-        conn_type="postgres",
-        description="A test postgres connection",
-        host=database.host,
-        login=database.user,
-        port=database.port,
-        password=database.password,
-        schema="test",
-        extra=json.dumps({"dbname": database.dbname, "threads": 2}),
-    )
+        yield conn_id
 
-    session.add(integration_test_conn)
-    session.commit()
-
-    yield conn_id
-
-    session.delete(integration_test_conn)
-    session.commit()
-
-    session.close()
+        session.delete(integration_test_conn)
+        session.commit()
+        session.flush()
 
 
 @pytest.fixture
@@ -387,11 +462,13 @@ def target_connection_dag(
 
         dbt_seed >> dbt_run >> dbt_test
 
+    sync_dag_to_db(dag)
     return dag
 
 
 def test_dbt_operators_in_connection_dag(
-    target_connection_dag, dbt_project_file, clear_dagruns
+    target_connection_dag,
+    dbt_project_file,
 ):
     """Assert DAG contains correct dbt operators when running."""
     dagrun = _create_dagrun(
@@ -440,7 +517,11 @@ def assert_dbt_results(
 
 
 def test_example_basic_dag(
-    dagbag, dbt_project_file, profiles_file, model_files, seed_files, clear_dagruns
+    dagbag,
+    dbt_project_file,
+    profiles_file,
+    model_files,
+    seed_files,
 ):
     """Test the example basic DAG."""
     dag = dagbag.get_dag(dag_id="example_basic_dbt")
@@ -460,6 +541,7 @@ def test_example_basic_dag(
     dbt_run.target = "test"
     dbt_run.profile = "default"
 
+    sync_dag_to_db(dag)
     dagrun = _create_dagrun(
         dag,
         state=DagRunState.RUNNING,
@@ -500,13 +582,17 @@ def test_example_dbt_project_in_s3_dag(dagbag):
     assert dbt_run.full_refresh is False
 
 
-def test_example_dbt_project_in_github_dag(dagbag, connection, clear_dagruns):
+def test_example_dbt_project_in_github_dag(
+    dagbag,
+    connection,
+):
     """Test the example basic DAG."""
     dag = dagbag.get_dag(dag_id="example_dbt_worflow_with_github")
 
     assert dag is not None
     assert len(dag.tasks) == 3
 
+    sync_dag_to_db(dag)
     dagrun = _create_dagrun(
         dag,
         state=DagRunState.RUNNING,
@@ -551,7 +637,6 @@ def test_example_complete_dbt_workflow_dag(
     seed_files,
     singular_tests_files,
     generic_tests_files,
-    clear_dagruns,
 ):
     """Test the example complete dbt workflow DAG."""
     dag = dagbag.get_dag(dag_id="example_complete_dbt_workflow")
@@ -559,6 +644,7 @@ def test_example_complete_dbt_workflow_dag(
     assert dag is not None
     assert len(dag.tasks) == 5
 
+    sync_dag_to_db(dag)
     dagrun = _create_dagrun(
         dag,
         state=DagRunState.RUNNING,
