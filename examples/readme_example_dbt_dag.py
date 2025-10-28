@@ -6,7 +6,9 @@ This example showcases a basic set of Dbt*Operators
 import datetime as dt
 
 import pendulum
-from airflow import DAG
+
+# from airflow.sdk import DAG in >=3.1
+from airflow.providers.common.compat.sdk import DAG
 
 from airflow_dbt_python.operators.dbt import (
     DbtRunOperator,
