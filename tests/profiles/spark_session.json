@@ -1,6 +1,6 @@
 {
   "conn_type": "spark_connect",
-  "host": "NA",
+  "host": "na",
   "port": 443,
   "schema": "schema_name",
   "extra": {

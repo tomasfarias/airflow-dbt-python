@@ -280,9 +280,11 @@ def test_dbt_seed_with_project_from_s3(
     assert run_result["status"] == RunStatus.Success
 
 
-def test_dbt_seed_with_airflow_connection(dbt_project_file, seed_files, airflow_conns):
+def test_dbt_seed_with_airflow_connection(
+    dbt_project_file, seed_files, dbt_target_airflow_conns
+):
     """Test execution of DbtSeedOperator with an Airflow connection target."""
-    for conn_id in airflow_conns:
+    for conn_id in dbt_target_airflow_conns:
         op = DbtSeedOperator(
             task_id="dbt_task",
             project_dir=dbt_project_file.parent,
@@ -299,14 +301,14 @@ def test_dbt_seed_with_airflow_connection(dbt_project_file, seed_files, airflow_
 
 
 def test_dbt_seed_with_airflow_connection_and_profile(
-    profiles_file, dbt_project_file, seed_files, airflow_conns
+    profiles_file, dbt_project_file, seed_files, dbt_target_airflow_conns
 ):
     """Test execution of DbtSeedOperator with a connection and a profiles file.
 
     An Airflow connection target should still be usable even in the presence of
     profiles file, and vice-versa.
     """
-    all_airflow_conns = airflow_conns + (None,)
+    all_airflow_conns = dbt_target_airflow_conns + (None,)
     target = "test"
 
     for conn_id in all_airflow_conns:

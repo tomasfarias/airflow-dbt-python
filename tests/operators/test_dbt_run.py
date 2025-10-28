@@ -1,10 +1,14 @@
 """Unit test module for DbtRunOperator."""
 
+import datetime as dt
 import json
 from pathlib import Path
+from unittest import mock
 
+import pendulum
 import pytest
 from airflow.exceptions import AirflowException
+from airflow.models.dagrun import DagRun
 from dbt.contracts.results import RunStatus
 
 from airflow_dbt_python.operators.dbt import DbtRunOperator
@@ -69,7 +73,9 @@ class FakeTaskInstance:
         self.xcom[key] = (value, execution_date)
 
 
-def test_dbt_run_non_existent_model(profiles_file, dbt_project_file, model_files):
+def test_dbt_run_non_existent_model(
+    context, profiles_file, dbt_project_file, model_files
+):
     """Test execution of DbtRunOperator with a non-existent model."""
     op = DbtRunOperator(
         task_id="dbt_task",
@@ -79,8 +85,7 @@ def test_dbt_run_non_existent_model(profiles_file, dbt_project_file, model_files
         full_refresh=True,
         do_xcom_push=True,
     )
-
-    execution_results = op.execute({})
+    execution_results = op.execute(context)
 
     assert len(execution_results["results"]) == 0
     assert isinstance(json.dumps(execution_results), str)
@@ -377,10 +382,10 @@ def test_dbt_run_uses_correct_argument_according_to_version():
 
 
 def test_dbt_run_models_with_airflow_connection(
-    dbt_project_file, model_files, airflow_conns
+    dbt_project_file, model_files, dbt_target_airflow_conns
 ):
     """Test execution of DbtRunOperator with an Airflow connection target."""
-    for conn_id in airflow_conns:
+    for conn_id in dbt_target_airflow_conns:
         op = DbtRunOperator(
             task_id="dbt_task",
             project_dir=dbt_project_file.parent,
@@ -397,14 +402,14 @@ def test_dbt_run_models_with_airflow_connection(
 
 
 def test_dbt_run_with_airflow_connection_and_profile(
-    profiles_file, dbt_project_file, model_files, airflow_conns
+    profiles_file, dbt_project_file, model_files, dbt_target_airflow_conns
 ):
     """Test execution of DbtRunOperator with a connection and a profiles file.
 
     An Airflow connection target should still be usable even in the presence of
     profiles file, and vice-versa.
     """
-    all_airflow_conns = airflow_conns + (None,)
+    all_airflow_conns = dbt_target_airflow_conns + (None,)
     target = "test"
 
     for conn_id in all_airflow_conns:

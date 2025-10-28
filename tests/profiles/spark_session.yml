@@ -5,6 +5,6 @@ default:
       type: spark
       method: session
       schema: schema_name
-      host: NA  # not used, but required by `dbt-core`
+      host: "na"  # not used, but required by `dbt-core`
       server_side_parameters:
         "spark.driver.memory": "4g"

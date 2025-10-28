@@ -296,10 +296,10 @@ def test_base_config_create_dbt_profile_with_env_vars(
 
 
 def test_base_config_create_dbt_profile_with_extra_target(
-    profiles_file, dbt_project_file, airflow_conns
+    profiles_file, dbt_project_file, dbt_target_airflow_conns
 ):
     """Test the create_dbt_profile with additional targets."""
-    for conn_id in airflow_conns:
+    for conn_id in dbt_target_airflow_conns:
         config = BaseConfig(
             target=conn_id,
             project_dir=dbt_project_file.parent,
@@ -358,10 +358,10 @@ def test_create_db_specific_dbt_profile_with_extra_target(
 
 
 def test_base_config_create_dbt_profile_with_extra_target_no_profile(
-    dbt_project_file, airflow_conns
+    dbt_project_file, dbt_target_airflow_conns
 ):
     """Test the create_dbt_profile with no project file."""
-    for conn_id in airflow_conns:
+    for conn_id in dbt_target_airflow_conns:
         config = BaseConfig(
             target=conn_id, project_dir=dbt_project_file.parent, profiles_dir=None
         )
@@ -425,7 +425,7 @@ def test_base_config_create_dbt_project_and_profile(profiles_file, dbt_project_f
 
 
 def test_base_config_create_dbt_project_and_profile_with_no_profile(
-    dbt_project_file, airflow_conns
+    dbt_project_file, dbt_target_airflow_conns
 ):
     """Test the create_dbt_project_and_profile with real project file."""
     config = BaseConfig(
@@ -436,7 +436,7 @@ def test_base_config_create_dbt_project_and_profile_with_no_profile(
     with pytest.raises(DbtProfileError):
         config.create_dbt_project_and_profile()
 
-    for conn_id in airflow_conns:
+    for conn_id in dbt_target_airflow_conns:
         config.target = conn_id
 
         hook = DbtConnectionHook.get_db_conn_hook(conn_id=conn_id)
