@@ -10,7 +10,12 @@ from functools import partial
 from pathlib import Path
 from typing import Optional
 
-from airflow.hooks.filesystem import FSHook
+from airflow_dbt_python.utils.version import AIRFLOW_V_3_0_PLUS
+
+if AIRFLOW_V_3_0_PLUS:
+    from airflow.providers.standard.hooks.filesystem import FSHook
+else:
+    from airflow.hooks.filesystem import FSHook
 
 from airflow_dbt_python.hooks.fs import DbtFSHook
 from airflow_dbt_python.utils.url import URL

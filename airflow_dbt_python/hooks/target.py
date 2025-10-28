@@ -24,8 +24,7 @@ from typing import (
     Union,
 )
 
-from airflow.hooks.base import BaseHook
-from airflow.models.connection import Connection
+from airflow.providers.common.compat.sdk import BaseHook, Connection
 
 
 def try_decode_base64(s: str) -> str:
