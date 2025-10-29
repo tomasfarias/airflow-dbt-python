@@ -368,7 +368,7 @@ class BaseConfig:
             and runtime_config
             and not DBT_INSTALLED_GTE_1_10_7
         ):
-            manifest = parse_manifest(
+            manifest = parse_manifest(  # type: ignore
                 runtime_config,
                 write_perf_info=write_perf_info,
                 write=False,
