@@ -205,7 +205,8 @@ def basic_dag(
 
         dbt_seed >> dbt_run >> dbt_test
 
-    sync_dag_to_db(dag)
+    if AIRFLOW_V_3_1_PLUS:
+        sync_dag_to_db(dag)
     return dag
 
 
@@ -315,7 +316,10 @@ def taskflow_dag(
         dbt_seed >> dbt_run >> dbt_test
 
     d = generate_dag()
-    sync_dag_to_db(d)
+
+    if AIRFLOW_V_3_1_PLUS:
+        sync_dag_to_db(d)
+
     return d
 
 
@@ -457,7 +461,8 @@ def target_connection_dag(
 
         dbt_seed >> dbt_run >> dbt_test
 
-    sync_dag_to_db(dag)
+    if AIRFLOW_V_3_1_PLUS:
+        sync_dag_to_db(dag)
     return dag
 
 
@@ -536,7 +541,9 @@ def test_example_basic_dag(
     dbt_run.target = "test"
     dbt_run.profile = "default"
 
-    sync_dag_to_db(dag)
+    if AIRFLOW_V_3_1_PLUS:
+        sync_dag_to_db(dag)
+
     dagrun = _create_dagrun(
         dag,
         state=DagRunState.RUNNING,
@@ -587,7 +594,9 @@ def test_example_dbt_project_in_github_dag(
     assert dag is not None
     assert len(dag.tasks) == 3
 
-    sync_dag_to_db(dag)
+    if AIRFLOW_V_3_1_PLUS:
+        sync_dag_to_db(dag)
+
     dagrun = _create_dagrun(
         dag,
         state=DagRunState.RUNNING,
@@ -639,7 +648,9 @@ def test_example_complete_dbt_workflow_dag(
     assert dag is not None
     assert len(dag.tasks) == 5
 
-    sync_dag_to_db(dag)
+    if AIRFLOW_V_3_1_PLUS:
+        sync_dag_to_db(dag)
+
     dagrun = _create_dagrun(
         dag,
         state=DagRunState.RUNNING,
