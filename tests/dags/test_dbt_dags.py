@@ -33,7 +33,6 @@ def sync_dag_to_db(
     bundle_name: str = "testing",
 ):
     """Sync dags into the database."""
-    from airflow.models.dagbundle import DagBundleModel
     from airflow.models.serialized_dag import SerializedDagModel
     from airflow.serialization.serialized_objects import (
         LazyDeserializedDAG,
@@ -42,8 +41,11 @@ def sync_dag_to_db(
     from airflow.utils.session import create_session
 
     with create_session() as session:
-        session.merge(DagBundleModel(name=bundle_name))
-        session.flush()
+        if AIRFLOW_V_3_1_PLUS:
+            from airflow.models.dagbundle import DagBundleModel
+
+            session.merge(DagBundleModel(name=bundle_name))
+            session.flush()
 
         def _write_dag(dag: DAG) -> SerializedDAG:
             if not SerializedDagModel.has_dag(dag.dag_id):
@@ -189,7 +191,7 @@ def basic_dag(
 
         dbt_seed >> dbt_run >> dbt_test
 
-    if AIRFLOW_V_3_1_PLUS:
+    if AIRFLOW_V_3_0_PLUS:
         sync_dag_to_db(dag)
     return dag
 
@@ -301,7 +303,7 @@ def taskflow_dag(
 
     d = generate_dag()
 
-    if AIRFLOW_V_3_1_PLUS:
+    if AIRFLOW_V_3_0_PLUS:
         sync_dag_to_db(d)
 
     return d
@@ -443,7 +445,7 @@ def target_connection_dag(
 
         dbt_seed >> dbt_run >> dbt_test
 
-    if AIRFLOW_V_3_1_PLUS:
+    if AIRFLOW_V_3_0_PLUS:
         sync_dag_to_db(dag)
     return dag
 
@@ -523,7 +525,7 @@ def test_example_basic_dag(
     dbt_run.target = "test"
     dbt_run.profile = "default"
 
-    if AIRFLOW_V_3_1_PLUS:
+    if AIRFLOW_V_3_0_PLUS:
         sync_dag_to_db(dag)
 
     dagrun = _create_dagrun(
@@ -576,7 +578,7 @@ def test_example_dbt_project_in_github_dag(
     assert dag is not None
     assert len(dag.tasks) == 3
 
-    if AIRFLOW_V_3_1_PLUS:
+    if AIRFLOW_V_3_0_PLUS:
         sync_dag_to_db(dag)
 
     dagrun = _create_dagrun(
@@ -630,7 +632,7 @@ def test_example_complete_dbt_workflow_dag(
     assert dag is not None
     assert len(dag.tasks) == 5
 
-    if AIRFLOW_V_3_1_PLUS:
+    if AIRFLOW_V_3_0_PLUS:
         sync_dag_to_db(dag)
 
     dagrun = _create_dagrun(
