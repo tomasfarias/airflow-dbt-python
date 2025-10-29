@@ -1,9 +1,9 @@
 """Unit test module for DbtGitFSHook."""
 
-import multiprocessing
 import os
 import platform
 import shutil
+import threading
 import typing
 
 import pytest
@@ -343,14 +343,15 @@ def git_server(repo, repo_name):
     backend = DictBackend({repo_name.encode(): repo})
     dul_server = TCPGitServer(backend, b"localhost", 0)
 
-    proc = multiprocessing.Process(target=dul_server.serve)
-    proc.start()
+    server_thread = threading.Thread(target=dul_server.serve)
+    server_thread.start()
 
     server_address, server_port = dul_server.socket.getsockname()
 
     yield server_address, server_port
 
-    proc.terminate()
+    dul_server.shutdown()
+    server_thread.join()
 
 
 @no_git_local_server
