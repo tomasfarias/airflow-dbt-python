@@ -87,6 +87,8 @@ dev = [
     "pytest-mock>=3.14.0",
     "pytest-postgresql>=5",
     "ruff>=0.0.254",
+    # Pinned as Airflow crashes: https://github.com/apache/airflow/issues/57426.
+    "structlog<=25.4",
     "types-PyYAML>=6.0.7",
     "types-freezegun>=1.1.6",
 ]
