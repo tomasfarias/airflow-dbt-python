@@ -12,6 +12,7 @@ from airflow_dbt_python.hooks.dbt import DbtHook
 from airflow_dbt_python.hooks.fs.local import DbtLocalFsHook
 from airflow_dbt_python.hooks.target import DbtConnectionHook, DbtPostgresHook
 from airflow_dbt_python.utils.configs import RunTaskConfig
+from airflow_dbt_python.utils.version import AIRFLOW_V_3_0_PLUS
 
 condition = False
 try:
@@ -48,7 +49,10 @@ def test_dbt_hook_get_s3_remote():
 
 def test_dbt_hook_get_local_fs_remote():
     """Test the correct remote is procured."""
-    from airflow.hooks.filesystem import FSHook
+    if AIRFLOW_V_3_0_PLUS:
+        from airflow.providers.standard.hooks.filesystem import FSHook
+    else:
+        from airflow.hooks.filesystem import FSHook  # type: ignore
 
     hook = DbtHook()
 
