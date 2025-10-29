@@ -313,10 +313,8 @@ def test_dbt_operators_in_taskflow_dag(
     profiles_file,
 ):
     """Assert DAG contains correct dbt operators when running."""
-    if AIRFLOW_V_3_1_PLUS:
+    if AIRFLOW_V_3_0_PLUS:
         dag = taskflow_dag
-    elif AIRFLOW_V_3_0_PLUS:
-        dag = DAG.from_sdk_dag(taskflow_dag)
     else:
         dag = taskflow_dag
 
