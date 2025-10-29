@@ -5,16 +5,17 @@ description = "A collection of Airflow operators, hooks, and utilities to execut
 authors = [{ name = "Tomás Farías Santana", email = "tomas@tomasfarias.dev" }]
 license = "MIT"
 readme = "README.md"
-requires-python = ">=3.9,<3.14"
+requires-python = ">=3.10,<3.14"
 classifiers = [
     "Development Status :: 5 - Production/Stable",
 
     "Intended Audience :: Developers",
 
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+
 ]
 
 dependencies = [
@@ -50,7 +51,7 @@ gcs = [
 ]
 git = [
     "apache-airflow-providers-ssh>=3.0.0",
-    "dulwich>=0.21",
+    "dulwich>=0.24.3",
 ]
 postgres = [
     "dbt-postgres>=1.8.0,<2.0.0",
