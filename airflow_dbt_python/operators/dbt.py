@@ -15,7 +15,7 @@ from airflow.models.xcom import XCOM_RETURN_KEY
 from airflow.providers.common.compat.sdk import BaseOperator
 
 from airflow_dbt_python.utils.enums import LogFormat
-from airflow_dbt_python.utils.version import AIRFLOW_V_3_1_PLUS
+from airflow_dbt_python.utils.version import AIRFLOW_V_3_0_PLUS
 
 if TYPE_CHECKING:
     from dbt.contracts.results import RunResult
@@ -346,7 +346,7 @@ class DbtBaseOperator(BaseOperator):
         serializable_result = self.make_run_results_serializable(
             dbt_results.run_results
         )
-        if AIRFLOW_V_3_1_PLUS:
+        if AIRFLOW_V_3_0_PLUS:
             xcom_push = context["ti"].xcom_push
         else:
             xcom_push = functools.partial(self.xcom_push, context)  # type: ignore
