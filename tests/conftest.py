@@ -219,7 +219,7 @@ def profiles_file_with_env(tmp_path_factory):
     return p
 
 
-@pytest.fixture(scope="session", autouse=True)
+@pytest.fixture(scope="module", autouse=True)
 def airflow_conns(database):
     """Create Airflow connections for testing.
 
@@ -250,11 +250,10 @@ def airflow_conns(database):
         yield ids
 
     with create_session() as session:
-        for conn in connections:
-            session.delete(conn)
+        session.query(Connection).delete()
 
 
-@pytest.fixture(scope="session", autouse=True)
+@pytest.fixture(scope="module")
 def dbt_target_airflow_conns(airflow_conns):
     """Return dbt target connection ids used in testing.
 
