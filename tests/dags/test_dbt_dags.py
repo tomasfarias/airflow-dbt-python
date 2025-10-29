@@ -52,11 +52,11 @@ def sync_dag_to_db(
                 SerializedDagModel.write_dag(
                     LazyDeserializedDAG(data=data), bundle_name, session=session
                 )
+                session.flush()
             return SerializedDAG.from_dict(data)
 
         SerializedDAG.bulk_write_to_db(bundle_name, None, [dag], session=session)
         _ = _write_dag(dag)
-        session.flush()
 
 
 def _create_dagrun(
@@ -393,7 +393,6 @@ def connection(database):
         if existing:
             # Let's clean up any existing connection.
             session.delete(existing)
-            session.commit()
 
         integration_test_conn = Connection(
             conn_id="integration_test_conn",
@@ -408,14 +407,11 @@ def connection(database):
         )
 
         session.add(integration_test_conn)
-        session.commit()
-        session.flush()
 
-        yield conn_id
+    yield conn_id
 
+    with create_session() as session:
         session.delete(integration_test_conn)
-        session.commit()
-        session.flush()
 
 
 @pytest.fixture

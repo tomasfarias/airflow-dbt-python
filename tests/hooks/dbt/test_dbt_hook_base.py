@@ -6,6 +6,7 @@ from unittest import mock
 
 import pytest
 from airflow.exceptions import AirflowNotFoundException
+from airflow.utils.session import create_session
 
 from airflow_dbt_python.hooks.dbt import DbtHook
 from airflow_dbt_python.hooks.fs.local import DbtLocalFsHook
@@ -165,25 +166,21 @@ def no_user_airflow_conn(database):
     uri = f"postgres://{database.host}:{database.port}/public?dbname={database.dbname}"
     conn_id = "dbt_test"
 
-    session = settings.Session()
-    existing = session.query(Connection).filter_by(conn_id=conn_id).first()
-    if existing is not None:
-        # Connections may exist from previous test run.
-        session.delete(existing)
-        session.commit()
+    with create_session() as session:
+        existing = session.query(Connection).filter_by(conn_id=conn_id).first()
+        if existing is not None:
+            # Connections may exist from previous test run.
+            session.delete(existing)
+            session.flush()
 
-    connection = Connection(conn_id=conn_id, uri=uri)
-    session.add(connection)
-
-    session.commit()
+        connection = Connection(conn_id=conn_id, uri=uri)
+        session.add(connection)
 
     with mock.patch.dict(os.environ, {f"AIRFLOW_CONN_{conn_id.upper()}": uri}):
         yield conn_id
 
-    session.delete(connection)
-    session.commit()
-
-    session.close()
+    with create_session() as session:
+        session.delete(connection)
 
 
 def test_dbt_hook_get_target_from_empty_connection(no_user_airflow_conn, database):

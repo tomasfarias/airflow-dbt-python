@@ -239,13 +239,10 @@ def airflow_conns(database):
             if existing is not None:
                 # Connections may exist from previous test run.
                 session.delete(existing)
-                session.commit()
+                session.flush()
             connections.append(Connection(conn_id=conn_id, uri=uri))
 
         session.add_all(connections)
-
-        session.commit()
-        session.flush()
 
     with mock.patch.dict(
         os.environ, zip((f"AIRFLOW_CONN_{id.upper()}" for id in ids), uris)
@@ -255,9 +252,6 @@ def airflow_conns(database):
     with create_session() as session:
         for conn in connections:
             session.delete(conn)
-
-        session.commit()
-        session.flush()
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -307,7 +301,6 @@ def profile_conn_id(request: SubRequest) -> Generator[str, None, None]:
         if existing is not None:
             # Connections may exist from previous test run.
             session.delete(existing)
-            session.commit()
             session.flush()
 
         conn_json_path = Path(__file__).parent / "profiles" / f"{conn_id}.json"
@@ -316,9 +309,6 @@ def profile_conn_id(request: SubRequest) -> Generator[str, None, None]:
 
         session.add(conn)
 
-        session.commit()
-        session.flush()
-
     with mock.patch.dict(
         os.environ, {f"AIRFLOW_CONN_{conn.conn_id.upper()}": conn.get_uri()}
     ):
@@ -326,9 +316,6 @@ def profile_conn_id(request: SubRequest) -> Generator[str, None, None]:
 
     with create_session() as session:
         session.delete(conn)
-
-        session.commit()
-        session.flush()
 
 
 @pytest.fixture(scope="session")
@@ -470,21 +457,16 @@ def gcp_conn_id():
         if existing is not None:
             # Connections may exist from previous test run.
             session.delete(existing)
-            session.commit()
             session.flush()
 
         conn = Connection(conn_id=conn_id, conn_type=GCSHook.conn_type)
 
         session.add(conn)
-        session.commit()
-        session.flush()
 
     yield conn_id
 
     with create_session() as session:
         session.delete(conn)
-        session.commit()
-        session.flush()
 
 
 @pytest.fixture
