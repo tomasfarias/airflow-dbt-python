@@ -9,7 +9,6 @@ import pendulum
 import pytest
 from airflow.models import DagBag, DagModel, DagRun, DagTag
 from airflow.models.dag import DagOwnerAttributes
-from airflow.models.dagrun import get_or_create_dagrun
 from airflow.models.serialized_dag import SerializedDagModel
 from airflow.providers.common.compat.sdk import DAG, DagRunState, TaskInstanceState
 from airflow.utils.session import create_session
