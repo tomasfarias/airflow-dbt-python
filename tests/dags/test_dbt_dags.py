@@ -66,25 +66,9 @@ def _create_dagrun(
     start_date: dt.datetime,
     run_type: DagRunType,
 ) -> DagRun:
-    if AIRFLOW_V_3_1_PLUS:
+    if AIRFLOW_V_3_0_PLUS:
         return parent_dag.test()
 
-    elif AIRFLOW_V_3_0_PLUS:
-        from airflow.utils.types import DagRunTriggeredByType  # type: ignore
-
-        return parent_dag.create_dagrun(  # type: ignore
-            run_id=f"{parent_dag.dag_id}-{logical_date.isoformat()}-RUN",
-            state=state,
-            logical_date=logical_date,
-            data_interval=data_interval,
-            start_date=start_date,
-            conf={},
-            backfill_id=None,
-            creating_job_id=None,
-            run_type=run_type,
-            run_after=dt.datetime(1970, 1, 1, 0, 0, 0, tzinfo=dt.timezone.utc),
-            triggered_by=DagRunTriggeredByType.TIMETABLE,
-        )
     else:
         return parent_dag.create_dagrun(  # type: ignore
             state=state,
