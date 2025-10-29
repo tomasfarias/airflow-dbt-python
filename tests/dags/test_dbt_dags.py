@@ -10,7 +10,7 @@ import pytest
 from airflow.models import DagBag, DagModel, DagRun, DagTag
 from airflow.models.dag import DagOwnerAttributes
 from airflow.models.serialized_dag import SerializedDagModel
-from airflow.providers.common.compat.sdk import DAG, DagRunState, TaskInstanceState
+from airflow.providers.common.compat.sdk import DagRunState, TaskInstanceState
 from airflow.utils.session import create_session
 from airflow.utils.types import DagRunType
 from dbt.contracts.results import RunStatus, TestStatus
@@ -22,7 +22,17 @@ from airflow_dbt_python.operators.dbt import (
     DbtSourceFreshnessOperator,
     DbtTestOperator,
 )
-from airflow_dbt_python.utils.version import AIRFLOW_V_3_0_PLUS, AIRFLOW_V_3_1_PLUS
+from airflow_dbt_python.utils.version import (
+    AIRFLOW_V_3_0,
+    AIRFLOW_V_3_0_PLUS,
+    AIRFLOW_V_3_1_PLUS,
+)
+
+if AIRFLOW_V_3_0:
+    # For some reason Airflow 3.0 cannot use dag.test()
+    from airflow import DAG
+else:
+    from airflow.providers.common.compat.sdk import DAG
 
 DATA_INTERVAL_START = pendulum.datetime(2022, 1, 1, tz="UTC")
 DATA_INTERVAL_END = DATA_INTERVAL_START + dt.timedelta(hours=1)
@@ -33,6 +43,7 @@ def sync_dag_to_db(
     bundle_name: str = "testing",
 ):
     """Sync dags into the database."""
+    from airflow.models.dagbundle import DagBundleModel
     from airflow.models.serialized_dag import SerializedDagModel
     from airflow.serialization.serialized_objects import (
         LazyDeserializedDAG,
@@ -41,11 +52,8 @@ def sync_dag_to_db(
     from airflow.utils.session import create_session
 
     with create_session() as session:
-        if AIRFLOW_V_3_1_PLUS:
-            from airflow.models.dagbundle import DagBundleModel
-
-            session.merge(DagBundleModel(name=bundle_name))
-            session.flush()
+        session.merge(DagBundleModel(name=bundle_name))
+        session.flush()
 
         def _write_dag(dag: DAG) -> SerializedDAG:
             if not SerializedDagModel.has_dag(dag.dag_id):
@@ -68,8 +76,25 @@ def _create_dagrun(
     start_date: dt.datetime,
     run_type: DagRunType,
 ) -> DagRun:
-    if AIRFLOW_V_3_0_PLUS:
+    if AIRFLOW_V_3_1_PLUS:
         return parent_dag.test()
+
+    elif AIRFLOW_V_3_0_PLUS:
+        from airflow.utils.types import DagRunTriggeredByType  # type: ignore
+
+        return parent_dag.create_dagrun(  # type: ignore
+            run_id=f"{parent_dag.dag_id}-{logical_date.isoformat()}-RUN",
+            state=state,
+            logical_date=logical_date,
+            data_interval=data_interval,
+            start_date=start_date,
+            conf={},
+            backfill_id=None,
+            creating_job_id=None,
+            run_type=run_type,
+            run_after=dt.datetime(1970, 1, 1, 0, 0, 0, tzinfo=dt.timezone.utc),
+            triggered_by=DagRunTriggeredByType.TIMETABLE,
+        )
 
     else:
         return parent_dag.create_dagrun(  # type: ignore
@@ -102,9 +127,7 @@ def test_dags_loaded(dagbag):
 @pytest.fixture
 def testing_dag_bundle():
     """Create a DAG bundle for tests."""
-    from airflow_dbt_python.utils.version import AIRFLOW_V_3_1_PLUS
-
-    if AIRFLOW_V_3_1_PLUS:
+    if AIRFLOW_V_3_0_PLUS:
         from airflow.models.dagbundle import DagBundleModel
 
         with create_session() as session:
@@ -131,10 +154,12 @@ def _clear_db():
         session.query(DagModel).delete()
         session.query(SerializedDagModel).delete()
 
-        if AIRFLOW_V_3_1_PLUS:
+        if AIRFLOW_V_3_0_PLUS:
+            from airflow.models.dag_version import DagVersion
             from airflow.models.dagbundle import DagBundleModel
 
             session.query(DagBundleModel).delete()
+            session.query(DagVersion).delete()
 
 
 @pytest.fixture(autouse=True)
@@ -303,7 +328,7 @@ def taskflow_dag(
 
     d = generate_dag()
 
-    if AIRFLOW_V_3_0_PLUS:
+    if AIRFLOW_V_3_1_PLUS:
         sync_dag_to_db(d)
 
     return d
@@ -315,8 +340,8 @@ def test_dbt_operators_in_taskflow_dag(
     profiles_file,
 ):
     """Assert DAG contains correct dbt operators when running."""
-    if AIRFLOW_V_3_0_PLUS:
-        dag = taskflow_dag
+    if AIRFLOW_V_3_0:
+        dag = DAG.from_sdk_dag(taskflow_dag)  # type: ignore
     else:
         dag = taskflow_dag
 
@@ -445,7 +470,7 @@ def target_connection_dag(
 
         dbt_seed >> dbt_run >> dbt_test
 
-    if AIRFLOW_V_3_0_PLUS:
+    if AIRFLOW_V_3_1_PLUS:
         sync_dag_to_db(dag)
     return dag
 
@@ -510,6 +535,9 @@ def test_example_basic_dag(
     """Test the example basic DAG."""
     dag = dagbag.get_dag(dag_id="example_basic_dbt")
 
+    if AIRFLOW_V_3_0:
+        dag = DAG.from_sdk_dag(dag)  # type: ignore
+
     assert dag is not None
     assert len(dag.tasks) == 1
 
@@ -525,7 +553,7 @@ def test_example_basic_dag(
     dbt_run.target = "test"
     dbt_run.profile = "default"
 
-    if AIRFLOW_V_3_0_PLUS:
+    if AIRFLOW_V_3_1_PLUS:
         sync_dag_to_db(dag)
 
     dagrun = _create_dagrun(
@@ -578,8 +606,11 @@ def test_example_dbt_project_in_github_dag(
     assert dag is not None
     assert len(dag.tasks) == 3
 
-    if AIRFLOW_V_3_0_PLUS:
+    if AIRFLOW_V_3_1_PLUS:
         sync_dag_to_db(dag)
+
+    if AIRFLOW_V_3_0:
+        dag = DAG.from_sdk_dag(dag)  # type: ignore
 
     dagrun = _create_dagrun(
         dag,
@@ -632,8 +663,11 @@ def test_example_complete_dbt_workflow_dag(
     assert dag is not None
     assert len(dag.tasks) == 5
 
-    if AIRFLOW_V_3_0_PLUS:
+    if AIRFLOW_V_3_1_PLUS:
         sync_dag_to_db(dag)
+
+    if AIRFLOW_V_3_0:
+        dag = DAG.from_sdk_dag(dag)  # type: ignore
 
     dagrun = _create_dagrun(
         dag,
