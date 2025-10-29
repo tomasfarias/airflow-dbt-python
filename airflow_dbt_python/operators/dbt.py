@@ -349,7 +349,7 @@ class DbtBaseOperator(BaseOperator):
         if AIRFLOW_V_3_1_PLUS:
             xcom_push = context["ti"].xcom_push
         else:
-            xcom_push = functools.partial(self.xcom_push, context)
+            xcom_push = functools.partial(self.xcom_push, context)  # type: ignore
 
         xcom_push(key=XCOM_RETURN_KEY, value=serializable_result)
         for key, artifact in dbt_results.artifacts.items():

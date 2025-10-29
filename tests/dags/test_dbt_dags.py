@@ -86,7 +86,7 @@ def _create_dagrun(
             triggered_by=DagRunTriggeredByType.TIMETABLE,
         )
     else:
-        return parent_dag.create_dagrun(
+        return parent_dag.create_dagrun(  # type: ignore
             state=state,
             execution_date=logical_date,  # type: ignore
             data_interval=data_interval,
