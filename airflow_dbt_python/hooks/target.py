@@ -250,7 +250,7 @@ class DbtConnectionHook(BaseHook, ABC, metaclass=DbtConnectionHookMeta):
             if isinstance(param, DbtConnectionParam):
                 key = param.override_name
                 value = getattr(conn, param.name, param.default)
-                if param.converter:
+                if value and param.converter:
                     value = param.converter(value)
             elif isinstance(param, DbtConnectionConditionParam):
                 key, default = param.resolve(conn)
@@ -273,6 +273,8 @@ class DbtConnectionHook(BaseHook, ABC, metaclass=DbtConnectionHookMeta):
             if isinstance(param, DbtConnectionParam):
                 key = param.override_name
                 value = extra.get(param.name, param.default)
+                if value and param.converter:
+                    value = param.converter(value)
             elif isinstance(param, DbtConnectionConditionParam):
                 key, default = param.resolve(conn)
                 value = extra.get(param.name, default)
