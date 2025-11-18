@@ -190,7 +190,7 @@ wheels = [
 
 [[package]]
 name = "airflow-dbt-python"
-version = "3.2.1"
+version = "3.2.2"
 source = { virtual = "." }
 dependencies = [
     { name = "apache-airflow" },
@@ -270,7 +270,7 @@ docs = [
 [package.metadata]
 requires-dist = [
     { name = "apache-airflow", marker = "python_full_version < '3.12'", specifier = ">=2.8,<4.0" },
-    { name = "apache-airflow", marker = "python_full_version == '3.12.*'", specifier = ">=3.0,<4.0" },
+    { name = "apache-airflow", marker = "python_full_version == '3.12.*'", specifier = ">=2.9,<4.0" },
     { name = "apache-airflow", marker = "python_full_version >= '3.13'", specifier = ">=3.1,<4.0" },
     { name = "apache-airflow-providers-amazon", marker = "extra == 'airflow-providers'", specifier = ">=3.0.0" },
     { name = "apache-airflow-providers-amazon", marker = "extra == 's3'", specifier = ">=3.0.0" },
