@@ -35,18 +35,14 @@ jobs:
           - '3.0.6'
           - '2.10.4'
         dbt-version:
-          - '1.10.13'
-          - '1.9.10'
+          - '1.11.2'
+          - '1.10.17'
         exclude:
           # Airflow added 3.13 support in >=3.1
           - airflow-version: '3.0.6'
             python-version: '3.13'
 
           - airflow-version: '2.10.4'
-            python-version: '3.13'
-
-          # Dbt added 3.13 support in >=1.10
-          - dbt-version: '1.9.10'
             python-version: '3.13'
 
     runs-on: ubuntu-latest
@@ -105,7 +101,7 @@ jobs:
 
       - name: Static type checking with mypy
         # We only run mypy on the latest supported versions of Airflow & dbt,
-        if: matrix.python-version == '3.13' && matrix.airflow-version == '3.1.1' && matrix.dbt-version == '1.10.13'
+        if: matrix.python-version == '3.13' && matrix.airflow-version == '3.1.1' && matrix.dbt-version == '1.11.12'
         run: uv run mypy .
 
       - name: Code formatting with ruff
