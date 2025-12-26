@@ -178,6 +178,7 @@ class BaseConfig:
     upgrade: bool = False
 
     require_model_names_without_spaces: bool = False
+    require_ref_searches_node_package_before_root: bool = False
     exclude_resource_types: list[str] = dataclasses.field(
         default_factory=list, repr=False
     )
