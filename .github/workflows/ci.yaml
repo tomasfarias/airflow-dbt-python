@@ -7,7 +7,7 @@ on:
       - '**.py'
       - 'pyproject.toml'
       - 'uv.lock'
-      - 'ci.yaml'
+      - '**/ci.yaml'
       - '!airflow_dbt_python/__version__.py'
     tags:
       - "v*"
@@ -18,7 +18,7 @@ on:
       - '**.py'
       - 'pyproject.toml'
       - 'uv.lock'
-      - 'ci.yaml'
+      - '**/ci.yaml'
       - '!airflow_dbt_python/__version__.py'
 
 jobs:
