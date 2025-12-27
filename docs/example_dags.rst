@@ -4,7 +4,7 @@ Example DAGs
 This section contains a few DAGs showing off some dbt pipelines to get you going.
 
 .. warning::
-   All example DAGs are tested against against ``apache-airflow==2.2.5``. Some changes, like modifying ``import`` statements or changing types, may be required for them to work in environments running other versions of Airflow.
+   All example DAGs are tested against a subset of *Airflow* versions. Some changes, like modifying ``import`` statements or changing types, may be required for them to work in environments running other versions of *Airflow*.
 
 Basic DAG
 ^^^^^^^^^

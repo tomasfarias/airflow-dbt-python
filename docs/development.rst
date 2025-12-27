@@ -41,16 +41,18 @@ The additional extras install dependencies required for testing. If testing a sp
 Support for different versions of *Airflow*
 -------------------------------------------
 
-*airflow-dbt-python* supports and is tested with multiple versions of Airflow; as a general rule, besides the latest version of Airflow, we test *airflow-dbt-python* against the latest version available in `AWS MWAA <https://aws.amazon.com/managed-workflows-for-apache-airflow/>`_, which usually lags behind a few minor versions. We are open to patches to improve backwards compatibility as long as they don't increase maintenance load significantly.
+*airflow-dbt-python* is tested against multiple versions of *Airflow*; as a general rule, besides the latest version of Airflow, we test *airflow-dbt-python* against the latest version available in `AWS MWAA <https://aws.amazon.com/managed-workflows-for-apache-airflow/>`_, which usually lags behind a few minor versions.
 
-If you wish to install a different version of Airflow for testing you may skip the *airflow-providers* extras of the previous section and use *pip* instead to install any versions of *apache-airflow* and required providers.
+We are open to patches to improve backwards compatibility as long as they don't increase maintenance load significantly.
+
+If you wish to install a different version of *Airflow* for testing you may skip the *airflow-providers* extras of the previous section and use *pip* instead to install any versions of *apache-airflow* and required providers.
 
 Modifying dependencies
 ----------------------
 
-Apache Airflow is a package of significant size that requires a lot of dependencies. Together with *dbt-core*, it's common to find dependency conflicts all over the place. Ultimately, we allow users to figure these issues out themselves, as most of the dependency conflicts are harmless: We do not interact with the *dbt* CLI, so any conflicts with CLI-specific packages can be safely ignored, but these requirements are not optional for *dbt-core*.
+*Apache Airflow* is a package of significant size that requires a lot of dependencies. Together with *dbt-core*, it's common to find dependency conflicts all over the place. Ultimately, we allow users to figure these issues out themselves, as most of the dependency conflicts are harmless: We do not interact with the *dbt* CLI, so any conflicts with CLI-specific packages can be safely ignored, but these requirements are not optional for *dbt-core*.
 
-All being said, this presents a problem when we try to add dependencies or modify existing ones. Grabbing a constraints file from `Airflow <https://github.com/apache/airflow>`_ and adding it as an optional group in ``pyproject.toml`` can be a useful strategy.
+All being said, this presents a problem when we try to add dependencies or modify existing ones. Grabbing a constraints file from `*Airflow* <https://github.com/apache/airflow>`_ and adding it as an optional group in ``pyproject.toml`` can be a useful strategy.
 
 Pre-commit hooks
 ----------------
@@ -86,12 +88,12 @@ Tests are available for all operators, hooks, and utilities. That being said, on
 .. note::
    Unit tests (and *airflow-dbt-python*) assume *dbt* works correctly and do not assert the behavior of the *dbt* commands in depth.
 
-Testing specific requirements
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Requirements
+^^^^^^^^^^^^
 
 Unit tests interact with a `PostgreSQL <https://www.postgresql.org/>`_ database as a target to run dbt commands. This requires *PostgreSQL* to be installed in your local environment. Installation instructions for all major platforms can be found `here <https://www.postgresql.org/download/>`_.
 
-An Airflow database needs to be initialized in your local environment. This requires choosing a location for it, via the ``AIRFLOW_HOME`` environment variable. The same directory where *airflow-dbt-python* was cloned to can be used for this:
+An *Airflow* database needs to be initialized in your local environment. This requires choosing a location for it, via the ``AIRFLOW_HOME`` environment variable. The same directory where *airflow-dbt-python* was cloned to can be used for this:
 
 .. code-block:: shell
 
