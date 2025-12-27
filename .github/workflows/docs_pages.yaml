@@ -8,28 +8,39 @@ jobs:
   build-docs:
     runs-on: ubuntu-latest
     steps:
-    - name: Checkout
-      uses: actions/checkout@v6
-      with:
-        fetch-depth: 0
+      - name: Harden Runner
+        uses: step-security/harden-runner@v2.14.0
+        with:
+          egress-policy: audit
+          allowed-endpoints: >
+            files.pythonhosted.org:443
+            github.com:443
+            release-assets.githubusercontent.com:443
+            api.github.com:443
+            pypi.org:443
 
-    - name: Set up Python '3.13'
-      uses: actions/setup-python@v6
-      with:
-        python-version: '3.13'
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
 
-    - name: Install uv and set the python version
-      uses: astral-sh/setup-uv@v7
-      with:
-        python-version: ${{ matrix.python-version }}
+      - name: Set up Python '3.13'
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
 
-    - name: Install airflow-dbt-python with uv
-      run: uv sync --all-extras --group docs
+      - name: Install uv and set the python version
+        uses: astral-sh/setup-uv@v7
+        with:
+          python-version: ${{ matrix.python-version }}
 
-    - name: Install Graphviz
-      run: sudo apt-get install graphviz
+      - name: Install airflow-dbt-python with uv
+        run: uv sync --all-extras --group docs
 
-    - name: Build documentation
-      run: |
-        cd docs/
-        uv run python -m sphinx -T -b dirhtml -d _build/doctrees . html
+      - name: Install Graphviz
+        run: sudo apt-get install graphviz
+
+      - name: Build documentation
+        run: |
+          cd docs/
+          uv run python -m sphinx -T -b dirhtml -d _build/doctrees . html
