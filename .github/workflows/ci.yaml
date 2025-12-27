@@ -33,7 +33,14 @@ jobs:
           - '3.11'
           - '3.10'
         airflow-version:
+          # Latest release as of 2025-12-27
+          # See: https://airflow.apache.org/docs/apache-airflow/stable/release_notes.html
           - '3.1.5'
+          # GCP Cloud Composer latest as of 2025-12-27
+          # See: https://docs.cloud.google.com/composer/docs/composer-versions
+          - '3.1.0'
+          # AWS MWAA latest as of 2025-12-27
+          # See: https://docs.aws.amazon.com/mwaa/latest/userguide/airflow-versions.html
           - '3.0.6'
         dbt-version:
           - '1.11.2'
@@ -46,7 +53,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@v2.10.4
+        uses: step-security/harden-runner@v2.14.0
         with:
           egress-policy: block
           allowed-endpoints: >
@@ -74,16 +81,17 @@ jobs:
           sudo apt-get update
           sudo apt-get install --yes --no-install-recommends postgresql
 
-      - uses: actions/checkout@v4.2.2
+      - uses: actions/checkout@v6
+
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v5.4.0
+        uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python-version }}
 
       - name: Install uv and set the python version
-        uses: astral-sh/setup-uv@v5
+        uses: astral-sh/setup-uv@v7
         with:
-          version: 0.7.2
+          version: 0.9.18
           python-version: ${{ matrix.python-version }}
 
       - name: Install Airflow & dbt
@@ -130,7 +138,7 @@ jobs:
 
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@v2.10.4
+        uses: step-security/harden-runner@v2.14.0
         with:
           egress-policy: block
           allowed-endpoints: >
@@ -139,15 +147,15 @@ jobs:
             api.github.com:443
             pypi.org:443
 
-      - uses: actions/checkout@v4.2.2
-      - uses: actions/setup-python@v5.4.0
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v7
         with:
-          python-version: '3.12'
+          python-version: '3.13'
 
       - name: Install uv and set the python version
-        uses: astral-sh/setup-uv@v5
+        uses: astral-sh/setup-uv@v7
         with:
-          version: 0.7.2
+          version: 0.9.18
           python-version: ${{ matrix.python-version }}
 
       - name: Install airflow-dbt-python with uv
@@ -190,3 +198,42 @@ jobs:
           minColorRange: 50
           maxColorRange: 90
           valColorRange: ${{ env.total }}
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: test
+    if: startsWith(github.ref, 'refs/tags/v')
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+
+      - name: Install uv and set the python version
+        uses: astral-sh/setup-uv@v7
+        with:
+          version: 0.9.18
+          python-version: 3.13
+
+      - name: Install airflow-dbt-python with uv
+        run: uv sync --no-dev
+
+      - name: Build airflow-dbt-python with uv
+        run: uv build
+
+      - name: Set prerelease variable
+        run: echo "IS_PRERELEASE=$(if $(uv version --short | grep -qP '^[0-9]+\.[0-9]+\.[0-9]+$'); then echo 'false'; else echo 'true'; fi)" >> $GITHUB_ENV
+
+      - name: Set release git tag
+        run: echo "RELEASE_TAG=${{ github.ref_name }}" >> $GITHUB_ENV
+
+      - name: Check tag matches package version
+        run: if [[ "$(uv version --short)" == ${RELEASE_TAG/v/} ]]; then exit 0; else exit 1; fi
+
+      - name: Release new tag
+        uses: softprops/action-gh-release@v1
+        with:
+          prerelease: ${{ fromJSON(env.IS_PRERELEASE) }}
+          token: ${{ secrets.GH_DEPLOY_TOKEN }}
+          files: |
+            dist/*
