@@ -10,23 +10,23 @@ Requirements
 
 Before using *airflow-dbt-python*, ensure you meet the following requirements:
 * A *dbt* project using `dbt-core <https://pypi.org/project/dbt-core/>`_ version 1.8 or later.
-* An Airflow environment using version 2.8 or later.
+* An *Airflow* environment using version 3.0 or later.
 
-  * If using any managed service, like AWS MWAA or GCP Cloud Composer 2/3, ensure your environment is created with a supported version of Airflow.
-  * If self-hosting, Airflow installation instructions can be found in their `official documentation <https://airflow.apache.org/docs/apache-airflow/stable/installation/index.html>`_.
+  * If using any managed *Airflow* service, like `AWS MWAA <https://aws.amazon.com/managed-workflows-for-apache-airflow/>`_ or `GCP Cloud Composer <https://cloud.google.com/composer>`_, ensure your environment is created with a supported version of *Airflow*.
+  * If self-hosting, *Airflow* installation instructions can be found in their `official documentation <https://airflow.apache.org/docs/apache-airflow/stable/installation/index.html>`_.
 
-* Running Python 3.9 or later in your Airflow environment.
+* Python 3.10 or later.
 
 .. warning::
-   Even though we don't impose any upper limits on versions of Airflow and *dbt*, it's possible that new versions are not supported immediately after release, particularly for *dbt*. We recommend testing the latest versions before upgrading and `reporting any issues <https://github.com/tomasfarias/airflow-dbt-python/issues/new/choose>`_.
+   New versions of *Airflow* and *dbt* may introduce breaking changes. We recommend testing any new versions of *Airflow* and *dbt* before upgrading production systems; Please `report any issues <https://github.com/tomasfarias/airflow-dbt-python/issues/new/choose>`_ that may arise during testing so they can be addressed.
 
 .. note::
-   Older versions of Airflow and *dbt* may work with *airflow-dbt-python*, although we cannot guarantee this. Our testing pipeline runs the latest *dbt-core* with the latest Airflow release, and the latest version supported by `AWS MWAA <https://aws.amazon.com/managed-workflows-for-apache-airflow/>`_ and `GCP Cloud Composer 2/3 <https://aws.amazon.com/managed-workflows-for-apache-airflow/>`_.
+   We only test *airflow-dbt-python* against a limited set of versions of *Airflow* and *dbt*, and try to keep up with the latest releases. For *Airflow*, our policy is to cover with tests the latest release of *Airflow*, the latest version available in `GCP Cloud Composer <https://docs.cloud.google.com/composer/docs/composer-versions>`_, and the latest version available in `AWS MWAA <https://docs.aws.amazon.com/mwaa/latest/userguide/airflow-versions>`_. For *dbt*, our policy is to cover the last two minor versions.
 
 Installation
 ------------
 
-Your installation will vary according to your specific Airflow environment setup. These instructions cover a general approach by installing from PyPI or the GitHub repository, and how to install it in AWS MWAA. Other serviced offerings may require different steps, check the documentation of your managed service.
+Your installation will vary according to your specific Airflow environment setup. These instructions cover installing from PyPI, building the GitHub repository directly, installing in AWS MWAA, and installing in GCP Cloud Composer. Other serviced offerings may require different steps, check the documentation of your managed service.
 
 From PyPI
 ^^^^^^^^^
@@ -62,24 +62,18 @@ Building from source
    git clone https://github.com/tomasfarias/airflow-dbt-python.git
    cd airflow-dbt-python
 
-And installing with *pip*:
+And build with *uv*:
 
 .. code-block:: shell
 
-   pip install .
+   uv build
 
-Optionally, any *dbt* adapters can be installed by specifying extras:
+In AWS MWAA
+^^^^^^^^^^^
 
-.. code-block:: shell
+Add *airflow-dbt-python* to your ``requirements.txt`` file and edit your *Airflow* environment to use this new ``requirements.txt`` file, or upload it as a plugin.
 
-   pip install .[postgres, redshift, bigquery, snowflake]
-
-Installing in MWAA
-^^^^^^^^^^^^^^^^^^
-
-*airflow-dbt-python* can be installed in an Airflow environment managed by AWS via their `Managed Workflows for Apache Airflow <https://aws.amazon.com/managed-workflows-for-apache-airflow/>`_ service.
-
-To do so, include *airflow-dbt-python* in the *requirements.txt* file provided to MWAA, for example:
+To do so, include *airflow-dbt-python* in the ``requirements.txt`` file provided to AWS MWAA, for example:
 
 .. code-block:: shell
    :caption: requirements.txt
@@ -109,6 +103,21 @@ The wheel file can now be added to your *plugins.zip*, and the requirements can 
    :caption: requirements.txt
 
    /usr/local/airflow/plugins/airflow_dbt_python-X.Y.Z-py3-none-any.whl
+
+In GCP Cloud Composer
+^^^^^^^^^^^^^^^^^^^^^
+
+Add *airflow-dbt-python* to your PyPI packages list.
+
+Refer to the `GCP Cloud Composer documentation <https://cloud.google.com/composer/docs/composer-3/install-python-dependencies#install-pypi>`_ on how to do this.
+
+In other managed services
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+*airflow-dbt-python* should be compatible with most or all *Airflow* managed services. Consult the documentation specific to your provider.
+
+If you notice an issue when installing *airflow-dbt-python* in a specific managed service, please open an `issue <https://github.com/tomasfarias/airflow-dbt-python/issues/new/choose>`_.
+
 
 Accessing a *dbt* project
 -------------------------
