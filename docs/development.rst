@@ -38,14 +38,19 @@ The additional extras install dependencies required for testing. If testing a sp
 
    uv pip install -e .
 
-Support for different versions of *Airflow*
--------------------------------------------
+Supported *Airflow* versions
+----------------------------
 
-*airflow-dbt-python* is tested against multiple versions of *Airflow*; as a general rule, besides the latest version of Airflow, we test *airflow-dbt-python* against the latest version available in `AWS MWAA <https://aws.amazon.com/managed-workflows-for-apache-airflow/>`_, which usually lags behind a few minor versions.
+*airflow-dbt-python* is tested against multiple versions of *Airflow*; as a policy, besides the latest version of Airflow, we test *airflow-dbt-python* against the latest version available in `AWS MWAA <https://docs.aws.amazon.com/mwaa/latest/userguide/airflow-versions>`_, and the latest version available in `GCP Cloud Composer <https://docs.cloud.google.com/composer/docs/composer-versions>`_.
 
 We are open to patches to improve backwards compatibility as long as they don't increase maintenance load significantly.
 
 If you wish to install a different version of *Airflow* for testing you may skip the *airflow-providers* extras of the previous section and use *pip* instead to install any versions of *apache-airflow* and required providers.
+
+Supported *dbt* versions
+----------------------------
+
+*airflow-dbt-python* is tested against multiple versions of *dbt*; as a policy, we cover the latest two minor versions with tests.
 
 Modifying dependencies
 ----------------------
@@ -91,7 +96,7 @@ Tests are available for all operators, hooks, and utilities. That being said, on
 Requirements
 ^^^^^^^^^^^^
 
-Unit tests interact with a `PostgreSQL <https://www.postgresql.org/>`_ database as a target to run dbt commands. This requires *PostgreSQL* to be installed in your local environment. Installation instructions for all major platforms can be found `here <https://www.postgresql.org/download/>`_.
+Unit tests interact with a `PostgreSQL <https://www.postgresql.org/>`_ database as a target to run *dbt* commands. This requires *PostgreSQL* to be installed in your local environment. Installation instructions for all major platforms can be found `here <https://www.postgresql.org/download/>`_.
 
 An *Airflow* database needs to be initialized in your local environment. This requires choosing a location for it, via the ``AIRFLOW_HOME`` environment variable. The same directory where *airflow-dbt-python* was cloned to can be used for this:
 
