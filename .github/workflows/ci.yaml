@@ -38,7 +38,9 @@ jobs:
           - '3.1.5'
           # GCP Cloud Composer latest as of 2025-12-27
           # See: https://docs.cloud.google.com/composer/docs/composer-versions
-          - '3.1.0'
+          # TODO: Uncomment once 'SUPERVISOR_COMMS' import bug is figured out
+          # This is fixed in later versions of Airflow.
+          # - '3.1.0'
           # AWS MWAA latest as of 2025-12-27
           # See: https://docs.aws.amazon.com/mwaa/latest/userguide/airflow-versions.html
           - '3.0.6'
