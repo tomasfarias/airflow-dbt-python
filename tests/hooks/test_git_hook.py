@@ -331,7 +331,9 @@ def repo(repo_dir, dbt_project_file, test_files, profiles_file, repo_branch):
 
         repo.get_worktree().stage(f"{test_file.parent.name}/{test_file.name}")
 
-    repo.do_commit(b"Test first commit", committer=b"Test user <test@user.com>")
+    repo.get_worktree().commit(
+        b"Test first commit", committer=b"Test user <test@user.com>"
+    )
 
     yield repo
 
