@@ -51,7 +51,7 @@ gcs = [
 ]
 git = [
     "apache-airflow-providers-ssh>=3.0.0",
-    "dulwich>=0.24.3",
+    "dulwich>=1.0.0",
 ]
 postgres = [
     "dbt-postgres>=1.8.0,<2.0.0",
