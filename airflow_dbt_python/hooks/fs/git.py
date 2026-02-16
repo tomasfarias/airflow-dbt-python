@@ -93,7 +93,12 @@ class DbtGitFSHook(SSHHook, DbtFSHook):
             if self.upload_filter(f) is False:
                 continue
 
+        # Starting from dulwich version 1.0.0, stage is an attribute of WorkTree class  
+        try:
             repo.stage(str(f.relative_to(source)))
+        except AttributeError:
+            repo.get_worktree().stage(str(f.relative_to(source)))
+
 
         ts = dt.datetime.now(dt.timezone.utc)
         repo.do_commit(
