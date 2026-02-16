@@ -93,7 +93,7 @@ class DbtGitFSHook(SSHHook, DbtFSHook):
             if self.upload_filter(f) is False:
                 continue
 
-        repo.get_worktree().stage(str(f.relative_to(source)))
+            repo.get_worktree().stage([str(f.relative_to(source))])
 
         ts = dt.datetime.now(dt.timezone.utc)
         repo.get_worktree().commit(

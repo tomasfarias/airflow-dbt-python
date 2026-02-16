@@ -344,7 +344,7 @@ def repo(repo_dir, dbt_project_file, test_files, profiles_file, repo_branch):
 def git_server(repo, repo_name):
     """A testing local TCP git server."""
     backend = DictBackend({repo_name.encode(): repo})
-    dul_server = TCPGitServer(backend, b"localhost", 0)
+    dul_server = TCPGitServer(backend, "localhost", 0)
 
     server_thread = threading.Thread(target=dul_server.serve)
     server_thread.start()
@@ -354,6 +354,8 @@ def git_server(repo, repo_name):
     yield server_address, server_port
 
     dul_server.shutdown()
+    dul_server.server_close()
+
     server_thread.join()
 
 
