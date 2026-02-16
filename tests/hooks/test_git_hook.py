@@ -317,18 +317,19 @@ def repo_dir(tmp_path):
 def repo(repo_dir, dbt_project_file, test_files, profiles_file, repo_branch):
     """Initialize a git repo with some dbt test files."""
     repo = Repo.init(repo_dir, default_branch=repo_branch)
+
     shutil.copyfile(dbt_project_file, repo_dir / "dbt_project.yml")
-    repo.stage("dbt_project.yml")
+    repo.get_worktree().stage("dbt_project.yml")
 
     shutil.copyfile(profiles_file, repo_dir / "profiles.yml")
-    repo.stage("profiles.yml")
+    repo.get_worktree().stage("profiles.yml")
 
     for test_file in test_files:
         remote_subdir = repo_dir / test_file.parent.name
         remote_subdir.mkdir(exist_ok=True)
         shutil.copyfile(test_file, remote_subdir / test_file.name)
 
-        repo.stage(f"{test_file.parent.name}/{test_file.name}")
+        repo.get_worktree().stage(f"{test_file.parent.name}/{test_file.name}")
 
     repo.do_commit(b"Test first commit", committer=b"Test user <test@user.com>")
 
