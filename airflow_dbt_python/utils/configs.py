@@ -177,33 +177,34 @@ class BaseConfig:
     static: bool = False
     upgrade: bool = False
 
-    require_model_names_without_spaces: bool = False
-    require_ref_searches_node_package_before_root: bool = False
     exclude_resource_types: list[str] = dataclasses.field(
         default_factory=list, repr=False
     )
 
-    # legacy behaviors - https://github.com/dbt-labs/dbt-core/blob/main/docs/guides/behavior-change-flags.md
+    # Behavior change flags
+    # See: https://docs.getdbt.com/reference/global-configs/behavior-changes#behavior-change-flags
+    require_all_warnings_handled_by_warn_error: Optional[bool] = None
     require_batched_execution_for_custom_microbatch_strategy: Optional[bool] = None
-    require_event_names_in_deprecations: Optional[bool] = None
     require_explicit_package_overrides_for_builtin_materializations: Optional[bool] = (
         None
     )
-    require_resource_names_without_spaces: Optional[bool] = None
-    source_freshness_run_project_hooks: Optional[bool] = None
-    skip_nodes_if_on_run_start_fails: Optional[bool] = None
-    state_modified_compare_more_unrendered_values: Optional[bool] = None
-    state_modified_compare_vars: Optional[bool] = None
-    require_yaml_configuration_for_mf_time_spines: Optional[bool] = None
-    require_nested_cumulative_type_params: Optional[bool] = None
-    validate_macro_args: Optional[bool] = None
-    require_all_warnings_handled_by_warn_error: Optional[bool] = None
     require_generic_test_arguments_property: Optional[bool] = None
+    require_nested_cumulative_type_params: Optional[bool] = None
+    require_ref_searches_node_package_before_root: Optional[bool] = None
+    require_resource_names_without_spaces: Optional[bool] = None
+    require_unique_project_resource_names: Optional[bool] = None
+    require_valid_schema_from_generate_schema_name: Optional[bool] = None
+    require_yaml_configuration_for_mf_time_spines: Optional[bool] = None
+    restrict_direct_pg_catalog_access: Optional[bool] = None
+    skip_nodes_if_on_run_start_fails: Optional[bool] = None
+    source_freshness_run_project_hooks: Optional[bool] = None
+    state_modified_compare_more_unrendered_values: Optional[bool] = None
+    validate_macro_args: Optional[bool] = None
 
     def __post_init__(self):
         """Post initialization actions for a dbt configuration."""
         self.vars = parse_yaml_args(self.vars)
-        self.set_flags_from_dbt_project()
+        self.set_flags_from_dbt_project_file()
         self.set_mutually_exclusive_attributes()
 
     def set_mutually_exclusive_attributes(self):
@@ -260,7 +261,7 @@ class BaseConfig:
             else:
                 setattr(self, attr, not negative_value)
 
-    def set_flags_from_dbt_project(self):
+    def set_flags_from_dbt_project_file(self):
         """Attempt to load configured flags from a project configuration file.
 
         Dbt allows flags to be set in the configuration file. Since we create a project
