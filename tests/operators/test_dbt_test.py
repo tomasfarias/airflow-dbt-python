@@ -248,3 +248,77 @@ def test_dbt_test_uses_correct_argument_according_to_version():
     assert getattr(op, "models", None) is None
     assert op.selector == "a-selector"
     assert getattr(op, "selector_name", None) is None
+
+
+GENERIC_TESTS_WITH_ARGUMENTS = """
+version: 2
+
+models:
+  - name: model_2
+    columns:
+      - name: field1
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['123', '456']
+"""
+
+
+@pytest.fixture(scope="function")
+def generic_tests_files_with_arguments(model_files, dbt_project_dir):
+    """Create a dbt generic test YAML file."""
+    d = dbt_project_dir / "models" / "new"
+    d.mkdir(exist_ok=True, parents=True)
+
+    schema = d / "schema.yml"
+    schema.write_text(GENERIC_TESTS_WITH_ARGUMENTS)
+
+    return [schema]
+
+
+@pytest.fixture(scope="function")
+def dbt_project_file_with_arguments_flag(dbt_project_dir, logs_dir, request):
+    """Create a test dbt_project.yml file with flag to require arguments."""
+    p = dbt_project_dir / "dbt_project.yml"
+    contents = """
+name: test
+profile: default
+config-version: 2
+version: 1.0.0
+flags:
+    require_generic_test_arguments_property: true
+"""
+    p.write_text(contents)
+
+    return p
+
+
+def test_dbt_test_generic_tests_with_arguments(
+    profiles_file,
+    dbt_project_file_with_arguments_flag,
+    generic_tests_files_with_arguments,
+    hook,
+):
+    """Test a dbt test operator for a generic test with arguments.
+
+    Since the require_generic_test_arguments_property flag is enabled, this should pass.
+    """
+    hook.run_dbt_task(
+        "run",
+        project_dir=dbt_project_file_with_arguments_flag.parent,
+        profiles_dir=profiles_file.parent,
+    )
+
+    op = DbtTestOperator(
+        task_id="dbt_task",
+        project_dir=dbt_project_file_with_arguments_flag.parent,
+        profiles_dir=profiles_file.parent,
+        generic=True,
+    )
+    results = op.execute({})
+
+    assert results["args"]["generic"] is True
+    assert len(results["results"]) == 2
+    for test_result in results["results"]:
+        assert test_result["status"] == TestStatus.Pass
