@@ -184,23 +184,26 @@ class BaseConfig:
     )
 
     # legacy behaviors - https://github.com/dbt-labs/dbt-core/blob/main/docs/guides/behavior-change-flags.md
-    require_batched_execution_for_custom_microbatch_strategy: bool = False
-    require_event_names_in_deprecations: bool = False
-    require_explicit_package_overrides_for_builtin_materializations: bool = True
-    require_resource_names_without_spaces: bool = True
-    source_freshness_run_project_hooks: bool = True
-    skip_nodes_if_on_run_start_fails: bool = False
-    state_modified_compare_more_unrendered_values: bool = False
-    state_modified_compare_vars: bool = False
-    require_yaml_configuration_for_mf_time_spines: bool = False
-    require_nested_cumulative_type_params: bool = False
-    validate_macro_args: bool = False
-    require_all_warnings_handled_by_warn_error: bool = False
-    require_generic_test_arguments_property: bool = False
+    require_batched_execution_for_custom_microbatch_strategy: Optional[bool] = None
+    require_event_names_in_deprecations: Optional[bool] = None
+    require_explicit_package_overrides_for_builtin_materializations: Optional[bool] = (
+        None
+    )
+    require_resource_names_without_spaces: Optional[bool] = None
+    source_freshness_run_project_hooks: Optional[bool] = None
+    skip_nodes_if_on_run_start_fails: Optional[bool] = None
+    state_modified_compare_more_unrendered_values: Optional[bool] = None
+    state_modified_compare_vars: Optional[bool] = None
+    require_yaml_configuration_for_mf_time_spines: Optional[bool] = None
+    require_nested_cumulative_type_params: Optional[bool] = None
+    validate_macro_args: Optional[bool] = None
+    require_all_warnings_handled_by_warn_error: Optional[bool] = None
+    require_generic_test_arguments_property: Optional[bool] = None
 
     def __post_init__(self):
         """Post initialization actions for a dbt configuration."""
         self.vars = parse_yaml_args(self.vars)
+        self.set_flags_from_dbt_project()
         self.set_mutually_exclusive_attributes()
 
     def set_mutually_exclusive_attributes(self):
@@ -256,6 +259,46 @@ class BaseConfig:
                 setattr(self, negative_attr, not positive_value)
             else:
                 setattr(self, attr, not negative_value)
+
+    def set_flags_from_dbt_project(self):
+        """Attempt to load configured flags from a project configuration file.
+
+        Dbt allows flags to be set in the configuration file. Since we create a project
+        here, we must attempt to load them when they are set.
+
+        Important to keep in mind dbt's precedence rules and not override anything
+        passed as an argument or set in an environment variable.
+        """
+        if not self.project_dir:
+            return
+
+        dbt_project_path = Path(self.project_dir) / "dbt_project.yml"
+        if dbt_project_path.exists() is False:
+            dbt_project_path = Path(self.project_dir) / "dbt_project.yaml"
+            if dbt_project_path.exists() is False:
+                return
+
+        try:
+            with open(dbt_project_path) as dbt_project_yaml:
+                yaml = dbt_project_yaml.read()
+                contents = yaml_helper.load_yaml_text(yaml) or {}
+        except Exception:
+            return
+
+        if "flags" not in contents:
+            return
+
+        for flag_name, flag_value in contents["flags"].items():
+            current_value = getattr(self, flag_name, None)
+            env_value = os.getenv(f"DBT_{flag_name.upper()}", None)
+
+            if current_value is not None or env_value is not None:
+                # According to dbt config precedence rules, a value passed as argument
+                # or in the environment wins over values set in dbt project config.
+                # https://docs.getdbt.com/reference/global-configs/project-flags#config-precedence
+                continue
+
+            setattr(self, flag_name, flag_value)
 
     def __getattribute__(self, item: str):
         """Dbt 1.5+ uses uppercase attributes, let's handle this."""
