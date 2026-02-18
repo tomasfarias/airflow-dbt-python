@@ -451,3 +451,58 @@ def test_base_config_create_dbt_project_and_profile_with_no_profile(
         target = profile.to_target_dict()
         assert target["name"] == conn_id
         assert target["type"] == "postgres"
+
+
+@pytest.fixture(scope="function")
+def dbt_project_file_with_flags(dbt_project_dir, logs_dir, request):
+    """Create a test dbt_project.yml file."""
+    p = dbt_project_dir / "dbt_project.yml"
+    contents = """
+name: test
+profile: default
+config-version: 2
+version: 1.0.0
+flags:
+    fail_fast: false
+    require_generic_test_arguments_property: true
+"""
+    p.write_text(contents)
+
+    return p
+
+
+def test_base_config_sets_flag_from_dbt_project_file(dbt_project_file_with_flags):
+    """Test the configuration reads flags from dbt project file."""
+    config = BaseConfig(
+        project_dir=dbt_project_file_with_flags.parent,
+    )
+    assert config.fail_fast is False
+    assert config.require_generic_test_arguments_property is True
+
+
+def test_base_config_does_not_override_when_value_passed(dbt_project_file_with_flags):
+    """Test flags in dbt project file do not override any values passed."""
+    config = BaseConfig(
+        project_dir=dbt_project_file_with_flags.parent,
+        fail_fast=True,
+        require_generic_test_arguments_property=False,
+    )
+    assert config.fail_fast is True
+    assert config.require_generic_test_arguments_property is False
+
+
+def test_base_config_does_not_override_when_value_in_environment(
+    dbt_project_file_with_flags,
+):
+    """Test flags in dbt project file do not override when environment values set."""
+    env = {
+        "DBT_FAIL_FAST": "1",
+        "DBT_REQUIRE_GENERIC_TEST_ARGUMENTS_PROPERTY": "0",
+    }
+
+    with patch.dict(os.environ, env):
+        config = BaseConfig(
+            project_dir=dbt_project_file_with_flags.parent,
+        )
+    assert config.fail_fast is None
+    assert config.require_generic_test_arguments_property is None
