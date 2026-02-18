@@ -266,20 +266,39 @@ models:
 
 
 @pytest.fixture(scope="function")
-def generic_tests_files_with_arguments(model_files, dbt_project_dir):
-    """Create a dbt generic test YAML file."""
-    d = dbt_project_dir / "models" / "new"
+def generic_tests_files_with_arguments(
+    model_files, dbt_project_dir, generic_tests_files
+):
+    """Create a dbt generic test YAML file using arguments.
+
+    We also take care to preserve the existing ``schema.yml`` file and restore it
+    afterwards.
+    """
+    schema_file = generic_tests_files[0]
+    schema_file_old = schema_file.rename(schema_file.with_suffix(".old"))
+    d = dbt_project_dir / "models"
     d.mkdir(exist_ok=True, parents=True)
 
     schema = d / "schema.yml"
     schema.write_text(GENERIC_TESTS_WITH_ARGUMENTS)
 
-    return [schema]
+    yield [schema]
+
+    schema.unlink()
+    schema_file_old.rename(schema_file)
 
 
 @pytest.fixture(scope="function")
-def dbt_project_file_with_arguments_flag(dbt_project_dir, logs_dir, request):
-    """Create a test dbt_project.yml file with flag to require arguments."""
+def dbt_project_file_with_arguments_flag(
+    dbt_project_file, dbt_project_dir, logs_dir, request
+):
+    """Create a test dbt_project.yml file with flag to require arguments.
+
+    We also take care to preserve the existing ``dbt_project_file`` and restore it
+    afterwards.
+    """
+    dbt_project_file_old = dbt_project_file.rename(dbt_project_file.with_suffix(".old"))
+
     p = dbt_project_dir / "dbt_project.yml"
     contents = """
 name: test
@@ -291,7 +310,10 @@ flags:
 """
     p.write_text(contents)
 
-    return p
+    yield p
+
+    p.unlink()
+    dbt_project_file_old.rename(dbt_project_file)
 
 
 def test_dbt_test_generic_tests_with_arguments(
