@@ -234,3 +234,24 @@ def test_dbt_build_models_with_project_from_s3(
     build_result = execution_results["results"][0]
 
     assert build_result["status"] == RunStatus.Success
+
+
+def test_full_refresh_in_template_fields():
+    """Test that full_refresh is included in DbtBuildOperator template_fields."""
+    assert "full_refresh" in DbtBuildOperator.template_fields
+
+
+def test_full_refresh_templated():
+    """Test that full_refresh can be templated with Jinja."""
+    import pendulum
+    from airflow.models.dag import DAG
+
+    dag = DAG(dag_id="test_dag", start_date=pendulum.datetime(2025, 1, 1))
+    op = DbtBuildOperator(
+        task_id="dbt_task",
+        full_refresh="{{ params.full_refresh }}",
+        dag=dag,
+    )
+    context = {"params": {"full_refresh": "True"}}
+    op.render_template_fields(context)
+    assert op.full_refresh == "True"

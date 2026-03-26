@@ -399,7 +399,9 @@ class DbtRunOperator(DbtBaseOperator):
     https://docs.getdbt.com/reference/commands/run.
     """
 
-    template_fields = base_template_fields + selection_template_fields
+    template_fields = (
+        base_template_fields + selection_template_fields + ["full_refresh"]
+    )
 
     def __init__(
         self,
@@ -431,7 +433,9 @@ class DbtSeedOperator(DbtBaseOperator):
     https://docs.getdbt.com/reference/commands/seed.
     """
 
-    template_fields = base_template_fields + selection_template_fields
+    template_fields = (
+        base_template_fields + selection_template_fields + ["full_refresh"]
+    )
 
     def __init__(
         self,
@@ -500,7 +504,9 @@ class DbtCompileOperator(_GraphRunnableOperator):
     https://docs.getdbt.com/reference/commands/compile.
     """
 
-    template_fields = base_template_fields + selection_template_fields
+    template_fields = (
+        base_template_fields + selection_template_fields + ["full_refresh"]
+    )
 
     def __init__(
         self,
@@ -765,7 +771,9 @@ class DbtBuildOperator(DbtBaseOperator):
     https://docs.getdbt.com/reference/commands/build.
     """
 
-    template_fields = base_template_fields + selection_template_fields
+    template_fields = (
+        base_template_fields + selection_template_fields + ["full_refresh"]
+    )
 
     def __init__(
         self,

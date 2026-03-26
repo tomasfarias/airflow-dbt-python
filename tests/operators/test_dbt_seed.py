@@ -327,3 +327,24 @@ def test_dbt_seed_with_airflow_connection_and_profile(
         assert run_result["status"] == RunStatus.Success
         assert op.profiles_dir == profiles_file.parent
         assert execution_results["args"]["target"] == conn_id or target
+
+
+def test_full_refresh_in_template_fields():
+    """Test that full_refresh is included in DbtSeedOperator template_fields."""
+    assert "full_refresh" in DbtSeedOperator.template_fields
+
+
+def test_full_refresh_templated():
+    """Test that full_refresh can be templated with Jinja."""
+    import pendulum
+    from airflow.models.dag import DAG
+
+    dag = DAG(dag_id="test_dag", start_date=pendulum.datetime(2025, 1, 1))
+    op = DbtSeedOperator(
+        task_id="dbt_task",
+        full_refresh="{{ params.full_refresh }}",
+        dag=dag,
+    )
+    context = {"params": {"full_refresh": "True"}}
+    op.render_template_fields(context)
+    assert op.full_refresh == "True"
