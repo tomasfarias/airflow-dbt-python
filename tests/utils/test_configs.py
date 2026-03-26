@@ -506,3 +506,36 @@ def test_base_config_does_not_override_when_value_in_environment(
         )
     assert config.fail_fast is None
     assert config.require_generic_test_arguments_property is None
+
+
+def test_table_mutability_config_full_refresh_string_coercion(
+    profiles_file, dbt_project_file
+):
+    """Test that full_refresh string values are coerced to booleans."""
+    config = RunTaskConfig(
+        profiles_dir=profiles_file.parent,
+        project_dir=dbt_project_file.parent,
+        full_refresh="True",
+    )
+    assert config.full_refresh is True
+
+    config = RunTaskConfig(
+        profiles_dir=profiles_file.parent,
+        project_dir=dbt_project_file.parent,
+        full_refresh="False",
+    )
+    assert config.full_refresh is False
+
+    config = RunTaskConfig(
+        profiles_dir=profiles_file.parent,
+        project_dir=dbt_project_file.parent,
+        full_refresh=None,
+    )
+    assert config.full_refresh is None
+
+    config = RunTaskConfig(
+        profiles_dir=profiles_file.parent,
+        project_dir=dbt_project_file.parent,
+        full_refresh=True,
+    )
+    assert config.full_refresh is True

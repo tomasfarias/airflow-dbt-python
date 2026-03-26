@@ -618,6 +618,8 @@ class TableMutabilityConfig(SelectionConfig):
     def __post_init__(self):
         """Call superclass __post_init__."""
         super().__post_init__()
+        if isinstance(self.full_refresh, str):
+            self.full_refresh = self.full_refresh.lower() == "true"
 
 
 @dataclasses.dataclass

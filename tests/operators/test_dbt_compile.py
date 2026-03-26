@@ -206,3 +206,24 @@ def test_dbt_compile_uses_correct_argument_according_to_version():
     assert getattr(op, "models", None) is None
     assert op.selector == "a-selector"
     assert getattr(op, "selector_name", None) is None
+
+
+def test_full_refresh_in_template_fields():
+    """Test that full_refresh is included in DbtCompileOperator template_fields."""
+    assert "full_refresh" in DbtCompileOperator.template_fields
+
+
+def test_full_refresh_templated():
+    """Test that full_refresh can be templated with Jinja."""
+    import pendulum
+    from airflow.models.dag import DAG
+
+    dag = DAG(dag_id="test_dag", start_date=pendulum.datetime(2025, 1, 1))
+    op = DbtCompileOperator(
+        task_id="dbt_task",
+        full_refresh="{{ params.full_refresh }}",
+        dag=dag,
+    )
+    context = {"params": {"full_refresh": "True"}}
+    op.render_template_fields(context)
+    assert op.full_refresh == "True"
