@@ -214,7 +214,12 @@ def test_full_refresh_in_template_fields():
 
 
 def test_full_refresh_templated():
-    """Test that full_refresh can be templated with Jinja."""
+    """Test that full_refresh can be templated with Jinja.
+
+    Airflow renders template fields as strings, so the operator receives a
+    string after rendering. The string-to-bool coercion happens in
+    TableMutabilityConfig and is tested in test_configs.py.
+    """
     import pendulum
     from airflow.models.dag import DAG
 

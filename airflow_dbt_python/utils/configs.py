@@ -619,6 +619,11 @@ class TableMutabilityConfig(SelectionConfig):
         """Call superclass __post_init__."""
         super().__post_init__()
         if isinstance(self.full_refresh, str):
+            if self.full_refresh.lower() not in ("true", "false"):
+                raise ValueError(
+                    f"Invalid value for full_refresh: '{self.full_refresh}'. "
+                    "Expected 'true' or 'false'."
+                )
             self.full_refresh = self.full_refresh.lower() == "true"
 
 
