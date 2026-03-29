@@ -241,22 +241,32 @@ def test_full_refresh_in_template_fields():
     assert "full_refresh" in DbtBuildOperator.template_fields
 
 
-def test_full_refresh_templated():
+@pytest.mark.parametrize(
+    "native,param_value,expected",
+    [
+        (False, "True", "True"),
+        (True, True, True),
+    ],
+)
+def test_full_refresh_templated(native, param_value, expected):
     """Test that full_refresh can be templated with Jinja.
 
-    Airflow renders template fields as strings, so the operator receives a
-    string after rendering. The string-to-bool coercion happens in
-    TableMutabilityConfig and is tested in test_configs.py.
+    With default rendering, Airflow renders to strings. With
+    render_template_as_native_obj=True, native Python types are preserved.
     """
     import pendulum
     from airflow.models.dag import DAG
 
-    dag = DAG(dag_id="test_dag", start_date=pendulum.datetime(2025, 1, 1))
+    dag = DAG(
+        dag_id="test_dag",
+        start_date=pendulum.datetime(2025, 1, 1),
+        render_template_as_native_obj=native,
+    )
     op = DbtBuildOperator(
         task_id="dbt_task",
         full_refresh="{{ params.full_refresh }}",
         dag=dag,
     )
-    context = {"params": {"full_refresh": "True"}}
+    context = {"params": {"full_refresh": param_value}}
     op.render_template_fields(context)
-    assert op.full_refresh == "True"
+    assert op.full_refresh == expected
