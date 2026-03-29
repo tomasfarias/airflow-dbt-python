@@ -508,34 +508,37 @@ def test_base_config_does_not_override_when_value_in_environment(
     assert config.require_generic_test_arguments_property is None
 
 
-def test_table_mutability_config_full_refresh_string_coercion(
+@pytest.mark.parametrize(
+    "input_value,expected",
+    [
+        ("True", True),
+        ("true", True),
+        ("False", False),
+        ("false", False),
+        (True, True),
+        (False, False),
+        (None, None),
+    ],
+)
+def test_table_mutability_config_full_refresh_coercion(
+    profiles_file, dbt_project_file, input_value, expected
+):
+    """Test that full_refresh values are coerced to booleans."""
+    config = RunTaskConfig(
+        profiles_dir=profiles_file.parent,
+        project_dir=dbt_project_file.parent,
+        full_refresh=input_value,
+    )
+    assert config.full_refresh is expected
+
+
+def test_table_mutability_config_full_refresh_invalid_string(
     profiles_file, dbt_project_file
 ):
-    """Test that full_refresh string values are coerced to booleans."""
-    config = RunTaskConfig(
-        profiles_dir=profiles_file.parent,
-        project_dir=dbt_project_file.parent,
-        full_refresh="True",
-    )
-    assert config.full_refresh is True
-
-    config = RunTaskConfig(
-        profiles_dir=profiles_file.parent,
-        project_dir=dbt_project_file.parent,
-        full_refresh="False",
-    )
-    assert config.full_refresh is False
-
-    config = RunTaskConfig(
-        profiles_dir=profiles_file.parent,
-        project_dir=dbt_project_file.parent,
-        full_refresh=None,
-    )
-    assert config.full_refresh is None
-
-    config = RunTaskConfig(
-        profiles_dir=profiles_file.parent,
-        project_dir=dbt_project_file.parent,
-        full_refresh=True,
-    )
-    assert config.full_refresh is True
+    """Test that invalid full_refresh strings raise a ValueError."""
+    with pytest.raises(ValueError, match="Invalid value for full_refresh"):
+        RunTaskConfig(
+            profiles_dir=profiles_file.parent,
+            project_dir=dbt_project_file.parent,
+            full_refresh="treu",
+        )
