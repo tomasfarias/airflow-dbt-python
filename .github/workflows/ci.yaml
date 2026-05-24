@@ -85,7 +85,7 @@ jobs:
 
       - run: |
           sudo apt-get update
-          sudo apt-get install --yes --no-install-recommends postgresql
+          sudo apt-get install --yes --no-install-recommends postgresql unixodbc-dev
 
       - name: Checkout
         uses: actions/checkout@v6
