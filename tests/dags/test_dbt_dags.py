@@ -34,6 +34,11 @@ if AIRFLOW_V_3_0:
 else:
     from airflow.providers.common.compat.sdk import DAG
 
+if AIRFLOW_V_3_0_PLUS:
+    from airflow.serialization.serialized_objects import DagSerialization
+else:
+    from airflow.serialization.serialized_objects import SerializedDAG
+
 DATA_INTERVAL_START = pendulum.datetime(2022, 1, 1, tz="UTC")
 DATA_INTERVAL_END = DATA_INTERVAL_START + dt.timedelta(hours=1)
 
@@ -57,12 +62,20 @@ def sync_dag_to_db(
 
         def _write_dag(dag: DAG) -> SerializedDAG:
             if not SerializedDagModel.has_dag(dag.dag_id):
-                data = SerializedDAG.to_dict(dag)
+                data = (
+                    DagSerialization.to_dict(dag)
+                    if AIRFLOW_V_3_0_PLUS
+                    else SerializedDAG.to_dict(dag)
+                )
                 SerializedDagModel.write_dag(
                     LazyDeserializedDAG(data=data), bundle_name, session=session
                 )
                 session.flush()
-            return SerializedDAG.from_dict(data)
+            return (
+                DagSerialization.from_dict(data)
+                if AIRFLOW_V_3_0_PLUS
+                else SerializedDAG.from_dict(data)
+            )
 
         SerializedDAG.bulk_write_to_db(bundle_name, None, [dag], session=session)
         _ = _write_dag(dag)
@@ -104,6 +117,13 @@ def _create_dagrun(
             start_date=start_date,
             run_type=run_type,
         )
+
+
+def _run_task_instance(ti):
+    if AIRFLOW_V_3_1_PLUS:
+        return
+
+    ti.run(ignore_ti_state=True)
 
 
 @pytest.fixture(scope="session")
@@ -240,7 +260,7 @@ def test_dbt_operators_in_dag(
         ti = dagrun.get_task_instance(task_id=task_id)
         ti.task = basic_dag.get_task(task_id=task_id)
 
-        ti.run(ignore_ti_state=True)
+        _run_task_instance(ti)
 
         assert ti.state == TaskInstanceState.SUCCESS
 
@@ -364,7 +384,7 @@ def test_dbt_operators_in_taskflow_dag(
         ti = dagrun.get_task_instance(task_id=task_id)
         ti.task = dag.get_task(task_id=task_id)
 
-        ti.run(ignore_ti_state=True)
+        _run_task_instance(ti)
 
         assert ti.state == TaskInstanceState.SUCCESS
         assert ti.task.retries == dag.default_args["retries"]
@@ -376,8 +396,9 @@ def test_dbt_operators_in_taskflow_dag(
         assert failure_callback == dag.default_args["on_failure_callback"]
 
         if isinstance(ti.task, DbtBaseOperator):
-            assert ti.task.profiles_dir == str(profiles_file.parent)
-            assert ti.task.project_dir == str(dbt_project_file.parent)
+            if not AIRFLOW_V_3_1_PLUS:
+                assert ti.task.profiles_dir == str(profiles_file.parent)
+                assert ti.task.project_dir == str(dbt_project_file.parent)
 
             results = ti.xcom_pull(
                 task_ids=task_id,
@@ -493,7 +514,7 @@ def test_dbt_operators_in_connection_dag(
         ti = dagrun.get_task_instance(task_id=task_id)
         ti.task = target_connection_dag.get_task(task_id=task_id)
 
-        ti.run(ignore_ti_state=True)
+        _run_task_instance(ti)
 
         assert ti.state == TaskInstanceState.SUCCESS
 
@@ -568,7 +589,7 @@ def test_example_basic_dag(
     ti = dagrun.get_task_instance(task_id="dbt_run_hourly")
     ti.task = dbt_run
 
-    ti.run(ignore_ti_state=True)
+    _run_task_instance(ti)
 
     assert ti.state == TaskInstanceState.SUCCESS
 
@@ -612,6 +633,9 @@ def test_example_dbt_project_in_github_dag(
     if AIRFLOW_V_3_0:
         dag = DAG.from_sdk_dag(dag)  # type: ignore
 
+    for task_id in ("dbt_seed", "dbt_run", "dbt_test"):
+        dag.get_task(task_id=task_id).dbt_conn_id = connection
+
     dagrun = _create_dagrun(
         dag,
         state=DagRunState.RUNNING,
@@ -626,7 +650,7 @@ def test_example_dbt_project_in_github_dag(
         ti.task = dag.get_task(task_id=task_id)
         ti.task.dbt_conn_id = connection
 
-        ti.run(ignore_ti_state=True)
+        _run_task_instance(ti)
 
         assert ti.state == TaskInstanceState.SUCCESS
 
@@ -669,6 +693,12 @@ def test_example_complete_dbt_workflow_dag(
     if AIRFLOW_V_3_0:
         dag = DAG.from_sdk_dag(dag)  # type: ignore
 
+    for task in dag.tasks:
+        task.project_dir = dbt_project_file.parent
+        task.profiles_dir = profiles_file.parent
+        task.target = "test"
+        task.profile = "default"
+
     dagrun = _create_dagrun(
         dag,
         state=DagRunState.RUNNING,
@@ -679,15 +709,10 @@ def test_example_complete_dbt_workflow_dag(
     )
 
     for task in dag.tasks:
-        task.project_dir = dbt_project_file.parent
-        task.profiles_dir = profiles_file.parent
-        task.target = "test"
-        task.profile = "default"
-
         ti = dagrun.get_task_instance(task_id=task.task_id)
         ti.task = task
 
-        ti.run(ignore_ti_state=True)
+        _run_task_instance(ti)
 
         assert ti.state == TaskInstanceState.SUCCESS
 
