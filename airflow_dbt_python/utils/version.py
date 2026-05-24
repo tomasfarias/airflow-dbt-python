@@ -3,31 +3,17 @@
 These are only used to ensure backwards compatibility with older versions of dbt.
 """
 
-try:
-    from dbt.semver import Matchers, VersionSpecifier
-except ImportError:
-    from dbt_common.semver import Matchers, VersionSpecifier
+from importlib.metadata import version
 
-from dbt.version import installed
+from packaging.version import Version
 
-DBT_1_8 = VersionSpecifier(
-    major="1", minor="8", patch="0", matcher=Matchers.GREATER_THAN_OR_EQUAL
-)
-DBT_1_9 = VersionSpecifier(
-    major="1", minor="9", patch="0", matcher=Matchers.GREATER_THAN_OR_EQUAL
-)
-DBT_1_10_7 = VersionSpecifier(
-    major="1", minor="10", patch="7", matcher=Matchers.GREATER_THAN_OR_EQUAL
-)
-DBT_2_0 = VersionSpecifier(
-    major="2", minor="0", patch="0", matcher=Matchers.GREATER_THAN_OR_EQUAL
-)
+DBT_VERSION = Version(version("dbt-core"))
 
-DBT_INSTALLED_GTE_1_9 = installed.compare(DBT_1_9) == 1
-DBT_INSTALLED_GTE_1_10_7 = installed.compare(DBT_1_10_7) == 1
+DBT_INSTALLED_GTE_1_9 = DBT_VERSION >= Version("1.9.0")
+DBT_INSTALLED_GTE_1_10_7 = DBT_VERSION >= Version("1.10.7")
 
-DBT_INSTALLED_1_8 = DBT_1_8 < installed < DBT_1_9
-DBT_INSTALLED_1_9 = DBT_1_9 < installed < DBT_2_0
+DBT_INSTALLED_1_8 = Version("1.8.0") <= DBT_VERSION < Version("1.9.0")
+DBT_INSTALLED_1_9 = Version("1.9.0") <= DBT_VERSION < Version("2.0.0")
 
 
 def _get_base_airflow_version_tuple() -> tuple[int, int, int]:
