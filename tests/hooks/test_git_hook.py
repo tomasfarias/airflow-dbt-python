@@ -332,7 +332,7 @@ def repo(repo_dir, dbt_project_file, test_files, profiles_file, repo_branch):
         repo.get_worktree().stage(f"{test_file.parent.name}/{test_file.name}")
 
     repo.get_worktree().commit(
-        b"Test first commit", committer=b"Test user <test@user.com>"
+        b"Test first commit", committer=b"Test user <test@user.com>", sign=False
     )
 
     yield repo
@@ -438,6 +438,12 @@ def test_upload_dbt_project_with_local_server(
     fs_hook = DbtGitFSHook(upload_filter=upload_only_target)
     server_address, server_port = git_server
     destination = URL(f"git://{server_address}:{server_port}/{repo_name}")
+
+    repo = Repo(repo_dir)
+    config = repo.get_config()
+    config.set((b"commit",), b"gpgsign", False)
+    config.write_to_path()
+    repo.close()
 
     fs_hook.upload_dbt_project(str(repo_dir), destination)
 
