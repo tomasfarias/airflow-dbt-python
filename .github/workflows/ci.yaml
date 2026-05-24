@@ -46,7 +46,7 @@ jobs:
           # time of check, they are the same.
           # - '3.2.1'
         dbt-version:
-          - '1.11.2'
+          - '1.11.11'
           - '1.10.17'
         exclude:
           # Airflow added 3.14 support in >=3.2
