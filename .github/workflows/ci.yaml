@@ -28,29 +28,30 @@ jobs:
       fail-fast: false
       matrix:
         python-version:
+          - '3.14'
           - '3.13'
           - '3.12'
           - '3.11'
           - '3.10'
         airflow-version:
-          # Latest release as of 2025-12-27
+          # Latest release as of 2026-05-24
           # See: https://airflow.apache.org/docs/apache-airflow/stable/release_notes.html
-          - '3.1.5'
-          # GCP Cloud Composer latest as of 2025-12-27
+          - '3.2.1'
+          # GCP Cloud Composer latest as of 2026-05-24
           # See: https://docs.cloud.google.com/composer/docs/composer-versions
-          # TODO: Uncomment once 'SUPERVISOR_COMMS' import bug is figured out
-          # This is fixed in later versions of Airflow.
-          # - '3.1.0'
-          # AWS MWAA latest as of 2025-12-27
+          - '3.1.7'
+          # AWS MWAA latest as of 2026-05-24
           # See: https://docs.aws.amazon.com/mwaa/latest/userguide/airflow-versions.html
-          - '3.0.6'
+          # TODO: Uncomment once latest stable no longer matches MWAA latest. At the
+          # time of check, they are the same.
+          # - '3.2.1'
         dbt-version:
-          - '1.11.2'
+          - '1.11.11'
           - '1.10.17'
         exclude:
-          # Airflow added 3.13 support in >=3.1
-          - airflow-version: '3.0.6'
-            python-version: '3.13'
+          # Airflow added 3.14 support in >=3.2
+          - airflow-version: '3.1.7'
+            python-version: '3.14'
 
     runs-on: ubuntu-latest
     steps:
@@ -82,7 +83,7 @@ jobs:
 
       - run: |
           sudo apt-get update
-          sudo apt-get install --yes --no-install-recommends postgresql
+          sudo apt-get install --yes --no-install-recommends postgresql unixodbc-dev
 
       - name: Checkout
         uses: actions/checkout@v6
@@ -147,6 +148,7 @@ jobs:
           allowed-endpoints: >
             files.pythonhosted.org:443
             github.com:443
+            raw.githubusercontent.com:443
             release-assets.githubusercontent.com:443
             api.github.com:443
             pypi.org:443

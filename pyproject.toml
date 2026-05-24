@@ -5,7 +5,7 @@ description = "A collection of Airflow operators, hooks, and utilities to execut
 authors = [{ name = "Tomás Farías Santana", email = "tomas@tomasfarias.dev" }]
 license = "MIT"
 readme = "README.md"
-requires-python = ">=3.10,<3.14"
+requires-python = ">=3.10,<3.15"
 classifiers = [
     "Development Status :: 5 - Production/Stable",
 
@@ -24,6 +24,7 @@ dependencies = [
     "apache-airflow>=3.1,<4.0; python_version>='3.13'",
     "contextlib-chdir==1.0.2;python_version<'3.11'",
     "dbt-core>=1.8.0,<2.0.0",
+    "packaging>=20.0",
 ]
 
 [project.urls]
