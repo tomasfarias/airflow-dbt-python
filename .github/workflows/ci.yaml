@@ -30,6 +30,7 @@ jobs:
         python-version:
           # TODO: Requires dbt 1.12 which is in beta at the time of check.
           # - '3.14'
+          - '3.14'
           - '3.13'
           - '3.12'
           - '3.11'
