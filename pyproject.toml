@@ -51,7 +51,9 @@ gcs = [
 ]
 git = [
     "apache-airflow-providers-ssh>=3.0.0",
-    "dulwich>=1.0.0",
+    # dulwich>=1.2.0 no longer includes a paramiko vendor module we need for SSH connections.
+    # Until we can provide our own, exclude newer versions.
+    "dulwich>=1.0.0,<1.2.0",
 ]
 postgres = [
     "dbt-postgres>=1.8.0,<2.0.0",
@@ -78,7 +80,7 @@ dev = [
     "coverage[toml]>=7.2",
     # docutils 0.21 causes an error with poetry (https://github.com/python-poetry/poetry/issues/9293)
     "docutils!=0.21",
-    "dulwich>=0.21,!=0.21.6",
+    "dulwich>=1.0.0,<1.2.0",
     "freezegun>=1.1.0",
     "mock-gcp==0.2.0",
     "moto>=4.0.3",
