@@ -239,6 +239,7 @@ dependencies = [
     { name = "apache-airflow" },
     { name = "contextlib-chdir", marker = "python_full_version < '3.11'" },
     { name = "dbt-core" },
+    { name = "packaging" },
 ]
 
 [package.optional-dependencies]
@@ -334,6 +335,7 @@ requires-dist = [
     { name = "dbt-spark", marker = "extra == 'spark'", specifier = ">=1.8.0,<2.0.0" },
     { name = "dbt-spark", extras = ["all"], marker = "extra == 'adapters'", specifier = ">=1.8.0,<2.0.0" },
     { name = "dulwich", marker = "extra == 'git'", specifier = ">=1.0.0,<1.2.0" },
+    { name = "packaging", specifier = ">=20.0" },
 ]
 provides-extras = ["airflow-providers", "adapters", "bigquery", "gcs", "git", "postgres", "redshift", "s3", "snowflake", "spark"]
 
