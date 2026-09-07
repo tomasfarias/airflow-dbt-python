@@ -36,24 +36,19 @@ jobs:
           - '3.11'
           - '3.10'
         airflow-version:
-          # Latest release as of 2026-05-24
+          # Latest release as of 2026-09-07
           # See: https://airflow.apache.org/docs/apache-airflow/stable/release_notes.html
-          - '3.2.1'
-          # GCP Cloud Composer latest as of 2026-05-24
+          - '3.3.1'
+          # Previous minor, kept for backward-compat coverage.
+          - '3.2.2'
+          # GCP Cloud Composer latest and AWS MWAA latest both also match the
+          # latest release (3.3.1) as of 2026-09-07, so no separate entries needed.
           # See: https://docs.cloud.google.com/composer/docs/composer-versions
-          - '3.1.7'
-          # AWS MWAA latest as of 2026-05-24
           # See: https://docs.aws.amazon.com/mwaa/latest/userguide/airflow-versions.html
-          # TODO: Uncomment once latest stable no longer matches MWAA latest. At the
-          # time of check, they are the same.
-          # - '3.2.1'
         dbt-version:
-          - '1.11.11'
-          - '1.10.17'
-        exclude:
-          # Airflow added 3.14 support in >=3.2
-          - airflow-version: '3.1.7'
-            python-version: '3.14'
+          - '1.12.3'
+          - '1.11.14'
+          - '1.10.23'
 
     runs-on: ubuntu-latest
     steps:
@@ -113,7 +108,7 @@ jobs:
 
       - name: Static type checking with mypy
         # We only run mypy on the latest supported versions of Airflow & dbt,
-        if: matrix.python-version == '3.13' && matrix.airflow-version == '3.1.1' && matrix.dbt-version == '1.11.12'
+        if: matrix.python-version == '3.13' && matrix.airflow-version == '3.3.1' && matrix.dbt-version == '1.12.3'
         run: uv run mypy .
 
       - name: Code formatting with ruff
