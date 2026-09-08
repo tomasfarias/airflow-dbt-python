@@ -881,17 +881,42 @@ class ConfigFactory(FromStrEnum):
     TEST = TestTaskConfig
 
     def create_config(self, **kwargs) -> BaseConfig:
-        """Instantiate a dbt task config with the given args and kwargs."""
-        config_fields = [field.name for field in self.fields]
+        """Instantiate a dbt task config with the given args and kwargs.
 
-        config_kwargs = {}
-        for field in config_fields:
-            field_value = kwargs.get(f"dbt_{field}", kwargs.get(field, None))
+        Any kwarg that doesn't match one of the config's own fields is passed
+        through via its extra_flags field instead of being dropped, so a
+        dbt parameter we haven't modeled explicitly still reaches dbt.
+        """
+        config_field_names = {field.name for field in self.fields}
 
-            if field_value is None:
+        # A "dbt_"-prefixed key wins over its bare counterpart, e.g. to let
+        # dbt_defer override an operator's own unrelated defer attribute.
+        normalized: dict[str, Any] = {
+            key: value for key, value in kwargs.items() if not key.startswith("dbt_")
+        }
+        normalized.update(
+            {
+                key[len("dbt_") :]: value
+                for key, value in kwargs.items()
+                if key.startswith("dbt_")
+            }
+        )
+
+        config_kwargs: dict[str, Any] = {}
+        extra_flags: dict[str, Any] = {}
+        for name, value in normalized.items():
+            if value is None:
                 continue
+            if name in config_field_names:
+                config_kwargs[name] = value
+            else:
+                extra_flags[name] = value
 
-            config_kwargs[field] = field_value
+        if extra_flags:
+            config_kwargs["extra_flags"] = {
+                **extra_flags,
+                **config_kwargs.get("extra_flags", {}),
+            }
 
         config = self.value(**config_kwargs)
 
