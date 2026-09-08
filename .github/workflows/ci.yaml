@@ -113,8 +113,8 @@ jobs:
         run: uv run ruff check .
 
       - name: Static type checking with mypy
-        # We only run mypy on the latest supported versions of Airflow & dbt,
-        if: matrix.python-version == '3.13' && matrix.airflow-version == '3.3.1' && matrix.dbt-version == '1.12.3'
+        # We only run mypy on the latest supported versions of Python, Airflow, and dbt.
+        if: matrix.python-version == '3.14' && matrix.airflow-version == '3.3.1' && matrix.dbt-version == '1.12.3'
         run: uv run mypy .
 
       - name: Code formatting with ruff
