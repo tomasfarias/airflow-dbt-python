@@ -182,31 +182,64 @@ class BaseConfig:
         default_factory=list, repr=False
     )
 
-    # Behavior change flags
+    # Behavior change flags.
     # See: https://docs.getdbt.com/reference/global-configs/behavior-changes#behavior-change-flags
-    require_all_warnings_handled_by_warn_error: Optional[bool] = None
-    require_batched_execution_for_custom_microbatch_strategy: Optional[bool] = None
-    require_explicit_package_overrides_for_builtin_materializations: Optional[bool] = (
-        None
-    )
-    require_generic_test_arguments_property: Optional[bool] = None
-    require_nested_cumulative_type_params: Optional[bool] = None
-    require_ref_searches_node_package_before_root: Optional[bool] = None
-    require_resource_names_without_spaces: Optional[bool] = None
-    require_unique_project_resource_names: Optional[bool] = None
-    require_valid_schema_from_generate_schema_name: Optional[bool] = None
-    require_yaml_configuration_for_mf_time_spines: Optional[bool] = None
+    #
+    # dbt-core's own project-level behavior change flags are not declared here
+    # individually: they are read from dbt.contracts.project.ProjectFlags at
+    # runtime in set_default_project_flags(), so new flags added by newer dbt
+    # versions don't require a change here. `restrict_direct_pg_catalog_access`
+    # is a Redshift/Fusion-specific flag not present in that schema, so it's
+    # kept as an explicit default.
     restrict_direct_pg_catalog_access: Optional[bool] = None
-    skip_nodes_if_on_run_start_fails: Optional[bool] = None
-    source_freshness_run_project_hooks: Optional[bool] = None
-    state_modified_compare_more_unrendered_values: Optional[bool] = None
-    validate_macro_args: Optional[bool] = None
+
+    # Escape hatch for any dbt flag or config option we don't otherwise model
+    # as a field, so callers can still pass it through without us having to
+    # declare it. Same idea as the `vars` field above, applied more broadly.
+    extra_flags: dict[str, Any] = dataclasses.field(default_factory=dict, repr=False)
 
     def __post_init__(self):
         """Post initialization actions for a dbt configuration."""
         self.vars = parse_yaml_args(self.vars)
+        for flag_name, flag_value in self.extra_flags.items():
+            setattr(self, flag_name, flag_value)
         self.set_flags_from_dbt_project_file()
+        self.set_default_project_flags()
         self.set_mutually_exclusive_attributes()
+
+    def set_default_project_flags(self):
+        """Default any dbt project-level behavior change flag we don't declare.
+
+        dbt-core resolves these project-only flags (see
+        dbt.contracts.project.ProjectFlags.project_only_flags) by setting only
+        the UPPERCASE attribute on the resulting Flags object, while some dbt
+        code paths look them up in lowercase (e.g. via get_flags().some_flag).
+        The lowercase variant only gets set for keys present in vars(self)
+        when we call dbt.flags.set_from_args(self, ...), so any such flag we
+        don't declare ourselves would be missing and raise an AttributeError.
+
+        Reading defaults from dbt's own ProjectFlags schema, instead of
+        hardcoding each flag's name here, means newly added dbt behavior
+        change flags work without changes on our end.
+        """
+        from dbt.contracts.project import ProjectFlags
+
+        # ProjectFlags also models general CLI options (e.g. debug,
+        # maximum_seed_size_mib) that dbt already defaults sensibly via its
+        # own FLAGS_DEFAULTS; only its project_only_flags are the legacy
+        # behavior-change flags this method needs to backfill.
+        project_only_flag_names = ProjectFlags().project_only_flags.keys()
+
+        for field in dataclasses.fields(ProjectFlags):
+            if field.name not in project_only_flag_names:
+                continue
+            if field.default is dataclasses.MISSING or hasattr(self, field.name):
+                continue
+
+            # Mirror set_flags_from_dbt_project_file's precedence: a value set
+            # via the environment wins over any default we would set here.
+            env_value = os.getenv(f"DBT_{field.name.upper()}", None)
+            setattr(self, field.name, None if env_value is not None else field.default)
 
     def set_mutually_exclusive_attributes(self):
         """Support pairs of mutually exclusive parameters.
