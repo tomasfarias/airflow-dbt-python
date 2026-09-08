@@ -164,6 +164,72 @@ id,name
 """
 
 
+@pytest.fixture(scope="session", autouse=True)
+def _fix_in_process_execution_api_lifespan_race():
+    """Work around a lifespan race in Airflow's ``InProcessExecutionAPI``.
+
+    Before apache/airflow#68840 (fixed in Airflow 3.3+), ``InProcessExecutionAPI
+    .transport`` schedules the FastAPI app's lifespan startup via
+    ``asyncio.run_coroutine_threadsafe`` without waiting for it, so a
+    ``dag.test()`` task run can hit the transport before ``app.state
+    .svcs_registry`` is set, raising ``AttributeError: 'State' object has no
+    attribute 'svcs_registry'``.
+
+    ``InProcessExecutionAPI`` is an ``@attrs.define()`` (slotted) class where
+    attrs itself manages caching for ``transport`` via a generated
+    ``__getattr__``/setter pair, so we can't simply monkeypatch the
+    ``transport`` property (attrs' setter breaks on a plain replacement). We
+    instead build our own transport the same way the buggy property does, but
+    waiting for lifespan startup to actually finish, and hand it out via a
+    plain (non-attrs) stand-in object patched into
+    ``in_process_api_server()``.
+    """
+    try:
+        import airflow.sdk.execution_time.supervisor as supervisor_module
+        from airflow.api_fastapi.execution_api.app import InProcessExecutionAPI
+    except ImportError:
+        yield
+        return
+
+    if not hasattr(supervisor_module, "in_process_api_server"):
+        yield
+        return
+
+    if "transport" not in InProcessExecutionAPI.__dict__:
+        # Already fixed upstream (owns its own loop/thread; no race to work
+        # around) or a version this workaround doesn't otherwise apply to.
+        yield
+        return
+
+    import asyncio
+    from contextlib import AsyncExitStack
+    from types import SimpleNamespace
+
+    import httpx
+    from a2wsgi import ASGIMiddleware
+
+    app = InProcessExecutionAPI().app
+    # Same construction as the buggy property (own event loop created by
+    # ASGIMiddleware internally), just actually waiting for the result.
+    middleware = ASGIMiddleware(app)
+
+    async def start_lifespan(cm: AsyncExitStack) -> None:
+        await cm.enter_async_context(app.router.lifespan_context(app))
+
+    cm = AsyncExitStack()
+    asyncio.run_coroutine_threadsafe(start_lifespan(cm), middleware.loop).result()
+
+    warm_api = SimpleNamespace(app=app, transport=httpx.WSGITransport(app=middleware))
+
+    original_in_process_api_server = supervisor_module.in_process_api_server
+    supervisor_module.in_process_api_server = lambda: warm_api
+
+    yield
+
+    supervisor_module.in_process_api_server = original_in_process_api_server
+    asyncio.run_coroutine_threadsafe(cm.aclose(), middleware.loop).result(timeout=5)
+
+
 @pytest.fixture(scope="session")
 def database(postgresql_proc):
     """Initialize a test postgres database."""
