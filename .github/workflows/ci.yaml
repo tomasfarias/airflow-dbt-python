@@ -28,8 +28,6 @@ jobs:
       fail-fast: false
       matrix:
         python-version:
-          # TODO: Requires dbt 1.12 which is in beta at the time of check.
-          # - '3.14'
           - '3.14'
           - '3.13'
           - '3.12'
@@ -49,6 +47,14 @@ jobs:
           - '1.12.3'
           - '1.11.14'
           - '1.10.23'
+        exclude:
+          # dbt-core <1.12 pins mashumaro<3.15, which lacks Python 3.14 support
+          # (only added in mashumaro 3.17). See mashumaro release notes and
+          # https://github.com/dbt-labs/dbt-core/issues/12098.
+          - python-version: '3.14'
+            dbt-version: '1.11.14'
+          - python-version: '3.14'
+            dbt-version: '1.10.23'
 
     runs-on: ubuntu-latest
     steps:
