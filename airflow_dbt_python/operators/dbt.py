@@ -182,6 +182,9 @@ class DbtBaseOperator(BaseOperator):
         no_favor_state: Optional[bool] = None,
         export_saved_queries: Optional[bool] = None,
         no_export_saved_queries: Optional[bool] = None,
+        # Escape hatch for any dbt flag or config option not modeled above,
+        # e.g. a project-level behavior change flag added by a newer dbt.
+        extra_flags: Optional[Dict[str, Any]] = None,
         # Extra features configuration
         dbt_conn_id: Optional[str] = None,
         profiles_conn_id: Optional[str] = None,
@@ -260,6 +263,7 @@ class DbtBaseOperator(BaseOperator):
         self.no_favor_state = no_favor_state
         self.export_saved_queries = export_saved_queries
         self.no_export_saved_queries = no_export_saved_queries
+        self.extra_flags = extra_flags or {}
 
         self.dbt_conn_id = dbt_conn_id
         self.profiles_conn_id = profiles_conn_id
