@@ -40,6 +40,11 @@ class DbtBaseOperator(BaseOperator):
     Defines how to build an argument list and execute a dbt command. Does not set a
     command itself, subclasses should set it.
 
+    Every `no_<flag>` parameter below is deprecated: dbt's own CLI merges
+    `--flag/--no-flag` into a single boolean, so pass `<flag>=False` instead
+    of `no_<flag>=True`. They are kept only for backwards compatibility and
+    will be removed in a future release.
+
     Attributes:
         project_dir: Directory for dbt to look for dbt_profile.yml. Defaults to
             current directory.
