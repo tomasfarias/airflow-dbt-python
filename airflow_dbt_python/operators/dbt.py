@@ -45,7 +45,15 @@ class DbtBaseOperator(BaseOperator):
     of `no_<flag>=True`. They are kept only for backwards compatibility and
     will be removed in a future release.
 
-    Attributes:
+    Most parameters below are only ever consumed through self.config_kwargs
+    (see its own description further down) and no longer get a dedicated
+    self.attr of their own; project_dir, profiles_dir, profile, target,
+    state, vars, env_vars, dbt_conn_id, profiles_conn_id, project_conn_id,
+    and do_xcom_push_artifacts are the exception, kept as real attributes
+    since they're either Jinja-templated (see template_fields) or read
+    elsewhere in this class (the dbt_hook property, execute()).
+
+    Args:
         project_dir: Directory for dbt to look for dbt_profile.yml. Defaults to
             current directory.
         profiles_dir: Directory for dbt to look for profiles.yml. Defaults to
@@ -124,6 +132,15 @@ class DbtBaseOperator(BaseOperator):
         replace_on_upload: Flag to allow replacing files when uploading dbt project
             back to project_dir.
         env_vars: Supply environment variables to the project
+        extra_flags: A dict of dbt project-level behavior change flags not
+            otherwise modeled by name above (e.g. a new flag added by a
+            newer dbt than this operator knows about).
+        config_kwargs: A dict of ANY dbt parameter, including ones with no
+            named parameter on this operator at all. This is what actually
+            gets sent to the dbt hook: every other parameter above is merged
+            into this same dict for backwards compatibility. Prefer this over
+            adding new named parameters for a dbt option this operator
+            doesn't yet support by name.
     """
 
     template_fields = base_template_fields
@@ -190,6 +207,13 @@ class DbtBaseOperator(BaseOperator):
         # Escape hatch for any dbt flag or config option not modeled above,
         # e.g. a project-level behavior change flag added by a newer dbt.
         extra_flags: Optional[Dict[str, Any]] = None,
+        # Escape hatch for ANY dbt parameter, including ones with no named
+        # parameter on this operator at all: everything below is folded into
+        # this same dict for backwards compatibility, and this is what
+        # actually gets forwarded to the dbt hook (see execute()), instead of
+        # this operator's full __dict__, which also carries Airflow-internal
+        # attributes (task_id, dag, retries, ...) unrelated to dbt.
+        config_kwargs: Optional[Dict[str, Any]] = None,
         # Extra features configuration
         dbt_conn_id: Optional[str] = None,
         profiles_conn_id: Optional[str] = None,
@@ -202,84 +226,65 @@ class DbtBaseOperator(BaseOperator):
         **kwargs,
     ) -> None:
         super().__init__(**kwargs)
+        self.config_kwargs = dict(config_kwargs or {})
+
+        # Kept as attributes: referenced by template_fields (Jinja rendering
+        # needs a real self.attr for each), or read elsewhere in this class
+        # (dbt_hook property, execute()). Every other parameter below is
+        # only ever consumed through self.config_kwargs, so no longer gets
+        # its own attribute -- see _update_config_kwargs().
         self.project_dir = project_dir
         self.profiles_dir = profiles_dir
         self.profile = profile
         self.target = target
         self.state = state
-
-        self.compiled_target = compiled_target
-        self.cache_selected_only = cache_selected_only
-        self.fail_fast = fail_fast
-        self.single_threaded = single_threaded
-        self.threads = threads
-        self.use_experimental_parser = use_experimental_parser
-        self.vars = vars or {}
-        self.warn_error = warn_error
-
-        self.debug = debug
-        self.log_path = log_path
-        self.log_cache_events = log_cache_events
-        self.quiet = quiet
-        self.no_quiet = no_quiet
-        self.print = print
-        self.no_print = no_print
-        self.log_level = log_level
-        self.log_level_file = log_level_file
-        self.log_format = log_format
-        self.log_format_file = log_format_file
-        self.record_timing_info = record_timing_info
-
-        self.dbt_defer = defer
-        self.no_defer = no_defer
-
-        self.static_parser = static_parser
-        self.no_static_parser = no_static_parser
-
-        self.send_anonymous_usage_stats = send_anonymous_usage_stats
-        self.no_send_anonymous_usage_stats = no_send_anonymous_usage_stats
-
-        self.partial_parse = partial_parse
-        self.no_partial_parse = no_partial_parse
-
-        self.use_colors = use_colors
-        self.no_use_colors = no_use_colors
-
-        self.introspect = introspect
-        self.no_introspect = no_introspect
-
-        self.version_check = version_check
-        self.no_version_check = no_version_check
-
-        self.write_json = write_json or (
-            do_xcom_push_artifacts and "run_results.json" in do_xcom_push_artifacts
-        )
-
-        self.write_perf_info = write_perf_info
-        self.partial_parse_file_diff = partial_parse_file_diff
-        self.no_partial_parse_file_diff = no_partial_parse_file_diff
-        self.inject_ephemeral_ctes = inject_ephemeral_ctes
-        self.no_inject_ephemeral_ctes = no_inject_ephemeral_ctes
-        self.empty = empty
-        self.no_empty = no_empty
-        self.show_resource_report = show_resource_report
-        self.no_show_resource_report = no_show_resource_report
-        self.favor_state = favor_state
-        self.no_favor_state = no_favor_state
-        self.export_saved_queries = export_saved_queries
-        self.no_export_saved_queries = no_export_saved_queries
-        self.extra_flags = extra_flags or {}
-
+        vars = vars or {}
+        self.vars = vars
+        self.env_vars = env_vars
         self.dbt_conn_id = dbt_conn_id
         self.profiles_conn_id = profiles_conn_id
         self.project_conn_id = project_conn_id
         self.do_xcom_push_artifacts = do_xcom_push_artifacts
-        self.upload_dbt_project = upload_dbt_project
-        self.delete_before_upload = delete_before_upload
-        self.replace_on_upload = replace_on_upload
-        self.env_vars = env_vars
+
+        if write_json is None and do_xcom_push_artifacts is not None:
+            write_json = "run_results.json" in do_xcom_push_artifacts
+        extra_flags = extra_flags or {}
 
         self._dbt_hook: Optional[DbtHook] = None
+
+        self._update_config_kwargs(
+            locals(),
+            exclude=(
+                "config_kwargs",
+                "dbt_conn_id",
+                "profiles_conn_id",
+                "project_conn_id",
+                "do_xcom_push_artifacts",
+            ),
+        )
+
+    def _update_config_kwargs(self, local_vars: dict, *, exclude: tuple = ()) -> None:
+        """Fold this __init__ call's own parameters into self.config_kwargs.
+
+        Every operator __init__ (this base class and each subclass) calls
+        this with its own `locals()` right after setting its attributes, so
+        every dbt-specific parameter -- however it's named, including ones
+        with no dedicated field on any Config -- ends up in config_kwargs.
+        Parameters absorbed by this __init__'s own **kwargs (Airflow-internal
+        attributes like task_id, dag, retries, ...) are never included here,
+        since they're never individual entries in `locals()` to begin with.
+
+        `__class__` is also always excluded: zero-arg `super()` (used by
+        every one of these __init__s) makes CPython implicitly add a
+        `__class__` cell to the local scope, so it shows up in `locals()`
+        too, holding this operator's own class. Forwarding it would let
+        Config's extra_flags handling `setattr` it onto the Config
+        instance, replacing the Config's class with the operator's.
+        """
+        skip = {"self", "kwargs", "__class__", *exclude}
+        self.config_kwargs.update(
+            {k: v for k, v in local_vars.items() if k not in skip}
+        )
 
     def execute(self, context):
         """Execute dbt command with prepared arguments.
@@ -296,11 +301,20 @@ class DbtBaseOperator(BaseOperator):
 
         result = DbtTaskResult(False, None, {})
 
+        # template_fields are only resolved (Jinja rendering, XComArg pulls) by
+        # Airflow right before execute() runs, via setattr on self -- long
+        # after config_kwargs was populated in __init__. Re-sync here so
+        # config_kwargs carries the resolved values instead of stale ones
+        # (e.g. an unresolved PlainXComArg).
+        self.config_kwargs.update(
+            {name: getattr(self, name) for name in self.template_fields}
+        )
+
         try:
             result = self.dbt_hook.run_dbt_task(
                 self.command,
                 artifacts=self.do_xcom_push_artifacts,
-                **vars(self),
+                **self.config_kwargs,
             )
         except Exception as e:
             self.log.exception(
@@ -384,8 +398,9 @@ class DbtBaseOperator(BaseOperator):
 class _GraphRunnableOperator(ABC, DbtBaseOperator):
     """The abstract base Airflow dbt operator for list/compile commands.
 
-    Attributes:
-        compiled_target:
+    compiled_target is only ever consumed through self.config_kwargs; it's
+    not Jinja-templated (not in template_fields) nor read elsewhere, so it
+    gets no dedicated attribute of its own.
     """
 
     def __init__(
@@ -394,7 +409,7 @@ class _GraphRunnableOperator(ABC, DbtBaseOperator):
         **kwargs,
     ):
         super().__init__(**kwargs)
-        self.compiled_target = compiled_target
+        self._update_config_kwargs(locals())
 
 
 selection_template_fields = ["select", "exclude"]
@@ -425,8 +440,10 @@ class DbtRunOperator(DbtBaseOperator):
         super().__init__(**kwargs)
         self.full_refresh = full_refresh
         self.exclude = exclude
-        self.selector = selector or selector_name
-        self.select = select or models
+        selector = selector or selector_name
+        select = select or models
+        self.select = select
+        self._update_config_kwargs(locals(), exclude=("models", "selector_name"))
 
     @property
     def command(self) -> str:
@@ -459,9 +476,9 @@ class DbtSeedOperator(DbtBaseOperator):
         super().__init__(**kwargs)
         self.full_refresh = full_refresh
         self.select = select
-        self.show = show
         self.exclude = exclude
-        self.selector = selector or selector_name
+        selector = selector or selector_name
+        self._update_config_kwargs(locals(), exclude=("selector_name",))
 
     @property
     def command(self) -> str:
@@ -492,12 +509,11 @@ class DbtTestOperator(DbtBaseOperator):
         **kwargs,
     ) -> None:
         super().__init__(**kwargs)
-        self.singular = singular
-        self.generic = generic
         self.exclude = exclude
-        self.selector = selector or selector_name
-        self.select = select or models
-        self.indirect_selection = indirect_selection
+        selector = selector or selector_name
+        select = select or models
+        self.select = select
+        self._update_config_kwargs(locals(), exclude=("models", "selector_name"))
 
     @property
     def command(self) -> str:
@@ -530,12 +546,12 @@ class DbtCompileOperator(_GraphRunnableOperator):
         **kwargs,
     ) -> None:
         super().__init__(**kwargs)
-        self.parse_only = parse_only
         self.full_refresh = full_refresh
         self.exclude = exclude
-        self.selector = selector or selector_name
-        self.select = select or models
-        self.upload_dbt_project = upload_dbt_project
+        selector = selector or selector_name
+        select = select or models
+        self.select = select
+        self._update_config_kwargs(locals(), exclude=("models", "selector_name"))
 
     @property
     def command(self) -> str:
@@ -552,7 +568,7 @@ class DbtDepsOperator(DbtBaseOperator):
 
     def __init__(self, upload_dbt_project: bool = True, **kwargs) -> None:
         super().__init__(**kwargs)
-        self.upload_dbt_project = upload_dbt_project
+        self._update_config_kwargs(locals())
 
     @property
     def command(self) -> str:
@@ -569,8 +585,7 @@ class DbtDocsGenerateOperator(DbtBaseOperator):
 
     def __init__(self, compile=True, upload_dbt_project: bool = True, **kwargs) -> None:
         super().__init__(**kwargs)
-        self.compile = compile
-        self.upload_dbt_project = upload_dbt_project
+        self._update_config_kwargs(locals())
 
     @property
     def command(self) -> str:
@@ -593,9 +608,7 @@ class DbtCleanOperator(DbtBaseOperator):
         **kwargs,
     ) -> None:
         super().__init__(**kwargs)
-        self.upload_dbt_project = upload_dbt_project
-        self.delete_before_upload = delete_before_upload
-        self.clean_project_files_only = clean_project_files_only
+        self._update_config_kwargs(locals())
 
     @property
     def command(self) -> str:
@@ -617,8 +630,7 @@ class DbtDebugOperator(DbtBaseOperator):
         **kwargs,
     ) -> None:
         super().__init__(**kwargs)
-        self.config_dir = config_dir
-        self.no_version_check = no_version_check
+        self._update_config_kwargs(locals())
 
     @property
     def command(self) -> str:
@@ -646,7 +658,8 @@ class DbtSnapshotOperator(DbtBaseOperator):
         super().__init__(**kwargs)
         self.select = select
         self.exclude = exclude
-        self.selector = selector or selector_name
+        selector = selector or selector_name
+        self._update_config_kwargs(locals(), exclude=("selector_name",))
 
     @property
     def command(self) -> str:
@@ -681,10 +694,8 @@ class DbtLsOperator(_GraphRunnableOperator):
         self.resource_types = resource_types
         self.select = select
         self.exclude = exclude
-        self.selector = selector or selector_name
-        self.dbt_output = dbt_output
-        self.output_keys = output_keys
-        self.indirect_selection = indirect_selection
+        selector = selector or selector_name
+        self._update_config_kwargs(locals(), exclude=("selector_name",))
 
     @property
     def command(self) -> str:
@@ -714,6 +725,7 @@ class DbtRunOperationOperator(DbtBaseOperator):
         super().__init__(**kwargs)
         self.macro = macro
         self.args = args
+        self._update_config_kwargs(locals())
 
     @property
     def command(self) -> str:
@@ -734,7 +746,7 @@ class DbtParseOperator(DbtBaseOperator):
         **kwargs,
     ) -> None:
         super().__init__(**kwargs)
-        self.upload_dbt_project = upload_dbt_project
+        self._update_config_kwargs(locals())
 
     @property
     def command(self) -> str:
@@ -762,9 +774,8 @@ class DbtSourceFreshnessOperator(DbtBaseOperator):
         super().__init__(**kwargs)
         self.select = select
         self.exclude = exclude
-        self.selector = selector or selector_name
-        self.dbt_output = dbt_output
-        self.upload_dbt_project = upload_dbt_project
+        selector = selector or selector_name
+        self._update_config_kwargs(locals(), exclude=("selector_name",))
 
     @property
     def command(self) -> str:
@@ -801,11 +812,8 @@ class DbtBuildOperator(DbtBaseOperator):
         self.full_refresh = full_refresh
         self.select = select
         self.exclude = exclude
-        self.selector = selector or selector_name
-        self.singular = singular
-        self.generic = generic
-        self.show = show
-        self.indirect_selection = indirect_selection
+        selector = selector or selector_name
+        self._update_config_kwargs(locals(), exclude=("selector_name",))
 
     @property
     def command(self) -> str:

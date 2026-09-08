@@ -28,7 +28,7 @@ def test_dbt_docs_generate_config_all_args():
     )
     assert op.command == "generate"
 
-    config = op.dbt_hook.get_dbt_task_config(command=op.command, **vars(op))
+    config = op.dbt_hook.get_dbt_task_config(command=op.command, **op.config_kwargs)
 
     assert isinstance(config, GenerateTaskConfig) is True
     assert config.project_dir == "/path/to/project/"
@@ -36,7 +36,7 @@ def test_dbt_docs_generate_config_all_args():
     assert config.profile == "dbt-profile"
     assert config.target == "dbt-target"
     assert config.compile is False
-    assert op.upload_dbt_project is False
+    assert op.config_kwargs["upload_dbt_project"] is False
 
 
 def test_dbt_docs_generate_produces_documentation_files(
