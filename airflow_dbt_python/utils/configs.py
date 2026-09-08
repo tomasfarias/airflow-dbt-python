@@ -42,6 +42,7 @@ from airflow_dbt_python.utils.enums import FromStrEnum, LogFormat, Output
 from airflow_dbt_python.utils.version import (
     DBT_INSTALLED_GTE_1_9,
     DBT_INSTALLED_GTE_1_10_7,
+    DBT_INSTALLED_GTE_1_12,
 )
 
 
@@ -435,9 +436,19 @@ class BaseConfig:
                 # TODO: Support for catalog integrations
                 active_integrations=[],  # type: ignore
             )
-            task = self.dbt_task(
-                args=local_flags, config=runtime_config, manifest=manifest
-            )
+            if DBT_INSTALLED_GTE_1_12 and issubclass(self.dbt_task, FreshnessTask):
+                # dbt-core>=1.12 made FreshnessTask.__init__ require catalogs, unlike
+                # its sibling ConfiguredTask subclasses, which default it to None.
+                task = self.dbt_task(
+                    args=local_flags,
+                    config=runtime_config,
+                    manifest=manifest,
+                    catalogs=[],
+                )
+            else:
+                task = self.dbt_task(
+                    args=local_flags, config=runtime_config, manifest=manifest
+                )
         elif issubclass(self.dbt_task, DepsTask):
             task = self.dbt_task(args=local_flags, project=project)
         elif issubclass(self.dbt_task, DebugTask):

@@ -11,6 +11,7 @@ DBT_VERSION = Version(version("dbt-core"))
 
 DBT_INSTALLED_GTE_1_9 = DBT_VERSION >= Version("1.9.0")
 DBT_INSTALLED_GTE_1_10_7 = DBT_VERSION >= Version("1.10.7")
+DBT_INSTALLED_GTE_1_12 = DBT_VERSION >= Version("1.12.0")
 
 DBT_INSTALLED_1_8 = Version("1.8.0") <= DBT_VERSION < Version("1.9.0")
 DBT_INSTALLED_1_9 = Version("1.9.0") <= DBT_VERSION < Version("2.0.0")
