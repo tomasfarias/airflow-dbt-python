@@ -1,11 +1,11 @@
 [project]
 name = "airflow-dbt-python"
-version = "3.6.0"
+version = "3.7.0"
 description = "A collection of Airflow operators, hooks, and utilities to execute dbt commands"
 authors = [{ name = "Tomás Farías Santana", email = "tomas@tomasfarias.dev" }]
 license = "MIT"
 readme = "README.md"
-requires-python = ">=3.10,<3.14"
+requires-python = ">=3.10,<3.15"
 classifiers = [
     "Development Status :: 5 - Production/Stable",
 
@@ -24,6 +24,7 @@ dependencies = [
     "apache-airflow>=3.1,<4.0; python_version>='3.13'",
     "contextlib-chdir==1.0.2;python_version<'3.11'",
     "dbt-core>=1.8.0,<2.0.0",
+    "packaging>=20.0",
 ]
 
 [project.urls]
@@ -90,8 +91,6 @@ dev = [
     "pytest-mock>=3.14.0",
     "pytest-postgresql>=5",
     "ruff>=0.0.254",
-    # Pinned as Airflow crashes: https://github.com/apache/airflow/issues/57426.
-    "structlog<=25.4",
     "types-PyYAML>=6.0.7",
     "types-freezegun>=1.1.6",
 ]

@@ -14,7 +14,7 @@ def test_dbt_ls_command_configuration(profiles_file, dbt_project_file):
 
     assert op.command == "list"
 
-    config = op.dbt_hook.get_dbt_task_config(command=op.command, **vars(op))
+    config = op.dbt_hook.get_dbt_task_config(command=op.command, **op.config_kwargs)
 
     assert isinstance(config, ListTaskConfig) is True
     assert config.project_dir == dbt_project_file.parent
