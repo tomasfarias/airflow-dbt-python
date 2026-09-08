@@ -6,6 +6,7 @@ import dataclasses
 import json
 import os
 import pickle
+import warnings
 from pathlib import Path
 from typing import Any, Optional, Type, Union
 
@@ -247,6 +248,12 @@ class BaseConfig:
         These pairs take the form attr, no_attr. If attr is set, then no_attr cannot
         be set to a non-None value.
 
+        dbt's own CLI merges each of these into a single boolean option (e.g.
+        `--introspect/--no-introspect` only ever produces one `introspect`
+        flag); the `no_attr` form is not something dbt itself has, it's only
+        kept here for backwards compatibility with existing callers and is
+        deprecated: pass `attr=False` instead of `no_attr=True`.
+
         Raises:
             ValueError: When attempting to set two mutually exclusive parameters
                 to non-None values.
@@ -280,6 +287,14 @@ class BaseConfig:
 
             positive_value = getattr(self, attr, None)
             negative_value = getattr(self, negative_attr, None)
+
+            if negative_value is not None:
+                warnings.warn(
+                    f"'{negative_attr}' is deprecated and will be removed in a "
+                    f"future release; use '{attr}={not negative_value}' instead.",
+                    DeprecationWarning,
+                    stacklevel=3,
+                )
 
             if (
                 positive_value is None
