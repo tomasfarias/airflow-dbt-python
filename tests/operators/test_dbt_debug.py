@@ -19,7 +19,7 @@ def test_dbt_debug_mocked_all_args():
     )
     assert op.command == "debug"
 
-    config = op.dbt_hook.get_dbt_task_config(command=op.command, **vars(op))
+    config = op.dbt_hook.get_dbt_task_config(command=op.command, **op.config_kwargs)
 
     assert isinstance(config, DebugTaskConfig) is True
     assert config.project_dir == "/path/to/project/"

@@ -19,7 +19,7 @@ def test_dbt_parse_mocked_all_args():
     )
     assert op.command == "parse"
 
-    config = op.dbt_hook.get_dbt_task_config(command=op.command, **vars(op))
+    config = op.dbt_hook.get_dbt_task_config(command=op.command, **op.config_kwargs)
 
     assert isinstance(config, ParseTaskConfig) is True
     assert config.project_dir == "/path/to/project/"

@@ -25,7 +25,7 @@ def test_dbt_run_operation_mocked_all_args():
 
     assert op.command == "run-operation"
 
-    config = op.dbt_hook.get_dbt_task_config(command=op.command, **vars(op))
+    config = op.dbt_hook.get_dbt_task_config(command=op.command, **op.config_kwargs)
 
     assert isinstance(config, RunOperationTaskConfig) is True
     assert config.project_dir == "/path/to/project/"
