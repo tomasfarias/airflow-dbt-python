@@ -211,7 +211,9 @@ class DbtConnectionHook(BaseHook, ABC, metaclass=DbtConnectionHookMeta):
         """Get a dbt hook class depend on Airflow connection type."""
         conn = cls.get_connection(conn_id)
 
-        if hook_cls := cls._dbt_hooks_by_conn_type.get(conn.conn_type):
+        if conn.conn_type is not None and (
+            hook_cls := cls._dbt_hooks_by_conn_type.get(conn.conn_type)
+        ):
             return hook_cls(conn=conn)
         raise KeyError(
             f"There are no DbtConnectionHook subclasses with conn_type={conn.conn_type}"
