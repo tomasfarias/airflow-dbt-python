@@ -21,7 +21,8 @@ def test_trino_registration():
           "http_scheme": "https",
           "database": "example",
           "schema": "example",
-          "verify": false
+          "verify": false,
+          "cert": false
         }
         """,
     )
@@ -38,6 +39,7 @@ def test_trino_registration():
     assert details["schema"] == "example"
     assert details["catalog"] == "example"
     assert details["verify"] is False
+    assert details["cert"] is False
 
 
 def test_trino_catalog_overrides_database():

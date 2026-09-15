@@ -515,6 +515,7 @@ class DbtTrinoHook(DbtConnectionHook):
         DbtConnectionParam("method", default="none"),
         DbtConnectionParam("http_scheme", default="https"),
         DbtConnectionParam("verify", default=True),
+        DbtConnectionParam("cert", default=None),
         DbtConnectionParam("database", "catalog", "hive"),
         "catalog",
         "host",
