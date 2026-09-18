@@ -33,7 +33,7 @@ def test_dbt_deps_mocked_all_args():
     )
     assert op.command == "deps"
 
-    config = op.dbt_hook.get_dbt_task_config(command=op.command, **vars(op))
+    config = op.dbt_hook.get_dbt_task_config(command=op.command, **op.config_kwargs)
 
     assert isinstance(config, DepsTaskConfig) is True
     assert config.project_dir == "/path/to/project/"

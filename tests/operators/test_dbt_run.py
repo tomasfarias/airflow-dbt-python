@@ -44,7 +44,7 @@ def test_dbt_run_mocked_all_args():
     )
     assert op.command == "run"
 
-    config = op.dbt_hook.get_dbt_task_config(command=op.command, **vars(op))
+    config = op.dbt_hook.get_dbt_task_config(command=op.command, **op.config_kwargs)
 
     assert isinstance(config, RunTaskConfig) is True
     assert config.project_dir == "/path/to/project/"
@@ -377,7 +377,7 @@ def test_dbt_run_uses_correct_argument_according_to_version():
 
     assert op.select == ["/path/to/model.sql", "+/another/model.sql+2"]
     assert getattr(op, "models", None) is None
-    assert op.selector == "a-selector"
+    assert op.config_kwargs["selector"] == "a-selector"
     assert getattr(op, "selector_name", None) is None
 
 

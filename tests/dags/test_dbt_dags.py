@@ -26,6 +26,7 @@ from airflow_dbt_python.utils.version import (
     AIRFLOW_V_3_0,
     AIRFLOW_V_3_0_PLUS,
     AIRFLOW_V_3_1_PLUS,
+    AIRFLOW_V_3_3_PLUS,
 )
 
 if AIRFLOW_V_3_0:
@@ -39,7 +40,7 @@ from airflow.serialization.serialized_objects import SerializedDAG
 try:
     from airflow.serialization.serialized_objects import DagSerialization
 except ImportError:
-    DagSerialization = SerializedDAG
+    DagSerialization = SerializedDAG  # type: ignore
 
 DATA_INTERVAL_START = pendulum.datetime(2022, 1, 1, tz="UTC")
 DATA_INTERVAL_END = DATA_INTERVAL_START + dt.timedelta(hours=1)
@@ -130,7 +131,12 @@ def _run_task_instance(ti):
 @pytest.fixture(scope="session")
 def dagbag():
     """An Airflow DagBag."""
-    dagbag = DagBag(dag_folder="examples/", include_examples=False)
+    if AIRFLOW_V_3_3_PLUS:
+        # DagBag dropped include_examples in Airflow 3.3: it no longer
+        # auto-discovers example DAGs into a plain folder scan like this.
+        dagbag = DagBag(dag_folder="examples/")
+    else:
+        dagbag = DagBag(dag_folder="examples/", include_examples=False)
 
     return dagbag
 

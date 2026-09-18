@@ -6,6 +6,7 @@ import dataclasses
 import json
 import os
 import pickle
+import warnings
 from pathlib import Path
 from typing import Any, Optional, Type, Union
 
@@ -42,6 +43,7 @@ from airflow_dbt_python.utils.enums import FromStrEnum, LogFormat, Output
 from airflow_dbt_python.utils.version import (
     DBT_INSTALLED_GTE_1_9,
     DBT_INSTALLED_GTE_1_10_7,
+    DBT_INSTALLED_GTE_1_12,
 )
 
 
@@ -181,37 +183,76 @@ class BaseConfig:
         default_factory=list, repr=False
     )
 
-    # Behavior change flags
+    # Behavior change flags.
     # See: https://docs.getdbt.com/reference/global-configs/behavior-changes#behavior-change-flags
-    require_all_warnings_handled_by_warn_error: Optional[bool] = None
-    require_batched_execution_for_custom_microbatch_strategy: Optional[bool] = None
-    require_explicit_package_overrides_for_builtin_materializations: Optional[bool] = (
-        None
-    )
-    require_generic_test_arguments_property: Optional[bool] = None
-    require_nested_cumulative_type_params: Optional[bool] = None
-    require_ref_searches_node_package_before_root: Optional[bool] = None
-    require_resource_names_without_spaces: Optional[bool] = None
-    require_unique_project_resource_names: Optional[bool] = None
-    require_valid_schema_from_generate_schema_name: Optional[bool] = None
-    require_yaml_configuration_for_mf_time_spines: Optional[bool] = None
+    #
+    # dbt-core's own project-level behavior change flags are not declared here
+    # individually: they are read from dbt.contracts.project.ProjectFlags at
+    # runtime in set_default_project_flags(), so new flags added by newer dbt
+    # versions don't require a change here. `restrict_direct_pg_catalog_access`
+    # is a Redshift/Fusion-specific flag not present in that schema, so it's
+    # kept as an explicit default.
     restrict_direct_pg_catalog_access: Optional[bool] = None
-    skip_nodes_if_on_run_start_fails: Optional[bool] = None
-    source_freshness_run_project_hooks: Optional[bool] = None
-    state_modified_compare_more_unrendered_values: Optional[bool] = None
-    validate_macro_args: Optional[bool] = None
+
+    # Escape hatch for any dbt flag or config option we don't otherwise model
+    # as a field, so callers can still pass it through without us having to
+    # declare it. Same idea as the `vars` field above, applied more broadly.
+    extra_flags: dict[str, Any] = dataclasses.field(default_factory=dict, repr=False)
 
     def __post_init__(self):
         """Post initialization actions for a dbt configuration."""
         self.vars = parse_yaml_args(self.vars)
+        for flag_name, flag_value in self.extra_flags.items():
+            setattr(self, flag_name, flag_value)
         self.set_flags_from_dbt_project_file()
+        self.set_default_project_flags()
         self.set_mutually_exclusive_attributes()
+
+    def set_default_project_flags(self):
+        """Default any dbt project-level behavior change flag we don't declare.
+
+        dbt-core resolves these project-only flags (see
+        dbt.contracts.project.ProjectFlags.project_only_flags) by setting only
+        the UPPERCASE attribute on the resulting Flags object, while some dbt
+        code paths look them up in lowercase (e.g. via get_flags().some_flag).
+        The lowercase variant only gets set for keys present in vars(self)
+        when we call dbt.flags.set_from_args(self, ...), so any such flag we
+        don't declare ourselves would be missing and raise an AttributeError.
+
+        Reading defaults from dbt's own ProjectFlags schema, instead of
+        hardcoding each flag's name here, means newly added dbt behavior
+        change flags work without changes on our end.
+        """
+        from dbt.contracts.project import ProjectFlags
+
+        # ProjectFlags also models general CLI options (e.g. debug,
+        # maximum_seed_size_mib) that dbt already defaults sensibly via its
+        # own FLAGS_DEFAULTS; only its project_only_flags are the legacy
+        # behavior-change flags this method needs to backfill.
+        project_only_flag_names = ProjectFlags().project_only_flags.keys()
+
+        for field in dataclasses.fields(ProjectFlags):
+            if field.name not in project_only_flag_names:
+                continue
+            if field.default is dataclasses.MISSING or hasattr(self, field.name):
+                continue
+
+            # Mirror set_flags_from_dbt_project_file's precedence: a value set
+            # via the environment wins over any default we would set here.
+            env_value = os.getenv(f"DBT_{field.name.upper()}", None)
+            setattr(self, field.name, None if env_value is not None else field.default)
 
     def set_mutually_exclusive_attributes(self):
         """Support pairs of mutually exclusive parameters.
 
         These pairs take the form attr, no_attr. If attr is set, then no_attr cannot
         be set to a non-None value.
+
+        dbt's own CLI merges each of these into a single boolean option (e.g.
+        `--introspect/--no-introspect` only ever produces one `introspect`
+        flag); the `no_attr` form is not something dbt itself has, it's only
+        kept here for backwards compatibility with existing callers and is
+        deprecated: pass `attr=False` instead of `no_attr=True`.
 
         Raises:
             ValueError: When attempting to set two mutually exclusive parameters
@@ -246,6 +287,14 @@ class BaseConfig:
 
             positive_value = getattr(self, attr, None)
             negative_value = getattr(self, negative_attr, None)
+
+            if negative_value is not None:
+                warnings.warn(
+                    f"'{negative_attr}' is deprecated and will be removed in a "
+                    f"future release; use '{attr}={not negative_value}' instead.",
+                    DeprecationWarning,
+                    stacklevel=3,
+                )
 
             if (
                 positive_value is None
@@ -435,9 +484,19 @@ class BaseConfig:
                 # TODO: Support for catalog integrations
                 active_integrations=[],  # type: ignore
             )
-            task = self.dbt_task(
-                args=local_flags, config=runtime_config, manifest=manifest
-            )
+            if DBT_INSTALLED_GTE_1_12 and issubclass(self.dbt_task, FreshnessTask):
+                # dbt-core>=1.12 made FreshnessTask.__init__ require catalogs, unlike
+                # its sibling ConfiguredTask subclasses, which default it to None.
+                task = self.dbt_task(
+                    args=local_flags,
+                    config=runtime_config,
+                    manifest=manifest,
+                    catalogs=[],
+                )
+            else:
+                task = self.dbt_task(
+                    args=local_flags, config=runtime_config, manifest=manifest
+                )
         elif issubclass(self.dbt_task, DepsTask):
             task = self.dbt_task(args=local_flags, project=project)
         elif issubclass(self.dbt_task, DebugTask):
@@ -822,17 +881,42 @@ class ConfigFactory(FromStrEnum):
     TEST = TestTaskConfig
 
     def create_config(self, **kwargs) -> BaseConfig:
-        """Instantiate a dbt task config with the given args and kwargs."""
-        config_fields = [field.name for field in self.fields]
+        """Instantiate a dbt task config with the given args and kwargs.
 
-        config_kwargs = {}
-        for field in config_fields:
-            field_value = kwargs.get(f"dbt_{field}", kwargs.get(field, None))
+        Any kwarg that doesn't match one of the config's own fields is passed
+        through via its extra_flags field instead of being dropped, so a
+        dbt parameter we haven't modeled explicitly still reaches dbt.
+        """
+        config_field_names = {field.name for field in self.fields}
 
-            if field_value is None:
+        # A "dbt_"-prefixed key wins over its bare counterpart, e.g. to let
+        # dbt_defer override an operator's own unrelated defer attribute.
+        normalized: dict[str, Any] = {
+            key: value for key, value in kwargs.items() if not key.startswith("dbt_")
+        }
+        normalized.update(
+            {
+                key[len("dbt_") :]: value
+                for key, value in kwargs.items()
+                if key.startswith("dbt_")
+            }
+        )
+
+        config_kwargs: dict[str, Any] = {}
+        extra_flags: dict[str, Any] = {}
+        for name, value in normalized.items():
+            if value is None:
                 continue
+            if name in config_field_names:
+                config_kwargs[name] = value
+            else:
+                extra_flags[name] = value
 
-            config_kwargs[field] = field_value
+        if extra_flags:
+            config_kwargs["extra_flags"] = {
+                **extra_flags,
+                **config_kwargs.get("extra_flags", {}),
+            }
 
         config = self.value(**config_kwargs)
 
