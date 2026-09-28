@@ -193,6 +193,7 @@ class BaseConfig:
     require_nested_cumulative_type_params: Optional[bool] = None
     require_ref_searches_node_package_before_root: Optional[bool] = None
     require_resource_names_without_spaces: Optional[bool] = None
+    require_source_and_semantic_model_names_without_spaces: Optional[bool] = None
     require_unique_project_resource_names: Optional[bool] = None
     require_valid_schema_from_generate_schema_name: Optional[bool] = None
     require_yaml_configuration_for_mf_time_spines: Optional[bool] = None
