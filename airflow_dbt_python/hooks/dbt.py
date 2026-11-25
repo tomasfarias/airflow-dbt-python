@@ -10,6 +10,7 @@ import json
 import logging
 import sys
 from abc import ABC
+from contextlib import chdir as chdir_ctx
 from contextlib import contextmanager
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -27,11 +28,6 @@ from urllib.parse import urlparse
 
 from airflow.exceptions import AirflowException
 from airflow.utils.log.logging_mixin import LoggingMixin
-
-if sys.version_info >= (3, 11):
-    from contextlib import chdir as chdir_ctx
-else:
-    from contextlib_chdir import chdir as chdir_ctx
 
 if TYPE_CHECKING:
     from dbt.contracts.results import RunResult

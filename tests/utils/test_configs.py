@@ -485,7 +485,7 @@ def test_base_config_does_not_override_when_value_passed(dbt_project_file_with_f
     config = BaseConfig(
         project_dir=dbt_project_file_with_flags.parent,
         fail_fast=True,
-        require_generic_test_arguments_property=False,
+        extra_flags={"require_generic_test_arguments_property": False},
     )
     assert config.fail_fast is True
     assert config.require_generic_test_arguments_property is False

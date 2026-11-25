@@ -29,7 +29,7 @@ def test_dbt_clean_configuration_with_all_args():
 
     assert op.command == "clean"
 
-    config = op.dbt_hook.get_dbt_task_config(command=op.command, **vars(op))
+    config = op.dbt_hook.get_dbt_task_config(command=op.command, **op.config_kwargs)
 
     assert isinstance(config, CleanTaskConfig) is True
     assert config.project_dir == "/path/to/project/"
