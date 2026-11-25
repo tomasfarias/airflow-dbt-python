@@ -15,7 +15,7 @@ Before using *airflow-dbt-python*, ensure you meet the following requirements:
   * If using any managed *Airflow* service, like `AWS MWAA <https://aws.amazon.com/managed-workflows-for-apache-airflow/>`_ or `GCP Cloud Composer <https://cloud.google.com/composer>`_, ensure your environment is created with a supported version of *Airflow*.
   * If self-hosting, *Airflow* installation instructions can be found in their `official documentation <https://airflow.apache.org/docs/apache-airflow/stable/installation/index.html>`_.
 
-* Python 3.10 or later.
+* Python 3.11 or later.
 
 .. warning::
    New versions of *Airflow* and *dbt* may introduce breaking changes. We recommend testing any new versions of *Airflow* and *dbt* before upgrading production systems; Please `report any issues <https://github.com/tomasfarias/airflow-dbt-python/issues/new/choose>`_ that may arise during testing so they can be addressed.
