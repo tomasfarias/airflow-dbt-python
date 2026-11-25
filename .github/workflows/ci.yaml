@@ -101,8 +101,15 @@ jobs:
 
       - name: Install Airflow & dbt
         run: |
+          extra=()
+          if [ "${{ matrix.airflow-version }}" = "3.2.2" ]; then
+            # Airflow 3.2.2 does not build its execution API app with the newest
+            # fastapi/cadwyn (pydantic "discriminator-no-field" error), so pin the
+            # versions from Airflow's own constraints-3.2.2 file.
+            extra=("fastapi==0.136.1" "starlette==1.1.0" "cadwyn==6.2.2")
+          fi
           uv add "apache-airflow==${{ matrix.airflow-version }}; python_version=='${{ matrix.python-version }}'" \
-                 "dbt-core==${{ matrix.dbt-version }}"
+                 "dbt-core==${{ matrix.dbt-version }}" "${extra[@]}"
           uv sync --all-extras --dev
           uv run airflow db migrate
           uv run airflow connections create-default-connections

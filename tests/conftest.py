@@ -195,9 +195,15 @@ def _fix_in_process_execution_api_lifespan_race():
         yield
         return
 
-    if "transport" not in InProcessExecutionAPI.__dict__:
-        # Already fixed upstream (owns its own loop/thread; no race to work
-        # around) or a version this workaround doesn't otherwise apply to.
+    from airflow import __version__ as airflow_version
+    from packaging.version import Version
+
+    if Version(airflow_version) >= Version("3.3"):
+        # Fixed upstream: ``transport`` owns its event loop and waits for the
+        # lifespan startup. Applying the workaround there is harmful: Airflow
+        # 3.4 moved its client to ``httpx2``, which rejects the ``httpx``
+        # transport built below (``assert isinstance(response.stream,
+        # SyncByteStream)``).
         yield
         return
 
